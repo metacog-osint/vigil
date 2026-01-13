@@ -3,13 +3,34 @@
 // Based on public threat intelligence reports
 
 import { createClient } from '@supabase/supabase-js'
-import dotenv from 'dotenv'
-dotenv.config()
+import fs from 'fs'
+import path from 'path'
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_ANON_KEY
-)
+// Load env from .env file if not already set
+let supabaseUrl = process.env.VITE_SUPABASE_URL
+let supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseKey) {
+  const envPath = path.join(process.cwd(), '.env')
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf-8')
+    for (const line of envContent.split('\n')) {
+      const [key, ...valueParts] = line.split('=')
+      const value = valueParts.join('=').trim()
+      if (key && value) {
+        if (key.trim() === 'VITE_SUPABASE_URL') supabaseUrl = value
+        if (key.trim() === 'VITE_SUPABASE_ANON_KEY') supabaseKey = value
+      }
+    }
+  }
+}
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY')
+  process.exit(1)
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 // ============================================
 // KNOWN ACTOR-CVE CORRELATIONS

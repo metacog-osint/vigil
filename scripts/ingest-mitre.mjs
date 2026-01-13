@@ -12,12 +12,29 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
+import fs from 'fs'
+import path from 'path'
 
 const ATTACK_URL = 'https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json'
 
-// Supabase setup
-const supabaseUrl = process.env.VITE_SUPABASE_URL
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
+// Load env from .env file if not already set
+let supabaseUrl = process.env.VITE_SUPABASE_URL
+let supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseKey) {
+  const envPath = path.join(process.cwd(), '.env')
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf-8')
+    for (const line of envContent.split('\n')) {
+      const [key, ...valueParts] = line.split('=')
+      const value = valueParts.join('=').trim()
+      if (key && value) {
+        if (key.trim() === 'VITE_SUPABASE_URL') supabaseUrl = value
+        if (key.trim() === 'VITE_SUPABASE_ANON_KEY') supabaseKey = value
+      }
+    }
+  }
+}
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY')
