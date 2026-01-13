@@ -173,6 +173,18 @@ export const incidents = {
     return supabase
       .rpc('incidents_by_sector', { cutoff_date: cutoffDate.toISOString() })
   },
+
+  async search(query, limit = 10) {
+    return supabase
+      .from('incidents')
+      .select(`
+        *,
+        threat_actor:threat_actors(id, name)
+      `)
+      .or(`victim_name.ilike.%${query}%,victim_sector.ilike.%${query}%`)
+      .order('discovered_date', { ascending: false })
+      .limit(limit)
+  },
 }
 
 // IOCs queries
@@ -268,6 +280,15 @@ export const vulnerabilities = {
     }
 
     return query
+  },
+
+  async search(query, limit = 10) {
+    return supabase
+      .from('vulnerabilities')
+      .select('*')
+      .or(`cve_id.ilike.%${query}%,description.ilike.%${query}%`)
+      .order('cvss_score', { ascending: false })
+      .limit(limit)
   },
 }
 

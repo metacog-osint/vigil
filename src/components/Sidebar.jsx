@@ -47,9 +47,18 @@ const navigation = [
       </svg>
     ),
   },
+  {
+    name: 'Bulk Search',
+    href: '/bulk-search',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    ),
+  },
 ]
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
   return (
     <>
       {/* Mobile overlay */}
@@ -63,46 +72,56 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Sidebar */}
       <aside
         className={clsx(
-          'fixed top-0 left-0 z-50 h-full w-64 bg-cyber-dark border-r border-gray-800',
-          'transform transition-transform duration-300 ease-in-out',
+          'fixed top-0 left-0 z-50 h-full bg-cyber-dark border-r border-gray-800',
+          'transform transition-all duration-300 ease-in-out',
           'lg:translate-x-0',
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? 'translate-x-0' : '-translate-x-full',
+          isCollapsed ? 'lg:w-16' : 'w-64'
         )}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-800">
+        <div className={clsx(
+          'flex items-center h-16 px-4 border-b border-gray-800',
+          isCollapsed ? 'justify-center' : 'justify-between'
+        )}>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-cyber-accent/20 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-cyber-accent/20 rounded-lg flex items-center justify-center flex-shrink-0">
               <svg className="w-5 h-5 text-cyber-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
             </div>
-            <div>
-              <div className="font-semibold text-white text-sm">Vigil</div>
-              <div className="text-xs text-gray-500">theintelligence.company</div>
-            </div>
+            {!isCollapsed && (
+              <div>
+                <div className="font-semibold text-white text-sm">Vigil</div>
+                <div className="text-xs text-gray-500">theintelligence.company</div>
+              </div>
+            )}
           </div>
-          <button
-            onClick={onClose}
-            className="lg:hidden p-1 rounded hover:bg-gray-800"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          {!isCollapsed && (
+            <button
+              onClick={onClose}
+              className="lg:hidden p-1 rounded hover:bg-gray-800"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-1">
+        <nav className={clsx('p-4 space-y-1', isCollapsed && 'px-2')}>
           {navigation.map((item) => (
             <NavLink
               key={item.href}
               to={item.href}
               onClick={onClose}
+              title={isCollapsed ? item.name : undefined}
               className={({ isActive }) =>
                 clsx(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  'flex items-center gap-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  isCollapsed ? 'justify-center px-2' : 'px-3',
                   isActive
                     ? 'bg-cyber-accent/20 text-cyber-accent'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800'
@@ -110,13 +129,38 @@ export default function Sidebar({ isOpen, onClose }) {
               }
             >
               {item.icon}
-              {item.name}
+              {!isCollapsed && item.name}
             </NavLink>
           ))}
         </nav>
 
+        {/* Collapse toggle button - desktop only */}
+        <div className="hidden lg:block absolute bottom-20 left-0 right-0 px-4">
+          <button
+            onClick={onToggleCollapse}
+            className={clsx(
+              'w-full flex items-center gap-2 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors',
+              isCollapsed ? 'justify-center px-2' : 'px-3'
+            )}
+            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <svg
+              className={clsx('w-5 h-5 transition-transform', isCollapsed && 'rotate-180')}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+            {!isCollapsed && <span>Collapse</span>}
+          </button>
+        </div>
+
         {/* Data Sources Status */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800">
+        <div className={clsx(
+          'absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800',
+          isCollapsed && 'hidden'
+        )}>
           <div className="text-xs text-gray-500 mb-2">Data Sources</div>
           <div className="space-y-1 text-xs">
             <div className="flex items-center justify-between">
@@ -133,6 +177,13 @@ export default function Sidebar({ isOpen, onClose }) {
             </div>
           </div>
         </div>
+
+        {/* Collapsed: Just show green dot */}
+        {isCollapsed && (
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800 flex justify-center">
+            <span className="w-2 h-2 bg-green-500 rounded-full live-indicator" title="Data sources online"></span>
+          </div>
+        )}
       </aside>
     </>
   )

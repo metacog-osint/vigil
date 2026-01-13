@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { incidents, subscribeToTable } from '../lib/supabase'
 import { formatDistanceToNow, format } from 'date-fns'
+import { SkeletonList } from '../components/Skeleton'
+import { EmptyIncidents } from '../components/EmptyState'
 
 const SECTORS = [
   'healthcare',
@@ -146,11 +148,9 @@ export default function Incidents() {
         {/* Incident List */}
         <div className="flex-1">
           {loading ? (
-            <div className="text-center py-8 text-gray-400">Loading...</div>
+            <SkeletonList items={8} />
           ) : incidentList.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              No incidents found for the selected filters.
-            </div>
+            <EmptyIncidents />
           ) : (
             <div className="space-y-2">
               {incidentList.map((incident) => (
