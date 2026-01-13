@@ -1,101 +1,58 @@
 # Vigil
 
 **Cyber Threat Intelligence Dashboard**
-*A product of [The Intelligence Company](https://theintelligence.company)*
 
 Real-time monitoring of ransomware groups, incidents, vulnerabilities, and indicators of compromise.
 
-🌐 **Live:** [vigil.theintelligence.company](https://vigil.theintelligence.company)
-
 ---
-
-## Architecture
-
-Vigil uses a **hybrid Firebase + Supabase** architecture:
-
-- **Supabase (PostgreSQL)**: Stores threat data (actors, incidents, IOCs, vulnerabilities)
-  - Enables complex SQL queries and correlations
-  - Edge Functions for scheduled data ingestion
-  - Real-time subscriptions for live updates
-
-- **Firebase**: Handles user-facing features
-  - Authentication (email/password, Google SSO)
-  - User preferences and watchlists (Firestore)
-  - Hosting and CDN
-
-## Data Sources
-
-| Source | Data | Update Frequency |
-|--------|------|------------------|
-| [Ransomwatch](https://github.com/joshhighet/ransomwatch) | Ransomware groups & victims | 30 min |
-| [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Exploited vulnerabilities | 6 hours |
-| [Abuse.ch ThreatFox](https://threatfox.abuse.ch/) | IOCs (hashes, IPs, domains) | 1 hour |
-| [Abuse.ch MalwareBazaar](https://bazaar.abuse.ch/) | Malware samples | 1 hour |
 
 ## Features
 
-- **Dashboard** - Stats, activity charts, recent incidents, top actors
-- **Threat Actors** - Browse ransomware groups with trend status (ESCALATING/STABLE/DECLINING)
-- **Incidents** - Ransomware attacks by sector/timeframe with auto-sector inference
-- **Vulnerabilities** - CISA KEV catalog with CVSS/EPSS scores
-- **IOC Search** - Hash/IP/domain search with external lookup links
+- **Dashboard** - Threat level gauge, sector distribution, activity charts, recent incidents
+- **Threat Actors** - 216 ransomware groups with trend status (ESCALATING/STABLE/DECLINING)
+- **Incidents** - 16,000+ ransomware attacks with sector classification
+- **Vulnerabilities** - CISA KEV catalog with CVSS scores
+- **IOC Search** - Hash/IP/domain lookup with external links
+- **Advanced Search** - Query language powered search across all data
+- **ATT&CK Matrix** - MITRE ATT&CK technique browser
+- **Alerts** - CISA security alerts
+- **Export** - CSV, JSON, and STIX 2.1 export formats
 
-## Setup
+## Data Sources
+
+| Source | Data | Records |
+|--------|------|---------|
+| [Ransomwatch](https://github.com/joshhighet/ransomwatch) | Ransomware groups & victims | 16,000+ incidents |
+| [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Exploited vulnerabilities | 1,487 KEVs |
+| [NVD](https://nvd.nist.gov/) | CVE database | 500+ recent CVEs |
+| [Abuse.ch ThreatFox](https://threatfox.abuse.ch/) | IOCs (hashes, IPs, domains) | 600+ IOCs |
+| [MITRE ATT&CK](https://attack.mitre.org/) | Techniques & tactics | Full matrix |
+
+## Quick Start
 
 ### Prerequisites
-
 - Node.js 18+
-- Supabase account (free tier works)
-- Firebase account (free tier works)
+- Supabase account (free tier)
 
-### 1. Clone and Install
+### Installation
 
 ```bash
+# Clone and install
+git clone https://github.com/metacog-osint/vigil.git
+cd vigil
 npm install
-```
 
-### 2. Configure Supabase
-
-1. Create a new Supabase project at https://supabase.com
-2. Run migrations in order:
-   - `supabase/migrations/001_initial_schema.sql`
-   - `supabase/migrations/002_trend_calculations.sql`
-3. Copy your project URL and anon key
-
-### 3. Configure Firebase
-
-1. Create a new Firebase project at https://console.firebase.google.com
-2. Enable Authentication (Email/Password and Google)
-3. Create a Firestore database
-4. Copy your Firebase config values
-
-### 4. Environment Variables
-
-```bash
+# Configure environment
 cp .env.example .env
-```
+# Edit .env with your Supabase credentials
 
-Fill in your Supabase and Firebase credentials.
+# Run database migrations (in Supabase SQL Editor)
+# Execute files in supabase/migrations/ in order
 
-### 5. Deploy Edge Functions (Supabase)
+# Ingest data
+npm run ingest
 
-```bash
-# Install Supabase CLI
-npm install -g supabase
-
-# Link your project
-supabase link --project-ref your-project-ref
-
-# Deploy functions
-supabase functions deploy ingest-ransomwatch
-supabase functions deploy ingest-cisa-kev
-supabase functions deploy ingest-abusech
-supabase functions deploy calculate-trends
-```
-
-### 6. Run Development Server
-
-```bash
+# Start development server
 npm run dev
 ```
 
@@ -106,35 +63,42 @@ Open http://localhost:5174
 ```
 vigil/
 ├── src/
-│   ├── components/       # React components
-│   ├── pages/           # Route pages
-│   ├── hooks/           # Custom React hooks
-│   ├── lib/             # Supabase & Firebase clients
-│   └── services/        # API service layers
+│   ├── components/     # React components (40+ components)
+│   ├── pages/          # Route pages (11 pages)
+│   ├── hooks/          # Custom React hooks
+│   └── lib/            # Supabase client, query parser, export utilities
+├── scripts/            # Data ingestion scripts
 ├── supabase/
-│   ├── migrations/      # Database schema
-│   └── functions/       # Edge functions for data ingestion
-├── public/              # Static assets
-└── index.html
+│   └── migrations/     # Database schema (5 migrations)
+└── docs/               # Documentation
 ```
 
 ## Tech Stack
 
 - **Frontend**: React 18, Vite, Tailwind CSS, Recharts
-- **Backend**: Supabase (PostgreSQL), Firebase
-- **Data Ingestion**: Supabase Edge Functions (Deno)
-- **Authentication**: Firebase Auth
+- **Database**: Supabase (PostgreSQL)
+- **Hosting**: Vercel
+- **Data Visualization**: Recharts (charts, gauges, treemaps)
 
-## Roadmap
+## Scripts
 
-- [ ] Vertex AI summaries for threat actors
-- [ ] MITRE ATT&CK mapping
-- [ ] Threat actor relationship graphs
-- [ ] Email/Slack alerting
-- [ ] API for external integrations
-- [ ] PDF report generation
+```bash
+npm run dev          # Start development server
+npm run build        # Production build
+npm run ingest       # Run all data ingestion
+npm run ingest:kev   # CISA KEV only
+npm run ingest:nvd   # NVD CVEs only
+```
+
+## Documentation
+
+- [DEPLOYMENT.md](./docs/DEPLOYMENT.md) - Hosting, pricing, deployment guide
+- [DEVELOPMENT.md](./docs/DEVELOPMENT.md) - Development notes and architecture
+
+## License
+
+MIT
 
 ---
 
-**The Intelligence Company**
-*Clarity in chaos.*
+Built for the iCOUNTER CTI Analyst position.
