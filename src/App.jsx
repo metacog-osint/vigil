@@ -11,6 +11,7 @@ import BulkSearch from './pages/BulkSearch'
 import Techniques from './pages/Techniques'
 import Watchlists from './pages/Watchlists'
 import Settings from './pages/Settings'
+import Alerts from './pages/Alerts'
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -87,6 +88,7 @@ function App() {
               <Route path="/bulk-search" element={<BulkSearch />} />
               <Route path="/techniques" element={<Techniques />} />
               <Route path="/watchlists" element={<Watchlists />} />
+              <Route path="/alerts" element={<Alerts />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
           </ErrorBoundary>

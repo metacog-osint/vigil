@@ -10,10 +10,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const scripts = [
   { name: 'CISA KEV', file: 'ingest-cisa-kev.mjs' },
+  { name: 'CISA Alerts', file: 'ingest-cisa-alerts.mjs' },
   { name: 'NVD CVEs', file: 'ingest-nvd.mjs' },
+  { name: 'MITRE ATT&CK', file: 'ingest-mitre.mjs' },
   { name: 'ThreatFox IOCs', file: 'ingest-threatfox.mjs' },
   { name: 'URLhaus', file: 'ingest-urlhaus.mjs' },
   { name: 'Feodo Tracker', file: 'ingest-feodo.mjs' },
+  { name: 'Spamhaus DROP', file: 'ingest-spamhaus.mjs' },
+  { name: 'MalwareBazaar', file: 'ingest-malwarebazaar.mjs' },
 ]
 
 function runScript(scriptPath) {
