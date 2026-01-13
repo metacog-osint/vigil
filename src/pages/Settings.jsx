@@ -1,8 +1,9 @@
 // Settings page - User preferences
 import { useState, useEffect } from 'react'
 import { clsx } from 'clsx'
-import { userPreferences as prefsApi, savedSearches as searchesApi, tags as tagsApi, syncLog as syncLogApi } from '../lib/supabase'
+import { userPreferences as prefsApi, savedSearches as searchesApi, tags as tagsApi, syncLog as syncLogApi, orgProfile as orgProfileApi } from '../lib/supabase'
 import { SkeletonCard, ErrorMessage, TimeAgo } from '../components'
+import { OrganizationProfileSetup, OrganizationProfileSummary } from '../components/OrganizationProfileSetup'
 import { formatDistanceToNow, format } from 'date-fns'
 
 const TIME_RANGES = [
@@ -228,10 +229,12 @@ export default function Settings() {
   const [savedSearches, setSavedSearches] = useState([])
   const [tags, setTags] = useState([])
   const [syncLogs, setSyncLogs] = useState([])
+  const [orgProfile, setOrgProfile] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isTagModalOpen, setIsTagModalOpen] = useState(false)
+  const [isEditingOrgProfile, setIsEditingOrgProfile] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -240,17 +243,19 @@ export default function Settings() {
   const loadData = async () => {
     setIsLoading(true)
     try {
-      const [prefsResult, searchesResult, tagsResult, syncResult] = await Promise.all([
+      const [prefsResult, searchesResult, tagsResult, syncResult, profileResult] = await Promise.all([
         prefsApi.get(),
         searchesApi.getAll(),
         tagsApi.getAll(),
         syncLogApi.getRecent(10),
+        orgProfileApi.get(),
       ])
 
       setPreferences(prefsResult.data?.preferences || {})
       setSavedSearches(searchesResult.data || [])
       setTags(tagsResult.data || [])
       setSyncLogs(syncResult.data || [])
+      setOrgProfile(profileResult || null)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -269,6 +274,19 @@ export default function Settings() {
     } finally {
       setIsSaving(false)
     }
+
+  const saveOrgProfile = async (profile) => {
+    setIsSaving(true)
+    try {
+      await orgProfileApi.update(profile)
+      setOrgProfile(profile)
+      setIsEditingOrgProfile(false)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setIsSaving(false)
+    }
+  }
   }
 
   const deleteSavedSearch = async (id) => {
@@ -318,6 +336,25 @@ export default function Settings() {
       {error && <ErrorMessage message={error} className="mb-4" />}
 
       <div className="space-y-6">
+                {/* Organization Profile */}
+        <SettingSection
+          title="Organization Profile"
+          description="Configure your organization's sector, geography, and tech stack for personalized threat intelligence"
+        >
+          {isEditingOrgProfile ? (
+            <OrganizationProfileSetup
+              profile={orgProfile}
+              onSave={saveOrgProfile}
+              onCancel={() => setIsEditingOrgProfile(false)}
+            />
+          ) : (
+            <OrganizationProfileSummary
+              profile={orgProfile}
+              onEdit={() => setIsEditingOrgProfile(true)}
+            />
+          )}
+        </SettingSection>
+
         {/* Display Preferences */}
         <SettingSection
           title="Display Preferences"
