@@ -89,15 +89,56 @@ export const threatActors = {
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - days)
 
-    return supabase
+    // Get incident counts per actor for the time period
+    const { data: incidentCounts, error: countError } = await supabase
+      .from('incidents')
+      .select('actor_id')
+      .gte('discovered_date', cutoffDate.toISOString().split('T')[0])
+
+    if (countError || !incidentCounts) {
+      // Fallback to old query
+      return supabase
+        .from('threat_actors')
+        .select('*')
+        .gte('last_seen', cutoffDate.toISOString())
+        .limit(limit)
+    }
+
+    // Count incidents per actor
+    const actorCounts = {}
+    for (const inc of incidentCounts) {
+      if (inc.actor_id) {
+        actorCounts[inc.actor_id] = (actorCounts[inc.actor_id] || 0) + 1
+      }
+    }
+
+    // Sort by count and get top actor IDs
+    const topActorIds = Object.entries(actorCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([id]) => id)
+
+    if (topActorIds.length === 0) {
+      return { data: [], error: null }
+    }
+
+    // Fetch actor details
+    const { data: actors, error } = await supabase
       .from('threat_actors')
-      .select(`
-        *,
-        incident_count:incidents(count)
-      `)
-      .gte('last_seen', cutoffDate.toISOString())
-      .order('incident_velocity', { ascending: false, nullsFirst: true })
-      .limit(limit)
+      .select('*')
+      .in('id', topActorIds)
+
+    if (error || !actors) {
+      return { data: [], error }
+    }
+
+    // Add incident counts and sort
+    const actorsWithCounts = actors.map(actor => ({
+      ...actor,
+      incident_count: [{ count: actorCounts[actor.id] || 0 }],
+    })).sort((a, b) => (b.incident_count[0]?.count || 0) - (a.incident_count[0]?.count || 0))
+
+    return { data: actorsWithCounts, error: null }
   },
 
   async getEscalating(limit = 10) {
@@ -202,6 +243,30 @@ export const incidents = {
       .or(`victim_name.ilike.%${query}%,victim_sector.ilike.%${query}%`)
       .order('discovered_date', { ascending: false })
       .limit(limit)
+  },
+
+  async getDailyCounts(days = 90) {
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - days)
+
+    const { data, error } = await supabase
+      .from('incidents')
+      .select('discovered_date')
+      .gte('discovered_date', cutoffDate.toISOString().split('T')[0])
+
+    if (error || !data) return []
+
+    // Count by date
+    const counts = {}
+    for (const row of data) {
+      const date = row.discovered_date?.split('T')[0]
+      if (date) {
+        counts[date] = (counts[date] || 0) + 1
+      }
+    }
+
+    // Convert to array format for calendar
+    return Object.entries(counts).map(([date, count]) => ({ date, count }))
   },
 }
 
@@ -310,29 +375,57 @@ export const vulnerabilities = {
   },
 
   async getBySeverity() {
-    // Fetch all vulnerabilities with CVSS scores
+    // Fetch all vulnerabilities with CVSS scores or severity
     const { data, error } = await supabase
       .from('vulnerabilities')
       .select('cvss_score, severity')
 
-    if (error || !data) return []
+    if (error || !data || data.length === 0) {
+      // Return placeholder data if no vulnerabilities
+      return [
+        { name: 'Critical', value: 0, severity: 'critical' },
+        { name: 'High', value: 0, severity: 'high' },
+        { name: 'Medium', value: 0, severity: 'medium' },
+        { name: 'Low', value: 0, severity: 'low' },
+      ]
+    }
 
-    // Count by severity
-    const counts = { critical: 0, high: 0, medium: 0, low: 0 }
+    // Count by severity - use cvss_score if available, else severity field, else unknown
+    const counts = { critical: 0, high: 0, medium: 0, low: 0, unknown: 0 }
     for (const row of data) {
-      if (row.cvss_score >= 9.0) counts.critical++
-      else if (row.cvss_score >= 7.0) counts.high++
-      else if (row.cvss_score >= 4.0) counts.medium++
-      else counts.low++
+      if (row.cvss_score != null) {
+        // Use CVSS score
+        if (row.cvss_score >= 9.0) counts.critical++
+        else if (row.cvss_score >= 7.0) counts.high++
+        else if (row.cvss_score >= 4.0) counts.medium++
+        else counts.low++
+      } else if (row.severity) {
+        // Use severity field
+        const sev = row.severity.toLowerCase()
+        if (sev === 'critical') counts.critical++
+        else if (sev === 'high') counts.high++
+        else if (sev === 'medium') counts.medium++
+        else if (sev === 'low') counts.low++
+        else counts.unknown++
+      } else {
+        counts.unknown++
+      }
     }
 
     // Return format for treemap
-    return [
+    const result = [
       { name: 'Critical', value: counts.critical, severity: 'critical' },
       { name: 'High', value: counts.high, severity: 'high' },
       { name: 'Medium', value: counts.medium, severity: 'medium' },
       { name: 'Low', value: counts.low, severity: 'low' },
-    ].filter(d => d.value > 0)
+    ]
+
+    // Add unknown if there are any
+    if (counts.unknown > 0) {
+      result.push({ name: 'Unknown', value: counts.unknown, severity: 'none' })
+    }
+
+    return result
   },
 }
 

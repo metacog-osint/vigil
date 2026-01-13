@@ -14,6 +14,23 @@ import { VulnTreemapMini } from '../components/VulnTreemap'
 import { ActivityCalendar } from '../components/ActivityCalendar'
 import { formatDistanceToNow } from 'date-fns'
 
+// Calculate threat level on a reasonable scale
+// Baseline: ~300 incidents/month is "normal" (score ~50)
+// 600+ incidents/month is "high" (score ~75)
+// 1000+ incidents/month is "critical" (score ~90+)
+function calculateThreatLevel(incidents30d, escalatingActors = 0) {
+  // Use logarithmic scaling for incidents
+  // log2(300) ≈ 8.2, so we normalize around that
+  const incidentScore = incidents30d > 0
+    ? Math.min(70, Math.round(Math.log2(incidents30d) * 7))
+    : 0
+
+  // Add points for escalating actors (max 30 points)
+  const escalationScore = Math.min(30, escalatingActors * 6)
+
+  return Math.min(100, incidentScore + escalationScore)
+}
+
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [recentIncidents, setRecentIncidents] = useState([])
@@ -22,6 +39,7 @@ export default function Dashboard() {
   const [sectorData, setSectorData] = useState([])
   const [vulnsBySeverity, setVulnsBySeverity] = useState([])
   const [escalatingActors, setEscalatingActors] = useState([])
+  const [calendarData, setCalendarData] = useState([])
   const [lastSync, setLastSync] = useState(null)
   const [aiSummary, setAiSummary] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -29,7 +47,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const [statsData, incidentsData, actorsData, kevsData, sectorStats, vulnStats, escalatingData, syncData] = await Promise.all([
+        const [statsData, incidentsData, actorsData, kevsData, sectorStats, vulnStats, escalatingData, syncData, calendarStats] = await Promise.all([
           dashboard.getOverview(),
           incidents.getRecent({ limit: 10, days: 365 }),
           threatActors.getTopActive(365, 5),
@@ -38,6 +56,7 @@ export default function Dashboard() {
           vulnerabilities.getBySeverity(),
           threatActors.getEscalating(5),
           syncLog.getRecent(1),
+          incidents.getDailyCounts(90),
         ])
 
         setStats(statsData)
@@ -47,6 +66,7 @@ export default function Dashboard() {
         setSectorData(sectorStats || [])
         setVulnsBySeverity(vulnStats || [])
         setEscalatingActors(escalatingData.data || [])
+        setCalendarData(calendarStats || [])
         setLastSync(syncData.data?.[0] || null)
 
         // Generate AI BLUF summary (non-blocking)
@@ -193,8 +213,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Threat Level Gauge */}
         <ThreatGauge
-          score={Math.min(100, Math.round((stats?.incidents24h || 0) * 2 + (recentIncidents?.length || 0) * 3))}
-          trend={stats?.incidents24h > 5 ? 'up' : 'stable'}
+          score={calculateThreatLevel(stats?.incidents24h || 0, escalatingActors?.length || 0)}
+          trend={stats?.incidents24h > 100 ? 'up' : 'stable'}
         />
 
         {/* Sector Distribution */}
@@ -233,7 +253,7 @@ export default function Dashboard() {
       {/* Activity Calendar */}
       <div className="cyber-card">
         <h2 className="text-lg font-semibold text-white mb-4">Incident Activity (90 Days)</h2>
-        <ActivityCalendar days={90} />
+        <ActivityCalendar data={calendarData} days={90} />
       </div>
 
       {/* Bottom Section */}
