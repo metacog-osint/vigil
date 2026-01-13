@@ -8,6 +8,7 @@ import Incidents from './pages/Incidents'
 import Vulnerabilities from './pages/Vulnerabilities'
 import IOCSearch from './pages/IOCSearch'
 import BulkSearch from './pages/BulkSearch'
+import Techniques from './pages/Techniques'
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -82,6 +83,7 @@ function App() {
               <Route path="/vulnerabilities" element={<Vulnerabilities />} />
               <Route path="/iocs" element={<IOCSearch />} />
               <Route path="/bulk-search" element={<BulkSearch />} />
+              <Route path="/techniques" element={<Techniques />} />
             </Routes>
           </ErrorBoundary>
         </main>
