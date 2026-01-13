@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { threatActors, subscribeToTable, incidents } from '../lib/supabase'
-import { formatDistanceToNow } from 'date-fns'
 import TrendBadge, { TrendIndicator } from '../components/TrendBadge'
+import { SmartTime } from '../components/TimeDisplay'
 import { SkeletonTable } from '../components/Skeleton'
 import { EmptyActors } from '../components/EmptyState'
 import { NewBadge } from '../components/NewIndicator'
@@ -250,9 +250,7 @@ export default function ThreatActors() {
                         )}
                       </td>
                       <td className="hidden md:table-cell text-sm text-gray-400">
-                        {actor.last_seen
-                          ? formatDistanceToNow(new Date(actor.last_seen), { addSuffix: true })
-                          : 'Unknown'}
+                        <SmartTime date={actor.last_seen} />
                       </td>
                       <td>
                         <span

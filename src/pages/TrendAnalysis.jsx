@@ -3,131 +3,14 @@ import { useState, useEffect } from 'react'
 import { trendAnalysis, incidents } from '../lib/supabase'
 import WeekComparisonCard from '../components/WeekComparisonCard'
 import ChangeSummaryCard from '../components/ChangeSummaryCard'
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts'
+import { SectorTrendChart, ActivityTrendChart } from '../components/SectorTrendChart'
+import { ActorTrajectoryChart, ActorSelector } from '../components/ActorTrajectoryChart'
 
 const TIME_RANGES = [
   { label: '30 days', value: 30 },
   { label: '60 days', value: 60 },
   { label: '90 days', value: 90 },
 ]
-
-function SectorTrendChart({ data, loading }) {
-  if (loading) {
-    return (
-      <div className="h-64 bg-gray-800/50 rounded animate-pulse" />
-    )
-  }
-
-  if (!data?.weeks?.length) {
-    return (
-      <div className="h-64 flex items-center justify-center text-gray-500">
-        No sector trend data available
-      </div>
-    )
-  }
-
-  // Transform data for recharts
-  const chartData = data.weeks.map(week => {
-    const point = { week }
-    for (const sector of data.sectors.slice(0, 6)) {
-      point[sector] = data.data[`${week}|${sector}`] || 0
-    }
-    return point
-  })
-
-  const COLORS = ['#00ff88', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
-
-  return (
-    <ResponsiveContainer width="100%" height={280}>
-      <LineChart data={chartData}>
-        <XAxis
-          dataKey="week"
-          stroke="#6b7280"
-          tick={{ fill: '#9ca3af', fontSize: 10 }}
-          tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-        />
-        <YAxis stroke="#6b7280" tick={{ fill: '#9ca3af', fontSize: 10 }} />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: '#1f2937',
-            border: '1px solid #374151',
-            borderRadius: '8px',
-          }}
-          labelFormatter={(v) => new Date(v).toLocaleDateString()}
-        />
-        <Legend />
-        {data.sectors.slice(0, 6).map((sector, i) => (
-          <Line
-            key={sector}
-            type="monotone"
-            dataKey={sector}
-            stroke={COLORS[i]}
-            strokeWidth={2}
-            dot={false}
-          />
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
-  )
-}
-
-function ActivityTrendChart({ data, loading }) {
-  if (loading) {
-    return (
-      <div className="h-48 bg-gray-800/50 rounded animate-pulse" />
-    )
-  }
-
-  if (!data?.length) {
-    return (
-      <div className="h-48 flex items-center justify-center text-gray-500">
-        No activity data available
-      </div>
-    )
-  }
-
-  // Sort and format for chart
-  const chartData = [...data]
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .map(d => ({
-      date: d.date,
-      count: d.count,
-    }))
-
-  return (
-    <ResponsiveContainer width="100%" height={200}>
-      <AreaChart data={chartData}>
-        <defs>
-          <linearGradient id="activityGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#00ff88" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="#00ff88" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <XAxis
-          dataKey="date"
-          stroke="#6b7280"
-          tick={{ fill: '#9ca3af', fontSize: 10 }}
-          tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-        />
-        <YAxis stroke="#6b7280" tick={{ fill: '#9ca3af', fontSize: 10 }} />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: '#1f2937',
-            border: '1px solid #374151',
-            borderRadius: '8px',
-          }}
-          labelFormatter={(v) => new Date(v).toLocaleDateString()}
-        />
-        <Area
-          type="monotone"
-          dataKey="count"
-          stroke="#00ff88"
-          fill="url(#activityGradient)"
-        />
-      </AreaChart>
-    </ResponsiveContainer>
-  )
-}
 
 export default function TrendAnalysis() {
   const [timeRange, setTimeRange] = useState(30)
@@ -136,6 +19,7 @@ export default function TrendAnalysis() {
   const [changeSummary, setChangeSummary] = useState(null)
   const [sectorTrends, setSectorTrends] = useState(null)
   const [dailyActivity, setDailyActivity] = useState([])
+  const [selectedActorIds, setSelectedActorIds] = useState([])
 
   useEffect(() => {
     async function loadData() {
@@ -207,6 +91,26 @@ export default function TrendAnalysis() {
           Weekly incident counts by sector (top 6 sectors shown)
         </p>
         <SectorTrendChart data={sectorTrends} loading={loading} />
+      </div>
+
+      {/* Actor Trajectory */}
+      <div className="cyber-card p-6 mb-6">
+        <h3 className="text-sm text-gray-400 mb-4">Actor Trajectory Comparison</h3>
+        <p className="text-xs text-gray-500 mb-4">
+          Select up to 5 actors to compare their activity over time
+        </p>
+        <div className="mb-4">
+          <ActorSelector
+            selectedIds={selectedActorIds}
+            onChange={setSelectedActorIds}
+            maxSelections={5}
+          />
+        </div>
+        <ActorTrajectoryChart
+          actorIds={selectedActorIds}
+          days={timeRange}
+          height={280}
+        />
       </div>
 
       {/* Sector Breakdown Table */}

@@ -80,3 +80,32 @@ export { ExportButton, QuickExportButton } from './ExportButton'
 
 // Timeline
 export { Timeline, TimelineMini, ActorTimeline } from './Timeline'
+
+// Trend Analysis
+export {
+  ActorTrajectoryChart,
+  ActorTrajectoryMini,
+  ActorSelector,
+} from './ActorTrajectoryChart'
+export {
+  SectorTrendChart,
+  SectorTrendMini,
+  ActivityTrendChart,
+  ActivityTrendMini,
+} from './SectorTrendChart'
+export { default as WeekComparisonCard } from './WeekComparisonCard'
+export { default as ChangeSummaryCard } from './ChangeSummaryCard'
+
+// Correlation
+export { default as CorrelationPanel } from './CorrelationPanel'
+export { AttackPathDiagram, AttackPathMini } from './AttackPathDiagram'
+
+// Organization & Relevance
+export { default as OrganizationProfileSetup } from './OrganizationProfileSetup'
+export { RelevanceBadge, RelevanceScore } from './RelevanceBadge'
+
+// IOC Enrichment
+export { default as IOCQuickLookupCard } from './IOCQuickLookupCard'
+
+// Keyboard shortcuts
+export { KeyboardShortcutsModal, KeyBadge } from './KeyboardShortcutsModal'

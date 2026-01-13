@@ -9,7 +9,10 @@ Vigil uses a comprehensive automated data ingestion system that pulls from multi
 | Ransomware | RansomLook, Ransomware.live | Every 6 hours |
 | IOCs | ThreatFox, URLhaus, Feodo, Abuse.ch | Every 6 hours |
 | Vulnerabilities | CISA KEV, NVD | Every 6 hours |
+| Alerts | CISA Alerts | Every 6 hours |
 | Techniques | MITRE ATT&CK | Every 6 hours |
+| Analytics | Actor Snapshots, Correlations | Daily (after ingestion) |
+| Reports | Weekly Summary | Weekly (Mondays) |
 
 ## GitHub Actions Workflow
 
@@ -45,8 +48,11 @@ You can manually trigger ingestion for specific sources via the GitHub Actions U
 | ingest-feodo | Feodo C2 trackers | None |
 | ingest-abusech | Abuse.ch feeds | None |
 | ingest-cisa-kev | CISA KEV | None |
+| ingest-cisa-alerts | CISA Alerts | None |
 | ingest-nvd | NVD CVEs | None |
 | ingest-mitre | MITRE ATT&CK | None |
+| seed-correlations | Actor-CVE links | After MITRE & KEV |
+| snapshot-actor-trends | Actor metrics | After ransomware & correlations |
 
 ### Required Secrets
 
@@ -71,12 +77,19 @@ npm run ingest
 npm run ingest:ransomlook      # RansomLook ransomware
 npm run ingest:ransomware-live # Ransomware.live
 npm run ingest:kev             # CISA KEV
+npm run ingest:cisa-alerts     # CISA security alerts
 npm run ingest:nvd             # NVD CVEs
 npm run ingest:threatfox       # ThreatFox IOCs
 npm run ingest:urlhaus         # URLhaus malware URLs
 npm run ingest:feodo           # Feodo C2 trackers
 npm run ingest:abusech         # All Abuse.ch feeds
 npm run ingest:mitre           # MITRE ATT&CK
+
+# Analytics & Reports
+npm run seed:correlations      # Actor-CVE correlations
+npm run snapshot:actors        # Daily actor trend snapshot
+npm run generate:weekly-summary             # Current week summary
+npm run generate:weekly-summary -- --backfill 4  # Backfill 4 weeks
 ```
 
 ### Script Architecture
@@ -323,6 +336,76 @@ if (DEBUG) console.log('Fetched', data.length, 'records')
 Run with debug:
 ```bash
 DEBUG=true npm run ingest:ransomlook
+```
+
+## Analytics Scripts
+
+### Actor Trend Snapshots (`snapshot-actor-trends.mjs`)
+
+Captures daily metrics for all recently active actors, enabling historical trajectory visualization.
+
+**Schedule**: Runs daily after ransomware ingestion completes
+
+**Data Captured**:
+- `trend_status` - Current ESCALATING/STABLE/DECLINING
+- `incidents_7d` - Incident count last 7 days
+- `incidents_30d` - Incident count last 30 days
+- `incident_velocity` - Incidents per day average
+- `rank_position` - Position in most-active rankings
+
+**Usage**:
+```bash
+npm run snapshot:actors
+```
+
+### Weekly Summary (`generate-weekly-summary.mjs`)
+
+Aggregates weekly statistics for trend comparison and "what changed" reports.
+
+**Schedule**: Runs weekly via `.github/workflows/weekly-summary.yml` (Mondays at 1:00 AM UTC)
+
+**Data Aggregated**:
+- Incident totals by sector and country
+- Active and escalating actor counts
+- New KEVs and critical vulnerabilities
+- Week-over-week change percentages
+
+**Usage**:
+```bash
+# Current week
+npm run generate:weekly-summary
+
+# Backfill historical data
+npm run generate:weekly-summary -- --backfill 8
+```
+
+### Correlation Seeding (`seed-correlations.mjs`)
+
+Pre-populates known actor-vulnerability correlations based on public threat intelligence.
+
+**Known Correlations**:
+- LockBit → CVE-2023-4966 (Citrix Bleed), CVE-2023-0669 (GoAnywhere)
+- ALPHV/BlackCat → CVE-2021-21972, CVE-2021-44228
+- Cl0p → CVE-2023-34362 (MOVEit)
+
+**Usage**:
+```bash
+npm run seed:correlations
+```
+
+## Weekly Summary Workflow
+
+Separate workflow at `.github/workflows/weekly-summary.yml`:
+
+```yaml
+on:
+  schedule:
+    - cron: '0 1 * * 1'  # Mondays at 1:00 AM UTC
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: 'Number of weeks to backfill'
+        default: '0'
 ```
 
 ## Adding New Sources

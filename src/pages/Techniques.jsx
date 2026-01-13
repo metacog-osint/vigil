@@ -1,8 +1,9 @@
 // MITRE ATT&CK Techniques browser
 import { useState, useEffect } from 'react'
-import { techniques as techniquesApi } from '../lib/supabase'
+import { techniques as techniquesApi, supabase } from '../lib/supabase'
 import { SkeletonTable } from '../components/Skeleton'
 import { EmptyState } from '../components/EmptyState'
+import { AttackMatrixHeatmap } from '../components/AttackMatrixHeatmap'
 
 const TACTICS = [
   'Reconnaissance',
@@ -40,15 +41,20 @@ const TACTIC_COLORS = {
 
 export default function Techniques() {
   const [techniquesList, setTechniquesList] = useState([])
+  const [allTechniques, setAllTechniques] = useState([]) // For heatmap
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedTactic, setSelectedTactic] = useState('')
   const [selectedTechnique, setSelectedTechnique] = useState(null)
   const [tacticCounts, setTacticCounts] = useState({})
+  const [viewMode, setViewMode] = useState('table') // 'table' or 'heatmap'
+  const [actorTechniques, setActorTechniques] = useState([])
 
   useEffect(() => {
     loadTechniques()
     loadTacticCounts()
+    loadActorTechniques()
+    loadAllTechniques()
   }, [search, selectedTactic])
 
   async function loadTechniques() {
@@ -75,6 +81,38 @@ export default function Techniques() {
       setTacticCounts(counts)
     } catch (error) {
       console.error('Error loading tactic counts:', error)
+    }
+  }
+
+  async function loadActorTechniques() {
+    try {
+      const { data } = await supabase
+        .from('actor_techniques')
+        .select('technique_id')
+
+      // Count occurrences of each technique
+      const counts = {}
+      for (const row of data || []) {
+        counts[row.technique_id] = (counts[row.technique_id] || 0) + 1
+      }
+
+      setActorTechniques(
+        Object.entries(counts).map(([technique_id, count]) => ({
+          technique_id,
+          count,
+        }))
+      )
+    } catch (error) {
+      console.error('Error loading actor techniques:', error)
+    }
+  }
+
+  async function loadAllTechniques() {
+    try {
+      const { data } = await techniquesApi.getAll({ limit: 1000 })
+      setAllTechniques(data || [])
+    } catch (error) {
+      console.error('Error loading all techniques:', error)
     }
   }
 
@@ -132,7 +170,7 @@ export default function Techniques() {
         ))}
       </div>
 
-      {/* Search */}
+      {/* Search and View Toggle */}
       <div className="flex gap-4">
         <input
           type="text"
@@ -141,9 +179,53 @@ export default function Techniques() {
           placeholder="Search techniques by ID or name..."
           className="cyber-input flex-1"
         />
+        <div className="flex rounded overflow-hidden border border-gray-700">
+          <button
+            onClick={() => setViewMode('table')}
+            className={`px-3 py-2 text-sm ${
+              viewMode === 'table'
+                ? 'bg-cyber-accent/20 text-cyber-accent'
+                : 'bg-gray-800 text-gray-400 hover:text-white'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setViewMode('heatmap')}
+            className={`px-3 py-2 text-sm ${
+              viewMode === 'heatmap'
+                ? 'bg-cyber-accent/20 text-cyber-accent'
+                : 'bg-gray-800 text-gray-400 hover:text-white'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
-      {/* Content */}
+      {/* Heatmap View */}
+      {viewMode === 'heatmap' && (
+        <div className="cyber-card p-6">
+          <h3 className="text-sm text-gray-400 mb-4">
+            ATT&CK Matrix Heatmap
+            <span className="text-xs text-gray-500 ml-2">
+              (color intensity = number of threat actors using technique)
+            </span>
+          </h3>
+          <AttackMatrixHeatmap
+            techniques={allTechniques}
+            actorTechniques={actorTechniques}
+            onTechniqueClick={setSelectedTechnique}
+          />
+        </div>
+      )}
+
+      {/* Content - Table View */}
+      {viewMode === 'table' && (
       <div className="flex gap-6">
         {/* Technique List */}
         <div className="flex-1">
@@ -347,6 +429,7 @@ export default function Techniques() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

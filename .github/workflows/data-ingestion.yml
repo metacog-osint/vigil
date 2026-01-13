@@ -234,6 +234,31 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
   # ============================================
+  # CISA ALERTS
+  # ============================================
+  ingest-cisa-alerts:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'vulnerabilities'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest CISA Alerts
+        run: npm run ingest:cisa-alerts
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
   # CORRELATIONS (After MITRE and KEV complete)
   # ============================================
   seed-correlations:
@@ -262,6 +287,35 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
   # ============================================
+  # ACTOR SNAPSHOTS (After all ingestion)
+  # ============================================
+  snapshot-actor-trends:
+    runs-on: ubuntu-latest
+    needs:
+      - ingest-ransomlook
+      - ingest-ransomware-live
+      - seed-correlations
+    if: always() && (needs.ingest-ransomlook.result == 'success' || needs.ingest-ransomware-live.result == 'success')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Snapshot actor trends
+        run: npm run snapshot:actors
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
   # SUMMARY
   # ============================================
   notify-completion:
@@ -274,9 +328,11 @@ jobs:
       - ingest-feodo
       - ingest-abusech
       - ingest-cisa-kev
+      - ingest-cisa-alerts
       - ingest-nvd
       - ingest-mitre
       - seed-correlations
+      - snapshot-actor-trends
     if: always()
     steps:
       - name: Summary
@@ -294,7 +350,9 @@ jobs:
           echo "| CISA KEV | ${{ needs.ingest-cisa-kev.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| NVD | ${{ needs.ingest-nvd.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| MITRE ATT&CK | ${{ needs.ingest-mitre.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CISA Alerts | ${{ needs.ingest-cisa-alerts.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Correlations | ${{ needs.seed-correlations.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Actor Snapshots | ${{ needs.snapshot-actor-trends.result }} |" >> $GITHUB_STEP_SUMMARY
 
       - name: Check for failures
         run: |
@@ -308,7 +366,9 @@ jobs:
           [[ "${{ needs.ingest-cisa-kev.result }}" == "failure" ]] && FAILED=1
           [[ "${{ needs.ingest-nvd.result }}" == "failure" ]] && FAILED=1
           [[ "${{ needs.ingest-mitre.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.ingest-cisa-alerts.result }}" == "failure" ]] && FAILED=1
           [[ "${{ needs.seed-correlations.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.snapshot-actor-trends.result }}" == "failure" ]] && FAILED=1
 
           if [ $FAILED -eq 1 ]; then
             echo "::warning::Some ingestion jobs failed. Check individual job logs."

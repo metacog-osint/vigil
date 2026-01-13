@@ -167,6 +167,33 @@ export const threatActors = {
 
 // Incidents queries
 export const incidents = {
+  async getAll(options = {}) {
+    const { limit = 100, offset = 0, search = '', sector = '', actor_id = '' } = options
+
+    let query = supabase
+      .from('incidents')
+      .select(`
+        *,
+        threat_actor:threat_actors(id, name)
+      `, { count: 'exact' })
+      .order('discovered_date', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (search) {
+      query = query.or(`victim_name.ilike.%${search}%,victim_sector.ilike.%${search}%`)
+    }
+
+    if (sector) {
+      query = query.eq('victim_sector', sector)
+    }
+
+    if (actor_id) {
+      query = query.eq('actor_id', actor_id)
+    }
+
+    return query
+  },
+
   async getRecent(options = {}) {
     const { limit = 50, offset = 0, actor_id = '', sector = '', days = 30 } = options
 
@@ -272,6 +299,33 @@ export const incidents = {
 
 // IOCs queries
 export const iocs = {
+  async getAll(options = {}) {
+    const { limit = 100, offset = 0, type = '', search = '', confidence = '' } = options
+
+    let query = supabase
+      .from('iocs')
+      .select(`
+        *,
+        threat_actor:threat_actors(id, name)
+      `, { count: 'exact' })
+      .order('last_seen', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (type) {
+      query = query.eq('type', type)
+    }
+
+    if (search) {
+      query = query.ilike('value', `%${search}%`)
+    }
+
+    if (confidence) {
+      query = query.eq('confidence', confidence)
+    }
+
+    return query
+  },
+
   async search(value, type = null) {
     let query = supabase
       .from('iocs')
@@ -448,6 +502,30 @@ function detectIOCType(value) {
 
 // Vulnerabilities queries
 export const vulnerabilities = {
+  async getAll(options = {}) {
+    const { limit = 100, offset = 0, search = '', minCvss = null, kevOnly = false } = options
+
+    let query = supabase
+      .from('vulnerabilities')
+      .select('*', { count: 'exact' })
+      .order('cvss_score', { ascending: false, nullsFirst: false })
+      .range(offset, offset + limit - 1)
+
+    if (search) {
+      query = query.or(`cve_id.ilike.%${search}%,description.ilike.%${search}%`)
+    }
+
+    if (minCvss !== null) {
+      query = query.gte('cvss_score', minCvss)
+    }
+
+    if (kevOnly) {
+      query = query.not('kev_date', 'is', null)
+    }
+
+    return query
+  },
+
   async getKEV(options = {}) {
     const { limit = 50, offset = 0, exploited = null } = options
 
@@ -510,10 +588,10 @@ export const vulnerabilities = {
   },
 
   async getBySeverity() {
-    // Fetch all vulnerabilities with CVSS scores or severity
+    // Fetch all vulnerabilities with CVSS scores
     const { data, error } = await supabase
       .from('vulnerabilities')
-      .select('cvss_score, severity')
+      .select('cvss_score')
 
     if (error || !data || data.length === 0) {
       // Return placeholder data if no vulnerabilities
@@ -761,8 +839,8 @@ export const userPreferences = {
       .eq('user_id', userId)
       .single()
 
-    if (error && error.code === 'PGRST116') {
-      // No row found, return defaults
+    if (error && (error.code === 'PGRST116' || error.code === '406' || error.message?.includes('406'))) {
+      // No row found or 406 Not Acceptable (single() with 0 results), return defaults
       return {
         data: {
           user_id: userId,
@@ -884,6 +962,30 @@ export const tags = {
 
 // Alerts queries
 export const alerts = {
+  async getAll(options = {}) {
+    const { limit = 100, offset = 0, search = '', category = '', severity = '' } = options
+
+    let query = supabase
+      .from('alerts')
+      .select('*', { count: 'exact' })
+      .order('published_date', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
+    }
+
+    if (category) {
+      query = query.eq('category', category)
+    }
+
+    if (severity) {
+      query = query.eq('severity', severity)
+    }
+
+    return query
+  },
+
   async getRecent(options = {}) {
     const { limit = 50, offset = 0, category = '', severity = '', days = 30 } = options
 

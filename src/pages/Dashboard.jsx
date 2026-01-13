@@ -15,7 +15,8 @@ import { ActivityCalendar } from '../components/ActivityCalendar'
 import WeekComparisonCard from '../components/WeekComparisonCard'
 import ChangeSummaryCard from '../components/ChangeSummaryCard'
 import { RelevanceBadge } from '../components/RelevanceBadge'
-import { formatDistanceToNow } from 'date-fns'
+import { SmartTime } from '../components/TimeDisplay'
+import { NewBadge } from '../components/NewIndicator'
 
 // Calculate threat level on a reasonable scale
 // Baseline: ~300 incidents/month is "normal" (score ~50)
@@ -90,7 +91,13 @@ export default function Dashboard() {
           recentIncidents: incidentsData.data || [],
           topActors: actorsData.data || [],
         }).then(summary => {
-          if (summary) setAiSummary(summary)
+          if (summary) {
+            setAiSummary(summary)
+          } else {
+            console.warn('AI summary returned null - check VITE_GROQ_API_KEY')
+          }
+        }).catch(err => {
+          console.error('AI summary generation error:', err)
         })
 
         // Load personalization data (non-blocking)
@@ -157,7 +164,7 @@ export default function Dashboard() {
         </div>
         {lastSync && (
           <div className="text-xs text-gray-500">
-            Last sync: {formatDistanceToNow(new Date(lastSync.completed_at), { addSuffix: true })}
+            Last sync: <SmartTime date={lastSync.completed_at} />
           </div>
         )}
       </div>
@@ -416,7 +423,10 @@ export default function Dashboard() {
                   className="flex items-center justify-between p-2 rounded bg-gray-800/50 hover:bg-gray-800"
                 >
                   <div>
-                    <div className="text-sm font-mono text-cyber-accent">{kev.cve_id}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-mono text-cyber-accent">{kev.cve_id}</span>
+                      <NewBadge date={kev.kev_date} thresholdHours={168} />
+                    </div>
                     <div className="text-xs text-gray-400 truncate max-w-xs">
                       {kev.description?.slice(0, 80)}...
                     </div>

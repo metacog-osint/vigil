@@ -27,7 +27,10 @@
     "ingest:ransomware": "node scripts/ingest-ransomlook.mjs && node scripts/ingest-ransomware-live.mjs",
     "reclassify:sectors": "node scripts/reclassify-sectors.mjs",
     "seed:correlations": "node scripts/seed-correlations.mjs",
-    "setup:db": "node scripts/setup-database.mjs"
+    "setup:db": "node scripts/setup-database.mjs",
+    "ingest:cisa-alerts": "node scripts/ingest-cisa-alerts.mjs",
+    "snapshot:actors": "node scripts/snapshot-actor-trends.mjs",
+    "generate:weekly-summary": "node scripts/generate-weekly-summary.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

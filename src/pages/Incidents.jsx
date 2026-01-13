@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { incidents, subscribeToTable } from '../lib/supabase'
-import { formatDistanceToNow, format } from 'date-fns'
 import { SkeletonList } from '../components/Skeleton'
 import { EmptyIncidents } from '../components/EmptyState'
 import { NewBadge } from '../components/NewIndicator'
 import { WatchButton } from '../components/WatchButton'
+import { SmartTime, FullDate } from '../components/TimeDisplay'
+import { IncidentFlow } from '../components/IncidentFlow'
 
 const SECTORS = [
   'healthcare',
@@ -78,6 +79,54 @@ export default function Incidents() {
     }
   }
 
+  // Compute flow data for IncidentFlow visualization
+  const flowData = useMemo(() => {
+    if (incidentList.length === 0) return { actors: [], sectors: [], flows: [] }
+
+    // Count incidents by actor
+    const actorCounts = {}
+    const sectorCounts = {}
+    const actorSectorLinks = {}
+
+    for (const incident of incidentList) {
+      const actorName = incident.threat_actor?.name || 'Unknown'
+      const sectorName = incident.victim_sector || 'Unknown'
+
+      actorCounts[actorName] = (actorCounts[actorName] || 0) + 1
+      sectorCounts[sectorName] = (sectorCounts[sectorName] || 0) + 1
+
+      const linkKey = `${actorName}|${sectorName}`
+      actorSectorLinks[linkKey] = (actorSectorLinks[linkKey] || 0) + 1
+    }
+
+    // Build actors and sectors arrays
+    const actors = Object.entries(actorCounts)
+      .map(([name, incidents]) => ({ name, incidents }))
+      .sort((a, b) => b.incidents - a.incidents)
+      .slice(0, 5)
+
+    const sectors = Object.entries(sectorCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+
+    // Build flows
+    const topActorNames = new Set(actors.map(a => a.name))
+    const topSectorNames = new Set(sectors.map(s => s.name))
+
+    const flows = Object.entries(actorSectorLinks)
+      .filter(([key]) => {
+        const [actor, sector] = key.split('|')
+        return topActorNames.has(actor) && topSectorNames.has(sector)
+      })
+      .map(([key, value]) => {
+        const [source, target] = key.split('|')
+        return { source, target, value, sourceCategory: 'actor', targetCategory: 'sector' }
+      })
+
+    return { actors, sectors, flows }
+  }, [incidentList])
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -145,6 +194,14 @@ export default function Incidents() {
         </div>
       </div>
 
+      {/* Attack Flow Visualization */}
+      {!loading && incidentList.length > 0 && flowData.flows.length > 0 && (
+        <div className="cyber-card">
+          <h3 className="text-lg font-semibold text-white mb-4">Attack Flow: Actors → Sectors</h3>
+          <IncidentFlow flows={flowData.flows} />
+        </div>
+      )}
+
       {/* Content */}
       <div className="flex gap-6">
         {/* Incident List */}
@@ -190,11 +247,7 @@ export default function Incidents() {
                       </div>
                     </div>
                     <div className="text-right text-sm text-gray-500 ml-4">
-                      {incident.discovered_date
-                        ? formatDistanceToNow(new Date(incident.discovered_date), {
-                            addSuffix: true,
-                          })
-                        : 'Unknown'}
+                      <SmartTime date={incident.discovered_date} />
                     </div>
                   </div>
                 </div>
@@ -246,9 +299,7 @@ export default function Incidents() {
               <div>
                 <div className="text-gray-500 mb-1">Discovered</div>
                 <div className="text-gray-300">
-                  {selectedIncident.discovered_date
-                    ? format(new Date(selectedIncident.discovered_date), 'PPP')
-                    : 'Unknown'}
+                  <FullDate date={selectedIncident.discovered_date} />
                 </div>
               </div>
 

@@ -1,0 +1,52 @@
+name: Weekly Summary Generation
+
+on:
+  schedule:
+    # Run every Monday at 1:00 AM UTC
+    - cron: '0 1 * * 1'
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: 'Backfill historical summaries (number of weeks)'
+        required: false
+        default: '0'
+        type: string
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  generate-weekly-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate weekly summary
+        run: |
+          if [ "${{ github.event.inputs.backfill }}" != "" ] && [ "${{ github.event.inputs.backfill }}" != "0" ]; then
+            npm run generate:weekly-summary -- --backfill ${{ github.event.inputs.backfill }}
+          else
+            npm run generate:weekly-summary
+          fi
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Summary
+        run: |
+          echo "## Weekly Summary Generation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Weekly summary has been generated and stored in the database." >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.backfill }}" != "" ] && [ "${{ github.event.inputs.backfill }}" != "0" ]; then
+            echo "Backfilled ${{ github.event.inputs.backfill }} weeks of historical data." >> $GITHUB_STEP_SUMMARY
+          fi
