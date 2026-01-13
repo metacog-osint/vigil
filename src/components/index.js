@@ -57,3 +57,12 @@ export {
   Timestamp,
   smartFormatDate,
 } from './TimeDisplay'
+
+// Visualizations
+export {
+  ThreatGauge,
+  ThreatGaugeMini,
+  calculateThreatScore,
+} from './ThreatGauge'
+export { Sparkline, SparklineBar } from './Sparkline'
+export { ActivityCalendar, ActivityCalendarMini } from './ActivityCalendar'
