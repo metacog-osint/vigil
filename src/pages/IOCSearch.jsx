@@ -3,6 +3,7 @@ import { iocs } from '../lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
 import { SkeletonList } from '../components/Skeleton'
 import { EmptyIOCs } from '../components/EmptyState'
+import { ExportButton } from '../components/ExportButton'
 
 const IOC_TYPES = [
   { key: '', label: 'All Types' },
@@ -131,11 +132,18 @@ export default function IOCSearch() {
 
       {/* Results */}
       <div>
-        <h2 className="text-lg font-semibold text-white mb-4">
-          {searched
-            ? `Search Results (${results.length})`
-            : `Recent IOCs (${recentIOCs.length})`}
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-white">
+            {searched
+              ? `Search Results (${results.length})`
+              : `Recent IOCs (${recentIOCs.length})`}
+          </h2>
+          <ExportButton
+            data={displayList}
+            entityType="iocs"
+            filename={searched ? 'vigil-ioc-search-results' : 'vigil-recent-iocs'}
+          />
+        </div>
 
         {loading ? (
           <SkeletonList items={5} />
