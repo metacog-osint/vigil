@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { iocs, threatActors, vulnerabilities, incidents } from '../lib/supabase'
-import { detectIOCType } from '../lib/utils'
+import IOCQuickLookupCard from './IOCQuickLookupCard'
 
 const SEARCH_TYPES = {
   all: { label: 'All', icon: '🔍' },
@@ -25,6 +25,8 @@ export function SearchModal({ isOpen, onClose }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [activeTab, setActiveTab] = useState('all')
   const [recentSearches, setRecentSearches] = useState([])
+  const [iocLookupMode, setIocLookupMode] = useState(false)
+  const [iocLookupData, setIocLookupData] = useState(null)
   const inputRef = useRef(null)
   const navigate = useNavigate()
 
@@ -43,6 +45,8 @@ export function SearchModal({ isOpen, onClose }) {
       setQuery('')
       setResults({ actors: [], incidents: [], vulnerabilities: [], iocs: [] })
       setSelectedIndex(0)
+      setIocLookupMode(false)
+      setIocLookupData(null)
     }
   }, [isOpen])
 
@@ -89,13 +93,44 @@ export function SearchModal({ isOpen, onClose }) {
   const search = useCallback(async (searchQuery) => {
     if (!searchQuery || searchQuery.length < 2) {
       setResults({ actors: [], incidents: [], vulnerabilities: [], iocs: [] })
+      setIocLookupMode(false)
+      setIocLookupData(null)
       return
     }
 
     setLoading(true)
     const searchType = detectSearchType(searchQuery)
 
+    // Check if this looks like a specific IOC - enable quick lookup mode
+    const isSpecificIOC = ['ip', 'hash', 'cve', 'url', 'domain'].includes(searchType)
+
     try {
+      // If it's a specific IOC, use quick lookup for enriched results
+      if (isSpecificIOC) {
+        const lookupResult = await iocs.quickLookup(searchQuery)
+        lookupResult.searchValue = searchQuery
+        setIocLookupData(lookupResult)
+        setIocLookupMode(true)
+
+        // Still do regular search for other result types
+        const actorResults = await threatActors.getAll({ search: searchQuery, limit: 3 })
+          .catch(() => ({ data: [] }))
+
+        setResults({
+          actors: actorResults.data || [],
+          incidents: [],
+          vulnerabilities: lookupResult.vulnerabilities || [],
+          iocs: lookupResult.iocs || [],
+        })
+        setSelectedIndex(0)
+        setLoading(false)
+        return
+      }
+
+      // Regular search mode
+      setIocLookupMode(false)
+      setIocLookupData(null)
+
       const searchPromises = []
 
       // Always search actors
@@ -326,6 +361,40 @@ export function SearchModal({ isOpen, onClose }) {
               <div className="text-xs text-gray-500 mt-4">
                 Type to search across all threat data. Auto-detects IPs, CVEs, hashes, and domains.
               </div>
+            </div>
+          ) : iocLookupMode && iocLookupData ? (
+            // IOC Quick Lookup Mode - show enriched results
+            <div className="p-4">
+              <div className="text-xs text-cyber-accent mb-3 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                IOC Quick Lookup
+              </div>
+              <IOCQuickLookupCard
+                data={iocLookupData}
+                type={iocLookupData.type}
+                onNavigate={(path, state) => {
+                  onClose()
+                  navigate(path, { state })
+                }}
+              />
+              {/* Show other results if any */}
+              {results.actors.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-700">
+                  <div className="text-xs text-gray-500 mb-2">Related Actors</div>
+                  {results.actors.map((actor, i) => (
+                    <button
+                      key={actor.id}
+                      onClick={() => handleSelect({ ...actor, _type: 'actor' })}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded text-left text-gray-300 hover:bg-gray-800"
+                    >
+                      <span>👥</span>
+                      <span className="flex-1">{actor.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : allResults.length === 0 && !loading ? (
             <div className="p-8 text-center text-gray-400">

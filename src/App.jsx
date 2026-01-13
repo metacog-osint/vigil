@@ -15,6 +15,7 @@ const Watchlists = lazy(() => import('./pages/Watchlists'))
 const Settings = lazy(() => import('./pages/Settings'))
 const Alerts = lazy(() => import('./pages/Alerts'))
 const AdvancedSearch = lazy(() => import('./pages/AdvancedSearch'))
+const TrendAnalysis = lazy(() => import('./pages/TrendAnalysis'))
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -113,6 +114,7 @@ function App() {
                 <Route path="/techniques" element={<Techniques />} />
                 <Route path="/watchlists" element={<Watchlists />} />
                 <Route path="/alerts" element={<Alerts />} />
+                <Route path="/trends" element={<TrendAnalysis />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </Suspense>

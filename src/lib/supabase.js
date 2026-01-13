@@ -309,6 +309,141 @@ export const iocs = {
       .order('created_at', { ascending: false })
       .limit(limit)
   },
+
+  // Quick lookup for IOC enrichment
+  async quickLookup(value) {
+    const type = detectIOCType(value)
+
+    const promises = [
+      // Search IOCs
+      supabase
+        .from('iocs')
+        .select(`
+          *,
+          threat_actor:threat_actors(id, name, trend_status)
+        `)
+        .or(`value.eq.${value},value.ilike.%${value}%`)
+        .order('last_seen', { ascending: false })
+        .limit(10),
+
+      // Search malware samples
+      supabase
+        .from('malware_samples')
+        .select('*')
+        .or(`sha256.eq.${value},md5.eq.${value},sha1.eq.${value}`)
+        .limit(5)
+    ]
+
+    // If looks like CVE, also search vulnerabilities
+    if (/^CVE-\d{4}-\d+$/i.test(value)) {
+      promises.push(
+        supabase
+          .from('vulnerabilities')
+          .select('*')
+          .ilike('cve_id', value)
+          .limit(1)
+      )
+    }
+
+    const results = await Promise.all(promises)
+
+    return {
+      iocs: results[0].data || [],
+      malware: results[1].data || [],
+      vulnerabilities: results[2]?.data || [],
+      type,
+      found: (results[0].data?.length > 0) || (results[1].data?.length > 0) || (results[2]?.data?.length > 0)
+    }
+  },
+
+  // Get external enrichment links for an IOC
+  getEnrichmentLinks(value, type) {
+    const links = []
+
+    switch (type) {
+      case 'ip':
+        links.push(
+          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/ip-address/${value}`, icon: 'virustotal' },
+          { name: 'Shodan', url: `https://www.shodan.io/host/${value}`, icon: 'shodan' },
+          { name: 'AbuseIPDB', url: `https://www.abuseipdb.com/check/${value}`, icon: 'abuseipdb' },
+          { name: 'Censys', url: `https://search.censys.io/hosts/${value}`, icon: 'censys' }
+        )
+        break
+      case 'hash_sha256':
+      case 'hash_md5':
+      case 'hash_sha1':
+      case 'hash':
+        links.push(
+          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/file/${value}`, icon: 'virustotal' },
+          { name: 'MalwareBazaar', url: `https://bazaar.abuse.ch/browse.php?search=${value}`, icon: 'malwarebazaar' },
+          { name: 'Hybrid Analysis', url: `https://www.hybrid-analysis.com/search?query=${value}`, icon: 'hybrid' }
+        )
+        break
+      case 'domain':
+        links.push(
+          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/domain/${value}`, icon: 'virustotal' },
+          { name: 'URLhaus', url: `https://urlhaus.abuse.ch/browse.php?search=${value}`, icon: 'urlhaus' },
+          { name: 'Shodan', url: `https://www.shodan.io/search?query=hostname%3A${value}`, icon: 'shodan' }
+        )
+        break
+      case 'url':
+        const encoded = encodeURIComponent(value)
+        links.push(
+          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/url/${encoded}`, icon: 'virustotal' },
+          { name: 'URLhaus', url: `https://urlhaus.abuse.ch/browse.php?search=${encoded}`, icon: 'urlhaus' }
+        )
+        break
+      case 'cve':
+        links.push(
+          { name: 'NVD', url: `https://nvd.nist.gov/vuln/detail/${value}`, icon: 'nvd' },
+          { name: 'CISA KEV', url: `https://www.cisa.gov/known-exploited-vulnerabilities-catalog`, icon: 'cisa' },
+          { name: 'CVE.org', url: `https://www.cve.org/CVERecord?id=${value}`, icon: 'cve' },
+          { name: 'Exploit-DB', url: `https://www.exploit-db.com/search?cve=${value}`, icon: 'exploitdb' }
+        )
+        break
+      default:
+        // Generic search
+        links.push(
+          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/search/${encodeURIComponent(value)}`, icon: 'virustotal' }
+        )
+    }
+
+    return links
+  },
+}
+
+// Helper to detect IOC type
+function detectIOCType(value) {
+  if (!value) return 'unknown'
+
+  // CVE pattern
+  if (/^CVE-\d{4}-\d+$/i.test(value)) return 'cve'
+
+  // IPv4
+  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(value)) return 'ip'
+
+  // IPv6
+  if (/^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/.test(value)) return 'ip'
+
+  // SHA256
+  if (/^[a-fA-F0-9]{64}$/.test(value)) return 'hash_sha256'
+
+  // SHA1
+  if (/^[a-fA-F0-9]{40}$/.test(value)) return 'hash_sha1'
+
+  // MD5
+  if (/^[a-fA-F0-9]{32}$/.test(value)) return 'hash_md5'
+
+  // URL
+  if (/^https?:\/\//i.test(value)) return 'url'
+
+  // Domain (simple check)
+  if (/^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.[a-zA-Z]{2,}$/.test(value)) return 'domain'
+
+  // Email
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'email'
+
+  return 'unknown'
 }
 
 // Vulnerabilities queries
@@ -945,6 +1080,423 @@ export const aiSummaries = {
       .limit(1)
       .single()
   },
+}
+
+// Organization Profile - for personalized threat relevance
+export const orgProfile = {
+  async get(userId = 'anonymous') {
+    const { data: prefs } = await userPreferences.get(userId)
+    return prefs?.preferences?.org_profile || null
+  },
+
+  async update(userId = 'anonymous', profile) {
+    const { data: current } = await userPreferences.get(userId)
+    const preferences = {
+      ...(current?.preferences || {}),
+      org_profile: profile
+    }
+    return userPreferences.update(userId, preferences)
+  },
+
+  async hasProfile(userId = 'anonymous') {
+    const profile = await this.get(userId)
+    return profile && (profile.sector || profile.tech_stack?.length > 0)
+  }
+}
+
+// Relevance scoring for personalized intelligence
+export const relevance = {
+  async getRelevantActors(profile, limit = 20) {
+    if (!profile?.sector) return { data: [], error: null }
+
+    // Get actors that target the user's sector
+    let query = supabase
+      .from('threat_actors')
+      .select('*')
+      .contains('target_sectors', [profile.sector])
+      .order('incident_velocity', { ascending: false, nullsFirst: false })
+      .limit(limit)
+
+    return query
+  },
+
+  async getRelevantVulnerabilities(profile, limit = 50) {
+    if (!profile?.tech_vendors?.length) return { data: [], error: null }
+
+    // Get vulnerabilities affecting user's tech stack
+    const { data, error } = await supabase
+      .from('vulnerabilities')
+      .select('*')
+      .order('cvss_score', { ascending: false })
+
+    if (error || !data) return { data: [], error }
+
+    // Filter and score by vendor/product match
+    const scored = data
+      .map(vuln => ({
+        ...vuln,
+        relevance_score: this.calculateVulnScore(vuln, profile)
+      }))
+      .filter(v => v.relevance_score > 0)
+      .sort((a, b) => b.relevance_score - a.relevance_score)
+      .slice(0, limit)
+
+    return { data: scored, error: null }
+  },
+
+  // Calculate actor relevance score (0-100)
+  calculateActorScore(actor, profile) {
+    if (!profile) return 0
+    let score = 0
+
+    // Sector match (50 points)
+    if (profile.sector && actor.target_sectors?.includes(profile.sector)) {
+      score += 50
+    } else if (profile.secondary_sectors?.some(s => actor.target_sectors?.includes(s))) {
+      score += 25
+    }
+
+    // Country/region match (30 points)
+    if (profile.country && actor.target_countries?.includes(profile.country)) {
+      score += 30
+    }
+
+    // Escalating status bonus (20 points)
+    if (actor.trend_status === 'ESCALATING') score += 20
+    else if (actor.trend_status === 'STABLE') score += 10
+
+    return Math.min(score, 100)
+  },
+
+  // Calculate vulnerability relevance score (0-100)
+  calculateVulnScore(vuln, profile) {
+    if (!profile) return 0
+    let score = 0
+
+    const vendors = (profile.tech_vendors || []).map(v => v.toLowerCase())
+    const stack = (profile.tech_stack || []).map(s => s.toLowerCase())
+
+    // Vendor match (40 points)
+    if (vuln.affected_vendors?.some(v => vendors.includes(v.toLowerCase()))) {
+      score += 40
+    }
+
+    // Product match (40 points)
+    if (vuln.affected_products?.some(p => stack.some(s => p.toLowerCase().includes(s)))) {
+      score += 40
+    }
+
+    // KEV status (10 points)
+    if (vuln.kev_date) score += 10
+
+    // Ransomware use (10 points)
+    if (vuln.ransomware_campaign_use) score += 10
+
+    return Math.min(score, 100)
+  },
+
+  // Get relevance label from score
+  getRelevanceLabel(score) {
+    if (score >= 80) return { label: 'Critical', color: 'red' }
+    if (score >= 60) return { label: 'High', color: 'orange' }
+    if (score >= 40) return { label: 'Medium', color: 'yellow' }
+    if (score >= 20) return { label: 'Low', color: 'blue' }
+    return { label: 'Info', color: 'gray' }
+  }
+}
+
+// Correlations - linking actors, vulnerabilities, TTPs, and IOCs
+export const correlations = {
+  async getActorCorrelations(actorId) {
+    const [techniques, vulnerabilities, iocData] = await Promise.all([
+      // Get TTPs
+      supabase
+        .from('actor_techniques')
+        .select(`
+          *,
+          technique:techniques(id, name, tactics, description)
+        `)
+        .eq('actor_id', actorId),
+
+      // Get exploited vulnerabilities
+      supabase
+        .from('actor_vulnerabilities')
+        .select(`
+          *,
+          vulnerability:vulnerabilities(cve_id, cvss_score, description, affected_products)
+        `)
+        .eq('actor_id', actorId),
+
+      // Get IOCs
+      supabase
+        .from('iocs')
+        .select('id, type, value, malware_family, confidence')
+        .eq('actor_id', actorId)
+        .limit(50)
+    ])
+
+    return {
+      techniques: techniques.data || [],
+      vulnerabilities: vulnerabilities.data || [],
+      iocs: iocData.data || []
+    }
+  },
+
+  async getAttackPath(actorId) {
+    const correlationData = await this.getActorCorrelations(actorId)
+
+    // Build graph structure for visualization
+    const nodes = [
+      { id: 'actor', type: 'actor', label: 'Actor' }
+    ]
+    const edges = []
+
+    // Add technique nodes
+    for (const t of correlationData.techniques) {
+      const nodeId = `ttp-${t.technique_id}`
+      nodes.push({
+        id: nodeId,
+        type: 'technique',
+        label: t.technique?.name || t.technique_id,
+        data: t.technique
+      })
+      edges.push({ from: 'actor', to: nodeId, label: 'uses' })
+    }
+
+    // Add vulnerability nodes
+    for (const v of correlationData.vulnerabilities) {
+      const nodeId = `cve-${v.cve_id}`
+      nodes.push({
+        id: nodeId,
+        type: 'vulnerability',
+        label: v.cve_id,
+        data: v.vulnerability
+      })
+      edges.push({ from: 'actor', to: nodeId, label: 'exploits' })
+    }
+
+    // Add sample IOC nodes (limit to 10)
+    for (const i of correlationData.iocs.slice(0, 10)) {
+      const nodeId = `ioc-${i.id}`
+      nodes.push({
+        id: nodeId,
+        type: 'ioc',
+        label: i.value?.substring(0, 20) + (i.value?.length > 20 ? '...' : ''),
+        data: i
+      })
+      edges.push({ from: 'actor', to: nodeId, label: 'associated' })
+    }
+
+    return { nodes, edges }
+  },
+
+  async getVulnActors(cveId) {
+    return supabase
+      .from('actor_vulnerabilities')
+      .select(`
+        *,
+        actor:threat_actors(id, name, trend_status, target_sectors)
+      `)
+      .eq('cve_id', cveId)
+  },
+
+  async getTechniqueActors(techniqueId) {
+    return supabase
+      .from('actor_techniques')
+      .select(`
+        *,
+        actor:threat_actors(id, name, trend_status)
+      `)
+      .eq('technique_id', techniqueId)
+  },
+
+  // Link an actor to a CVE (for seeding or manual correlation)
+  async linkActorVulnerability(actorId, cveId, confidence = 'medium', source = 'manual') {
+    return supabase
+      .from('actor_vulnerabilities')
+      .upsert({
+        actor_id: actorId,
+        cve_id: cveId,
+        confidence,
+        source,
+        first_seen: new Date().toISOString().split('T')[0]
+      }, { onConflict: 'actor_id,cve_id' })
+  }
+}
+
+// Trend Analysis - temporal intelligence
+export const trendAnalysis = {
+  async getWeeklyComparison(weeksBack = 8) {
+    return supabase
+      .from('weekly_summaries')
+      .select('*')
+      .order('week_start', { ascending: false })
+      .limit(weeksBack)
+  },
+
+  async getWeekOverWeekChange() {
+    const { data: summaries } = await this.getWeeklyComparison(2)
+
+    if (!summaries || summaries.length < 2) {
+      // Calculate on the fly if no summaries table
+      return this.calculateWeekOverWeek()
+    }
+
+    const [current, previous] = summaries
+    return {
+      currentWeek: current,
+      previousWeek: previous,
+      incidentChange: current.incident_change_pct,
+      sectorChanges: this.calculateSectorChanges(
+        current.incidents_by_sector,
+        previous.incidents_by_sector
+      )
+    }
+  },
+
+  async calculateWeekOverWeek() {
+    const now = new Date()
+    const thisWeekStart = new Date(now)
+    thisWeekStart.setDate(now.getDate() - now.getDay())
+    thisWeekStart.setHours(0, 0, 0, 0)
+
+    const lastWeekStart = new Date(thisWeekStart)
+    lastWeekStart.setDate(lastWeekStart.getDate() - 7)
+
+    const [thisWeek, lastWeek] = await Promise.all([
+      supabase
+        .from('incidents')
+        .select('victim_sector', { count: 'exact' })
+        .gte('discovered_date', thisWeekStart.toISOString().split('T')[0]),
+      supabase
+        .from('incidents')
+        .select('victim_sector', { count: 'exact' })
+        .gte('discovered_date', lastWeekStart.toISOString().split('T')[0])
+        .lt('discovered_date', thisWeekStart.toISOString().split('T')[0])
+    ])
+
+    const currentCount = thisWeek.count || 0
+    const previousCount = lastWeek.count || 0
+    const changePercent = previousCount > 0
+      ? Math.round(((currentCount - previousCount) / previousCount) * 100)
+      : 0
+
+    return {
+      currentWeek: { incidents_total: currentCount },
+      previousWeek: { incidents_total: previousCount },
+      incidentChange: changePercent
+    }
+  },
+
+  calculateSectorChanges(current, previous) {
+    const changes = []
+    const allSectors = new Set([
+      ...Object.keys(current || {}),
+      ...Object.keys(previous || {})
+    ])
+
+    for (const sector of allSectors) {
+      const curr = current?.[sector] || 0
+      const prev = previous?.[sector] || 0
+      const change = prev > 0 ? Math.round(((curr - prev) / prev) * 100) : (curr > 0 ? 100 : 0)
+
+      changes.push({
+        sector,
+        current: curr,
+        previous: prev,
+        change
+      })
+    }
+
+    return changes.sort((a, b) => b.change - a.change)
+  },
+
+  async getSectorTrends(days = 90) {
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - days)
+
+    const { data } = await supabase
+      .from('incidents')
+      .select('victim_sector, discovered_date')
+      .gte('discovered_date', cutoffDate.toISOString().split('T')[0])
+
+    // Group by week and sector
+    const weeklyBySector = {}
+
+    for (const incident of (data || [])) {
+      const date = new Date(incident.discovered_date)
+      const weekStart = this.getWeekStart(date)
+      const sector = incident.victim_sector || 'Unknown'
+      const key = `${weekStart}|${sector}`
+
+      weeklyBySector[key] = (weeklyBySector[key] || 0) + 1
+    }
+
+    // Transform into chart-friendly format
+    const weeks = [...new Set(Object.keys(weeklyBySector).map(k => k.split('|')[0]))].sort()
+    const sectors = [...new Set(Object.keys(weeklyBySector).map(k => k.split('|')[1]))]
+
+    return {
+      weeks,
+      sectors,
+      data: weeklyBySector
+    }
+  },
+
+  getWeekStart(date) {
+    const d = new Date(date)
+    const day = d.getDay()
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+    d.setDate(diff)
+    return d.toISOString().split('T')[0]
+  },
+
+  async getChangeSummary(sinceDays = 7) {
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - sinceDays)
+    const cutoff = cutoffDate.toISOString().split('T')[0]
+
+    const [newIncidents, newActors, newKEVs, escalatingActors] = await Promise.all([
+      supabase
+        .from('incidents')
+        .select('*', { count: 'exact', head: true })
+        .gte('discovered_date', cutoff),
+
+      supabase
+        .from('threat_actors')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', cutoffDate.toISOString()),
+
+      supabase
+        .from('vulnerabilities')
+        .select('*', { count: 'exact', head: true })
+        .gte('kev_date', cutoff),
+
+      supabase
+        .from('threat_actors')
+        .select('id, name, incidents_7d, trend_status')
+        .eq('trend_status', 'ESCALATING')
+        .order('incidents_7d', { ascending: false })
+        .limit(10)
+    ])
+
+    return {
+      newIncidents: newIncidents.count || 0,
+      newActors: newActors.count || 0,
+      newKEVs: newKEVs.count || 0,
+      escalatingActors: escalatingActors.data || [],
+      sinceDays
+    }
+  },
+
+  async getActorTrajectories(actorIds, days = 90) {
+    return supabase
+      .from('actor_trend_history')
+      .select('*')
+      .in('actor_id', actorIds)
+      .gte('recorded_date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+      .order('recorded_date', { ascending: true })
+  }
 }
 
 export default supabase
