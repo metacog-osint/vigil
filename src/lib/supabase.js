@@ -357,6 +357,259 @@ export const techniques = {
   },
 }
 
+// Watchlists queries
+export const watchlists = {
+  async getAll(userId = 'anonymous') {
+    return supabase
+      .from('watchlists')
+      .select(`
+        *,
+        items:watchlist_items(count)
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+  },
+
+  async getById(id) {
+    return supabase
+      .from('watchlists')
+      .select(`
+        *,
+        items:watchlist_items(*)
+      `)
+      .eq('id', id)
+      .single()
+  },
+
+  async create(watchlist) {
+    return supabase
+      .from('watchlists')
+      .insert(watchlist)
+      .select()
+      .single()
+  },
+
+  async update(id, updates) {
+    return supabase
+      .from('watchlists')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+  },
+
+  async delete(id) {
+    return supabase
+      .from('watchlists')
+      .delete()
+      .eq('id', id)
+  },
+
+  async addItem(watchlistId, entityId, notes = null) {
+    return supabase
+      .from('watchlist_items')
+      .insert({ watchlist_id: watchlistId, entity_id: entityId, notes })
+      .select()
+      .single()
+  },
+
+  async removeItem(watchlistId, entityId) {
+    return supabase
+      .from('watchlist_items')
+      .delete()
+      .eq('watchlist_id', watchlistId)
+      .eq('entity_id', entityId)
+  },
+
+  async isWatched(entityId, userId = 'anonymous') {
+    const { data } = await supabase
+      .from('watchlist_items')
+      .select(`
+        *,
+        watchlist:watchlists!inner(user_id)
+      `)
+      .eq('entity_id', entityId)
+      .eq('watchlist.user_id', userId)
+    return data && data.length > 0
+  },
+}
+
+// Saved Searches queries
+export const savedSearches = {
+  async getAll(userId = 'anonymous', searchType = null) {
+    let query = supabase
+      .from('saved_searches')
+      .select('*')
+      .eq('user_id', userId)
+      .order('use_count', { ascending: false })
+
+    if (searchType) {
+      query = query.eq('search_type', searchType)
+    }
+
+    return query
+  },
+
+  async create(search) {
+    return supabase
+      .from('saved_searches')
+      .insert(search)
+      .select()
+      .single()
+  },
+
+  async update(id, updates) {
+    return supabase
+      .from('saved_searches')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+  },
+
+  async delete(id) {
+    return supabase
+      .from('saved_searches')
+      .delete()
+      .eq('id', id)
+  },
+
+  async incrementUseCount(id) {
+    return supabase
+      .rpc('increment_search_use_count', { search_id: id })
+  },
+}
+
+// User Preferences queries
+export const userPreferences = {
+  async get(userId = 'anonymous') {
+    const { data, error } = await supabase
+      .from('user_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    if (error && error.code === 'PGRST116') {
+      // No row found, return defaults
+      return {
+        data: {
+          user_id: userId,
+          preferences: {
+            defaultTimeRange: '30d',
+            defaultSeverity: 'all',
+            itemsPerPage: 25,
+            darkMode: true,
+            compactView: false,
+            showNewIndicators: true,
+            sidebarCollapsed: false,
+            dashboardLayout: 'default',
+          },
+          last_visit: null,
+        },
+      }
+    }
+
+    return { data, error }
+  },
+
+  async update(userId = 'anonymous', preferences) {
+    return supabase
+      .from('user_preferences')
+      .upsert({
+        user_id: userId,
+        preferences,
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single()
+  },
+
+  async updateLastVisit(userId = 'anonymous') {
+    return supabase
+      .from('user_preferences')
+      .upsert({
+        user_id: userId,
+        last_visit: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single()
+  },
+}
+
+// Tags queries
+export const tags = {
+  async getAll(userId = 'anonymous') {
+    return supabase
+      .from('tags')
+      .select(`
+        *,
+        entity_tags(count)
+      `)
+      .eq('user_id', userId)
+      .order('name', { ascending: true })
+  },
+
+  async create(tag) {
+    return supabase
+      .from('tags')
+      .insert(tag)
+      .select()
+      .single()
+  },
+
+  async update(id, updates) {
+    return supabase
+      .from('tags')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+  },
+
+  async delete(id) {
+    return supabase
+      .from('tags')
+      .delete()
+      .eq('id', id)
+  },
+
+  async addToEntity(tagId, entityType, entityId) {
+    return supabase
+      .from('entity_tags')
+      .insert({ tag_id: tagId, entity_type: entityType, entity_id: entityId })
+      .select()
+      .single()
+  },
+
+  async removeFromEntity(tagId, entityType, entityId) {
+    return supabase
+      .from('entity_tags')
+      .delete()
+      .eq('tag_id', tagId)
+      .eq('entity_type', entityType)
+      .eq('entity_id', entityId)
+  },
+
+  async getForEntity(entityType, entityId) {
+    return supabase
+      .from('entity_tags')
+      .select(`
+        *,
+        tag:tags(*)
+      `)
+      .eq('entity_type', entityType)
+      .eq('entity_id', entityId)
+  },
+
+  async getEntitiesByTag(tagId) {
+    return supabase
+      .from('entity_tags')
+      .select('*')
+      .eq('tag_id', tagId)
+  },
+}
+
 // Dashboard stats
 export const dashboard = {
   async getOverview() {
