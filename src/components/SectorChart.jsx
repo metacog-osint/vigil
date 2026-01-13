@@ -22,8 +22,9 @@ const DEFAULT_COLORS = [
 export function SectorChart({
   data = [],
   onSectorClick,
-  innerRadius = 60,
-  outerRadius = 100,
+  innerRadius = 40,
+  outerRadius = 70,
+  height = 200,
   className = '',
 }) {
   // Transform data if needed
@@ -51,9 +52,17 @@ export function SectorChart({
     return null
   }
 
+  if (!data || data.length === 0) {
+    return (
+      <div className={clsx('flex items-center justify-center text-gray-500 text-sm', className)} style={{ height }}>
+        No sector data available
+      </div>
+    )
+  }
+
   return (
     <div className={clsx('', className)}>
-      <ResponsiveContainer width="100%" height={250}>
+      <ResponsiveContainer width="100%" height={height}>
         <PieChart>
           <Pie
             data={chartData}

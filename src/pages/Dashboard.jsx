@@ -6,28 +6,38 @@ import ActivityChart from '../components/ActivityChart'
 import RecentIncidents from '../components/RecentIncidents'
 import TopActors from '../components/TopActors'
 import { SkeletonDashboard } from '../components/Skeleton'
+import { ThreatGauge } from '../components/ThreatGauge'
+import { SectorChart } from '../components/SectorChart'
+import { AttackMatrixMini } from '../components/AttackMatrixHeatmap'
+import { VulnTreemapMini } from '../components/VulnTreemap'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [recentIncidents, setRecentIncidents] = useState([])
   const [topActors, setTopActors] = useState([])
   const [recentKEVs, setRecentKEVs] = useState([])
+  const [sectorData, setSectorData] = useState([])
+  const [vulnsBySeverity, setVulnsBySeverity] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const [statsData, incidentsData, actorsData, kevsData] = await Promise.all([
+        const [statsData, incidentsData, actorsData, kevsData, sectorStats, vulnStats] = await Promise.all([
           dashboard.getOverview(),
           incidents.getRecent({ limit: 10, days: 365 }),
           threatActors.getTopActive(365, 5),
           vulnerabilities.getRecentKEV(365),
+          incidents.getBySector(),
+          vulnerabilities.getBySeverity(),
         ])
 
         setStats(statsData)
         setRecentIncidents(incidentsData.data || [])
         setTopActors(actorsData.data || [])
         setRecentKEVs(kevsData.data || [])
+        setSectorData(sectorStats || [])
+        setVulnsBySeverity(vulnStats || [])
       } catch (error) {
         console.error('Dashboard load error:', error)
       } finally {
@@ -105,6 +115,27 @@ export default function Dashboard() {
             </svg>
           }
         />
+      </div>
+
+      {/* Visualizations Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Threat Level Gauge */}
+        <ThreatGauge
+          score={Math.min(100, Math.round((stats?.incidents24h || 0) * 2 + (recentIncidents?.length || 0) * 3))}
+          trend={stats?.incidents24h > 5 ? 'up' : 'stable'}
+        />
+
+        {/* Sector Distribution */}
+        <div className="cyber-card lg:col-span-2">
+          <h2 className="text-sm font-semibold text-gray-400 mb-3">Targeted Sectors</h2>
+          <SectorChart data={sectorData} height={200} />
+        </div>
+
+        {/* Vulnerability Severity */}
+        <div className="cyber-card">
+          <h2 className="text-sm font-semibold text-gray-400 mb-3">Vulnerability Severity</h2>
+          <VulnTreemapMini data={vulnsBySeverity} />
+        </div>
       </div>
 
       {/* Main Content Grid */}

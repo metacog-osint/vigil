@@ -207,32 +207,70 @@ export function VulnTreemapMini({
 }) {
   const severityCounts = useMemo(() => {
     const counts = { critical: 0, high: 0, medium: 0, low: 0 }
-    for (const vuln of data) {
-      const sev = vuln.severity?.toLowerCase() || 'medium'
-      if (counts[sev] !== undefined) counts[sev]++
+
+    // Handle pre-aggregated format: [{ name: 'Critical', value: 100, severity: 'critical' }]
+    if (data.length > 0 && data[0].value !== undefined) {
+      for (const item of data) {
+        const sev = item.severity?.toLowerCase() || item.name?.toLowerCase() || 'medium'
+        if (counts[sev] !== undefined) counts[sev] = item.value
+      }
+    } else {
+      // Handle raw vulnerability array format
+      for (const vuln of data) {
+        const sev = vuln.severity?.toLowerCase() || 'medium'
+        if (counts[sev] !== undefined) counts[sev]++
+      }
     }
     return counts
   }, [data])
 
   const total = Object.values(severityCounts).reduce((a, b) => a + b, 0) || 1
 
+  if (total === 0) {
+    return (
+      <div className={clsx('text-center text-gray-500 text-sm py-4', className)}>
+        No data
+      </div>
+    )
+  }
+
   return (
-    <div className={clsx('flex h-6 rounded overflow-hidden', className)}>
-      {Object.entries(severityCounts).map(([sev, count]) => {
-        const width = (count / total) * 100
-        if (width === 0) return null
-        return (
-          <div
-            key={sev}
-            className="h-full transition-all"
-            style={{
-              width: `${width}%`,
-              backgroundColor: SEVERITY_COLORS[sev],
-            }}
-            title={`${sev}: ${count}`}
-          />
-        )
-      })}
+    <div className={className}>
+      <div className="flex h-8 rounded overflow-hidden mb-3">
+        {Object.entries(severityCounts).map(([sev, count]) => {
+          const width = (count / total) * 100
+          if (width === 0) return null
+          return (
+            <div
+              key={sev}
+              className="h-full transition-all flex items-center justify-center"
+              style={{
+                width: `${width}%`,
+                backgroundColor: SEVERITY_COLORS[sev],
+                minWidth: count > 0 ? '20px' : '0',
+              }}
+              title={`${sev}: ${count}`}
+            >
+              {width > 15 && (
+                <span className="text-white text-xs font-medium">{count}</span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      {/* Legend */}
+      <div className="grid grid-cols-2 gap-1 text-xs">
+        {Object.entries(severityCounts).map(([sev, count]) => (
+          <div key={sev} className="flex items-center gap-1.5">
+            <div
+              className="w-2 h-2 rounded-sm"
+              style={{ backgroundColor: SEVERITY_COLORS[sev] }}
+            />
+            <span className="text-gray-400 capitalize">{sev}</span>
+            <span className="text-gray-500">({count})</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

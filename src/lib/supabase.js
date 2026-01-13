@@ -166,12 +166,30 @@ export const incidents = {
       .gte('discovered_date', cutoffDate.toISOString())
   },
 
-  async getBySector(days = 30) {
+  async getBySector(days = 365) {
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - days)
 
-    return supabase
-      .rpc('incidents_by_sector', { cutoff_date: cutoffDate.toISOString() })
+    // Fetch incidents and aggregate by sector
+    const { data, error } = await supabase
+      .from('incidents')
+      .select('victim_sector')
+      .gte('discovered_date', cutoffDate.toISOString())
+
+    if (error || !data) return []
+
+    // Count by sector
+    const counts = {}
+    for (const row of data) {
+      const sector = row.victim_sector || 'Unknown'
+      counts[sector] = (counts[sector] || 0) + 1
+    }
+
+    // Convert to array format for charts
+    return Object.entries(counts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10)
   },
 
   async search(query, limit = 10) {
@@ -289,6 +307,32 @@ export const vulnerabilities = {
       .or(`cve_id.ilike.%${query}%,description.ilike.%${query}%`)
       .order('cvss_score', { ascending: false })
       .limit(limit)
+  },
+
+  async getBySeverity() {
+    // Fetch all vulnerabilities with CVSS scores
+    const { data, error } = await supabase
+      .from('vulnerabilities')
+      .select('cvss_score, severity')
+
+    if (error || !data) return []
+
+    // Count by severity
+    const counts = { critical: 0, high: 0, medium: 0, low: 0 }
+    for (const row of data) {
+      if (row.cvss_score >= 9.0) counts.critical++
+      else if (row.cvss_score >= 7.0) counts.high++
+      else if (row.cvss_score >= 4.0) counts.medium++
+      else counts.low++
+    }
+
+    // Return format for treemap
+    return [
+      { name: 'Critical', value: counts.critical, severity: 'critical' },
+      { name: 'High', value: counts.high, severity: 'high' },
+      { name: 'Medium', value: counts.medium, severity: 'medium' },
+      { name: 'Low', value: counts.low, severity: 'low' },
+    ].filter(d => d.value > 0)
   },
 }
 
