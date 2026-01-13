@@ -1,0 +1,93 @@
+name: Scheduled Data Ingestion
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  ingest-cisa-kev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest CISA KEV
+        run: npm run ingest:kev
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  ingest-nvd:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest NVD CVEs
+        run: npm run ingest:nvd
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  ingest-abusech:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest Abuse.ch feeds
+        run: npm run ingest:abusech
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  notify-completion:
+    runs-on: ubuntu-latest
+    needs: [ingest-cisa-kev, ingest-nvd, ingest-abusech]
+    if: always()
+    steps:
+      - name: Check job results
+        run: |
+          echo "CISA KEV: ${{ needs.ingest-cisa-kev.result }}"
+          echo "NVD: ${{ needs.ingest-nvd.result }}"
+          echo "Abuse.ch: ${{ needs.ingest-abusech.result }}"
+
+      - name: Report status
+        run: |
+          if [[ "${{ needs.ingest-cisa-kev.result }}" == "success" ]] && \
+             [[ "${{ needs.ingest-nvd.result }}" == "success" ]] && \
+             [[ "${{ needs.ingest-abusech.result }}" == "success" ]]; then
+            echo "All ingestion jobs completed successfully!"
+          else
+            echo "Some ingestion jobs failed. Check the logs."
+            exit 1
+          fi
