@@ -77,3 +77,6 @@ export { TagSelector, TagBadges } from './TagSelector'
 
 // Export functionality
 export { ExportButton, QuickExportButton } from './ExportButton'
+
+// Timeline
+export { Timeline, TimelineMini, ActorTimeline } from './Timeline'

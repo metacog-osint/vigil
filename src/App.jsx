@@ -12,6 +12,7 @@ import Techniques from './pages/Techniques'
 import Watchlists from './pages/Watchlists'
 import Settings from './pages/Settings'
 import Alerts from './pages/Alerts'
+import AdvancedSearch from './pages/AdvancedSearch'
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -86,6 +87,7 @@ function App() {
               <Route path="/vulnerabilities" element={<Vulnerabilities />} />
               <Route path="/iocs" element={<IOCSearch />} />
               <Route path="/bulk-search" element={<BulkSearch />} />
+              <Route path="/advanced-search" element={<AdvancedSearch />} />
               <Route path="/techniques" element={<Techniques />} />
               <Route path="/watchlists" element={<Watchlists />} />
               <Route path="/alerts" element={<Alerts />} />
