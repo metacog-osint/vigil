@@ -264,6 +264,79 @@ CREATE TABLE malware (
 
 ---
 
+## Table: `techniques`
+
+Stores MITRE ATT&CK Enterprise techniques.
+
+```sql
+CREATE TABLE techniques (
+  id TEXT PRIMARY KEY,                    -- T1059.001
+  name TEXT NOT NULL,
+  description TEXT,
+  tactics TEXT[] DEFAULT '{}',            -- Initial Access, Execution, etc.
+  platforms TEXT[] DEFAULT '{}',          -- Windows, Linux, macOS, etc.
+  detection TEXT,
+  mitigations TEXT[] DEFAULT '{}',
+  data_sources TEXT[] DEFAULT '{}',
+  is_subtechnique BOOLEAN DEFAULT FALSE,
+  url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### Indexes
+- `idx_techniques_tactics` - GIN on `tactics`
+- `idx_techniques_platforms` - GIN on `platforms`
+
+### Key Queries
+```sql
+-- Get techniques by tactic
+SELECT * FROM techniques WHERE tactics @> ARRAY['Initial Access'];
+
+-- Search techniques
+SELECT * FROM techniques WHERE id ILIKE '%T1059%' OR name ILIKE '%PowerShell%';
+
+-- Get all sub-techniques of a parent
+SELECT * FROM techniques WHERE id LIKE 'T1059.%';
+```
+
+---
+
+## Table: `actor_techniques`
+
+Junction table mapping threat actors to their known ATT&CK techniques.
+
+```sql
+CREATE TABLE actor_techniques (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  actor_id UUID REFERENCES threat_actors(id) ON DELETE CASCADE,
+  technique_id TEXT REFERENCES techniques(id) ON DELETE CASCADE,
+  confidence TEXT DEFAULT 'medium',       -- low, medium, high
+  first_seen DATE,
+  last_seen DATE,
+  source TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(actor_id, technique_id)
+);
+```
+
+### Key Queries
+```sql
+-- Get techniques for an actor
+SELECT t.* FROM techniques t
+JOIN actor_techniques at ON t.id = at.technique_id
+WHERE at.actor_id = '<uuid>';
+
+-- Get actors using a technique
+SELECT ta.* FROM threat_actors ta
+JOIN actor_techniques at ON ta.id = at.actor_id
+WHERE at.technique_id = 'T1059.001';
+```
+
+---
+
 ## Table: `sync_log`
 
 Tracks data ingestion runs.

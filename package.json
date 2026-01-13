@@ -19,7 +19,8 @@
     "ingest:threatfox": "node scripts/ingest-threatfox.mjs",
     "ingest:urlhaus": "node scripts/ingest-urlhaus.mjs",
     "ingest:feodo": "node scripts/ingest-feodo.mjs",
-    "ingest:abusech": "node scripts/ingest-abusech.mjs"
+    "ingest:abusech": "node scripts/ingest-abusech.mjs",
+    "ingest:mitre": "node scripts/ingest-mitre.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
