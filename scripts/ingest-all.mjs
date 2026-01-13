@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const scripts = [
+  { name: 'Ransomwatch', file: 'ingest-ransomwatch.mjs' },  // Run first - creates actors
   { name: 'CISA KEV', file: 'ingest-cisa-kev.mjs' },
   { name: 'CISA Alerts', file: 'ingest-cisa-alerts.mjs' },
   { name: 'NVD CVEs', file: 'ingest-nvd.mjs' },

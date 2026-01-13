@@ -11,6 +11,7 @@ import {
   getFirestore,
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
   collection,
@@ -177,7 +178,7 @@ export async function getShiftNotes(date) {
   const notesRef = collection(db, 'shift_notes')
   const q = query(notesRef, where('date', '==', date))
 
-  const snapshot = await getDoc(q)
+  const snapshot = await getDocs(q)
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
 }
 

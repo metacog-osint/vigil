@@ -17,9 +17,10 @@ export default function ActivityChart() {
   useEffect(() => {
     async function loadData() {
       try {
-        const { data: incidentData } = await incidents.getStats(30)
+        // Get 90 days of data for better coverage
+        const { data: incidentData } = await incidents.getStats(90)
 
-        // Group by date
+        // Group by date - show last 30 days on chart
         const counts = {}
         for (let i = 29; i >= 0; i--) {
           const date = format(subDays(new Date(), i), 'yyyy-MM-dd')
@@ -27,9 +28,10 @@ export default function ActivityChart() {
         }
 
         incidentData?.forEach((incident) => {
-          const date = incident.discovered_date
-          if (counts[date] !== undefined) {
-            counts[date]++
+          // Handle both date formats (with and without time)
+          const dateStr = incident.discovered_date?.split('T')[0]
+          if (dateStr && counts[dateStr] !== undefined) {
+            counts[dateStr]++
           }
         })
 
