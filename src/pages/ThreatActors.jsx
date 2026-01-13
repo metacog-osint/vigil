@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react'
-import { threatActors, subscribeToTable } from '../lib/supabase'
+import { threatActors, subscribeToTable, incidents } from '../lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
 import TrendBadge, { TrendIndicator } from '../components/TrendBadge'
 import { SkeletonTable } from '../components/Skeleton'
 import { EmptyActors } from '../components/EmptyState'
+import { NewBadge } from '../components/NewIndicator'
+import { WatchButton } from '../components/WatchButton'
+import { Sparkline } from '../components/Sparkline'
+import { Timeline } from '../components/Timeline'
 
 const SECTORS = [
   'healthcare',
@@ -31,6 +35,7 @@ export default function ThreatActors() {
   const [trendFilter, setTrendFilter] = useState('')
   const [trendSummary, setTrendSummary] = useState({ escalating: 0, stable: 0, declining: 0 })
   const [selectedActor, setSelectedActor] = useState(null)
+  const [actorIncidents, setActorIncidents] = useState([])
 
   useEffect(() => {
     loadActors()
@@ -77,6 +82,34 @@ export default function ThreatActors() {
       console.error('Error loading trend summary:', error)
     }
   }
+
+  // Load incidents when an actor is selected
+  useEffect(() => {
+    if (selectedActor) {
+      loadActorIncidents(selectedActor.id)
+    } else {
+      setActorIncidents([])
+    }
+  }, [selectedActor])
+
+  async function loadActorIncidents(actorId) {
+    try {
+      const { data } = await incidents.getRecent({ actor_id: actorId, limit: 20, days: 365 })
+      setActorIncidents(data || [])
+    } catch (error) {
+      console.error('Error loading actor incidents:', error)
+    }
+  }
+
+  // Convert incidents to timeline events
+  const timelineEvents = actorIncidents.map((incident) => ({
+    id: incident.id,
+    type: 'incident',
+    title: incident.victim_name || 'Unknown Victim',
+    description: `${incident.victim_sector || 'Unknown sector'} - ${incident.status || 'claimed'}`,
+    date: incident.discovered_date,
+    tags: [incident.victim_country].filter(Boolean),
+  }))
 
   return (
     <div className="space-y-6">
@@ -184,12 +217,20 @@ export default function ThreatActors() {
                       className="cursor-pointer"
                     >
                       <td>
-                        <div className="font-medium text-white">{actor.name}</div>
-                        {actor.aliases?.length > 0 && (
-                          <div className="text-xs text-gray-500">
-                            aka {actor.aliases.slice(0, 2).join(', ')}
+                        <div className="flex items-center gap-2">
+                          <WatchButton entityType="threat_actor" entityId={actor.id} size="sm" />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-white">{actor.name}</span>
+                              <NewBadge date={actor.last_seen} thresholdHours={48} />
+                            </div>
+                            {actor.aliases?.length > 0 && (
+                              <div className="text-xs text-gray-500">
+                                aka {actor.aliases.slice(0, 2).join(', ')}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </td>
                       <td className="hidden md:table-cell">
                         <span className="badge-info">{actor.actor_type || 'ransomware'}</span>
@@ -324,6 +365,14 @@ export default function ThreatActors() {
                 <div>
                   <div className="text-gray-500 mb-1">Description</div>
                   <div className="text-gray-300 text-xs">{selectedActor.description}</div>
+                </div>
+              )}
+
+              {/* Activity Timeline */}
+              {timelineEvents.length > 0 && (
+                <div className="pt-4 border-t border-gray-800">
+                  <div className="text-gray-500 mb-2">Recent Activity ({timelineEvents.length} incidents)</div>
+                  <Timeline events={timelineEvents} maxItems={5} className="max-h-64 overflow-y-auto" />
                 </div>
               )}
 

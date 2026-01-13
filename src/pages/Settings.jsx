@@ -1,8 +1,9 @@
 // Settings page - User preferences
 import { useState, useEffect } from 'react'
 import { clsx } from 'clsx'
-import { userPreferences as prefsApi, savedSearches as searchesApi, tags as tagsApi } from '../lib/supabase'
+import { userPreferences as prefsApi, savedSearches as searchesApi, tags as tagsApi, syncLog as syncLogApi } from '../lib/supabase'
 import { SkeletonCard, ErrorMessage, TimeAgo } from '../components'
+import { formatDistanceToNow, format } from 'date-fns'
 
 const TIME_RANGES = [
   { value: '7d', label: '7 days' },
@@ -178,10 +179,55 @@ function CreateTagModal({ isOpen, onClose, onCreate }) {
   )
 }
 
+function SyncLogList({ logs }) {
+  if (logs.length === 0) {
+    return <p className="text-gray-500 text-sm">No sync history available</p>
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'success': return 'text-green-400'
+      case 'partial': return 'text-yellow-400'
+      case 'failed': return 'text-red-400'
+      default: return 'text-gray-400'
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      {logs.map((log) => (
+        <div
+          key={log.id}
+          className="flex items-center justify-between bg-gray-800/50 rounded px-3 py-2"
+        >
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-white text-sm font-medium">{log.source}</span>
+              <span className={`text-xs ${getStatusColor(log.status)}`}>
+                {log.status}
+              </span>
+            </div>
+            <div className="text-xs text-gray-500">
+              {log.records_added} added, {log.records_updated} updated
+              {log.error_count > 0 && `, ${log.error_count} errors`}
+            </div>
+          </div>
+          <div className="text-right text-xs text-gray-500">
+            {log.completed_at
+              ? formatDistanceToNow(new Date(log.completed_at), { addSuffix: true })
+              : 'In progress'}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function Settings() {
   const [preferences, setPreferences] = useState(null)
   const [savedSearches, setSavedSearches] = useState([])
   const [tags, setTags] = useState([])
+  const [syncLogs, setSyncLogs] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -194,15 +240,17 @@ export default function Settings() {
   const loadData = async () => {
     setIsLoading(true)
     try {
-      const [prefsResult, searchesResult, tagsResult] = await Promise.all([
+      const [prefsResult, searchesResult, tagsResult, syncResult] = await Promise.all([
         prefsApi.get(),
         searchesApi.getAll(),
         tagsApi.getAll(),
+        syncLogApi.getRecent(10),
       ])
 
       setPreferences(prefsResult.data?.preferences || {})
       setSavedSearches(searchesResult.data || [])
       setTags(tagsResult.data || [])
+      setSyncLogs(syncResult.data || [])
     } catch (err) {
       setError(err.message)
     } finally {
@@ -361,6 +409,14 @@ export default function Settings() {
               + Create new tag
             </button>
           </div>
+        </SettingSection>
+
+        {/* Sync History */}
+        <SettingSection
+          title="Data Sync History"
+          description="Recent data ingestion status from external sources"
+        >
+          <SyncLogList logs={syncLogs} />
         </SettingSection>
 
         {/* Data & Privacy */}

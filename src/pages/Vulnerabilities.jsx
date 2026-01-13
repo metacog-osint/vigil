@@ -3,7 +3,8 @@ import { vulnerabilities } from '../lib/supabase'
 import { formatDistanceToNow, format } from 'date-fns'
 import { SkeletonTable } from '../components/Skeleton'
 import { EmptyVulnerabilities } from '../components/EmptyState'
-import { SeverityBadge, EPSSBadge } from '../components/SeverityBadge'
+import { SeverityBadge, SeverityBar, EPSSBadge } from '../components/SeverityBadge'
+import { NewBadge } from '../components/NewIndicator'
 
 export default function Vulnerabilities() {
   const [vulnList, setVulnList] = useState([])
@@ -132,7 +133,10 @@ export default function Vulnerabilities() {
                       className="cursor-pointer"
                     >
                       <td>
-                        <div className="font-mono text-cyber-accent">{vuln.cve_id}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-cyber-accent">{vuln.cve_id}</span>
+                          <NewBadge date={vuln.kev_date} thresholdHours={72} />
+                        </div>
                         <div className="text-xs text-gray-500 truncate max-w-xs">
                           {vuln.description?.slice(0, 60)}...
                         </div>
@@ -141,7 +145,10 @@ export default function Vulnerabilities() {
                         {vuln.affected_vendors?.[0] || 'Unknown'}
                       </td>
                       <td>
-                        <SeverityBadge score={vuln.cvss_score} />
+                        <div className="space-y-1">
+                          <SeverityBadge score={vuln.cvss_score} />
+                          <SeverityBar score={vuln.cvss_score} className="w-16" />
+                        </div>
                       </td>
                       <td className="hidden md:table-cell text-sm text-gray-400">
                         {vuln.kev_date

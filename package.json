@@ -20,7 +20,11 @@
     "ingest:urlhaus": "node scripts/ingest-urlhaus.mjs",
     "ingest:feodo": "node scripts/ingest-feodo.mjs",
     "ingest:abusech": "node scripts/ingest-abusech.mjs",
-    "ingest:mitre": "node scripts/ingest-mitre.mjs"
+    "ingest:mitre": "node scripts/ingest-mitre.mjs",
+    "ingest:ransomwatch": "node scripts/ingest-ransomwatch.mjs",
+    "ingest:ransomlook": "node scripts/ingest-ransomlook.mjs",
+    "ingest:ransomware-live": "node scripts/ingest-ransomware-live.mjs",
+    "ingest:ransomware": "node scripts/ingest-ransomlook.mjs && node scripts/ingest-ransomware-live.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
