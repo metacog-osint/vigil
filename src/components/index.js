@@ -66,3 +66,7 @@ export {
 } from './ThreatGauge'
 export { Sparkline, SparklineBar } from './Sparkline'
 export { ActivityCalendar, ActivityCalendarMini } from './ActivityCalendar'
+export { SectorChart, SectorBarChart } from './SectorChart'
+export { AttackMatrixHeatmap, AttackMatrixMini } from './AttackMatrixHeatmap'
+export { VulnTreemap, VulnTreemapMini } from './VulnTreemap'
+export { IncidentFlow, IncidentFlowSimple, AttackChain } from './IncidentFlow'
