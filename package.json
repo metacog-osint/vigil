@@ -25,7 +25,8 @@
     "ingest:ransomlook": "node scripts/ingest-ransomlook.mjs",
     "ingest:ransomware-live": "node scripts/ingest-ransomware-live.mjs",
     "ingest:ransomware": "node scripts/ingest-ransomlook.mjs && node scripts/ingest-ransomware-live.mjs",
-    "reclassify:sectors": "node scripts/reclassify-sectors.mjs"
+    "reclassify:sectors": "node scripts/reclassify-sectors.mjs",
+    "seed:correlations": "node scripts/seed-correlations.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

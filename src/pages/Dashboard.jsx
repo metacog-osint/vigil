@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { dashboard, incidents, threatActors, vulnerabilities, syncLog } from '../lib/supabase'
+import { dashboard, incidents, threatActors, vulnerabilities, syncLog, orgProfile, relevance, trendAnalysis } from '../lib/supabase'
 import { generateBLUF } from '../lib/ai'
 import StatCard from '../components/StatCard'
 import ActivityChart from '../components/ActivityChart'
@@ -12,6 +12,9 @@ import { SectorChart } from '../components/SectorChart'
 import { AttackMatrixMini } from '../components/AttackMatrixHeatmap'
 import { VulnTreemapMini } from '../components/VulnTreemap'
 import { ActivityCalendar } from '../components/ActivityCalendar'
+import WeekComparisonCard from '../components/WeekComparisonCard'
+import ChangeSummaryCard from '../components/ChangeSummaryCard'
+import { RelevanceBadge } from '../components/RelevanceBadge'
 import { formatDistanceToNow } from 'date-fns'
 
 // Calculate threat level on a reasonable scale
@@ -43,6 +46,13 @@ export default function Dashboard() {
   const [lastSync, setLastSync] = useState(null)
   const [aiSummary, setAiSummary] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  // Personalization and trend data
+  const [userProfile, setUserProfile] = useState(null)
+  const [relevantActors, setRelevantActors] = useState([])
+  const [relevantVulns, setRelevantVulns] = useState([])
+  const [weekComparison, setWeekComparison] = useState(null)
+  const [changeSummary, setChangeSummary] = useState(null)
 
   useEffect(() => {
     async function loadDashboard() {
@@ -82,6 +92,12 @@ export default function Dashboard() {
         }).then(summary => {
           if (summary) setAiSummary(summary)
         })
+
+        // Load personalization data (non-blocking)
+        loadPersonalizationData()
+
+        // Load trend data (non-blocking)
+        loadTrendData()
       } catch (error) {
         console.error('Dashboard load error:', error)
       } finally {
@@ -91,6 +107,39 @@ export default function Dashboard() {
 
     loadDashboard()
   }, [])
+
+  // Load personalization data (org profile + relevance scores)
+  async function loadPersonalizationData() {
+    try {
+      const profile = await orgProfile.get()
+      if (profile) {
+        setUserProfile(profile)
+        // Get relevant actors and vulnerabilities based on profile
+        const [actors, vulns] = await Promise.all([
+          relevance.getRelevantActors(profile, 5),
+          relevance.getRelevantVulnerabilities(profile, 5),
+        ])
+        setRelevantActors(actors || [])
+        setRelevantVulns(vulns || [])
+      }
+    } catch (error) {
+      console.error('Error loading personalization:', error)
+    }
+  }
+
+  // Load trend analysis data
+  async function loadTrendData() {
+    try {
+      const [weekData, changeData] = await Promise.all([
+        trendAnalysis.getWeekOverWeekChange(),
+        trendAnalysis.getChangeSummary(7),
+      ])
+      setWeekComparison(weekData)
+      setChangeSummary(changeData)
+    } catch (error) {
+      console.error('Error loading trend data:', error)
+    }
+  }
 
   if (loading) {
     return <SkeletonDashboard />
@@ -208,6 +257,84 @@ export default function Dashboard() {
           }
         />
       </div>
+
+      {/* Trend Analysis Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <WeekComparisonCard data={weekComparison} loading={!weekComparison} />
+        <ChangeSummaryCard data={changeSummary} loading={!changeSummary} />
+      </div>
+
+      {/* Relevant to You Section (if org profile exists) */}
+      {userProfile && (relevantActors.length > 0 || relevantVulns.length > 0) && (
+        <div className="cyber-card">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-cyber-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <h2 className="text-lg font-semibold text-white">Relevant to Your Organization</h2>
+            </div>
+            <Link to="/settings" className="text-cyber-accent text-sm hover:underline">
+              Edit profile
+            </Link>
+          </div>
+          <p className="text-gray-400 text-sm mb-4">
+            Based on your {userProfile.sector} sector in {userProfile.country || userProfile.region}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Relevant Actors */}
+            {relevantActors.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-400 mb-2">Priority Threat Actors</h3>
+                <div className="space-y-2">
+                  {relevantActors.slice(0, 3).map((actor) => (
+                    <Link
+                      key={actor.id}
+                      to="/actors"
+                      className="flex items-center justify-between p-2 rounded bg-gray-800/50 hover:bg-gray-800 transition-colors"
+                    >
+                      <div>
+                        <span className="text-white font-medium">{actor.name}</span>
+                        {actor.target_sectors?.length > 0 && (
+                          <span className="text-xs text-gray-500 ml-2">
+                            targets {actor.target_sectors[0]}
+                          </span>
+                        )}
+                      </div>
+                      <RelevanceBadge score={actor.relevanceScore} size="sm" showLabel={false} />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Relevant Vulnerabilities */}
+            {relevantVulns.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-400 mb-2">Priority Vulnerabilities</h3>
+                <div className="space-y-2">
+                  {relevantVulns.slice(0, 3).map((vuln) => (
+                    <Link
+                      key={vuln.cve_id}
+                      to="/vulnerabilities"
+                      className="flex items-center justify-between p-2 rounded bg-gray-800/50 hover:bg-gray-800 transition-colors"
+                    >
+                      <div>
+                        <span className="text-cyber-accent font-mono text-sm">{vuln.cve_id}</span>
+                        {vuln.affected_vendors?.length > 0 && (
+                          <span className="text-xs text-gray-500 ml-2">
+                            {vuln.affected_vendors[0]}
+                          </span>
+                        )}
+                      </div>
+                      <RelevanceBadge score={vuln.relevanceScore} size="sm" showLabel={false} />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Visualizations Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

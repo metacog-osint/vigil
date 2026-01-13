@@ -380,6 +380,44 @@ cve:2024-* cvss:>=9.0 kev:true
 
 ---
 
+## Deferred: Future Enhancements
+
+The following items were considered for Sprint 12 but deferred for future implementation:
+
+### Vulnerabilities "Known Actors" Section
+**Status:** Deferred
+**Rationale:** Most analysts start from actors, not CVEs. The actor → CVE direction (via CorrelationPanel) provides more value than CVE → actor.
+**Implementation notes:**
+- Add section to Vulnerabilities.jsx detail panel
+- Use `correlations.getVulnActors(cveId)` function (already exists)
+- Show actors known to exploit the selected CVE
+
+### Techniques "Used By" Section
+**Status:** Deferred
+**Rationale:** The Techniques page (ATT&CK matrix) is already complex. Adding actor lists per technique would clutter the UI.
+**Implementation notes:**
+- Add to technique detail modal/panel
+- Use `correlations.getTechniqueActors(techniqueId)` function (already exists)
+- Show actors using the selected technique
+
+### AttackPathDiagram Component
+**Status:** Deferred
+**Rationale:** Requires additional dependency (react-flow or vis.js) and significant UI work. The tabular CorrelationPanel provides the same information more simply.
+**Implementation notes:**
+- `correlations.getAttackPath(actorId)` function already exists
+- Returns `{ nodes, edges }` structure ready for graph visualization
+- Would show: Actor → Techniques → Vulnerabilities → IOCs as visual graph
+
+### ActorTrajectoryChart Component
+**Status:** Deferred
+**Rationale:** TrendAnalysis page already provides activity trends. Per-actor trajectory charts would be redundant.
+**Implementation notes:**
+- Would show individual actor activity over time (7/30/90 days)
+- Could use `trendAnalysis.getActorTrajectories(actorIds, days)` function
+- Line chart with incidents per day/week
+
+---
+
 *Last updated: January 2026*
 *Version: 0.2.0*
 
