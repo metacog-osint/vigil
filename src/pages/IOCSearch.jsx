@@ -1,0 +1,263 @@
+import { useState } from 'react'
+import { iocs } from '../lib/supabase'
+import { formatDistanceToNow } from 'date-fns'
+
+const IOC_TYPES = [
+  { key: '', label: 'All Types' },
+  { key: 'hash_sha256', label: 'SHA256' },
+  { key: 'hash_md5', label: 'MD5' },
+  { key: 'ip', label: 'IP Address' },
+  { key: 'domain', label: 'Domain' },
+  { key: 'url', label: 'URL' },
+]
+
+export default function IOCSearch() {
+  const [searchValue, setSearchValue] = useState('')
+  const [typeFilter, setTypeFilter] = useState('')
+  const [results, setResults] = useState([])
+  const [recentIOCs, setRecentIOCs] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [searched, setSearched] = useState(false)
+
+  async function handleSearch(e) {
+    e.preventDefault()
+    if (!searchValue.trim()) return
+
+    setLoading(true)
+    setSearched(true)
+    try {
+      const { data, error } = await iocs.search(searchValue.trim(), typeFilter || null)
+      if (error) throw error
+      setResults(data || [])
+    } catch (error) {
+      console.error('Search error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function loadRecentIOCs() {
+    try {
+      const { data, error } = await iocs.getRecent(50)
+      if (error) throw error
+      setRecentIOCs(data || [])
+    } catch (error) {
+      console.error('Error loading recent IOCs:', error)
+    }
+  }
+
+  // Load recent IOCs on first render
+  useState(() => {
+    loadRecentIOCs()
+  }, [])
+
+  const getTypeBadge = (type) => {
+    switch (type) {
+      case 'hash_sha256':
+      case 'hash_md5':
+      case 'hash_sha1':
+        return 'badge-info'
+      case 'ip':
+        return 'badge-high'
+      case 'domain':
+        return 'badge-medium'
+      case 'url':
+        return 'badge-low'
+      default:
+        return 'badge-info'
+    }
+  }
+
+  const getConfidenceBadge = (confidence) => {
+    switch (confidence) {
+      case 'high':
+        return 'badge-critical'
+      case 'medium':
+        return 'badge-medium'
+      case 'low':
+        return 'badge-low'
+      default:
+        return 'badge-info'
+    }
+  }
+
+  const displayList = searched ? results : recentIOCs
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-white">IOC Search</h1>
+        <p className="text-gray-400 text-sm mt-1">
+          Search indicators of compromise (hashes, IPs, domains)
+        </p>
+      </div>
+
+      {/* Search Form */}
+      <form onSubmit={handleSearch} className="cyber-card">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder="Enter hash, IP, domain, or URL..."
+              className="cyber-input w-full font-mono"
+            />
+          </div>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="cyber-input"
+          >
+            {IOC_TYPES.map((type) => (
+              <option key={type.key} value={type.key}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+          <button type="submit" className="cyber-button-primary" disabled={loading}>
+            {loading ? 'Searching...' : 'Search'}
+          </button>
+        </div>
+
+        {/* Quick examples */}
+        <div className="mt-3 text-xs text-gray-500">
+          Examples: SHA256 hash, MD5 hash, IP address, domain name
+        </div>
+      </form>
+
+      {/* Results */}
+      <div>
+        <h2 className="text-lg font-semibold text-white mb-4">
+          {searched
+            ? `Search Results (${results.length})`
+            : `Recent IOCs (${recentIOCs.length})`}
+        </h2>
+
+        {loading ? (
+          <div className="text-center py-8 text-gray-400">Searching...</div>
+        ) : displayList.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">
+            {searched
+              ? 'No IOCs found matching your search.'
+              : 'No IOCs in database. Run data ingestion to populate.'}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {displayList.map((ioc) => (
+              <div key={ioc.id} className="cyber-card">
+                <div className="flex flex-col md:flex-row md:items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className={getTypeBadge(ioc.type)}>
+                      {ioc.type.replace('hash_', '').toUpperCase()}
+                    </span>
+                    <span className={getConfidenceBadge(ioc.confidence)}>
+                      {ioc.confidence}
+                    </span>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="font-mono text-sm text-white break-all">
+                      {ioc.value}
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                      {ioc.malware_family && (
+                        <span className="text-orange-400">{ioc.malware_family}</span>
+                      )}
+                      {ioc.threat_actor?.name && (
+                        <span className="text-cyber-accent">
+                          {ioc.threat_actor.name}
+                        </span>
+                      )}
+                      {ioc.tags?.length > 0 && (
+                        <span>{ioc.tags.slice(0, 3).join(', ')}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-right text-xs text-gray-500">
+                    <div>
+                      First: {ioc.first_seen
+                        ? formatDistanceToNow(new Date(ioc.first_seen), { addSuffix: true })
+                        : 'Unknown'}
+                    </div>
+                    <div>
+                      Last: {ioc.last_seen
+                        ? formatDistanceToNow(new Date(ioc.last_seen), { addSuffix: true })
+                        : 'Unknown'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-800">
+                  {ioc.type.includes('hash') && (
+                    <>
+                      <a
+                        href={`https://www.virustotal.com/gui/file/${ioc.value}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-cyber-accent hover:underline"
+                      >
+                        VirusTotal →
+                      </a>
+                      <a
+                        href={`https://bazaar.abuse.ch/browse.php?search=${ioc.value}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-cyber-accent hover:underline"
+                      >
+                        MalwareBazaar →
+                      </a>
+                    </>
+                  )}
+                  {ioc.type === 'ip' && (
+                    <>
+                      <a
+                        href={`https://www.abuseipdb.com/check/${ioc.value}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-cyber-accent hover:underline"
+                      >
+                        AbuseIPDB →
+                      </a>
+                      <a
+                        href={`https://www.shodan.io/host/${ioc.value}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-cyber-accent hover:underline"
+                      >
+                        Shodan →
+                      </a>
+                    </>
+                  )}
+                  {ioc.type === 'domain' && (
+                    <a
+                      href={`https://www.virustotal.com/gui/domain/${ioc.value}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-cyber-accent hover:underline"
+                    >
+                      VirusTotal →
+                    </a>
+                  )}
+                  {ioc.source_url && (
+                    <a
+                      href={ioc.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-gray-400 hover:underline ml-auto"
+                    >
+                      Source: {ioc.source}
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

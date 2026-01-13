@@ -1,0 +1,36 @@
+{
+  "name": "Vigil - Cyber Threat Intelligence",
+  "short_name": "Vigil",
+  "description": "Real-time cyber threat intelligence monitoring and analysis by The Intelligence Company",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060a12",
+  "theme_color": "#0a0f1a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["security", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/",
+      "description": "Threat intelligence overview"
+    },
+    {
+      "name": "Incidents",
+      "url": "/incidents",
+      "description": "Recent ransomware incidents"
+    },
+    {
+      "name": "IOC Search",
+      "url": "/iocs",
+      "description": "Search indicators of compromise"
+    }
+  ]
+}
