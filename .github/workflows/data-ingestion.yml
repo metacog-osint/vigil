@@ -2,13 +2,32 @@ name: Scheduled Data Ingestion
 
 on:
   schedule:
-    # Run daily at 6 AM UTC
-    - cron: '0 6 * * *'
-  workflow_dispatch: # Allow manual trigger
+    # Tier 1: Every 6 hours - Ransomware & IOC feeds (frequently updated)
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Data source to ingest (leave empty for all)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - ransomware
+          - iocs
+          - vulnerabilities
+          - mitre
+
+env:
+  NODE_VERSION: '20'
 
 jobs:
-  ingest-cisa-kev:
+  # ============================================
+  # RANSOMWARE DATA (Every 6 hours)
+  # ============================================
+  ingest-ransomlook:
     runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'ransomware'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -16,7 +35,146 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest RansomLook data
+        run: npm run ingest:ransomlook
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  ingest-ransomware-live:
+    runs-on: ubuntu-latest
+    needs: ingest-ransomlook  # Run after RansomLook to enable dedup/corroboration
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'ransomware'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest Ransomware.live data
+        run: npm run ingest:ransomware-live
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # IOC FEEDS (Every 6 hours)
+  # ============================================
+  ingest-threatfox:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'iocs'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest ThreatFox IOCs
+        run: npm run ingest:threatfox
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  ingest-urlhaus:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'iocs'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest URLhaus malware URLs
+        run: npm run ingest:urlhaus
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  ingest-feodo:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'iocs'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest Feodo C2 trackers
+        run: npm run ingest:feodo
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  ingest-abusech:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'iocs'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest Abuse.ch feeds
+        run: npm run ingest:abusech
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # VULNERABILITY DATA (Every 6 hours)
+  # ============================================
+  ingest-cisa-kev:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'vulnerabilities'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
       - name: Install dependencies
@@ -30,6 +188,7 @@ jobs:
 
   ingest-nvd:
     runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'vulnerabilities'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,7 +196,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
       - name: Install dependencies
@@ -49,8 +208,12 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-  ingest-abusech:
+  # ============================================
+  # MITRE ATT&CK (Every 6 hours - rarely changes but low cost)
+  # ============================================
+  ingest-mitre:
     runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'mitre'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -58,36 +221,66 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Ingest Abuse.ch feeds
-        run: npm run ingest:abusech
+      - name: Ingest MITRE ATT&CK
+        run: npm run ingest:mitre
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+  # ============================================
+  # SUMMARY
+  # ============================================
   notify-completion:
     runs-on: ubuntu-latest
-    needs: [ingest-cisa-kev, ingest-nvd, ingest-abusech]
+    needs:
+      - ingest-ransomlook
+      - ingest-ransomware-live
+      - ingest-threatfox
+      - ingest-urlhaus
+      - ingest-feodo
+      - ingest-abusech
+      - ingest-cisa-kev
+      - ingest-nvd
+      - ingest-mitre
     if: always()
     steps:
-      - name: Check job results
+      - name: Summary
         run: |
-          echo "CISA KEV: ${{ needs.ingest-cisa-kev.result }}"
-          echo "NVD: ${{ needs.ingest-nvd.result }}"
-          echo "Abuse.ch: ${{ needs.ingest-abusech.result }}"
+          echo "## Data Ingestion Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Source | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| RansomLook | ${{ needs.ingest-ransomlook.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Ransomware.live | ${{ needs.ingest-ransomware-live.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ThreatFox | ${{ needs.ingest-threatfox.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| URLhaus | ${{ needs.ingest-urlhaus.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Feodo | ${{ needs.ingest-feodo.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Abuse.ch | ${{ needs.ingest-abusech.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CISA KEV | ${{ needs.ingest-cisa-kev.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| NVD | ${{ needs.ingest-nvd.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MITRE ATT&CK | ${{ needs.ingest-mitre.result }} |" >> $GITHUB_STEP_SUMMARY
 
-      - name: Report status
+      - name: Check for failures
         run: |
-          if [[ "${{ needs.ingest-cisa-kev.result }}" == "success" ]] && \
-             [[ "${{ needs.ingest-nvd.result }}" == "success" ]] && \
-             [[ "${{ needs.ingest-abusech.result }}" == "success" ]]; then
-            echo "All ingestion jobs completed successfully!"
+          FAILED=0
+          [[ "${{ needs.ingest-ransomlook.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.ingest-ransomware-live.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.ingest-threatfox.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.ingest-urlhaus.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.ingest-feodo.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.ingest-abusech.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.ingest-cisa-kev.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.ingest-nvd.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.ingest-mitre.result }}" == "failure" ]] && FAILED=1
+
+          if [ $FAILED -eq 1 ]; then
+            echo "::warning::Some ingestion jobs failed. Check individual job logs."
           else
-            echo "Some ingestion jobs failed. Check the logs."
-            exit 1
+            echo "All ingestion jobs completed successfully!"
           fi

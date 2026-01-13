@@ -44,6 +44,17 @@
 - Vite manual chunk splitting
 - Reduced initial bundle from ~1MB to ~215KB
 
+**Sprint 11: User Experience Enhancements**
+- NewBadge indicators on list items (actors, incidents, vulnerabilities)
+- WatchButton for quick watchlist management
+- Escalating Actors alert box on Dashboard
+- AI BLUF (Bottom Line Up Front) summary via Groq API (optional)
+- ActivityCalendar on Dashboard (90-day heatmap)
+- Timeline in actor detail panel (recent incidents)
+- SeverityBar visualization on vulnerability rows
+- Sync status display in Settings page
+- Last sync timestamp in Dashboard header
+
 ### Bug Fixes
 
 | Issue | Fix |
@@ -160,11 +171,25 @@ npm run ingest:nvd       # NVD CVEs only
 VITE_SUPABASE_URL=https://xxx.supabase.co
 VITE_SUPABASE_ANON_KEY=xxx
 
+# Optional - AI Summaries (free tier)
+VITE_GROQ_API_KEY=xxx  # Get from https://console.groq.com/keys
+
 # Optional (Firebase - not currently used)
 VITE_FIREBASE_API_KEY=
 VITE_FIREBASE_AUTH_DOMAIN=
 VITE_FIREBASE_PROJECT_ID=
 ```
+
+### AI Features (Optional)
+
+The dashboard includes an AI-generated BLUF (Bottom Line Up Front) summary powered by Groq's free API tier. To enable:
+
+1. Create a free account at https://console.groq.com
+2. Generate an API key
+3. Add `VITE_GROQ_API_KEY` to your `.env` file or Vercel environment variables
+4. Restart the dev server or redeploy
+
+Without the API key, the dashboard works normally without the AI summary.
 
 ## Contributing
 

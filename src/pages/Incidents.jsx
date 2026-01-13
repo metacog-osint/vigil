@@ -3,6 +3,8 @@ import { incidents, subscribeToTable } from '../lib/supabase'
 import { formatDistanceToNow, format } from 'date-fns'
 import { SkeletonList } from '../components/Skeleton'
 import { EmptyIncidents } from '../components/EmptyState'
+import { NewBadge } from '../components/NewIndicator'
+import { WatchButton } from '../components/WatchButton'
 
 const SECTORS = [
   'healthcare',
@@ -162,15 +164,18 @@ export default function Incidents() {
                   }`}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-white truncate">
-                          {incident.victim_name || 'Unknown Victim'}
-                        </span>
-                        <span className={getStatusColor(incident.status)}>
-                          {incident.status}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <WatchButton entityType="incident" entityId={incident.id} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-white truncate">
+                            {incident.victim_name || 'Unknown Victim'}
+                          </span>
+                          <NewBadge date={incident.discovered_date} thresholdHours={48} />
+                          <span className={getStatusColor(incident.status)}>
+                            {incident.status}
+                          </span>
+                        </div>
                       <div className="flex items-center gap-3 mt-1 text-sm text-gray-400">
                         <span className="text-cyber-accent">
                           {incident.threat_actor?.name || 'Unknown Actor'}
@@ -181,6 +186,7 @@ export default function Incidents() {
                         {incident.victim_country && (
                           <span>{incident.victim_country}</span>
                         )}
+                        </div>
                       </div>
                     </div>
                     <div className="text-right text-sm text-gray-500 ml-4">
