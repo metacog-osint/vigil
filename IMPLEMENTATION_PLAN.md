@@ -587,3 +587,64 @@ To begin implementation:
 
 *Implementation plan created: January 2026*
 *Reference: ROADMAP.md for feature details*
+
+---
+
+## Sprint 12: Differentiating Features (COMPLETED)
+
+> Features that make Vigil unique compared to other CTI tools
+
+### 12.1 Organization Profile & Relevance Scoring
+- [x] Create `OrganizationProfileSetup.jsx` wizard
+- [x] Create `OrganizationProfileSummary` component
+- [x] Create `RelevanceBadge.jsx` component
+- [x] Add `orgProfile` module to supabase.js
+- [x] Add `relevance` module with scoring functions
+- [x] Integrate into Settings page
+
+### 12.2 IOC Quick Lookup
+- [x] Add IOC type detection (IP, hash, domain, URL, CVE)
+- [x] Create `IOCQuickLookupCard.jsx` component
+- [x] Add `quickLookup()` function to iocs module
+- [x] Add `getEnrichmentLinks()` function
+- [x] Enhance SearchModal with IOC mode
+
+### 12.3 Actor-Vuln-TTP Correlation
+- [x] Create `CorrelationPanel.jsx` component
+- [x] Add `correlations` module to supabase.js
+- [x] Implement getActorCorrelations()
+- [x] Implement getVulnActors()
+- [x] Implement getTechniqueActors()
+
+### 12.4 Trend Analysis Dashboard
+- [x] Create `TrendAnalysis.jsx` page
+- [x] Create `WeekComparisonCard.jsx` component
+- [x] Create `ChangeSummaryCard.jsx` component
+- [x] Add `trendAnalysis` module to supabase.js
+- [x] Add /trends route to App.jsx
+- [x] Add Trends link to Sidebar
+
+**Deliverables:**
+- Personalized threat intelligence
+- Instant IOC enrichment
+- Actor attack profile visualization
+- Temporal trend analysis
+
+---
+
+## Updated Implementation Order
+
+\`\`\`
+Sprint 0-10: Foundation through Performance (see above)
+    ↓
+Sprint 11: UX Enhancements (completed)
+    ↓
+Sprint 12: Differentiating Features (completed) ← Current
+    ↓
+Sprint 13: Polish & Production Hardening (next)
+\`\`\`
+
+---
+
+*Implementation plan updated: January 2026*
+

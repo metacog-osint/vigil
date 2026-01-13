@@ -351,3 +351,35 @@ cve:2024-* cvss:>=9.0 kev:true
 *Last updated: January 2026*
 *Platform: https://vigil.theintelligence.company*
 *Repository: C:\Users\metac\Documents\Vigil*
+
+---
+
+## Completed: Differentiating Features (January 2026)
+
+### Organization Profile & Relevance Scoring
+- [x] Organization profile wizard (sector, geography, tech stack)
+- [x] Relevance scoring algorithm
+- [x] RelevanceBadge component
+- [x] Integration in Settings page
+
+### IOC Quick Lookup
+- [x] Enhanced search with IOC type detection
+- [x] External enrichment links (VirusTotal, Shodan, AbuseIPDB, etc.)
+- [x] IOCQuickLookupCard component
+
+### Actor Correlations
+- [x] CorrelationPanel showing TTPs, CVEs, IOCs
+- [x] Correlation queries in supabase.js
+
+### Trend Analysis
+- [x] TrendAnalysis page
+- [x] Week-over-week comparison
+- [x] Change summary ("what's new")
+- [x] Sector trend charts
+- [x] Activity trend visualization
+
+---
+
+*Last updated: January 2026*
+*Version: 0.2.0*
+
