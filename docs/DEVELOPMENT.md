@@ -55,6 +55,46 @@
 - Sync status display in Settings page
 - Last sync timestamp in Dashboard header
 
+**Sprint 11.5: Data Automation & Intelligence**
+
+*Sector Classification System*
+- Comprehensive sector classifier with 400+ keywords across 21 sectors
+- Support for international keywords (German, French, Spanish, Italian)
+- TLD-based detection (.edu, .gov, .mil, .health, etc.)
+- API sector normalization with extensive alias mapping
+- Batch reclassification script for existing data
+- Files: `scripts/lib/sector-classifier.mjs`, `scripts/reclassify-sectors.mjs`
+
+*Dashboard Visualization Fixes*
+- ThreatGauge: Fixed logarithmic scale for accurate threat representation
+- ActivityCalendar: Properly wired to incident data (90-day heatmap)
+- Top Actors: Rewritten to show recent activity instead of all-time counts
+- Sector chart: Improved filtering of "Unknown/Other" sectors
+
+*Automated Data Ingestion (GitHub Actions)*
+- Scheduled workflow running every 6 hours
+- 9 parallel ingestion jobs:
+  - RansomLook, Ransomware.live (ransomware)
+  - ThreatFox, URLhaus, Feodo, Abuse.ch (IOCs)
+  - CISA KEV, NVD (vulnerabilities)
+  - MITRE ATT&CK (techniques)
+- Manual dispatch with source filtering
+- Completion summary in GitHub Actions UI
+- File: `.github/workflows/data-ingestion.yml`
+
+*AI BLUF Summaries*
+- Integration with Groq API (free tier, llama-3.3-70b-versatile model)
+- Dashboard "Bottom Line Up Front" summary generation
+- Actor-specific AI summaries
+- Throttled saving (every 6 hours) to prevent API abuse
+- Storage in ai_summaries table for historical tracking
+- File: `src/lib/ai.js`
+
+*New Ingestion Scripts*
+- `ingest-ransomlook.mjs`: RansomLook API with sector classification
+- `ingest-ransomware-live.mjs`: Ransomware.live API with deduplication
+- Enhanced existing scripts with sector classifier integration
+
 ### Bug Fixes
 
 | Issue | Fix |

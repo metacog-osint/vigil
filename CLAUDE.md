@@ -227,12 +227,109 @@ Local Node.js scripts for data ingestion (in `scripts/` folder):
 npm run ingest
 
 # Individual sources
-npm run ingest:kev       # CISA KEV vulnerabilities
-npm run ingest:nvd       # NVD CVEs
-npm run ingest:abusech   # URLhaus, Feodo, ThreatFox IOCs
+npm run ingest:kev           # CISA KEV vulnerabilities
+npm run ingest:nvd           # NVD CVEs
+npm run ingest:abusech       # URLhaus, Feodo, ThreatFox IOCs
+npm run ingest:ransomlook    # RansomLook ransomware data
+npm run ingest:ransomware-live # Ransomware.live data
+npm run ingest:mitre         # MITRE ATT&CK techniques
+npm run ingest:threatfox     # ThreatFox IOCs
+npm run ingest:urlhaus       # URLhaus malware URLs
+npm run ingest:feodo         # Feodo C2 trackers
 ```
 
 Scripts read credentials from `.env` file automatically.
+
+### Automated Ingestion (GitHub Actions)
+
+Data is automatically ingested every 6 hours via `.github/workflows/data-ingestion.yml`:
+- Ransomware feeds: RansomLook, Ransomware.live
+- IOC feeds: ThreatFox, URLhaus, Feodo, Abuse.ch
+- Vulnerability feeds: CISA KEV, NVD
+- MITRE ATT&CK: Techniques and tactics
+
+Manual dispatch available via GitHub Actions UI with source filtering.
+
+## Sector Classification
+
+The `scripts/lib/sector-classifier.mjs` module provides comprehensive victim sector classification:
+
+### Sectors Supported (21 total)
+- healthcare, pharmaceuticals, finance, technology, manufacturing
+- retail, education, energy, government, defense
+- legal, construction, real_estate, transportation, telecommunications
+- media, hospitality, agriculture, nonprofit, professional_services, Other
+
+### Classification Priority
+1. API-provided sector (if valid)
+2. TLD detection (.edu → education, .gov → government, .mil → defense)
+3. Victim name keyword matching
+4. Description keyword matching
+5. Website URL keyword matching
+6. Default to "Other"
+
+### Usage in Ingestion Scripts
+
+```javascript
+import { classifySector, SECTORS } from './lib/sector-classifier.mjs'
+
+const sector = classifySector({
+  victimName: 'General Hospital',
+  website: 'generalhospital.org',
+  description: 'Healthcare provider',
+  apiSector: '',  // From API if available
+  activity: ''    // Alternative sector field
+})
+// Returns: 'healthcare'
+```
+
+### Batch Reclassification
+
+```bash
+npm run reclassify-sectors
+```
+
+Reclassifies all existing incidents with improved classification logic.
+
+## AI Integration
+
+The `src/lib/ai.js` module provides AI-powered summaries via Groq API (free tier).
+
+### Setup
+
+```bash
+# Get free API key from https://console.groq.com/keys
+VITE_GROQ_API_KEY=gsk_xxxxxxxxxxxxx
+```
+
+### BLUF Generation
+
+```javascript
+import { generateBLUF } from '../lib/ai'
+
+const summary = await generateBLUF({
+  incidents30d: 500,
+  topActors: [{ name: 'LockBit' }, { name: 'ALPHV' }],
+  topSectors: [{ name: 'healthcare', value: 45 }],
+  recentIncidents: [{ victim_name: 'Hospital X', threat_actor: { name: 'LockBit' } }]
+}, { save: true })
+// Returns: "LockBit and ALPHV are driving ransomware activity targeting healthcare..."
+```
+
+### Actor Summaries
+
+```javascript
+import { generateActorSummary } from '../lib/ai'
+
+const summary = await generateActorSummary(actor, recentIncidents)
+// Returns 2-3 sentence threat actor summary
+```
+
+### Model Configuration
+
+- Model: `llama-3.3-70b-versatile` (best quality, 128K context)
+- Save throttle: 6 hours (prevents API abuse)
+- Storage: `ai_summaries` table for historical tracking
 
 ## Deployment
 
