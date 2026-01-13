@@ -70,3 +70,7 @@ export { SectorChart, SectorBarChart } from './SectorChart'
 export { AttackMatrixHeatmap, AttackMatrixMini } from './AttackMatrixHeatmap'
 export { VulnTreemap, VulnTreemapMini } from './VulnTreemap'
 export { IncidentFlow, IncidentFlowSimple, AttackChain } from './IncidentFlow'
+
+// User features
+export { WatchButton } from './WatchButton'
+export { TagSelector, TagBadges } from './TagSelector'
