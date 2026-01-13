@@ -5,6 +5,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import https from 'https'
+import { classifySector } from './lib/sector-classifier.mjs'
 
 // Load env from parent directory
 const supabaseUrl = process.env.VITE_SUPABASE_URL
@@ -32,80 +33,6 @@ const supabase = createClient(
 )
 
 const API_BASE = 'https://api.ransomware.live/v2'
-
-// Map Ransomware.live sectors to our standard sectors
-const SECTOR_MAP = {
-  'Healthcare': 'healthcare',
-  'Financial Services': 'finance',
-  'Finance': 'finance',
-  'Banking': 'finance',
-  'Insurance': 'finance',
-  'Technology': 'technology',
-  'IT Services': 'technology',
-  'Software': 'technology',
-  'Manufacturing': 'manufacturing',
-  'Retail': 'retail',
-  'Consumer Goods': 'retail',
-  'Education': 'education',
-  'Energy': 'energy',
-  'Oil & Gas': 'energy',
-  'Utilities': 'energy',
-  'Government': 'government',
-  'Public Sector': 'government',
-  'Legal': 'legal',
-  'Law Firm': 'legal',
-  'Construction': 'construction',
-  'Real Estate': 'real_estate',
-  'Transportation': 'transportation',
-  'Logistics': 'transportation',
-  'Telecommunications': 'telecommunications',
-  'Hospitality': 'hospitality',
-  'Food & Beverage': 'hospitality',
-}
-
-// Sector keywords for fallback classification
-const SECTOR_KEYWORDS = {
-  healthcare: ['hospital', 'health', 'medical', 'clinic', 'pharma', 'dental', 'care'],
-  finance: ['bank', 'financial', 'insurance', 'credit', 'capital', 'invest'],
-  technology: ['tech', 'software', 'IT', 'cyber', 'data', 'cloud', 'digital'],
-  manufacturing: ['manufacturing', 'industrial', 'factory', 'production'],
-  retail: ['retail', 'store', 'shop', 'commerce', 'market'],
-  education: ['school', 'university', 'college', 'education', 'academy'],
-  energy: ['energy', 'oil', 'gas', 'power', 'utility', 'electric'],
-  government: ['gov', 'city', 'county', 'municipal', 'state', 'federal'],
-  legal: ['law', 'legal', 'attorney', 'lawyer'],
-  construction: ['construction', 'building', 'contractor'],
-  transportation: ['transport', 'logistics', 'shipping', 'freight'],
-}
-
-function normalizeSector(apiSector, victimName = '') {
-  // First try direct mapping
-  if (apiSector && SECTOR_MAP[apiSector]) {
-    return SECTOR_MAP[apiSector]
-  }
-
-  // Try case-insensitive mapping
-  if (apiSector) {
-    const lowerSector = apiSector.toLowerCase()
-    for (const [key, value] of Object.entries(SECTOR_MAP)) {
-      if (key.toLowerCase() === lowerSector) {
-        return value
-      }
-    }
-  }
-
-  // Fall back to keyword-based classification
-  if (victimName) {
-    const lower = victimName.toLowerCase()
-    for (const [sector, keywords] of Object.entries(SECTOR_KEYWORDS)) {
-      if (keywords.some(kw => lower.includes(kw))) {
-        return sector
-      }
-    }
-  }
-
-  return apiSector || 'Other'
-}
 
 function parseDate(dateStr) {
   if (!dateStr) return null
@@ -292,7 +219,12 @@ async function ingestRansomwareLive() {
 
     // Use API-provided sector if available, otherwise classify
     const apiSector = victim.activity || victim.sector || victim.industry
-    const normalizedSector = normalizeSector(apiSector, victimName)
+    const normalizedSector = classifySector({
+      victimName: victimName,
+      website: victim.website || victim.url || null,
+      apiSector: apiSector,
+      activity: victim.activity,
+    })
 
     const incidentData = {
       actor_id: actorId,

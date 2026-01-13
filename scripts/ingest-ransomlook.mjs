@@ -5,6 +5,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import https from 'https'
+import { classifySector } from './lib/sector-classifier.mjs'
 
 // Load env from parent directory
 const supabaseUrl = process.env.VITE_SUPABASE_URL
@@ -32,41 +33,6 @@ const supabase = createClient(
 )
 
 const API_BASE = 'https://www.ransomlook.io/api'
-
-// Sector keywords for classification
-const SECTOR_KEYWORDS = {
-  healthcare: ['hospital', 'health', 'medical', 'clinic', 'pharma', 'dental', 'care', 'surgery', 'patient'],
-  finance: ['bank', 'financial', 'insurance', 'credit', 'capital', 'invest', 'loan', 'wealth', 'asset'],
-  technology: ['tech', 'software', 'IT', 'cyber', 'data', 'cloud', 'digital', 'computer', 'network'],
-  manufacturing: ['manufacturing', 'industrial', 'factory', 'production', 'auto', 'steel', 'metal'],
-  retail: ['retail', 'store', 'shop', 'commerce', 'market', 'consumer', 'grocery', 'mall'],
-  education: ['school', 'university', 'college', 'education', 'academy', 'institute', 'student'],
-  energy: ['energy', 'oil', 'gas', 'power', 'utility', 'electric', 'solar', 'wind', 'nuclear'],
-  government: ['gov', 'city', 'county', 'municipal', 'state', 'federal', 'public', 'council', 'ministry'],
-  legal: ['law', 'legal', 'attorney', 'lawyer', 'court', 'solicitor', 'barrister'],
-  construction: ['construction', 'building', 'contractor', 'architect', 'engineering', 'civil'],
-  transportation: ['transport', 'logistics', 'shipping', 'freight', 'cargo', 'airline', 'rail'],
-  real_estate: ['real estate', 'property', 'realty', 'housing', 'mortgage'],
-  telecommunications: ['telecom', 'mobile', 'wireless', 'broadband', 'phone', 'cellular'],
-  hospitality: ['hotel', 'resort', 'restaurant', 'travel', 'tourism', 'hospitality'],
-}
-
-function classifySector(victimName, existingSector = null) {
-  // If we already have a valid sector from the API, use it
-  if (existingSector && existingSector !== 'Unknown' && existingSector !== '') {
-    return existingSector
-  }
-
-  if (!victimName) return 'Unknown'
-  const lower = victimName.toLowerCase()
-
-  for (const [sector, keywords] of Object.entries(SECTOR_KEYWORDS)) {
-    if (keywords.some(kw => lower.includes(kw))) {
-      return sector
-    }
-  }
-  return 'Other'
-}
 
 function parseDate(dateStr) {
   if (!dateStr) return null
@@ -246,8 +212,13 @@ async function ingestRansomLook() {
     const incidentData = {
       actor_id: actorId,
       victim_name: victimName,
-      victim_sector: classifySector(victimName),
+      victim_sector: classifySector({
+        victimName: victimName,
+        website: post.website || null,
+        description: post.description || null,
+      }),
       victim_country: post.country || null,
+      victim_website: post.website || null,
       discovered_date: discoveredDate,
       status: 'claimed',
       source: 'ransomlook',
