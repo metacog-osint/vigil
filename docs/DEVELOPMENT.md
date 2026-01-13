@@ -198,3 +198,69 @@ Without the API key, the dashboard works normally without the AI summary.
 3. Run `npm run lint && npm run build`
 4. Push and create PR
 5. Vercel creates preview deployment automatically
+
+---
+
+## Sprint 12: Differentiating Features (January 2026)
+
+### Completed Features
+
+**Feature 1: Organization Profile & Relevance Scoring**
+- OrganizationProfileSetup wizard (4-step setup: sector, geography, vendors, tech stack)
+- OrganizationProfileSummary component for profile display
+- RelevanceBadge component with score visualization (0-100 scale)
+- Integration in Settings page
+- Backend modules: orgProfile, relevance in supabase.js
+
+**Feature 2: IOC Quick Lookup**
+- Enhanced SearchModal with IOC type detection (IP, hash, domain, URL, CVE)
+- IOCQuickLookupCard component with enrichment links
+- External service links: VirusTotal, Shodan, AbuseIPDB, MalwareBazaar, etc.
+- quickLookup() and getEnrichmentLinks() functions in supabase.js
+
+**Feature 3: Actor-Vuln-TTP Correlation**
+- CorrelationPanel component showing TTPs, CVEs, IOCs, malware for actors
+- Collapsible sections with counts and summary statistics
+- correlations module in supabase.js with:
+  - getActorCorrelations()
+  - getVulnActors()
+  - getTechniqueActors()
+  - getAttackPath()
+
+**Feature 4: Trend Analysis Dashboard**
+- TrendAnalysis page with time range selector (30/60/90 days)
+- WeekComparisonCard for week-over-week metrics
+- ChangeSummaryCard for "what's changed" summaries
+- Sector trend charts and activity charts using Recharts
+- trendAnalysis module in supabase.js
+
+### New Components Added
+
+| Component | Purpose |
+|-----------|---------|
+| OrganizationProfileSetup.jsx | Profile setup wizard |
+| OrganizationProfileSummary | Profile display |
+| RelevanceBadge.jsx | Relevance score visualization |
+| IOCQuickLookupCard.jsx | Rich IOC display with enrichment |
+| CorrelationPanel.jsx | Actor correlation display |
+| WeekComparisonCard.jsx | Week-over-week comparison |
+| ChangeSummaryCard.jsx | Change summary display |
+| TrendAnalysis.jsx | Trends page |
+
+### New Supabase Modules
+
+| Module | Functions |
+|--------|-----------|
+| orgProfile | get(), update(), hasProfile() |
+| relevance | getRelevantActors(), getRelevantVulnerabilities() |
+| correlations | getActorCorrelations(), getVulnActors(), etc. |
+| trendAnalysis | getWeekOverWeekChange(), getSectorTrends(), etc. |
+
+### Files Modified
+
+- src/lib/supabase.js - Extended with 4 new modules (~550 lines added)
+- src/components/SearchModal.jsx - Enhanced with IOC detection
+- src/pages/Settings.jsx - Added Organization Profile section
+- src/App.jsx - Added /trends route
+- src/components/Sidebar.jsx - Added Trends nav link
+

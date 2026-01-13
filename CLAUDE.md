@@ -263,3 +263,136 @@ Domain: vigil.theintelligence.company (DNS via Squarespace/Google Domains)
 1. Create new migration file in `supabase/migrations/`
 2. Update query functions in `src/lib/supabase.js`
 3. Update affected components
+
+---
+
+## New Features (v0.2.0)
+
+### Organization Profile Module
+
+Store and retrieve organization profile data for personalized threat intelligence:
+
+\`\`\`javascript
+import { orgProfile } from '../lib/supabase'
+
+// Get current profile
+const profile = await orgProfile.get()
+
+// Update profile
+await orgProfile.update({
+  sector: 'healthcare',
+  region: 'north_america',
+  country: 'United States',
+  tech_vendors: ['Microsoft', 'Cisco'],
+  tech_stack: ['Windows Server', 'Active Directory']
+})
+
+// Check if profile exists
+const hasProfile = await orgProfile.hasProfile()
+\`\`\`
+
+### Relevance Scoring Module
+
+Calculate relevance scores based on org profile:
+
+\`\`\`javascript
+import { relevance } from '../lib/supabase'
+
+// Get actors sorted by relevance
+const actors = await relevance.getRelevantActors(profile, limit)
+
+// Get vulnerabilities sorted by relevance
+const vulns = await relevance.getRelevantVulnerabilities(profile, limit)
+
+// Calculate individual scores
+const actorScore = relevance.calculateActorScore(actor, profile)
+const vulnScore = relevance.calculateVulnScore(vuln, profile)
+\`\`\`
+
+### Correlations Module
+
+Fetch correlated data for threat actors:
+
+\`\`\`javascript
+import { correlations } from '../lib/supabase'
+
+// Get all correlations for an actor
+const data = await correlations.getActorCorrelations(actorId)
+// Returns: { techniques, vulnerabilities, iocs, malware }
+
+// Get actors exploiting a CVE
+const actors = await correlations.getVulnActors(cveId)
+
+// Get actors using a technique
+const actors = await correlations.getTechniqueActors(techniqueId)
+\`\`\`
+
+### Trend Analysis Module
+
+Get temporal intelligence and trend data:
+
+\`\`\`javascript
+import { trendAnalysis } from '../lib/supabase'
+
+// Get week-over-week comparison
+const comparison = await trendAnalysis.getWeekOverWeekChange()
+// Returns: { currentWeek, previousWeek, incidentChange }
+
+// Get change summary
+const changes = await trendAnalysis.getChangeSummary(7)
+// Returns: { newIncidents, newActors, newKEVs, escalatingActors }
+
+// Get sector trends over time
+const sectorData = await trendAnalysis.getSectorTrends(30)
+// Returns: { weeks, sectors, data }
+\`\`\`
+
+### IOC Quick Lookup
+
+Enhanced IOC search with enrichment:
+
+\`\`\`javascript
+import { iocs } from '../lib/supabase'
+
+// Quick lookup with type detection
+const result = await iocs.quickLookup('8.8.8.8')
+// Returns: { iocs, malware, vulnerabilities, type, found }
+
+// Get external enrichment links
+const links = iocs.getEnrichmentLinks('8.8.8.8', 'ip')
+// Returns: [{ name: 'VirusTotal', url: '...' }, ...]
+\`\`\`
+
+### New Component Patterns
+
+#### RelevanceBadge Component
+\`\`\`jsx
+import { RelevanceBadge } from '../components/RelevanceBadge'
+
+<RelevanceBadge score={85} reasons={[{factor: 'Sector match', points: 50}]} />
+\`\`\`
+
+#### CorrelationPanel Component
+\`\`\`jsx
+import { CorrelationPanel } from '../components/CorrelationPanel'
+
+<CorrelationPanel actorId={actorId} actorName={actorName} />
+\`\`\`
+
+#### WeekComparisonCard Component
+\`\`\`jsx
+import WeekComparisonCard from '../components/WeekComparisonCard'
+
+<WeekComparisonCard data={weekComparison} loading={loading} />
+\`\`\`
+
+### Route Updates
+
+| Route | Component | Description |
+|-------|-----------|-------------|
+| /trends | TrendAnalysis | Trend analysis dashboard |
+
+### Sidebar Navigation
+
+Trends page added to sidebar navigation between Alerts and Watchlists.
+
