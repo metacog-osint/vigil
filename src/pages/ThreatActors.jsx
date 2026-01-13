@@ -8,6 +8,7 @@ import { NewBadge } from '../components/NewIndicator'
 import { WatchButton } from '../components/WatchButton'
 import { Sparkline } from '../components/Sparkline'
 import { Timeline } from '../components/Timeline'
+import { CorrelationPanel } from '../components/CorrelationPanel'
 
 const SECTORS = [
   'healthcare',
@@ -375,6 +376,11 @@ export default function ThreatActors() {
                   <Timeline events={timelineEvents} maxItems={5} className="max-h-64 overflow-y-auto" />
                 </div>
               )}
+
+              {/* Correlation Panel - TTPs, CVEs, IOCs */}
+              <div className="pt-4 border-t border-gray-800">
+                <CorrelationPanel actorId={selectedActor.id} actorName={selectedActor.name} />
+              </div>
 
               <div className="pt-4 border-t border-gray-800">
                 <div className="text-gray-500 text-xs">
