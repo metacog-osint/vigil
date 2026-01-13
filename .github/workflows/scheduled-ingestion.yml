@@ -1,0 +1,66 @@
+name: Scheduled Data Ingestion
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    # Allow manual trigger from GitHub Actions UI
+    inputs:
+      run_mitre:
+        description: 'Run MITRE ATT&CK ingestion'
+        type: boolean
+        default: true
+      run_kev:
+        description: 'Run CISA KEV ingestion'
+        type: boolean
+        default: true
+      run_correlations:
+        description: 'Run correlation seeding'
+        type: boolean
+        default: true
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run MITRE ATT&CK ingestion
+        if: ${{ github.event_name == 'schedule' || inputs.run_mitre }}
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npm run ingest:mitre
+
+      - name: Run CISA KEV ingestion
+        if: ${{ github.event_name == 'schedule' || inputs.run_kev }}
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npm run ingest:kev
+
+      - name: Run correlation seeding
+        if: ${{ github.event_name == 'schedule' || inputs.run_correlations }}
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npm run seed:correlations
+
+      - name: Summary
+        run: |
+          echo "## Ingestion Complete" >> $GITHUB_STEP_SUMMARY
+          echo "- MITRE ATT&CK: ✓" >> $GITHUB_STEP_SUMMARY
+          echo "- CISA KEV: ✓" >> $GITHUB_STEP_SUMMARY
+          echo "- Correlations: ✓" >> $GITHUB_STEP_SUMMARY
