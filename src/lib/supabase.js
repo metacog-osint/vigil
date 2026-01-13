@@ -610,6 +610,128 @@ export const tags = {
   },
 }
 
+// Alerts queries
+export const alerts = {
+  async getRecent(options = {}) {
+    const { limit = 50, offset = 0, category = '', severity = '', days = 30 } = options
+
+    let query = supabase
+      .from('alerts')
+      .select('*', { count: 'exact' })
+      .order('published_date', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (days > 0) {
+      const cutoffDate = new Date()
+      cutoffDate.setDate(cutoffDate.getDate() - days)
+      query = query.gte('published_date', cutoffDate.toISOString())
+    }
+
+    if (category) {
+      query = query.eq('category', category)
+    }
+
+    if (severity) {
+      query = query.eq('severity', severity)
+    }
+
+    return query
+  },
+
+  async getById(id) {
+    return supabase
+      .from('alerts')
+      .select('*')
+      .eq('id', id)
+      .single()
+  },
+
+  async getByCVE(cveId) {
+    return supabase
+      .from('alerts')
+      .select('*')
+      .contains('cve_ids', [cveId])
+      .order('published_date', { ascending: false })
+  },
+}
+
+// Malware samples queries
+export const malwareSamples = {
+  async getRecent(options = {}) {
+    const { limit = 50, offset = 0, signature = '', days = 30 } = options
+
+    let query = supabase
+      .from('malware_samples')
+      .select('*', { count: 'exact' })
+      .order('first_seen', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (days > 0) {
+      const cutoffDate = new Date()
+      cutoffDate.setDate(cutoffDate.getDate() - days)
+      query = query.gte('first_seen', cutoffDate.toISOString())
+    }
+
+    if (signature) {
+      query = query.eq('signature', signature)
+    }
+
+    return query
+  },
+
+  async searchHash(hash) {
+    return supabase
+      .from('malware_samples')
+      .select('*')
+      .or(`sha256.eq.${hash},sha1.eq.${hash},md5.eq.${hash}`)
+      .single()
+  },
+
+  async getBySignature(signature, limit = 50) {
+    return supabase
+      .from('malware_samples')
+      .select('*')
+      .eq('signature', signature)
+      .order('first_seen', { ascending: false })
+      .limit(limit)
+  },
+
+  async getSignatureSummary() {
+    const { data } = await supabase
+      .from('malware_samples')
+      .select('signature')
+      .not('signature', 'is', null)
+
+    const counts = {}
+    for (const row of (data || [])) {
+      if (row.signature) {
+        counts[row.signature] = (counts[row.signature] || 0) + 1
+      }
+    }
+    return counts
+  },
+}
+
+// Sync log queries
+export const syncLog = {
+  async getRecent(limit = 20) {
+    return supabase
+      .from('sync_log')
+      .select('*')
+      .order('completed_at', { ascending: false })
+      .limit(limit)
+  },
+
+  async getBySource(source) {
+    return supabase
+      .from('sync_log')
+      .select('*')
+      .eq('source', source)
+      .order('completed_at', { ascending: false })
+      .limit(10)
+  },
+}
+
 // Dashboard stats
 export const dashboard = {
   async getOverview() {
