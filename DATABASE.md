@@ -24,6 +24,8 @@
 | `sync_log` | Data ingestion logs | UUID | ~50 |
 | `sector_keywords` | Keyword → sector mapping | keyword (text) | ~50 |
 | `actor_aliases` | Alias → actor mapping | alias (text) | ~20 |
+| `weekly_summaries` | Weekly aggregated statistics | UUID | ~52/year |
+| `actor_trend_history` | Daily actor trend snapshots | UUID | ~500/day |
 
 ---
 
@@ -399,6 +401,115 @@ Sample data:
 
 ---
 
+## Table: `weekly_summaries`
+
+Stores aggregated weekly statistics for trend comparison (Migration 007).
+
+```sql
+CREATE TABLE weekly_summaries (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  week_start DATE NOT NULL UNIQUE,
+  week_end DATE NOT NULL,
+
+  -- Incident metrics
+  incidents_total INTEGER DEFAULT 0,
+  incidents_by_sector JSONB DEFAULT '{}',
+  incidents_by_country JSONB DEFAULT '{}',
+
+  -- Actor metrics
+  actors_active INTEGER DEFAULT 0,
+  actors_escalating INTEGER DEFAULT 0,
+  actors_new INTEGER DEFAULT 0,
+  top_actors JSONB DEFAULT '[]',
+
+  -- Vulnerability metrics
+  kevs_added INTEGER DEFAULT 0,
+  critical_vulns_added INTEGER DEFAULT 0,
+
+  -- Change metrics
+  incident_change_pct NUMERIC,
+  actor_change_pct NUMERIC,
+
+  -- AI-generated summary
+  ai_summary TEXT,
+
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### Indexes
+- `idx_weekly_summaries_week` - B-tree on `week_start DESC`
+
+### Key Queries
+```sql
+-- Get recent weekly summaries
+SELECT * FROM weekly_summaries ORDER BY week_start DESC LIMIT 8;
+
+-- Get week-over-week comparison
+SELECT * FROM recent_weekly_trends;
+```
+
+---
+
+## Table: `actor_trend_history`
+
+Daily snapshots of actor metrics for trajectory visualization (Migration 007).
+
+```sql
+CREATE TABLE actor_trend_history (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  actor_id UUID NOT NULL REFERENCES threat_actors(id) ON DELETE CASCADE,
+  recorded_date DATE NOT NULL DEFAULT CURRENT_DATE,
+
+  -- Trend metrics at time of snapshot
+  trend_status TEXT,
+  incidents_7d INTEGER DEFAULT 0,
+  incidents_30d INTEGER DEFAULT 0,
+  incident_velocity NUMERIC DEFAULT 0,
+
+  -- Additional context
+  rank_position INTEGER,
+
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+
+  UNIQUE(actor_id, recorded_date)
+);
+```
+
+### Indexes
+- `idx_actor_trend_history_actor` - B-tree on `actor_id`
+- `idx_actor_trend_history_date` - B-tree on `recorded_date DESC`
+- `idx_actor_trend_history_actor_date` - Composite on `(actor_id, recorded_date DESC)`
+
+### Key Queries
+```sql
+-- Get trajectory for specific actors (last 90 days)
+SELECT * FROM actor_trajectories WHERE actor_id IN ('<uuid1>', '<uuid2>');
+
+-- Get snapshot for today
+SELECT snapshot_actor_trends();
+```
+
+---
+
+## Views
+
+### `recent_weekly_trends`
+Returns last 12 weeks of summaries with previous week comparisons.
+
+```sql
+SELECT * FROM recent_weekly_trends;
+```
+
+### `actor_trajectories`
+Returns actor trend history for last 90 days with actor names.
+
+```sql
+SELECT * FROM actor_trajectories WHERE actor_name = 'LockBit';
+```
+
+---
+
 ## Stored Functions
 
 ### `apply_actor_trends()`
@@ -429,6 +540,27 @@ Resolves an alias to the canonical actor ID.
 SELECT resolve_actor_alias('ALPHV');  -- Returns BlackCat's UUID
 ```
 
+### `get_week_boundaries(target_date)`
+Returns week start and end dates for a given date.
+
+```sql
+SELECT * FROM get_week_boundaries(CURRENT_DATE);
+```
+
+### `calculate_weekly_summary(target_week_start)`
+Calculates summary statistics for a given week.
+
+```sql
+SELECT calculate_weekly_summary('2026-01-06');
+```
+
+### `snapshot_actor_trends()`
+Creates daily snapshot of actor metrics (called by automation).
+
+```sql
+SELECT snapshot_actor_trends();  -- Returns count of actors snapshotted
+```
+
 ---
 
 ## Data Sources
@@ -436,11 +568,18 @@ SELECT resolve_actor_alias('ALPHV');  -- Returns BlackCat's UUID
 | Source | Table(s) | Frequency | Notes |
 |--------|----------|-----------|-------|
 | Ransomwatch | threat_actors, incidents | Historical | Data from June 2025 |
-| CISA KEV | vulnerabilities | Daily | ~1,500 entries |
-| NVD | vulnerabilities | Daily | ~500 recent CVEs |
-| URLhaus | iocs | Daily | Malicious URLs |
-| Feodo Tracker | iocs | Daily | Botnet C2 IPs |
-| ThreatFox | iocs | Daily | Mixed IOCs |
+| RansomLook | threat_actors, incidents | Every 6 hours | Active ransomware tracker |
+| Ransomware.live | incidents | Every 6 hours | Corroborates RansomLook |
+| CISA KEV | vulnerabilities | Every 6 hours | ~1,500 entries |
+| CISA Alerts | alerts | Every 6 hours | Security advisories |
+| NVD | vulnerabilities | Every 6 hours | ~500 recent CVEs |
+| URLhaus | iocs | Every 6 hours | Malicious URLs |
+| Feodo Tracker | iocs | Every 6 hours | Botnet C2 IPs |
+| ThreatFox | iocs | Every 6 hours | Mixed IOCs |
+| Abuse.ch | iocs | Every 6 hours | SSL certificates |
+| MITRE ATT&CK | techniques | Every 6 hours | TTPs database |
+| Actor Snapshots | actor_trend_history | Daily | Automated via GitHub Actions |
+| Weekly Summary | weekly_summaries | Weekly | Automated every Monday |
 
 ---
 

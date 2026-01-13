@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-export function useKeyboardShortcuts({ onToggleSidebar, onOpenSearch }) {
+export function useKeyboardShortcuts({ onToggleSidebar, onOpenSearch, onShowHelp }) {
   const navigate = useNavigate()
 
   const handleKeyDown = useCallback(
@@ -22,8 +22,11 @@ export function useKeyboardShortcuts({ onToggleSidebar, onOpenSearch }) {
       // Global shortcuts (no modifier keys needed)
       switch (e.key) {
         case '?':
-          // Show help modal (future feature)
-          console.log('Keyboard shortcuts: ?, /, g+d, g+a, g+i, g+v, g+s, [, Esc')
+          // Show keyboard shortcuts help modal
+          e.preventDefault()
+          if (onShowHelp) {
+            onShowHelp()
+          }
           break
 
         case '/':
@@ -95,13 +98,37 @@ export function useKeyboardShortcuts({ onToggleSidebar, onOpenSearch }) {
         case 's':
           if (window._waitingForGoKey) {
             e.preventDefault()
-            navigate('/iocs')
+            navigate('/settings')
+            window._waitingForGoKey = false
+          }
+          break
+
+        case 't':
+          if (window._waitingForGoKey) {
+            e.preventDefault()
+            navigate('/techniques')
+            window._waitingForGoKey = false
+          }
+          break
+
+        case 'w':
+          if (window._waitingForGoKey) {
+            e.preventDefault()
+            navigate('/watchlists')
+            window._waitingForGoKey = false
+          }
+          break
+
+        case 'r':
+          if (window._waitingForGoKey) {
+            e.preventDefault()
+            navigate('/trends')
             window._waitingForGoKey = false
           }
           break
       }
     },
-    [navigate, onToggleSidebar, onOpenSearch]
+    [navigate, onToggleSidebar, onOpenSearch, onShowHelp]
   )
 
   useEffect(() => {

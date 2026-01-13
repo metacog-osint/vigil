@@ -10,6 +10,11 @@
 2. [IOC Quick Lookup](#2-ioc-quick-lookup)
 3. [Actor-Vuln-TTP Correlation](#3-actor-vuln-ttp-correlation)
 4. [Trend Analysis Dashboard](#4-trend-analysis-dashboard)
+5. [Actor Trajectory Charts](#5-actor-trajectory-charts)
+6. [Attack Path Visualization](#6-attack-path-visualization)
+7. [Incident Flow Visualization](#7-incident-flow-visualization)
+8. [Keyboard Shortcuts](#8-keyboard-shortcuts)
+9. [Smart Time Display](#9-smart-time-display)
 
 ---
 
@@ -222,6 +227,190 @@ const sectorData = await trendAnalysis.getSectorTrends(30)
 
 ---
 
+## 5. Actor Trajectory Charts
+
+### Purpose
+Track and compare threat actor activity over time with historical trend visualization.
+
+### Features
+
+- **Multi-Actor Comparison**: Compare up to 8 actors on the same chart
+- **Historical Data**: View incident counts over 30/60/90 day periods
+- **Activity Metrics**: Track incidents_7d, incidents_30d, and incident velocity
+- **Mini Version**: Compact sparkline-style chart for dashboard widgets
+
+### How to Use
+
+1. Navigate to **Trends** page
+2. Scroll to the **Actor Trajectories** section
+3. Use the actor selector to choose actors to compare
+4. Select time range (30/60/90 days)
+
+### Components
+
+| File | Purpose |
+|------|---------|
+| `src/components/ActorTrajectoryChart.jsx` | Full trajectory chart with legend |
+| `ActorTrajectoryMini` | Compact version for widgets |
+| `ActorSelector` | Multi-select dropdown for actor selection |
+
+### Data Source
+
+Historical data is captured daily by `scripts/snapshot-actor-trends.mjs` and stored in the `actor_trend_history` table.
+
+---
+
+## 6. Attack Path Visualization
+
+### Purpose
+Visual representation of attack chains showing how actors move from techniques to targets.
+
+### Features
+
+- **Node Types**: Actor (red), Technique (purple), Vulnerability (amber), IOC (blue)
+- **Flow Visualization**: Shows connections between attack elements
+- **Interactive**: Hover for details on connections
+- **Compact Mode**: Mini version for embedding in panels
+
+### Components
+
+| File | Purpose |
+|------|---------|
+| `src/components/AttackPathDiagram.jsx` | Full attack path diagram |
+| `AttackPathMini` | Compact card version |
+
+### How It Works
+
+The attack path shows:
+1. **Actor** → entry point
+2. **Techniques** → methods used (MITRE ATT&CK)
+3. **Vulnerabilities** → CVEs exploited
+4. **IOCs** → indicators generated
+
+---
+
+## 7. Incident Flow Visualization
+
+### Purpose
+Sankey-style diagram showing attack flows from actors to targeted sectors.
+
+### Features
+
+- **Actor → Sector Flow**: Shows which actors target which sectors
+- **Volume Indication**: Link thickness represents incident count
+- **Color Coding**: Actors (red), Tactics (purple), Sectors (blue)
+- **Legend**: Clear category identification
+
+### How to Use
+
+1. Navigate to **Incidents** page
+2. The flow visualization appears automatically when data is loaded
+3. Shows top 5 actors and top 5 targeted sectors
+
+### Components
+
+| File | Purpose |
+|------|---------|
+| `src/components/IncidentFlow.jsx` | Sankey diagram component |
+| `IncidentFlowSimple` | Simplified bar-based flow |
+| `AttackChain` | Timeline-style attack chain |
+
+---
+
+## 8. Keyboard Shortcuts
+
+### Purpose
+Quick navigation and actions without using the mouse.
+
+### Access
+
+Press `?` anywhere in the app to open the keyboard shortcuts help modal.
+
+### Available Shortcuts
+
+#### Navigation (g + key)
+| Shortcut | Action |
+|----------|--------|
+| `g` then `d` | Go to Dashboard |
+| `g` then `a` | Go to Actors |
+| `g` then `i` | Go to Incidents |
+| `g` then `v` | Go to Vulnerabilities |
+| `g` then `t` | Go to Techniques |
+| `g` then `w` | Go to Watchlists |
+| `g` then `r` | Go to Trends |
+| `g` then `s` | Go to Settings |
+
+#### Search
+| Shortcut | Action |
+|----------|--------|
+| `/` | Open search / Focus search input |
+| `Cmd+K` / `Ctrl+K` | Open quick search modal |
+
+#### Interface
+| Shortcut | Action |
+|----------|--------|
+| `[` | Toggle sidebar collapse |
+| `?` | Show keyboard shortcuts help |
+| `Escape` | Close modals / Blur input |
+
+### Components
+
+| File | Purpose |
+|------|---------|
+| `src/components/KeyboardShortcutsModal.jsx` | Help modal with shortcut list |
+| `src/hooks/useKeyboardShortcuts.js` | Keyboard event handling |
+
+---
+
+## 9. Smart Time Display
+
+### Purpose
+Intelligent time formatting that adapts based on how recent the date is.
+
+### Formats
+
+| Time Distance | Display Format |
+|---------------|----------------|
+| < 24 hours | "2 hours ago" |
+| Today | "Today at 14:30" |
+| Yesterday | "Yesterday at 09:15" |
+| This week | "Monday" |
+| Older | "Jan 5, 2026" |
+
+### Components
+
+| Component | Usage |
+|-----------|-------|
+| `TimeAgo` | Always shows relative time with full date tooltip |
+| `SmartTime` | Adaptive formatting based on age |
+| `DateBadge` | Colored badge with smart formatting |
+| `FullDate` | Always shows full date (e.g., "January 5, 2026") |
+| `Timestamp` | Monospace ISO format for technical display |
+
+### Usage Example
+
+```jsx
+import { SmartTime, FullDate, TimeAgo } from '../components/TimeDisplay'
+
+// In a list - adaptive display
+<SmartTime date={incident.discovered_date} />
+
+// In detail panel - full date
+<FullDate date={incident.discovered_date} />
+
+// Always relative
+<TimeAgo date={actor.last_seen} />
+```
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `src/components/TimeDisplay.jsx` | All time formatting components |
+| `smartFormatDate()` | Utility function for smart formatting |
+
+---
+
 ## Implementation Details
 
 ### Supabase Modules
@@ -247,6 +436,18 @@ All features use modular functions in `src/lib/supabase.js`:
 ---
 
 ## Version History
+
+### v0.3.0 (January 2026)
+- Added Actor Trajectory Charts for historical trend comparison
+- Added Attack Path Visualization diagrams
+- Added Incident Flow (Sankey) visualization on Incidents page
+- Added Keyboard Shortcuts modal (press `?` for help)
+- Added Smart Time Display components (SmartTime, TimeAgo, etc.)
+- Added AttackMatrixHeatmap toggle to Techniques page
+- Added daily actor snapshots automation
+- Added weekly summary generation automation
+- Integrated NewBadge indicators across pages
+- Added `getAll` functions for incidents, vulnerabilities, iocs, alerts
 
 ### v0.2.0 (January 2026)
 - Added Organization Profile & Relevance Scoring

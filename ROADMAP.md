@@ -380,44 +380,68 @@ cve:2024-* cvss:>=9.0 kev:true
 
 ---
 
-## Deferred: Future Enhancements
+## Completed: Sprint 13 Features (January 2026)
 
-The following items were considered for Sprint 12 but deferred for future implementation:
+### ActorTrajectoryChart Component
+- [x] Multi-actor comparison line chart
+- [x] ActorTrajectoryMini for dashboard widgets
+- [x] ActorSelector dropdown for choosing actors
+- [x] Integration with TrendAnalysis page
+- [x] Uses `trendAnalysis.getActorTrajectories(actorIds, days)` function
+
+### AttackPathDiagram Component
+- [x] Visual attack path: Actor → Technique → Vulnerability → IOC
+- [x] Pure SVG/CSS implementation (no external dependency)
+- [x] AttackPathMini for compact display
+- [x] Uses `correlations.getAttackPath(actorId)` function
+
+### Incident Flow Visualization
+- [x] Sankey-style diagram showing Actor → Sector flows
+- [x] Integrated into Incidents page
+- [x] Dynamic computation from incident data
+- [x] IncidentFlowSimple as fallback
+
+### Keyboard Shortcuts
+- [x] KeyboardShortcutsModal component
+- [x] Press `?` to show help modal
+- [x] Navigation shortcuts (g+d, g+a, g+i, etc.)
+- [x] Search shortcuts (/, Cmd+K)
+- [x] Interface shortcuts ([, Escape)
+
+### Smart Time Display
+- [x] TimeDisplay components (SmartTime, TimeAgo, FullDate, etc.)
+- [x] Integrated across Incidents, ThreatActors, Dashboard pages
+- [x] Adaptive formatting based on time distance
+
+### ATT&CK Matrix Heatmap
+- [x] AttackMatrixHeatmap toggle on Techniques page
+- [x] Table/Heatmap view toggle
+- [x] Tactic filtering
+
+### Automation
+- [x] Daily actor trend snapshots (snapshot-actor-trends.mjs)
+- [x] Weekly summary generation (generate-weekly-summary.mjs)
+- [x] GitHub Actions workflow for weekly summaries
+- [x] Database migration 007 for trend tables
+
+### Supabase Module Completeness
+- [x] Added `getAll` functions for incidents, vulnerabilities, iocs, alerts
+- [x] Component barrel exports updated
+
+---
+
+## Deferred: Future Enhancements
 
 ### Vulnerabilities "Known Actors" Section
 **Status:** Deferred
 **Rationale:** Most analysts start from actors, not CVEs. The actor → CVE direction (via CorrelationPanel) provides more value than CVE → actor.
-**Implementation notes:**
-- Add section to Vulnerabilities.jsx detail panel
-- Use `correlations.getVulnActors(cveId)` function (already exists)
-- Show actors known to exploit the selected CVE
 
 ### Techniques "Used By" Section
 **Status:** Deferred
 **Rationale:** The Techniques page (ATT&CK matrix) is already complex. Adding actor lists per technique would clutter the UI.
-**Implementation notes:**
-- Add to technique detail modal/panel
-- Use `correlations.getTechniqueActors(techniqueId)` function (already exists)
-- Show actors using the selected technique
-
-### AttackPathDiagram Component
-**Status:** Deferred
-**Rationale:** Requires additional dependency (react-flow or vis.js) and significant UI work. The tabular CorrelationPanel provides the same information more simply.
-**Implementation notes:**
-- `correlations.getAttackPath(actorId)` function already exists
-- Returns `{ nodes, edges }` structure ready for graph visualization
-- Would show: Actor → Techniques → Vulnerabilities → IOCs as visual graph
-
-### ActorTrajectoryChart Component
-**Status:** Deferred
-**Rationale:** TrendAnalysis page already provides activity trends. Per-actor trajectory charts would be redundant.
-**Implementation notes:**
-- Would show individual actor activity over time (7/30/90 days)
-- Could use `trendAnalysis.getActorTrajectories(actorIds, days)` function
-- Line chart with incidents per day/week
 
 ---
 
 *Last updated: January 2026*
-*Version: 0.2.0*
+*Version: 0.3.0*
 

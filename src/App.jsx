@@ -22,6 +22,7 @@ import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import SearchModal from './components/SearchModal'
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal'
 import { SkeletonDashboard } from './components/Skeleton'
 
 // Hooks
@@ -45,6 +46,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const { user, loading: authLoading } = useAuth()
   const isOnline = useOnlineStatus()
   const location = useLocation()
@@ -53,6 +55,7 @@ function App() {
   useKeyboardShortcuts({
     onToggleSidebar: () => setSidebarCollapsed((prev) => !prev),
     onOpenSearch: () => setSearchOpen(true),
+    onShowHelp: () => setHelpOpen(true),
   })
 
   // Cmd+K / Ctrl+K to open search
@@ -132,6 +135,9 @@ function App() {
 
       {/* Search Modal */}
       <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+
+      {/* Keyboard Shortcuts Help Modal */}
+      <KeyboardShortcutsModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   )
 }

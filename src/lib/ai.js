@@ -38,8 +38,11 @@ export async function generateBLUF(data, options = { save: true }) {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
 
   if (!apiKey) {
+    console.warn('VITE_GROQ_API_KEY not set - AI summary disabled')
     return null // AI features disabled without API key
   }
+
+  console.log('Generating AI summary with Groq...')
 
   const { prompt, metadata } = buildBLUFPrompt(data)
 
@@ -68,12 +71,14 @@ export async function generateBLUF(data, options = { save: true }) {
     })
 
     if (!response.ok) {
-      console.error('Groq API error:', response.status)
+      const errorText = await response.text()
+      console.error('Groq API error:', response.status, errorText)
       return null
     }
 
     const result = await response.json()
     const summary = result.choices?.[0]?.message?.content || null
+    console.log('AI summary generated:', summary ? 'success' : 'empty response')
 
     // Save to database for historical tracking (throttled to once per 6 hours)
     if (summary && options.save) {
