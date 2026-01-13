@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { signOut, signInWithGoogle } from '../lib/firebase'
 
-export default function Header({ onMenuClick, user, isOnline }) {
+export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
   const [showUserMenu, setShowUserMenu] = useState(false)
 
   const handleSignOut = async () => {
@@ -48,19 +48,19 @@ export default function Header({ onMenuClick, user, isOnline }) {
 
       {/* Right side */}
       <div className="flex items-center gap-4">
-        {/* Quick search */}
-        <div className="hidden md:flex items-center">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search IOCs, actors..."
-              className="cyber-input w-64 pl-9 py-1.5 text-sm"
-            />
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-        </div>
+        {/* Quick search button */}
+        <button
+          onClick={onSearchClick}
+          className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 bg-gray-800/50 border border-gray-700 rounded-lg hover:border-gray-600 hover:text-gray-300 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <span>Search...</span>
+          <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-xs text-gray-500 bg-gray-800 border border-gray-700 rounded">
+            ⌘K
+          </kbd>
+        </button>
 
         {/* Notifications */}
         <button className="relative p-2 rounded-lg hover:bg-gray-800">

@@ -5,6 +5,7 @@ import StatCard from '../components/StatCard'
 import ActivityChart from '../components/ActivityChart'
 import RecentIncidents from '../components/RecentIncidents'
 import TopActors from '../components/TopActors'
+import { SkeletonDashboard } from '../components/Skeleton'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
@@ -38,11 +39,7 @@ export default function Dashboard() {
   }, [])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-cyber-accent animate-pulse">Loading dashboard...</div>
-      </div>
-    )
+    return <SkeletonDashboard />
   }
 
   return (

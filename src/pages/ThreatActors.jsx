@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { threatActors, subscribeToTable } from '../lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
 import TrendBadge, { TrendIndicator } from '../components/TrendBadge'
+import { SkeletonTable } from '../components/Skeleton'
+import { EmptyActors } from '../components/EmptyState'
 
 const SECTORS = [
   'healthcare',
@@ -158,11 +160,9 @@ export default function ThreatActors() {
         {/* Actor List */}
         <div className="flex-1">
           {loading ? (
-            <div className="text-center py-8 text-gray-400">Loading...</div>
+            <SkeletonTable rows={8} cols={5} />
           ) : actors.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              No actors found. Data will appear after syncing.
-            </div>
+            <EmptyActors />
           ) : (
             <div className="cyber-card overflow-hidden">
               <table className="cyber-table">

@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { vulnerabilities } from '../lib/supabase'
 import { formatDistanceToNow, format } from 'date-fns'
+import { SkeletonTable } from '../components/Skeleton'
+import { EmptyVulnerabilities } from '../components/EmptyState'
+import { SeverityBadge, EPSSBadge } from '../components/SeverityBadge'
 
 export default function Vulnerabilities() {
   const [vulnList, setVulnList] = useState([])
@@ -40,13 +43,6 @@ export default function Vulnerabilities() {
     }
   }
 
-  const getSeverityBadge = (cvss) => {
-    if (!cvss) return 'badge-info'
-    if (cvss >= 9) return 'badge-critical'
-    if (cvss >= 7) return 'badge-high'
-    if (cvss >= 4) return 'badge-medium'
-    return 'badge-low'
-  }
 
   return (
     <div className="space-y-6">
@@ -113,11 +109,9 @@ export default function Vulnerabilities() {
         {/* Vuln List */}
         <div className="flex-1">
           {loading ? (
-            <div className="text-center py-8 text-gray-400">Loading...</div>
+            <SkeletonTable rows={8} cols={4} />
           ) : vulnList.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              No vulnerabilities found.
-            </div>
+            <EmptyVulnerabilities />
           ) : (
             <div className="cyber-card overflow-hidden">
               <table className="cyber-table">
@@ -147,9 +141,7 @@ export default function Vulnerabilities() {
                         {vuln.affected_vendors?.[0] || 'Unknown'}
                       </td>
                       <td>
-                        <span className={getSeverityBadge(vuln.cvss_score)}>
-                          {vuln.cvss_score || 'N/A'}
-                        </span>
+                        <SeverityBadge score={vuln.cvss_score} />
                       </td>
                       <td className="hidden md:table-cell text-sm text-gray-400">
                         {vuln.kev_date
@@ -198,16 +190,12 @@ export default function Vulnerabilities() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-gray-500 mb-1">CVSS Score</div>
-                  <span className={getSeverityBadge(selectedVuln.cvss_score)}>
-                    {selectedVuln.cvss_score || 'N/A'}
-                  </span>
+                  <SeverityBadge score={selectedVuln.cvss_score} showLabel />
                 </div>
                 {selectedVuln.epss_score && (
                   <div>
                     <div className="text-gray-500 mb-1">EPSS</div>
-                    <div className="text-gray-300">
-                      {(selectedVuln.epss_score * 100).toFixed(2)}%
-                    </div>
+                    <EPSSBadge score={selectedVuln.epss_score} percentile={selectedVuln.epss_percentile} />
                   </div>
                 )}
               </div>

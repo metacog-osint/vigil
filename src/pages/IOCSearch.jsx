@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { iocs } from '../lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
+import { SkeletonList } from '../components/Skeleton'
+import { EmptyIOCs } from '../components/EmptyState'
 
 const IOC_TYPES = [
   { key: '', label: 'All Types' },
@@ -47,7 +49,7 @@ export default function IOCSearch() {
   }
 
   // Load recent IOCs on first render
-  useState(() => {
+  useEffect(() => {
     loadRecentIOCs()
   }, [])
 
@@ -136,13 +138,9 @@ export default function IOCSearch() {
         </h2>
 
         {loading ? (
-          <div className="text-center py-8 text-gray-400">Searching...</div>
+          <SkeletonList items={5} />
         ) : displayList.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">
-            {searched
-              ? 'No IOCs found matching your search.'
-              : 'No IOCs in database. Run data ingestion to populate.'}
-          </div>
+          <EmptyIOCs />
         ) : (
           <div className="space-y-2">
             {displayList.map((ioc) => (
