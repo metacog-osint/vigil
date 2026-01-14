@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { dashboard, incidents, threatActors, vulnerabilities, syncLog, orgProfile, relevance, trendAnalysis } from '../lib/supabase'
 import { generateBLUF } from '../lib/ai'
 import { getTopTargetedServices } from '../lib/service-categories'
@@ -24,6 +24,55 @@ import { SectorDrilldown } from '../components/SectorDrilldown'
 import ThreatAttributionMap from '../components/ThreatAttributionMap'
 import CountryAttackPanel from '../components/CountryAttackPanel'
 import { KillChainMini } from '../components/KillChainVisualization'
+
+// Personalization Prompt Component
+function PersonalizationPrompt() {
+  const navigate = useNavigate()
+  const [dismissed, setDismissed] = useState(false)
+
+  if (dismissed) return null
+
+  return (
+    <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-4">
+      <div className="flex items-start gap-4">
+        <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
+          <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <h3 className="text-white font-medium mb-1">Personalize Your Threat Feed</h3>
+          <p className="text-sm text-gray-400 mb-3">
+            Tell us about your industry and tech stack to get alerts tailored to your organization.
+            Get notified about Cisco zero-days, healthcare ransomware, or whatever matters to you.
+          </p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/settings')}
+              className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600 transition-colors"
+            >
+              Set Up Now
+            </button>
+            <button
+              onClick={() => setDismissed(true)}
+              className="text-sm text-gray-500 hover:text-gray-300"
+            >
+              Maybe later
+            </button>
+          </div>
+        </div>
+        <button
+          onClick={() => setDismissed(true)}
+          className="text-gray-500 hover:text-gray-300"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+}
 
 // Calculate threat level on a reasonable scale
 // Baseline: ~300 incidents/month is "normal" (score ~50)
@@ -210,6 +259,11 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Personalization Prompt */}
+      {!userProfile?.sector && (
+        <PersonalizationPrompt />
+      )}
 
       {/* AI BLUF Summary */}
       {aiSummary && (

@@ -29,6 +29,7 @@ import SearchModal from './components/SearchModal'
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal'
 import { SkeletonDashboard } from './components/Skeleton'
 import OnboardingTour from './components/OnboardingTour'
+import PersonalizationWizard, { usePersonalizationWizard } from './components/PersonalizationWizard'
 
 // Hooks
 import { useAuth } from './hooks/useAuth'
@@ -52,9 +53,11 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [showPersonalization, setShowPersonalization] = useState(false)
   const { user, loading: authLoading } = useAuth()
   const isOnline = useOnlineStatus()
   const location = useLocation()
+  const { shouldShow: shouldShowPersonalization, dismiss: dismissPersonalization } = usePersonalizationWizard()
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -151,6 +154,20 @@ function App() {
 
       {/* Onboarding Tour */}
       <OnboardingTour />
+
+      {/* Personalization Wizard - shows for first-time users after onboarding */}
+      {(shouldShowPersonalization || showPersonalization) && (
+        <PersonalizationWizard
+          onComplete={() => {
+            setShowPersonalization(false)
+            dismissPersonalization()
+          }}
+          onSkip={() => {
+            setShowPersonalization(false)
+            dismissPersonalization()
+          }}
+        />
+      )}
     </div>
   )
 }

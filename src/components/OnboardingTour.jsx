@@ -57,8 +57,8 @@ const TOUR_STEPS = [
   },
   {
     id: 'settings',
-    title: 'Organization Profile',
-    description: 'Set up your sector, tech stack, and preferences for personalized threat intelligence.',
+    title: 'Personalize Your Feed',
+    description: 'Set up your industry and tech stack (like Cisco, Microsoft) to get alerts tailored to YOUR organization.',
     target: '[data-tour="nav-settings"]',
     position: 'right',
     route: '/settings',
@@ -66,7 +66,7 @@ const TOUR_STEPS = [
   {
     id: 'complete',
     title: 'You\'re All Set!',
-    description: 'Start exploring threat intelligence tailored to your needs. Visit Settings to customize your experience.',
+    description: 'Head to Settings to personalize your feed. Get Cisco zero-days, healthcare incidents, or whatever matters to you - before it hits the news.',
     target: null,
     position: 'center',
     route: '/settings',
