@@ -6,6 +6,9 @@ import { SkeletonCard, ErrorMessage, TimeAgo } from '../components'
 import { OrganizationProfileSetup, OrganizationProfileSummary } from '../components/OrganizationProfileSetup'
 import DataSourcesPanel from '../components/DataSourcesPanel'
 import AlertRulesSection from '../components/AlertRulesSection'
+import ApiKeysSection from '../components/ApiKeysSection'
+import { getUserSubscription, getSubscriptionDisplayInfo, createBillingPortalSession } from '../lib/stripe'
+import { useAuth } from '../hooks/useAuth'
 import { formatDistanceToNow, format } from 'date-fns'
 
 const TIME_RANGES = [
@@ -182,6 +185,138 @@ function CreateTagModal({ isOpen, onClose, onCreate }) {
   )
 }
 
+function SubscriptionSection({ subscription, userId, onError }) {
+  const [isLoading, setIsLoading] = useState(false)
+  const displayInfo = getSubscriptionDisplayInfo(subscription)
+
+  const handleManageSubscription = async () => {
+    if (!userId) return
+    setIsLoading(true)
+    try {
+      const { url } = await createBillingPortalSession(userId)
+      window.location.href = url
+    } catch (err) {
+      onError(err.message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <span className="text-xl font-semibold text-white">{displayInfo.tierName}</span>
+            <span className={`text-sm capitalize ${displayInfo.statusColor}`}>
+              {displayInfo.statusLabel}
+            </span>
+          </div>
+          {displayInfo.renewalInfo && (
+            <p className="text-sm text-gray-500 mt-1">{displayInfo.renewalInfo}</p>
+          )}
+        </div>
+        <div className="flex gap-2">
+          {subscription?.tier !== 'free' && subscription?.stripe_subscription_id && (
+            <button
+              onClick={handleManageSubscription}
+              disabled={isLoading}
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
+            >
+              {isLoading ? 'Loading...' : 'Manage Subscription'}
+            </button>
+          )}
+          {(subscription?.tier === 'free' || !subscription) && (
+            <a
+              href="/pricing"
+              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-sm transition-colors"
+            >
+              Upgrade Plan
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Tier benefits */}
+      <div className="bg-gray-800/50 rounded-lg p-4">
+        <h4 className="text-sm font-medium text-gray-300 mb-2">Your plan includes:</h4>
+        <ul className="text-sm text-gray-400 space-y-1">
+          {subscription?.tier === 'enterprise' && (
+            <>
+              <li className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Everything in Team, plus:
+              </li>
+              <li className="flex items-center gap-2 ml-6">SSO/SAML authentication</li>
+              <li className="flex items-center gap-2 ml-6">Dedicated support</li>
+              <li className="flex items-center gap-2 ml-6">Custom integrations</li>
+            </>
+          )}
+          {subscription?.tier === 'team' && (
+            <>
+              <li className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Everything in Professional, plus:
+              </li>
+              <li className="flex items-center gap-2 ml-6">REST API access</li>
+              <li className="flex items-center gap-2 ml-6">Team collaboration features</li>
+              <li className="flex items-center gap-2 ml-6">Custom reports</li>
+            </>
+          )}
+          {subscription?.tier === 'professional' && (
+            <>
+              <li className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Full threat actor database
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Advanced search & filters
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Unlimited watchlists
+              </li>
+            </>
+          )}
+          {(!subscription || subscription?.tier === 'free') && (
+            <>
+              <li className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Basic threat intelligence
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Up to 3 watchlists
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                7-day data retention
+              </li>
+            </>
+          )}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
 function SyncLogList({ logs }) {
   if (logs.length === 0) {
     return <p className="text-gray-500 text-sm">No sync history available</p>
@@ -227,11 +362,13 @@ function SyncLogList({ logs }) {
 }
 
 export default function Settings() {
+  const { user } = useAuth()
   const [preferences, setPreferences] = useState(null)
   const [savedSearches, setSavedSearches] = useState([])
   const [tags, setTags] = useState([])
   const [syncLogs, setSyncLogs] = useState([])
   const [orgProfile, setOrgProfile] = useState(null)
+  const [subscription, setSubscription] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -240,7 +377,7 @@ export default function Settings() {
 
   useEffect(() => {
     loadData()
-  }, [])
+  }, [user])
 
   const loadData = async () => {
     setIsLoading(true)
@@ -258,6 +395,12 @@ export default function Settings() {
       setTags(tagsResult.data || [])
       setSyncLogs(syncResult.data || [])
       setOrgProfile(profileResult || null)
+
+      // Load subscription if user is logged in
+      if (user?.uid) {
+        const sub = await getUserSubscription(user.uid)
+        setSubscription(sub)
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -338,7 +481,30 @@ export default function Settings() {
       {error && <ErrorMessage message={error} className="mb-4" />}
 
       <div className="space-y-6">
-                {/* Organization Profile */}
+                {/* Subscription */}
+        <SettingSection
+          title="Subscription"
+          description="Manage your Vigil subscription plan"
+        >
+          <SubscriptionSection
+            subscription={subscription}
+            userId={user?.uid}
+            onError={setError}
+          />
+        </SettingSection>
+
+        {/* API Keys */}
+        <SettingSection
+          title="API Access"
+          description="Manage API keys for programmatic access to Vigil data"
+        >
+          <ApiKeysSection
+            userId={user?.uid}
+            userTier={subscription?.tier || 'free'}
+          />
+        </SettingSection>
+
+        {/* Organization Profile */}
         <SettingSection
           title="Organization Profile"
           description="Configure your organization's sector, geography, and tech stack for personalized threat intelligence"
