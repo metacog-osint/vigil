@@ -3,7 +3,7 @@
 // Sends personalized threat intelligence summaries to subscribed users
 // Run via: npm run send:digest or GitHub Actions scheduled workflow
 
-import 'dotenv/config'
+import './env.mjs'
 import { createClient } from '@supabase/supabase-js'
 import { sendEmail, generateDigestHtml } from './lib/email.mjs'
 
