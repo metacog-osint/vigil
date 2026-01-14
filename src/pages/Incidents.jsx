@@ -759,28 +759,53 @@ export default function Incidents() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="cyber-card">
-          <div className="text-2xl font-bold text-white">{totalCount.toLocaleString()}</div>
-          <div className="text-sm text-gray-400">Total Incidents</div>
-        </div>
-        <div className="cyber-card">
-          <div className="text-2xl font-bold text-red-400">
-            {incidentList.filter((i) => i.status === 'leaked').length}
+        <Tooltip content="Total ransomware incidents matching current filters" source="ransomware.live">
+          <div className="cyber-card cursor-help">
+            <div className="text-2xl font-bold text-white">{totalCount.toLocaleString()}</div>
+            <div className="text-sm text-gray-400">Total Incidents</div>
           </div>
-          <div className="text-sm text-gray-400">Data Leaked</div>
-        </div>
-        <div className="cyber-card">
-          <div className="text-2xl font-bold text-orange-400">
-            {incidentList.filter((i) => i.victim_sector === 'healthcare').length}
+        </Tooltip>
+        <Tooltip content="Incidents discovered in the last 7 days" source="Calculated from discovered_date">
+          <div className="cyber-card cursor-help">
+            <div className="text-2xl font-bold text-green-400">
+              {incidentList.filter((i) => {
+                if (!i.discovered_date) return false
+                const d = new Date(i.discovered_date)
+                const weekAgo = new Date()
+                weekAgo.setDate(weekAgo.getDate() - 7)
+                return d >= weekAgo
+              }).length}
+            </div>
+            <div className="text-sm text-gray-400">This Week</div>
           </div>
-          <div className="text-sm text-gray-400">Healthcare</div>
-        </div>
-        <div className="cyber-card">
-          <div className="text-2xl font-bold text-cyber-accent">
-            {[...new Set(incidentList.map((i) => i.actor_id).filter(Boolean))].length}
+        </Tooltip>
+        <Tooltip content="Most frequently targeted industry sector in current view" source="Sector classification">
+          <div className="cyber-card cursor-help">
+            {analytics?.topSectors?.[0] ? (
+              <>
+                <div className="text-2xl font-bold text-orange-400 capitalize">
+                  {analytics.topSectors[0].name}
+                </div>
+                <div className="text-sm text-gray-400">
+                  Top Sector ({analytics.topSectors[0].count})
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-gray-500">—</div>
+                <div className="text-sm text-gray-400">Top Sector</div>
+              </>
+            )}
           </div>
-          <div className="text-sm text-gray-400">Active Groups</div>
-        </div>
+        </Tooltip>
+        <Tooltip content="Distinct threat actor groups with incidents in current view" source="ransomware.live">
+          <div className="cyber-card cursor-help">
+            <div className="text-2xl font-bold text-cyber-accent">
+              {[...new Set(incidentList.map((i) => i.actor_id).filter(Boolean))].length}
+            </div>
+            <div className="text-sm text-gray-400">Active Groups</div>
+          </div>
+        </Tooltip>
       </div>
 
       {/* Content based on view mode */}
@@ -799,9 +824,18 @@ export default function Incidents() {
             <>
               {/* Incident Timeline Chart */}
               <div className="cyber-card p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                  Incident Activity ({timeRange === 0 ? 'Last 90 Days' : timeRange === 365 ? 'Last Year' : `Last ${timeRange} Days`})
-                </h3>
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-semibold text-white">
+                    Incident Activity ({timeRange === 0 ? 'Last 90 Days' : timeRange === 365 ? 'Last Year' : `Last ${timeRange} Days`})
+                  </h3>
+                  <Tooltip content="Daily count of ransomware incidents by discovered date. Spikes indicate increased threat actor activity." source="ransomware.live">
+                    <span className="text-gray-500 hover:text-gray-300 cursor-help">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </span>
+                  </Tooltip>
+                </div>
                 <ResponsiveContainer width="100%" height={250}>
                   <AreaChart data={analytics.timelineData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
@@ -840,7 +874,16 @@ export default function Incidents() {
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Sector Distribution Pie */}
                 <div className="cyber-card p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Sector Distribution</h3>
+                  <div className="flex items-center gap-2 mb-4">
+                    <h3 className="text-lg font-semibold text-white">Sector Distribution</h3>
+                    <Tooltip content="Industry sectors targeted by ransomware groups. Click any slice to filter the table by that sector." source="Sector classification">
+                      <span className="text-gray-500 hover:text-gray-300 cursor-help">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </span>
+                    </Tooltip>
+                  </div>
                   <ResponsiveContainer width="100%" height={280}>
                     <PieChart>
                       <Pie
@@ -877,7 +920,16 @@ export default function Incidents() {
 
                 {/* Top Actors Bar Chart */}
                 <div className="cyber-card p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Most Active Threat Actors</h3>
+                  <div className="flex items-center gap-2 mb-4">
+                    <h3 className="text-lg font-semibold text-white">Most Active Threat Actors</h3>
+                    <Tooltip content="Ransomware groups ranked by incident count. Click any bar to filter incidents by that actor." source="ransomware.live">
+                      <span className="text-gray-500 hover:text-gray-300 cursor-help">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </span>
+                    </Tooltip>
+                  </div>
                   <ResponsiveContainer width="100%" height={280}>
                     <BarChart
                       data={analytics.topActors.slice(0, 8)}
@@ -921,7 +973,16 @@ export default function Incidents() {
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Top Countries */}
                 <div className="cyber-card p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Top Targeted Countries</h3>
+                  <div className="flex items-center gap-2 mb-4">
+                    <h3 className="text-lg font-semibold text-white">Top Targeted Countries</h3>
+                    <Tooltip content="Countries where victim organizations are located. Note: Country data is often incomplete in source feeds." source="ransomware.live (sparse)">
+                      <span className="text-gray-500 hover:text-gray-300 cursor-help">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </span>
+                    </Tooltip>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {analytics.topCountries.map((country, i) => (
                       <button
@@ -947,7 +1008,16 @@ export default function Incidents() {
 
                 {/* Status Breakdown */}
                 <div className="cyber-card p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Incident Status</h3>
+                  <div className="flex items-center gap-2 mb-4">
+                    <h3 className="text-lg font-semibold text-white">Incident Status</h3>
+                    <Tooltip content="Claimed: announced by actor. Confirmed: verified attack. Leaked: data published. Paid: ransom paid." source="ransomware.live">
+                      <span className="text-gray-500 hover:text-gray-300 cursor-help">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </span>
+                    </Tooltip>
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     {analytics.statuses.map((status) => (
                       <button
