@@ -7,6 +7,7 @@ import { OrganizationProfileSetup, OrganizationProfileSummary } from '../compone
 import DataSourcesPanel from '../components/DataSourcesPanel'
 import AlertRulesSection from '../components/AlertRulesSection'
 import ApiKeysSection from '../components/ApiKeysSection'
+import IntegrationsSection from '../components/IntegrationsSection'
 import { getUserSubscription, getSubscriptionDisplayInfo, createBillingPortalSession } from '../lib/stripe'
 import { useAuth } from '../hooks/useAuth'
 import { formatDistanceToNow, format } from 'date-fns'
@@ -499,6 +500,17 @@ export default function Settings() {
           description="Manage API keys for programmatic access to Vigil data"
         >
           <ApiKeysSection
+            userId={user?.uid}
+            userTier={subscription?.tier || 'free'}
+          />
+        </SettingSection>
+
+        {/* Integrations */}
+        <SettingSection
+          title="Integrations"
+          description="Connect Vigil to your SIEM, ticketing, and communication tools"
+        >
+          <IntegrationsSection
             userId={user?.uid}
             userTier={subscription?.tier || 'free'}
           />
