@@ -177,7 +177,7 @@ export const threatActors = {
 // Incidents queries
 export const incidents = {
   async getAll(options = {}) {
-    const { limit = 100, offset = 0, search = '', sector = '', actor_id = '' } = options
+    const { limit = 100, offset = 0, search = '', sector = '', status = '', actor_id = '', days = 0 } = options
 
     let query = supabase
       .from('incidents')
@@ -188,12 +188,24 @@ export const incidents = {
       .order('discovered_date', { ascending: false })
       .range(offset, offset + limit - 1)
 
+    // Date filter (0 = all time)
+    if (days > 0) {
+      const cutoffDate = new Date()
+      cutoffDate.setDate(cutoffDate.getDate() - days)
+      query = query.gte('discovered_date', cutoffDate.toISOString())
+    }
+
     if (search) {
+      // Search victim name or actor name via joined table
       query = query.or(`victim_name.ilike.%${search}%,victim_sector.ilike.%${search}%`)
     }
 
     if (sector) {
       query = query.eq('victim_sector', sector)
+    }
+
+    if (status) {
+      query = query.eq('status', status)
     }
 
     if (actor_id) {
