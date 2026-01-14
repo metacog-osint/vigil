@@ -5,11 +5,13 @@
 
 ---
 
-## Current State (v0.4.1)
+## Current State (v0.5.0)
 
-### Data Sources Integrated (11 Automated)
+### Data Sources Integrated (16 Automated)
+
+#### Core Threat Intelligence (Every 6 Hours)
 - [x] RansomLook - Ransomware groups (~600 groups)
-- [x] Ransomware.live - Ransomware attacks (16,000+ incidents)
+- [x] Ransomware.live - Ransomware attacks (24,000+ incidents with full history 2020-present)
 - [x] MITRE ATT&CK - APT groups & techniques (172 groups, 691 techniques)
 - [x] Malpedia - Malware families & actors (864 actors, 3,638 families)
 - [x] MISP Galaxy - Community threat actor data (2,940 actors)
@@ -19,6 +21,15 @@
 - [x] Abuse.ch ThreatFox - IOCs (malware indicators)
 - [x] Abuse.ch URLhaus - Malicious URLs
 - [x] Abuse.ch Feodo Tracker - Botnet C2 IPs
+
+#### New Data Sources (Daily)
+- [x] AlienVault OTX - Community threat pulses and IOCs
+- [x] MalwareBazaar - Malware samples with hashes
+- [x] GreyNoise - Mass scanner IP identification
+- [x] IP Geolocation - Country enrichment for IOCs
+
+#### Breach Data (Weekly)
+- [x] Have I Been Pwned - Breach database correlation
 
 ### Threat Actor Taxonomy (1,000+ actors)
 | Category | Count | Description |
@@ -64,17 +75,24 @@
 
 ## Phase 2: Additional Data Sources
 
-### High-Value Free Sources (No Auth Required)
+### Completed Integrations (v0.5.0)
+
+| Source | Data Type | Status |
+|--------|-----------|--------|
+| MITRE ATT&CK | TTPs, techniques | Integrated |
+| AlienVault OTX | IOCs, pulses | Integrated |
+| GreyNoise | Mass scanner IPs | Integrated |
+| MalwareBazaar | Malware samples | Integrated |
+| Have I Been Pwned | Breach data | Integrated |
+| IP Geolocation | Country enrichment | Integrated |
+
+### Future Free Sources (No Auth Required)
 
 | Source | Data Type | Value | Priority |
 |--------|-----------|-------|----------|
-| MITRE ATT&CK | TTPs, techniques | Map actors to attack patterns | High |
-| AlienVault OTX | IOCs, pulses | Community-sourced threat intel | High |
 | Shodan (limited) | Exposed services | Infrastructure reconnaissance | Medium |
-| GreyNoise | Mass scanner IPs | Filter noise from real threats | Medium |
 | Phishtank | Phishing URLs | Credential theft tracking | Medium |
 | Spamhaus DROP | Malicious IP ranges | Network blocklists | Low |
-| MalwareBazaar | Malware samples | File hashes, YARA rules | Medium |
 | OpenPhish | Phishing feeds | Real-time phishing URLs | Medium |
 | Emerging Threats | Suricata rules | IDS/IPS signatures | Low |
 
@@ -87,7 +105,6 @@
 | Mandiant | APT tracking, attribution | Enterprise |
 | Censys | Attack surface mapping | Free tier available |
 | Shodan (full) | Complete internet scanning data | $59/mo |
-| Have I Been Pwned | Breach data correlation | Free for domain search |
 | Hybrid Analysis | Malware sandbox reports | Free tier available |
 
 ### Government/Official Sources

@@ -1,0 +1,173 @@
+name: Additional Data Sources Ingestion
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Data source to ingest (leave empty for all)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - alienvault
+          - malwarebazaar
+          - greynoise
+          - hibp
+          - geolocation
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ============================================
+  # ALIENVAULT OTX (Daily - community threat intel)
+  # ============================================
+  ingest-alienvault-otx:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'alienvault'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest AlienVault OTX pulses
+        run: npm run ingest:alienvault-otx
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # MALWAREBAZAAR (Daily - malware samples)
+  # ============================================
+  ingest-malwarebazaar:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'malwarebazaar'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest MalwareBazaar samples
+        run: npm run ingest:malwarebazaar
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # GREYNOISE (Daily - IP reputation enrichment)
+  # ============================================
+  enrich-greynoise:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'greynoise'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Enrich IOCs with GreyNoise
+        run: npm run ingest:greynoise
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # GEOLOCATION (Daily - IP geolocation enrichment)
+  # ============================================
+  enrich-geolocation:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'geolocation'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Enrich IOCs with geolocation
+        run: npm run enrich:geolocation
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # HAVE I BEEN PWNED (Weekly - breach data)
+  # ============================================
+  ingest-hibp:
+    runs-on: ubuntu-latest
+    # Only run on Sundays or manual trigger
+    if: github.event.schedule == '0 2 * * 0' || github.event.inputs.source == 'hibp'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest HIBP breach data
+        run: npm run ingest:hibp
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # SUMMARY
+  # ============================================
+  notify-completion:
+    runs-on: ubuntu-latest
+    needs:
+      - ingest-alienvault-otx
+      - ingest-malwarebazaar
+      - enrich-greynoise
+      - enrich-geolocation
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## Additional Data Sources Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Source | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| AlienVault OTX | ${{ needs.ingest-alienvault-otx.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MalwareBazaar | ${{ needs.ingest-malwarebazaar.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| GreyNoise | ${{ needs.enrich-greynoise.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Geolocation | ${{ needs.enrich-geolocation.result }} |" >> $GITHUB_STEP_SUMMARY
