@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { incidents, subscribeToTable, savedSearches } from '../lib/supabase'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { incidents, subscribeToTable, savedSearches, threatActors, watchlists } from '../lib/supabase'
 import { SkeletonTable } from '../components/Skeleton'
 import { EmptyIncidents } from '../components/EmptyState'
 import { NewBadge } from '../components/NewIndicator'
 import { WatchButton } from '../components/WatchButton'
 import { SmartTime, FullDate } from '../components/TimeDisplay'
 import { IncidentFlow } from '../components/IncidentFlow'
-import { Tooltip, ColumnMenu, FIELD_TOOLTIPS } from '../components/Tooltip'
+import { Tooltip, ColumnMenu } from '../components/Tooltip'
+import { Sparkline } from '../components/Sparkline'
 
 const SECTORS = [
   'healthcare',
@@ -46,14 +47,21 @@ const PAGE_SIZE = 50
 
 export default function Incidents() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+
   const [incidentList, setIncidentList] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [sectorFilter, setSectorFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [countryFilter, setCountryFilter] = useState('')
   const [timeRange, setTimeRange] = useState(30)
   const [selectedIncident, setSelectedIncident] = useState(null)
   const [sortConfig, setSortConfig] = useState({ field: 'discovered_date', direction: 'desc' })
+
+  // Actor filter from URL (when coming from ThreatActors page)
+  const [actorFilter, setActorFilter] = useState('')
+  const [actorName, setActorName] = useState('')
 
   // Pagination
   const [totalCount, setTotalCount] = useState(0)
@@ -67,6 +75,39 @@ export default function Incidents() {
   // Keyboard navigation
   const [focusedRowIndex, setFocusedRowIndex] = useState(-1)
   const tableRef = useRef(null)
+
+  // View mode (table or overview)
+  const [viewMode, setViewMode] = useState('table')
+
+  // Bulk selection
+  const [selectedRows, setSelectedRows] = useState(new Set())
+
+  // Data freshness
+  const [lastIncidentDate, setLastIncidentDate] = useState(null)
+
+  // Actor incident counts for sparklines
+  const [actorTrends, setActorTrends] = useState({})
+
+  // Handle URL params for actor filter
+  useEffect(() => {
+    const actorId = searchParams.get('actor')
+    if (actorId) {
+      setActorFilter(actorId)
+      // Load actor name
+      loadActorName(actorId)
+    }
+  }, [searchParams])
+
+  async function loadActorName(actorId) {
+    try {
+      const { data } = await threatActors.getById(actorId)
+      if (data) {
+        setActorName(data.name)
+      }
+    } catch (error) {
+      console.error('Error loading actor:', error)
+    }
+  }
 
   // Sort incidents
   const sortedIncidents = useMemo(() => {
@@ -118,12 +159,12 @@ export default function Incidents() {
     })
 
     return () => unsubscribe()
-  }, [search, sectorFilter, statusFilter, timeRange])
+  }, [search, sectorFilter, statusFilter, countryFilter, timeRange, actorFilter])
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return
+      if (viewMode === 'overview' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return
 
       switch (e.key) {
         case 'ArrowDown':
@@ -142,6 +183,7 @@ export default function Incidents() {
         case 'Escape':
           setSelectedIncident(null)
           setFocusedRowIndex(-1)
+          setSelectedRows(new Set())
           break
         case '/':
           e.preventDefault()
@@ -152,7 +194,7 @@ export default function Incidents() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [focusedRowIndex, sortedIncidents])
+  }, [viewMode, focusedRowIndex, sortedIncidents])
 
   async function loadIncidents(reset = false) {
     if (reset) {
@@ -168,6 +210,8 @@ export default function Incidents() {
         search,
         sector: sectorFilter,
         status: statusFilter,
+        country: countryFilter,
+        actor_id: actorFilter,
         days: timeRange,
         limit: PAGE_SIZE,
         offset,
@@ -177,6 +221,12 @@ export default function Incidents() {
 
       if (reset) {
         setIncidentList(data || [])
+        // Set data freshness from most recent incident
+        if (data && data.length > 0) {
+          setLastIncidentDate(data[0].discovered_date)
+        }
+        // Calculate actor trends for sparklines
+        calculateActorTrends(data || [])
       } else {
         setIncidentList(prev => [...prev, ...(data || [])])
       }
@@ -187,6 +237,31 @@ export default function Incidents() {
       setLoading(false)
       setLoadingMore(false)
     }
+  }
+
+  // Calculate actor incident trends for sparklines
+  function calculateActorTrends(data) {
+    const trends = {}
+    const now = new Date()
+
+    data.forEach(inc => {
+      const actorId = inc.actor_id
+      if (!actorId) return
+
+      if (!trends[actorId]) {
+        trends[actorId] = { week1: 0, week2: 0, week3: 0, week4: 0 }
+      }
+
+      const incDate = new Date(inc.discovered_date)
+      const daysAgo = Math.floor((now - incDate) / (1000 * 60 * 60 * 24))
+
+      if (daysAgo <= 7) trends[actorId].week1++
+      else if (daysAgo <= 14) trends[actorId].week2++
+      else if (daysAgo <= 21) trends[actorId].week3++
+      else if (daysAgo <= 28) trends[actorId].week4++
+    })
+
+    setActorTrends(trends)
   }
 
   const loadMore = () => {
@@ -211,7 +286,7 @@ export default function Incidents() {
     if (!saveFilterName.trim()) return
 
     const filterConfig = {
-      search, sectorFilter, statusFilter, timeRange, sortConfig
+      search, sectorFilter, statusFilter, countryFilter, timeRange, sortConfig, actorFilter
     }
 
     try {
@@ -234,7 +309,9 @@ export default function Incidents() {
     setSearch(q.search || '')
     setSectorFilter(q.sectorFilter || '')
     setStatusFilter(q.statusFilter || '')
+    setCountryFilter(q.countryFilter || '')
     setTimeRange(q.timeRange || 30)
+    setActorFilter(q.actorFilter || '')
     if (q.sortConfig) setSortConfig(q.sortConfig)
     setSavedFiltersOpen(false)
   }
@@ -250,8 +327,12 @@ export default function Incidents() {
 
   // CSV Export
   function exportToCSV() {
+    const dataToExport = selectedRows.size > 0
+      ? sortedIncidents.filter(inc => selectedRows.has(inc.id))
+      : sortedIncidents
+
     const headers = ['Victim', 'Actor', 'Sector', 'Country', 'Status', 'Discovered', 'Website', 'Source']
-    const rows = sortedIncidents.map(inc => [
+    const rows = dataToExport.map(inc => [
       inc.victim_name || '',
       inc.threat_actor?.name || '',
       inc.victim_sector || '',
@@ -277,10 +358,58 @@ export default function Incidents() {
   }
 
   // Navigate to actor
-  function goToActor(actorId, actorName) {
+  function goToActor(actorId) {
     if (actorId) {
       navigate(`/actors?actor=${actorId}`)
     }
+  }
+
+  // Bulk select with shift+click
+  function handleRowClick(incident, event) {
+    if (event.shiftKey) {
+      setSelectedRows(prev => {
+        const next = new Set(prev)
+        if (next.has(incident.id)) {
+          next.delete(incident.id)
+        } else {
+          next.add(incident.id)
+        }
+        return next
+      })
+    } else {
+      setSelectedIncident(incident)
+      setSelectedRows(new Set())
+    }
+  }
+
+  async function addSelectedToWatchlist() {
+    if (selectedRows.size === 0) return
+
+    try {
+      const { data: lists } = await watchlists.getAll()
+      const incidentList = lists?.find(w => w.entity_type === 'incident')
+
+      if (!incidentList) {
+        alert('No watchlist found for incidents. Create one first.')
+        return
+      }
+
+      for (const incidentId of selectedRows) {
+        await watchlists.addItem(incidentList.id, incidentId)
+      }
+
+      alert(`Added ${selectedRows.size} incidents to watchlist`)
+      setSelectedRows(new Set())
+    } catch (error) {
+      console.error('Error adding to watchlist:', error)
+    }
+  }
+
+  // Clear actor filter
+  function clearActorFilter() {
+    setActorFilter('')
+    setActorName('')
+    setSearchParams({})
   }
 
   const getStatusColor = (status) => {
@@ -293,37 +422,60 @@ export default function Incidents() {
     }
   }
 
-  // Compute flow data for IncidentFlow visualization
-  const flowData = useMemo(() => {
-    if (incidentList.length === 0) return { actors: [], sectors: [], flows: [] }
+  // Compute analytics for overview
+  const analytics = useMemo(() => {
+    if (incidentList.length === 0) return null
 
     const actorCounts = {}
     const sectorCounts = {}
+    const countryCounts = {}
+    const statusCounts = {}
     const actorSectorLinks = {}
 
     for (const incident of incidentList) {
       const actorName = incident.threat_actor?.name || 'Unknown'
+      const actorId = incident.actor_id
       const sectorName = incident.victim_sector || 'Unknown'
+      const countryName = incident.victim_country || 'Unknown'
+      const status = incident.status || 'unknown'
 
-      actorCounts[actorName] = (actorCounts[actorName] || 0) + 1
+      // Actor counts with ID
+      if (!actorCounts[actorName]) {
+        actorCounts[actorName] = { count: 0, id: actorId }
+      }
+      actorCounts[actorName].count++
+
       sectorCounts[sectorName] = (sectorCounts[sectorName] || 0) + 1
+      countryCounts[countryName] = (countryCounts[countryName] || 0) + 1
+      statusCounts[status] = (statusCounts[status] || 0) + 1
 
       const linkKey = `${actorName}|${sectorName}`
       actorSectorLinks[linkKey] = (actorSectorLinks[linkKey] || 0) + 1
     }
 
-    const actors = Object.entries(actorCounts)
-      .map(([name, incidents]) => ({ name, incidents }))
-      .sort((a, b) => b.incidents - a.incidents)
-      .slice(0, 5)
+    const topActors = Object.entries(actorCounts)
+      .map(([name, data]) => ({ name, count: data.count, id: data.id }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10)
 
-    const sectors = Object.entries(sectorCounts)
+    const topSectors = Object.entries(sectorCounts)
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 5)
+      .slice(0, 10)
 
-    const topActorNames = new Set(actors.map(a => a.name))
-    const topSectorNames = new Set(sectors.map(s => s.name))
+    const topCountries = Object.entries(countryCounts)
+      .filter(([name]) => name !== 'Unknown')
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 15)
+
+    const statuses = Object.entries(statusCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+
+    // Build flows for visualization
+    const topActorNames = new Set(topActors.slice(0, 5).map(a => a.name))
+    const topSectorNames = new Set(topSectors.slice(0, 5).map(s => s.name))
 
     const flows = Object.entries(actorSectorLinks)
       .filter(([key]) => {
@@ -335,10 +487,22 @@ export default function Incidents() {
         return { source, target, value, sourceCategory: 'actor', targetCategory: 'sector' }
       })
 
-    return { actors, sectors, flows }
+    return { topActors, topSectors, topCountries, statuses, flows }
   }, [incidentList])
 
-  const hasActiveFilters = search || sectorFilter || statusFilter || timeRange !== 30
+  const hasActiveFilters = search || sectorFilter || statusFilter || countryFilter || actorFilter || timeRange !== 30
+
+  // Data freshness indicator
+  const dataFreshness = useMemo(() => {
+    if (!lastIncidentDate) return null
+    const date = new Date(lastIncidentDate)
+    const now = new Date()
+    const hoursAgo = Math.floor((now - date) / (1000 * 60 * 60))
+
+    if (hoursAgo < 24) return { text: `${hoursAgo}h ago`, color: 'text-green-400' }
+    if (hoursAgo < 72) return { text: `${Math.floor(hoursAgo / 24)}d ago`, color: 'text-yellow-400' }
+    return { text: `${Math.floor(hoursAgo / 24)}d ago`, color: 'text-red-400' }
+  }, [lastIncidentDate])
 
   return (
     <div className="space-y-6">
@@ -346,14 +510,35 @@ export default function Incidents() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Ransomware Incidents</h1>
-          <p className="text-gray-400 text-sm mt-1">
-            {totalCount.toLocaleString()} incidents total
-            {hasActiveFilters && ` • ${sortedIncidents.length} shown`}
-          </p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-gray-400 text-sm">
+              {totalCount.toLocaleString()} incidents total
+              {hasActiveFilters && ` • ${sortedIncidents.length} shown`}
+            </p>
+            {dataFreshness && (
+              <span className={`text-xs ${dataFreshness.color} flex items-center gap-1`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                Latest: {dataFreshness.text}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Action buttons */}
         <div className="flex items-center gap-2">
+          {/* Bulk actions */}
+          {selectedRows.size > 0 && (
+            <button
+              onClick={addSelectedToWatchlist}
+              className="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-white text-sm rounded flex items-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+              Add {selectedRows.size} to Watchlist
+            </button>
+          )}
+
           {/* Saved Filters dropdown */}
           <div className="relative">
             <button
@@ -418,22 +603,62 @@ export default function Incidents() {
           <button
             onClick={exportToCSV}
             className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded flex items-center gap-1.5"
-            title="Export to CSV"
+            title={selectedRows.size > 0 ? `Export ${selectedRows.size} selected` : 'Export to CSV'}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Export
+            Export{selectedRows.size > 0 ? ` (${selectedRows.size})` : ''}
           </button>
+
+          {/* View toggle */}
+          <div className="flex bg-gray-800 rounded overflow-hidden">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'table' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              Table
+            </button>
+            <button
+              onClick={() => setViewMode('overview')}
+              className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'overview' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+              </svg>
+              Overview
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Actor filter banner */}
+      {actorFilter && actorName && (
+        <div className="bg-cyan-900/30 border border-cyan-800 rounded-lg px-4 py-2 flex items-center justify-between">
+          <span className="text-cyan-400">
+            Showing incidents for: <strong>{actorName}</strong>
+          </span>
+          <button
+            onClick={clearActorFilter}
+            className="text-cyan-400 hover:text-white flex items-center gap-1 text-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Clear
+          </button>
+        </div>
+      )}
 
       {/* Keyboard shortcuts hint */}
       <div className="text-xs text-gray-600 flex gap-4">
         <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">↑↓</kbd> Navigate</span>
         <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Enter</kbd> View details</span>
         <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">/</kbd> Search</span>
-        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Esc</kbd> Close panel</span>
+        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Shift+Click</kbd> Select multiple</span>
       </div>
 
       {/* Search and Filters */}
@@ -480,7 +705,9 @@ export default function Incidents() {
               setSearch('')
               setSectorFilter('')
               setStatusFilter('')
+              setCountryFilter('')
               setTimeRange(30)
+              clearActorFilter()
               setSortConfig({ field: 'discovered_date', direction: 'desc' })
             }}
             className="text-sm text-gray-400 hover:text-cyan-400 flex items-center gap-1.5 px-3 py-2 rounded border border-gray-700 hover:border-gray-600 transition-colors"
@@ -519,257 +746,402 @@ export default function Incidents() {
         </div>
       </div>
 
-      {/* Attack Flow Visualization */}
-      {!loading && incidentList.length > 0 && flowData.flows.length > 0 && (
-        <div className="cyber-card">
-          <h3 className="text-lg font-semibold text-white mb-4">Attack Flow: Actors → Sectors</h3>
-          <IncidentFlow flows={flowData.flows} />
-        </div>
-      )}
-
-      {/* Content */}
-      <div className="flex gap-6">
-        {/* Incident Table */}
-        <div className="flex-1" ref={tableRef}>
+      {/* Content based on view mode */}
+      {viewMode === 'overview' ? (
+        /* Overview Analytics View */
+        <div className="space-y-6">
           {loading ? (
-            <SkeletonTable rows={8} cols={5} />
-          ) : sortedIncidents.length === 0 ? (
-            <EmptyIncidents />
-          ) : (
-            <div className="cyber-card overflow-hidden">
-              <table className="cyber-table">
-                <thead>
-                  <tr>
-                    <th>
-                      <ColumnMenu
-                        field="victim_name"
-                        currentSort={sortConfig}
-                        onSort={setSortConfig}
-                        currentFilter={null}
-                        onFilter={() => {}}
-                        tooltip={{ content: 'Organization or company targeted in the attack', source: 'ransomware.live' }}
-                      >
-                        Victim
-                      </ColumnMenu>
-                    </th>
-                    <th>
-                      <ColumnMenu
-                        field="actor_name"
-                        currentSort={sortConfig}
-                        onSort={setSortConfig}
-                        currentFilter={null}
-                        onFilter={() => {}}
-                        tooltip={{ content: 'Threat actor or ransomware group responsible', source: 'ransomware.live' }}
-                      >
-                        Actor
-                      </ColumnMenu>
-                    </th>
-                    <th className="hidden md:table-cell">
-                      <ColumnMenu
-                        field="victim_sector"
-                        currentSort={sortConfig}
-                        onSort={setSortConfig}
-                        currentFilter={sectorFilter}
-                        onFilter={setSectorFilter}
-                        filterOptions={SECTOR_FILTER_OPTIONS}
-                        tooltip={{ content: 'Industry sector of the victim organization', source: 'Classified' }}
-                      >
-                        Sector
-                      </ColumnMenu>
-                    </th>
-                    <th className="hidden lg:table-cell">
-                      <ColumnMenu
-                        field="status"
-                        currentSort={sortConfig}
-                        onSort={setSortConfig}
-                        currentFilter={statusFilter}
-                        onFilter={setStatusFilter}
-                        filterOptions={STATUS_OPTIONS}
-                        tooltip={{ content: 'claimed = announced by actor, confirmed = verified, leaked = data published, paid = ransom paid', source: 'ransomware.live' }}
-                      >
-                        Status
-                      </ColumnMenu>
-                    </th>
-                    <th>
-                      <ColumnMenu
-                        field="discovered_date"
-                        currentSort={sortConfig}
-                        onSort={setSortConfig}
-                        currentFilter={null}
-                        onFilter={() => {}}
-                        tooltip={{ content: 'Date the incident was discovered or announced', source: 'ransomware.live' }}
-                      >
-                        Date
-                      </ColumnMenu>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedIncidents.map((incident, index) => (
-                    <tr
-                      key={incident.id}
-                      onClick={() => setSelectedIncident(incident)}
-                      className={`cursor-pointer transition-colors ${
-                        selectedIncident?.id === incident.id ? 'bg-cyan-900/30' : ''
-                      } ${
-                        focusedRowIndex === index ? 'ring-1 ring-inset ring-cyan-500' : ''
-                      }`}
-                    >
-                      <td>
-                        <div className="flex items-center gap-2">
-                          <WatchButton entityType="incident" entityId={incident.id} size="sm" />
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-white">
-                                {incident.victim_name || 'Unknown'}
-                              </span>
-                              <NewBadge date={incident.discovered_date} thresholdHours={48} />
-                            </div>
-                            {incident.victim_country && (
-                              <div className="text-xs text-gray-500">{incident.victim_country}</div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            goToActor(incident.actor_id, incident.threat_actor?.name)
-                          }}
-                          className="text-cyber-accent hover:text-cyan-300 hover:underline text-left"
-                        >
-                          {incident.threat_actor?.name || 'Unknown'}
-                        </button>
-                      </td>
-                      <td className="hidden md:table-cell text-gray-400 capitalize">
-                        {incident.victim_sector || '—'}
-                      </td>
-                      <td className="hidden lg:table-cell">
-                        <span className={`px-2 py-0.5 rounded text-xs ${getStatusColor(incident.status)}`}>
-                          {incident.status || 'unknown'}
-                        </span>
-                      </td>
-                      <td className="text-gray-400 text-sm">
-                        <SmartTime date={incident.discovered_date} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {/* Load More button */}
-              {hasMore && (
-                <div className="p-4 text-center border-t border-gray-800">
-                  <button
-                    onClick={loadMore}
-                    disabled={loadingMore}
-                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors disabled:opacity-50"
-                  >
-                    {loadingMore ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                        Loading...
-                      </span>
-                    ) : (
-                      `Load More (${incidentList.length} of ${totalCount})`
-                    )}
-                  </button>
+            <div className="cyber-card p-12 text-center">
+              <svg className="animate-spin w-8 h-8 mx-auto mb-4 text-cyan-400" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <div className="text-gray-400">Loading analytics...</div>
+            </div>
+          ) : analytics && (
+            <>
+              {/* Attack Flow Visualization */}
+              {analytics.flows.length > 0 && (
+                <div className="cyber-card">
+                  <h3 className="text-lg font-semibold text-white mb-4">Attack Flow: Actors → Sectors</h3>
+                  <IncidentFlow flows={analytics.flows} />
                 </div>
               )}
-            </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Top Actors */}
+                <div className="cyber-card p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Top Actors</h3>
+                  <div className="space-y-2">
+                    {analytics.topActors.map((actor, i) => (
+                      <button
+                        key={actor.name}
+                        onClick={() => {
+                          if (actor.id) {
+                            setActorFilter(actor.id)
+                            setActorName(actor.name)
+                            setViewMode('table')
+                          }
+                        }}
+                        className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-800/50 transition-colors text-left"
+                      >
+                        <span className="text-gray-500 text-sm w-5">{i + 1}.</span>
+                        <span className="flex-1 text-white">{actor.name}</span>
+                        {actorTrends[actor.id] && (
+                          <Sparkline
+                            data={[
+                              actorTrends[actor.id].week4,
+                              actorTrends[actor.id].week3,
+                              actorTrends[actor.id].week2,
+                              actorTrends[actor.id].week1
+                            ]}
+                            width={50}
+                            height={20}
+                          />
+                        )}
+                        <span className="text-cyan-400 font-mono w-8 text-right">{actor.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Top Sectors */}
+                <div className="cyber-card p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Top Sectors</h3>
+                  <div className="space-y-2">
+                    {analytics.topSectors.map((sector) => (
+                      <button
+                        key={sector.name}
+                        onClick={() => {
+                          setSectorFilter(sector.name.toLowerCase())
+                          setViewMode('table')
+                        }}
+                        className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-800/50 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400"
+                              style={{ width: `${(sector.count / analytics.topSectors[0].count) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                        <span className="text-gray-300 capitalize w-28 text-left">{sector.name}</span>
+                        <span className="text-cyan-400 font-mono w-8 text-right">{sector.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Countries and Status */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Top Countries */}
+                <div className="cyber-card p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Top Countries</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {analytics.topCountries.map((country) => (
+                      <button
+                        key={country.name}
+                        onClick={() => {
+                          setCountryFilter(country.name)
+                          setViewMode('table')
+                        }}
+                        className="px-3 py-1.5 bg-gray-800 rounded hover:bg-gray-700 transition-colors text-sm"
+                      >
+                        <span className="text-white">{country.name}</span>
+                        <span className="text-gray-500 ml-2">({country.count})</span>
+                      </button>
+                    ))}
+                    {analytics.topCountries.length === 0 && (
+                      <span className="text-gray-500">No country data available</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status Breakdown */}
+                <div className="cyber-card p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">By Status</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {analytics.statuses.map((status) => (
+                      <button
+                        key={status.name}
+                        onClick={() => {
+                          setStatusFilter(status.name)
+                          setViewMode('table')
+                        }}
+                        className={`p-3 rounded-lg transition-all ${getStatusColor(status.name)} hover:opacity-80`}
+                      >
+                        <div className="text-2xl font-bold">{status.count}</div>
+                        <div className="text-xs capitalize">{status.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </div>
+      ) : (
+        /* Table View */
+        <div className="flex gap-6">
+          <div className="flex-1" ref={tableRef}>
+            {loading ? (
+              <SkeletonTable rows={8} cols={5} />
+            ) : sortedIncidents.length === 0 ? (
+              <EmptyIncidents />
+            ) : (
+              <div className="cyber-card overflow-hidden">
+                <table className="cyber-table">
+                  <thead>
+                    <tr>
+                      <th>
+                        <ColumnMenu
+                          field="victim_name"
+                          currentSort={sortConfig}
+                          onSort={setSortConfig}
+                          currentFilter={null}
+                          onFilter={() => {}}
+                          tooltip={{ content: 'Organization or company targeted in the attack', source: 'ransomware.live' }}
+                        >
+                          Victim
+                        </ColumnMenu>
+                      </th>
+                      <th>
+                        <ColumnMenu
+                          field="actor_name"
+                          currentSort={sortConfig}
+                          onSort={setSortConfig}
+                          currentFilter={null}
+                          onFilter={() => {}}
+                          tooltip={{ content: 'Threat actor or ransomware group responsible', source: 'ransomware.live' }}
+                        >
+                          Actor
+                        </ColumnMenu>
+                      </th>
+                      <th className="hidden md:table-cell">
+                        <ColumnMenu
+                          field="victim_sector"
+                          currentSort={sortConfig}
+                          onSort={setSortConfig}
+                          currentFilter={sectorFilter}
+                          onFilter={setSectorFilter}
+                          filterOptions={SECTOR_FILTER_OPTIONS}
+                          tooltip={{ content: 'Industry sector of the victim organization', source: 'Classified' }}
+                        >
+                          Sector
+                        </ColumnMenu>
+                      </th>
+                      <th className="hidden lg:table-cell">
+                        <ColumnMenu
+                          field="status"
+                          currentSort={sortConfig}
+                          onSort={setSortConfig}
+                          currentFilter={statusFilter}
+                          onFilter={setStatusFilter}
+                          filterOptions={STATUS_OPTIONS}
+                          tooltip={{ content: 'claimed = announced by actor, confirmed = verified, leaked = data published, paid = ransom paid', source: 'ransomware.live' }}
+                        >
+                          Status
+                        </ColumnMenu>
+                      </th>
+                      <th>
+                        <ColumnMenu
+                          field="discovered_date"
+                          currentSort={sortConfig}
+                          onSort={setSortConfig}
+                          currentFilter={null}
+                          onFilter={() => {}}
+                          tooltip={{ content: 'Date the incident was discovered or announced', source: 'ransomware.live' }}
+                        >
+                          Date
+                        </ColumnMenu>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedIncidents.map((incident, index) => (
+                      <tr
+                        key={incident.id}
+                        onClick={(e) => handleRowClick(incident, e)}
+                        className={`cursor-pointer transition-colors ${
+                          selectedRows.has(incident.id) ? 'bg-cyan-900/30' : ''
+                        } ${
+                          selectedIncident?.id === incident.id ? 'bg-cyan-900/20' : ''
+                        } ${
+                          focusedRowIndex === index ? 'ring-1 ring-inset ring-cyan-500' : ''
+                        }`}
+                      >
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <WatchButton entityType="incident" entityId={incident.id} size="sm" />
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-white">
+                                  {incident.victim_name || 'Unknown'}
+                                </span>
+                                <NewBadge date={incident.discovered_date} thresholdHours={48} />
+                              </div>
+                              {incident.victim_country && (
+                                <div className="text-xs text-gray-500">{incident.victim_country}</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                goToActor(incident.actor_id)
+                              }}
+                              className="text-cyber-accent hover:text-cyan-300 hover:underline text-left"
+                            >
+                              {incident.threat_actor?.name || 'Unknown'}
+                            </button>
+                            {actorTrends[incident.actor_id] && (
+                              <Sparkline
+                                data={[
+                                  actorTrends[incident.actor_id].week4,
+                                  actorTrends[incident.actor_id].week3,
+                                  actorTrends[incident.actor_id].week2,
+                                  actorTrends[incident.actor_id].week1
+                                ]}
+                                width={40}
+                                height={16}
+                              />
+                            )}
+                          </div>
+                        </td>
+                        <td className="hidden md:table-cell text-gray-400 capitalize">
+                          {incident.victim_sector || '—'}
+                        </td>
+                        <td className="hidden lg:table-cell">
+                          <span className={`px-2 py-0.5 rounded text-xs ${getStatusColor(incident.status)}`}>
+                            {incident.status || 'unknown'}
+                          </span>
+                        </td>
+                        <td className="text-gray-400 text-sm">
+                          <SmartTime date={incident.discovered_date} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
 
-        {/* Incident Detail Panel */}
-        {selectedIncident && (
-          <div className="w-80 cyber-card hidden lg:block">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white truncate">
-                {selectedIncident.victim_name || 'Unknown'}
-              </h3>
-              <button
-                onClick={() => setSelectedIncident(null)}
-                className="text-gray-400 hover:text-white"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+                {/* Load More button */}
+                {hasMore && (
+                  <div className="p-4 text-center border-t border-gray-800">
+                    <button
+                      onClick={loadMore}
+                      disabled={loadingMore}
+                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors disabled:opacity-50"
+                    >
+                      {loadingMore ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                          Loading...
+                        </span>
+                      ) : (
+                        `Load More (${incidentList.length} of ${totalCount})`
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
-            <div className="space-y-4 text-sm">
-              <div>
-                <div className="text-gray-500 mb-1">Threat Actor</div>
+          {/* Incident Detail Panel */}
+          {selectedIncident && (
+            <div className="w-80 cyber-card hidden lg:block">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white truncate">
+                  {selectedIncident.victim_name || 'Unknown'}
+                </h3>
                 <button
-                  onClick={() => goToActor(selectedIncident.actor_id, selectedIncident.threat_actor?.name)}
-                  className="text-cyber-accent font-medium hover:text-cyan-300 hover:underline"
+                  onClick={() => setSelectedIncident(null)}
+                  className="text-gray-400 hover:text-white"
                 >
-                  {selectedIncident.threat_actor?.name || 'Unknown'}
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4 text-sm">
                 <div>
-                  <div className="text-gray-500 mb-1">Sector</div>
-                  <div className="text-gray-300 capitalize">
-                    {selectedIncident.victim_sector || 'Unknown'}
-                  </div>
+                  <div className="text-gray-500 mb-1">Threat Actor</div>
+                  <button
+                    onClick={() => goToActor(selectedIncident.actor_id)}
+                    className="text-cyber-accent font-medium hover:text-cyan-300 hover:underline"
+                  >
+                    {selectedIncident.threat_actor?.name || 'Unknown'}
+                  </button>
                 </div>
-                <div>
-                  <div className="text-gray-500 mb-1">Country</div>
-                  <div className="text-gray-300">
-                    {selectedIncident.victim_country || 'Unknown'}
-                  </div>
-                </div>
-              </div>
 
-              <div>
-                <div className="text-gray-500 mb-1">Discovered</div>
-                <div className="text-gray-300">
-                  <FullDate date={selectedIncident.discovered_date} />
-                </div>
-              </div>
-
-              <div>
-                <div className="text-gray-500 mb-1">Status</div>
-                <span className={`px-2 py-0.5 rounded text-xs ${getStatusColor(selectedIncident.status)}`}>
-                  {selectedIncident.status || 'unknown'}
-                </span>
-              </div>
-
-              {selectedIncident.data_leaked && (
-                <div className="p-2 bg-red-900/20 border border-red-800/50 rounded">
-                  <div className="text-red-400 text-xs font-medium">Data Leaked</div>
-                  {selectedIncident.data_size && (
-                    <div className="text-red-300 text-xs">
-                      Size: {selectedIncident.data_size}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-gray-500 mb-1">Sector</div>
+                    <div className="text-gray-300 capitalize">
+                      {selectedIncident.victim_sector || 'Unknown'}
                     </div>
-                  )}
-                </div>
-              )}
-
-              {selectedIncident.victim_website && (
-                <div>
-                  <div className="text-gray-500 mb-1">Website</div>
-                  <div className="text-gray-300 text-xs font-mono truncate">
-                    {selectedIncident.victim_website}
+                  </div>
+                  <div>
+                    <div className="text-gray-500 mb-1">Country</div>
+                    <div className="text-gray-300">
+                      {selectedIncident.victim_country || 'Unknown'}
+                    </div>
                   </div>
                 </div>
-              )}
 
-              <div className="pt-4 border-t border-gray-800">
-                <div className="text-gray-500 text-xs">
-                  Source: {selectedIncident.source || 'ransomware.live'}
+                <div>
+                  <div className="text-gray-500 mb-1">Discovered</div>
+                  <div className="text-gray-300">
+                    <FullDate date={selectedIncident.discovered_date} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-gray-500 mb-1">Status</div>
+                  <span className={`px-2 py-0.5 rounded text-xs ${getStatusColor(selectedIncident.status)}`}>
+                    {selectedIncident.status || 'unknown'}
+                  </span>
+                </div>
+
+                {selectedIncident.data_leaked && (
+                  <div className="p-2 bg-red-900/20 border border-red-800/50 rounded">
+                    <div className="text-red-400 text-xs font-medium">Data Leaked</div>
+                    {selectedIncident.data_size && (
+                      <div className="text-red-300 text-xs">
+                        Size: {selectedIncident.data_size}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selectedIncident.victim_website && (
+                  <div>
+                    <div className="text-gray-500 mb-1">Website</div>
+                    <div className="text-gray-300 text-xs font-mono truncate">
+                      {selectedIncident.victim_website}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t border-gray-800">
+                  <div className="text-gray-500 text-xs">
+                    Source: {selectedIncident.source || 'ransomware.live'}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
