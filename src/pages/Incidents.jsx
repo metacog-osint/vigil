@@ -6,7 +6,7 @@ import { EmptyIncidents } from '../components/EmptyState'
 import { NewBadge } from '../components/NewIndicator'
 import { WatchButton } from '../components/WatchButton'
 import { SmartTime, FullDate } from '../components/TimeDisplay'
-import { IncidentFlow } from '../components/IncidentFlow'
+// Removed IncidentFlow - using simpler inline visualization
 import { Tooltip, ColumnMenu } from '../components/Tooltip'
 import { Sparkline } from '../components/Sparkline'
 
@@ -760,11 +760,60 @@ export default function Incidents() {
             </div>
           ) : analytics && (
             <>
-              {/* Attack Flow Visualization */}
-              {analytics.flows.length > 0 && (
-                <div className="cyber-card">
-                  <h3 className="text-lg font-semibold text-white mb-4">Attack Flow: Actors → Sectors</h3>
-                  <IncidentFlow flows={analytics.flows} />
+              {/* Attack Flow Visualization - Simple version */}
+              {analytics.topActors.length > 0 && analytics.topSectors.length > 0 && (
+                <div className="cyber-card p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Attack Flow: Top Actors → Target Sectors</h3>
+                  <div className="flex items-stretch gap-8">
+                    {/* Left: Top 5 Actors */}
+                    <div className="flex-1">
+                      <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Actors</div>
+                      <div className="space-y-2">
+                        {analytics.topActors.slice(0, 5).map((actor, i) => (
+                          <div
+                            key={actor.name}
+                            className="flex items-center gap-2 p-2 bg-red-900/30 border border-red-800/50 rounded text-sm"
+                          >
+                            <span className="text-red-400 font-mono w-6">{actor.count}</span>
+                            <span className="text-white truncate flex-1">{actor.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Middle: Flow arrows */}
+                    <div className="flex flex-col justify-center">
+                      <svg className="w-16 h-32 text-gray-600" viewBox="0 0 64 128">
+                        {[0, 1, 2, 3, 4].map(i => (
+                          <path
+                            key={i}
+                            d={`M 0 ${12 + i * 24} Q 32 ${64} 64 ${12 + i * 24}`}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1"
+                            opacity={0.5 - i * 0.08}
+                          />
+                        ))}
+                        <polygon points="60,64 64,60 64,68" fill="currentColor" />
+                      </svg>
+                    </div>
+
+                    {/* Right: Top 5 Sectors */}
+                    <div className="flex-1">
+                      <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Target Sectors</div>
+                      <div className="space-y-2">
+                        {analytics.topSectors.slice(0, 5).map((sector) => (
+                          <div
+                            key={sector.name}
+                            className="flex items-center gap-2 p-2 bg-blue-900/30 border border-blue-800/50 rounded text-sm"
+                          >
+                            <span className="text-blue-400 font-mono w-6">{sector.count}</span>
+                            <span className="text-white truncate flex-1 capitalize">{sector.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
