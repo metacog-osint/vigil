@@ -5,13 +5,17 @@
 
 import { createClient } from '@supabase/supabase-js'
 import https from 'https'
-import { supabaseUrl, supabaseKey } from './env.mjs'
+import { supabaseUrl, supabaseKey, otxApiKey } from './env.mjs'
 
-// OTX API - no key required for public pulses
 const OTX_API = 'https://otx.alienvault.com/api/v1'
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase credentials. Check your .env file.')
+  process.exit(1)
+}
+
+if (!otxApiKey) {
+  console.error('Missing OTX_API_KEY. Get one at https://otx.alienvault.com/settings')
   process.exit(1)
 }
 
@@ -23,6 +27,7 @@ function fetchJSON(url) {
       headers: {
         'User-Agent': 'Vigil-CTI-Dashboard/1.0',
         'Accept': 'application/json',
+        'X-OTX-API-KEY': otxApiKey,
       },
       timeout: 30000,
     }
@@ -72,8 +77,7 @@ function mapOTXIndicatorType(otxType) {
 }
 
 async function fetchSubscribedPulses(page = 1, limit = 50) {
-  // Fetch recent pulses from the public feed
-  const url = `${OTX_API}/pulses/subscribed?page=${page}&limit=${limit}&modified_since=30d`
+  const url = `${OTX_API}/pulses/subscribed?page=${page}&limit=${limit}`
   return fetchJSON(url)
 }
 
@@ -82,15 +86,10 @@ async function fetchPulseIndicators(pulseId) {
   return fetchJSON(url)
 }
 
-async function fetchActivityFeed(page = 1) {
-  // Activity feed shows recent threat activity
-  const url = `${OTX_API}/pulses/activity?page=${page}&limit=50`
-  return fetchJSON(url)
-}
-
 async function ingestAlienVaultOTX() {
   console.log('Starting AlienVault OTX Ingestion...')
   console.log('Source: https://otx.alienvault.com/')
+  console.log('Using API key authentication')
   console.log('')
 
   let totalPulses = 0
@@ -99,34 +98,32 @@ async function ingestAlienVaultOTX() {
   let skipped = 0
   let failed = 0
 
-  // Fetch recent activity/pulses
-  console.log('Fetching recent pulses from activity feed...')
+  console.log('Fetching subscribed pulses...')
 
   let page = 1
-  const maxPages = 5 // Limit to avoid rate limits
+  const maxPages = 10
 
   while (page <= maxPages) {
     try {
-      const response = await fetchActivityFeed(page)
+      const response = await fetchSubscribedPulses(page, 50)
       const pulses = response.results || []
 
-      if (pulses.length === 0) break
+      if (pulses.length === 0) {
+        console.log('  No more pulses found')
+        break
+      }
 
       console.log(`  Page ${page}: ${pulses.length} pulses`)
       totalPulses += pulses.length
 
       for (const pulse of pulses) {
-        // Extract indicators directly from pulse if available
-        const indicators = pulse.indicators || []
+        let indicators = pulse.indicators || []
 
-        if (indicators.length === 0) {
-          // Try to fetch indicators separately
+        if (indicators.length === 0 && pulse.id) {
           try {
             const indicatorData = await fetchPulseIndicators(pulse.id)
-            if (indicatorData.results) {
-              indicators.push(...indicatorData.results)
-            }
-            await sleep(200) // Rate limit
+            indicators = indicatorData.results || indicatorData || []
+            await sleep(200)
           } catch (e) {
             // Skip if we can't get indicators
           }
@@ -138,7 +135,6 @@ async function ingestAlienVaultOTX() {
           try {
             const iocType = mapOTXIndicatorType(indicator.type)
 
-            // Skip non-IOC types
             if (['cve', 'yara', 'mutex', 'filepath'].includes(iocType)) continue
 
             const record = {
@@ -180,22 +176,8 @@ async function ingestAlienVaultOTX() {
           }
         }
 
-        // Extract threat actor info if present
         if (pulse.adversary) {
           try {
-            const actorData = {
-              name: pulse.adversary,
-              actor_type: 'apt',
-              status: 'active',
-              source: 'alienvault_otx',
-              metadata: {
-                otx_pulse_id: pulse.id,
-                targeted_countries: pulse.targeted_countries,
-                malware_families: pulse.malware_families,
-              }
-            }
-
-            // Check if actor exists
             const { data: existing } = await supabase
               .from('threat_actors')
               .select('id')
@@ -203,7 +185,17 @@ async function ingestAlienVaultOTX() {
               .single()
 
             if (!existing) {
-              await supabase.from('threat_actors').insert(actorData)
+              await supabase.from('threat_actors').insert({
+                name: pulse.adversary,
+                actor_type: 'apt',
+                status: 'active',
+                source: 'alienvault_otx',
+                metadata: {
+                  otx_pulse_id: pulse.id,
+                  targeted_countries: pulse.targeted_countries,
+                  malware_families: pulse.malware_families,
+                }
+              })
             }
           } catch (e) {
             // Actor might already exist
@@ -212,7 +204,7 @@ async function ingestAlienVaultOTX() {
       }
 
       page++
-      await sleep(1000) // Rate limit between pages
+      await sleep(1000)
     } catch (e) {
       console.error(`Error fetching page ${page}:`, e.message)
       break
@@ -228,7 +220,6 @@ async function ingestAlienVaultOTX() {
   console.log(`IOCs skipped (duplicates): ${skipped}`)
   console.log(`Failed: ${failed}`)
 
-  // Log sync
   await supabase.from('sync_log').insert({
     source: 'alienvault_otx',
     status: 'success',

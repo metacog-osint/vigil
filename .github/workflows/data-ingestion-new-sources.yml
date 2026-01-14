@@ -171,3 +171,80 @@ jobs:
           echo "| MalwareBazaar | ${{ needs.ingest-malwarebazaar.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| GreyNoise | ${{ needs.enrich-greynoise.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Geolocation | ${{ needs.enrich-geolocation.result }} |" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================
+  # VIRUSTOTAL (Daily - IOC reputation, rate limited)
+  # ============================================
+  enrich-virustotal:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'virustotal'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Enrich IOCs with VirusTotal
+        run: npm run enrich:virustotal
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
+
+  # ============================================
+  # HYBRID ANALYSIS (Daily - sandbox reports)
+  # ============================================
+  enrich-hybridanalysis:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'hybridanalysis'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Enrich samples with Hybrid Analysis
+        run: npm run enrich:hybridanalysis
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          HYBRID_ANALYSIS_API_KEY: ${{ secrets.HYBRID_ANALYSIS_API_KEY }}
+
+  # ============================================
+  # SHODAN INTERNETDB (Daily - free IP enrichment)
+  # ============================================
+  enrich-shodan:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'shodan'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Enrich IPs with Shodan InternetDB
+        run: npm run enrich:shodan
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}

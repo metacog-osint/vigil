@@ -5,7 +5,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import https from 'https'
-import { supabaseUrl, supabaseKey } from './env.mjs'
+import { supabaseUrl, supabaseKey, greynoiseApiKey } from './env.mjs'
 
 // GreyNoise Community API - free, no key required for basic queries
 const GREYNOISE_API = 'https://api.greynoise.io/v3/community'
@@ -19,11 +19,18 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 function fetchJSON(url) {
   return new Promise((resolve, reject) => {
+    const headers = {
+      'User-Agent': 'Vigil-CTI-Dashboard/1.0',
+      'Accept': 'application/json',
+    }
+
+    // Add API key if available (increases rate limit)
+    if (greynoiseApiKey) {
+      headers['key'] = greynoiseApiKey
+    }
+
     const options = {
-      headers: {
-        'User-Agent': 'Vigil-CTI-Dashboard/1.0',
-        'Accept': 'application/json',
-      },
+      headers,
       timeout: 30000,
     }
 
