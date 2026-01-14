@@ -2,10 +2,14 @@
 // Source: https://www.ransomware.live/
 // Ingests ransomware gang posts/victim claims
 // Run: node scripts/ingest-ransomware-live.mjs
+// Run with --full flag to fetch ALL historical data: node scripts/ingest-ransomware-live.mjs --full
 
 import { createClient } from '@supabase/supabase-js'
 import https from 'https'
 import { classifySector } from './lib/sector-classifier.mjs'
+
+// Check for --full flag
+const FULL_HISTORICAL = process.argv.includes('--full')
 
 // Load env from parent directory
 const supabaseUrl = process.env.VITE_SUPABASE_URL
@@ -45,6 +49,10 @@ function parseDate(dateStr) {
   }
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 function fetchJSON(url) {
   return new Promise((resolve, reject) => {
     const options = {
@@ -52,7 +60,7 @@ function fetchJSON(url) {
         'User-Agent': 'Vigil-CTI-Dashboard/1.0',
         'Accept': 'application/json',
       },
-      timeout: 30000,
+      timeout: 60000, // Increased timeout for larger responses
     }
 
     const req = https.get(url, options, (res) => {
@@ -75,9 +83,26 @@ function fetchJSON(url) {
   })
 }
 
+// Generate list of year/month pairs from start date to now
+function getMonthsToFetch(startYear = 2020) {
+  const months = []
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1
+
+  for (let year = startYear; year <= currentYear; year++) {
+    const endMonth = year === currentYear ? currentMonth : 12
+    for (let month = 1; month <= endMonth; month++) {
+      months.push({ year, month: month.toString().padStart(2, '0') })
+    }
+  }
+  return months
+}
+
 async function ingestRansomwareLive() {
   console.log('Fetching Ransomware.live data...')
-  console.log('Source: https://www.ransomware.live/\n')
+  console.log('Source: https://www.ransomware.live/')
+  console.log(`Mode: ${FULL_HISTORICAL ? 'FULL HISTORICAL (2020-present)' : 'Recent victims only'}\n`)
 
   // Fetch groups
   console.log('Fetching groups...')
@@ -89,25 +114,7 @@ async function ingestRansomwareLive() {
     console.error('Failed to fetch groups:', error.message)
   }
 
-  // Fetch recent victims
-  console.log('Fetching recent victims...')
-  let victims = []
-  try {
-    victims = await fetchJSON(`${API_BASE}/recentvictims`)
-    console.log(`Found ${victims.length} recent victims`)
-  } catch (error) {
-    console.error('Failed to fetch recent victims:', error.message)
-    // Try recentcyberattacks as fallback
-    try {
-      victims = await fetchJSON(`${API_BASE}/recentcyberattacks`)
-      console.log(`Found ${victims.length} recent cyberattacks (fallback)`)
-    } catch (e) {
-      console.error('Failed to fetch cyberattacks:', e.message)
-      return
-    }
-  }
-
-  // Build actor map
+  // Build actor map first
   console.log('\nProcessing threat actors...')
   const actorMap = new Map()
   let actorsAdded = 0
@@ -171,14 +178,58 @@ async function ingestRansomwareLive() {
 
   console.log(`Actors: ${actorsAdded} added, ${actorsUpdated} existing`)
 
+  // Fetch victims - either recent or full historical
+  let allVictims = []
+
+  if (FULL_HISTORICAL) {
+    // Fetch month by month to get full history
+    const months = getMonthsToFetch(2020)
+    console.log(`\nFetching historical data for ${months.length} months (2020-present)...`)
+    console.log('This will take a few minutes. Adding 1s delay between requests to avoid rate limits.\n')
+
+    for (const { year, month } of months) {
+      try {
+        const url = `${API_BASE}/victims/${year}/${month}`
+        const victims = await fetchJSON(url)
+        if (Array.isArray(victims) && victims.length > 0) {
+          allVictims.push(...victims)
+          console.log(`  ${year}-${month}: ${victims.length} victims`)
+        } else {
+          console.log(`  ${year}-${month}: 0 victims`)
+        }
+        await sleep(1000) // 1 second delay between requests
+      } catch (error) {
+        console.error(`  ${year}-${month}: Failed - ${error.message}`)
+        await sleep(2000) // Longer delay on error
+      }
+    }
+    console.log(`\nTotal historical victims fetched: ${allVictims.length}`)
+  } else {
+    // Just fetch recent victims (default behavior)
+    console.log('\nFetching recent victims...')
+    try {
+      allVictims = await fetchJSON(`${API_BASE}/recentvictims`)
+      console.log(`Found ${allVictims.length} recent victims`)
+    } catch (error) {
+      console.error('Failed to fetch recent victims:', error.message)
+      try {
+        allVictims = await fetchJSON(`${API_BASE}/recentcyberattacks`)
+        console.log(`Found ${allVictims.length} recent cyberattacks (fallback)`)
+      } catch (e) {
+        console.error('Failed to fetch cyberattacks:', e.message)
+        return
+      }
+    }
+  }
+
   // Process victims/incidents
   console.log('\nIngesting incidents...')
   let incidentsAdded = 0
   let incidentsSkipped = 0
   let incidentsFailed = 0
 
-  for (let i = 0; i < victims.length; i++) {
-    const victim = victims[i]
+  for (let i = 0; i < allVictims.length; i++) {
+    const victim = allVictims[i]
 
     // Ransomware.live structure varies, try multiple field names
     const groupName = victim.group_name || victim.group || ''
@@ -283,9 +334,9 @@ async function ingestRansomwareLive() {
       incidentsAdded++
     }
 
-    // Progress
-    if (i % 100 === 0 && i > 0) {
-      console.log(`  Processed ${i}/${victims.length} victims...`)
+    // Progress every 500 records
+    if (i % 500 === 0 && i > 0) {
+      console.log(`  Processed ${i}/${allVictims.length} victims... (${incidentsAdded} added, ${incidentsSkipped} skipped)`)
     }
   }
 
@@ -312,17 +363,19 @@ async function ingestRansomwareLive() {
   await supabase.from('sync_log').insert({
     source: 'ransomware.live',
     status: 'success',
-    records_processed: victims.length,
+    records_processed: allVictims.length,
     records_added: incidentsAdded,
     records_updated: incidentsSkipped,
     completed_at: new Date().toISOString(),
+    metadata: { mode: FULL_HISTORICAL ? 'full_historical' : 'recent_only' }
   })
 
   console.log('\n' + '='.repeat(50))
   console.log('Ransomware.live Ingestion Complete')
   console.log('='.repeat(50))
+  console.log(`Mode: ${FULL_HISTORICAL ? 'Full Historical' : 'Recent Only'}`)
   console.log(`Groups processed: ${groups.length}`)
-  console.log(`Victims processed: ${victims.length}`)
+  console.log(`Victims processed: ${allVictims.length}`)
   console.log(`Incidents added: ${incidentsAdded}`)
   console.log(`Incidents skipped (duplicate): ${incidentsSkipped}`)
   console.log(`Incidents failed: ${incidentsFailed}`)
