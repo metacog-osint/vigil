@@ -287,15 +287,32 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
   # ============================================
-  # ACTOR SNAPSHOTS (After all ingestion)
+  # TREND CALCULATION (After ransomware ingestion)
   # ============================================
-  snapshot-actor-trends:
+  calculate-trends:
     runs-on: ubuntu-latest
     needs:
       - ingest-ransomlook
       - ingest-ransomware-live
-      - seed-correlations
     if: always() && (needs.ingest-ransomlook.result == 'success' || needs.ingest-ransomware-live.result == 'success')
+    steps:
+      - name: Calculate actor trends
+        run: |
+          curl -X POST "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/rpc/apply_actor_trends" \
+            -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json"
+          echo "Trend calculation complete"
+
+  # ============================================
+  # ACTOR SNAPSHOTS (After trend calculation)
+  # ============================================
+  snapshot-actor-trends:
+    runs-on: ubuntu-latest
+    needs:
+      - calculate-trends
+      - seed-correlations
+    if: always() && needs.calculate-trends.result == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -332,6 +349,7 @@ jobs:
       - ingest-nvd
       - ingest-mitre
       - seed-correlations
+      - calculate-trends
       - snapshot-actor-trends
     if: always()
     steps:
@@ -352,6 +370,7 @@ jobs:
           echo "| MITRE ATT&CK | ${{ needs.ingest-mitre.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| CISA Alerts | ${{ needs.ingest-cisa-alerts.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Correlations | ${{ needs.seed-correlations.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Trend Calculation | ${{ needs.calculate-trends.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Actor Snapshots | ${{ needs.snapshot-actor-trends.result }} |" >> $GITHUB_STEP_SUMMARY
 
       - name: Check for failures
@@ -368,6 +387,7 @@ jobs:
           [[ "${{ needs.ingest-mitre.result }}" == "failure" ]] && FAILED=1
           [[ "${{ needs.ingest-cisa-alerts.result }}" == "failure" ]] && FAILED=1
           [[ "${{ needs.seed-correlations.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.calculate-trends.result }}" == "failure" ]] && FAILED=1
           [[ "${{ needs.snapshot-actor-trends.result }}" == "failure" ]] && FAILED=1
 
           if [ $FAILED -eq 1 ]; then
