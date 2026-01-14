@@ -253,7 +253,7 @@ export default function Dashboard() {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-tour="dashboard-stats">
         <StatCard
           label="Active Actors"
           value={stats?.totalActors || 0}

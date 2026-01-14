@@ -28,6 +28,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import SearchModal from './components/SearchModal'
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal'
 import { SkeletonDashboard } from './components/Skeleton'
+import OnboardingTour from './components/OnboardingTour'
 
 // Hooks
 import { useAuth } from './hooks/useAuth'
@@ -147,6 +148,9 @@ function App() {
 
       {/* Keyboard Shortcuts Help Modal */}
       <KeyboardShortcutsModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
+
+      {/* Onboarding Tour */}
+      <OnboardingTour />
     </div>
   )
 }
