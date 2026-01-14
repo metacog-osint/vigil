@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { threatActors, subscribeToTable, incidents, savedSearches, orgProfile, relevance, watchlists } from '../lib/supabase'
 import TrendBadge, { TrendIndicator } from '../components/TrendBadge'
 import { SmartTime } from '../components/TimeDisplay'
@@ -147,6 +147,56 @@ export default function ThreatActors() {
 
   // Feature 5: Related Actors
   const [relatedActors, setRelatedActors] = useState([])
+
+  // Sort actors based on current config (must be defined before useEffects that use it)
+  const sortedActors = useMemo(() => {
+    return [...actors].sort((a, b) => {
+      if (!sortConfig) return 0
+
+      const { field, direction } = sortConfig
+      let aVal = a[field]
+      let bVal = b[field]
+
+      // Handle nulls
+      if (aVal == null) aVal = field === 'name' ? '' : -Infinity
+      if (bVal == null) bVal = field === 'name' ? '' : -Infinity
+
+      // Actor type uses sortOrder for logical grouping
+      if (field === 'actor_type') {
+        aVal = getTypeConfig(aVal).sortOrder
+        bVal = getTypeConfig(bVal).sortOrder
+      }
+
+      // String comparison for other text fields
+      if (field === 'name' || field === 'status') {
+        aVal = String(aVal).toLowerCase()
+        bVal = String(bVal).toLowerCase()
+      }
+
+      // Date comparison
+      if (field === 'last_seen' || field === 'first_seen') {
+        aVal = aVal ? new Date(aVal).getTime() : 0
+        bVal = bVal ? new Date(bVal).getTime() : 0
+      }
+
+      // Trend status ordering
+      if (field === 'trend_status') {
+        const order = { 'ESCALATING': 3, 'STABLE': 2, 'DECLINING': 1 }
+        aVal = order[aVal] || 0
+        bVal = order[bVal] || 0
+      }
+
+      // Feature 9: Risk score sorting
+      if (field === 'risk_score') {
+        aVal = riskScores[a.id] || 0
+        bVal = riskScores[b.id] || 0
+      }
+
+      if (aVal < bVal) return direction === 'asc' ? -1 : 1
+      if (aVal > bVal) return direction === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [actors, sortConfig, riskScores])
 
   // Initial load + subscriptions
   useEffect(() => {
@@ -448,54 +498,6 @@ export default function ThreatActors() {
       console.error('Error loading org profile:', error)
     }
   }
-
-  // Sort actors based on current config
-  const sortedActors = [...actors].sort((a, b) => {
-    if (!sortConfig) return 0
-
-    const { field, direction } = sortConfig
-    let aVal = a[field]
-    let bVal = b[field]
-
-    // Handle nulls
-    if (aVal == null) aVal = field === 'name' ? '' : -Infinity
-    if (bVal == null) bVal = field === 'name' ? '' : -Infinity
-
-    // Actor type uses sortOrder for logical grouping
-    if (field === 'actor_type') {
-      aVal = getTypeConfig(aVal).sortOrder
-      bVal = getTypeConfig(bVal).sortOrder
-    }
-
-    // String comparison for other text fields
-    if (field === 'name' || field === 'status') {
-      aVal = String(aVal).toLowerCase()
-      bVal = String(bVal).toLowerCase()
-    }
-
-    // Date comparison
-    if (field === 'last_seen' || field === 'first_seen') {
-      aVal = aVal ? new Date(aVal).getTime() : 0
-      bVal = bVal ? new Date(bVal).getTime() : 0
-    }
-
-    // Trend status ordering
-    if (field === 'trend_status') {
-      const order = { 'ESCALATING': 3, 'STABLE': 2, 'DECLINING': 1 }
-      aVal = order[aVal] || 0
-      bVal = order[bVal] || 0
-    }
-
-    // Feature 9: Risk score sorting
-    if (field === 'risk_score') {
-      aVal = riskScores[a.id] || 0
-      bVal = riskScores[b.id] || 0
-    }
-
-    if (aVal < bVal) return direction === 'asc' ? -1 : 1
-    if (aVal > bVal) return direction === 'asc' ? 1 : -1
-    return 0
-  })
 
   // Load incidents when an actor is selected
   useEffect(() => {
