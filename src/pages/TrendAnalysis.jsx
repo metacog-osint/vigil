@@ -5,6 +5,9 @@ import WeekComparisonCard from '../components/WeekComparisonCard'
 import ChangeSummaryCard from '../components/ChangeSummaryCard'
 import { SectorTrendChart, ActivityTrendChart } from '../components/SectorTrendChart'
 import { ActorTrajectoryChart, ActorSelector } from '../components/ActorTrajectoryChart'
+import CalendarHeatmap from '../components/CalendarHeatmap'
+import ActorRelationshipGraph from '../components/ActorRelationshipGraph'
+import KillChainVisualization from '../components/KillChainVisualization'
 
 const TIME_RANGES = [
   { label: '30 days', value: 30 },
@@ -133,6 +136,41 @@ export default function TrendAnalysis() {
           </div>
         </div>
       )}
+
+      {/* Calendar Heatmap - Full Year View */}
+      <div className="cyber-card p-6 mt-6">
+        <CalendarHeatmap
+          days={365}
+          title="Attack Activity (1 Year)"
+          onDayClick={(day) => console.log('Day clicked:', day)}
+        />
+      </div>
+
+      {/* Kill Chain Analysis */}
+      <div className="cyber-card p-6 mt-6">
+        <h3 className="text-sm text-gray-400 mb-4">Attack Kill Chain Activity</h3>
+        <p className="text-xs text-gray-500 mb-4">
+          MITRE ATT&CK tactics mapped to Lockheed Martin Kill Chain phases
+        </p>
+        <KillChainVisualization
+          days={timeRange}
+          onPhaseClick={(phase) => console.log('Phase clicked:', phase)}
+        />
+      </div>
+
+      {/* Actor Relationship Graph */}
+      <div className="cyber-card p-6 mt-6">
+        <h3 className="text-sm text-gray-400 mb-4">Actor Relationships</h3>
+        <p className="text-xs text-gray-500 mb-4">
+          Network visualization of threat actor connections based on shared TTPs, sectors, and infrastructure
+        </p>
+        <ActorRelationshipGraph
+          limit={25}
+          minRelationshipScore={25}
+          height={450}
+          onActorClick={(actor) => console.log('Actor clicked:', actor)}
+        />
+      </div>
     </div>
   )
 }

@@ -21,6 +21,9 @@ import { NewBadge } from '../components/NewIndicator'
 import { TargetedServicesWidget } from '../components/TargetedServicesWidget'
 import { ActiveExploitationWidget } from '../components/ActiveExploitationWidget'
 import { SectorDrilldown } from '../components/SectorDrilldown'
+import ThreatAttributionMap from '../components/ThreatAttributionMap'
+import CountryAttackPanel from '../components/CountryAttackPanel'
+import { KillChainMini } from '../components/KillChainVisualization'
 
 // Calculate threat level on a reasonable scale
 // Baseline: ~300 incidents/month is "normal" (score ~50)
@@ -64,6 +67,10 @@ export default function Dashboard() {
   const [activeExploits, setActiveExploits] = useState([])
   const [sectorDetails, setSectorDetails] = useState([])
   const [widgetsLoading, setWidgetsLoading] = useState(true)
+
+  // Sprint 3 - Map visualization state
+  const [mapViewMode, setMapViewMode] = useState('victims')
+  const [selectedCountry, setSelectedCountry] = useState(null)
 
   useEffect(() => {
     async function loadDashboard() {
@@ -329,6 +336,67 @@ export default function Dashboard() {
         onSectorClick={(sector) => console.log('Sector clicked:', sector.name)}
       />
 
+      {/* Global Threat Map - Sprint 3 */}
+      <div className="cyber-card">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-white">Global Threat Map</h2>
+            <p className="text-sm text-gray-400">Geographic distribution of attacks (30 days)</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setMapViewMode('victims')}
+              className={`px-3 py-1 text-sm rounded transition-colors ${
+                mapViewMode === 'victims'
+                  ? 'bg-cyan-600 text-white'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
+              Victims
+            </button>
+            <button
+              onClick={() => setMapViewMode('attackers')}
+              className={`px-3 py-1 text-sm rounded transition-colors ${
+                mapViewMode === 'attackers'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
+              Attackers
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <ThreatAttributionMap
+              days={30}
+              viewMode={mapViewMode}
+              onCountryClick={setSelectedCountry}
+              selectedCountry={selectedCountry?.code}
+              height={350}
+            />
+          </div>
+          <div>
+            {selectedCountry ? (
+              <CountryAttackPanel
+                country={selectedCountry}
+                days={30}
+                onActorClick={(actor) => console.log('Actor clicked:', actor.name)}
+                onClose={() => setSelectedCountry(null)}
+              />
+            ) : (
+              <div className="bg-gray-800/50 rounded-lg p-4 h-full flex flex-col justify-center items-center text-center">
+                <svg className="w-12 h-12 text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-gray-400 text-sm mb-1">Click a country to see details</p>
+                <p className="text-gray-500 text-xs">Active actors, targeted sectors, and incidents</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Relevant to You Section (if org profile exists) */}
       {userProfile && (relevantActors.length > 0 || relevantVulns.length > 0) && (
         <div className="cyber-card">
@@ -447,6 +515,9 @@ export default function Dashboard() {
         <h2 className="text-lg font-semibold text-white mb-4">Incident Activity (90 Days)</h2>
         <ActivityCalendar data={calendarData} days={90} />
       </div>
+
+      {/* Kill Chain Overview */}
+      <KillChainMini onViewFull={() => console.log('View full kill chain')} />
 
       {/* Bottom Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
