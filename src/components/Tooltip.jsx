@@ -182,7 +182,184 @@ export const FIELD_TOOLTIPS = {
 }
 
 /**
- * Sortable column header component
+ * Column header with dropdown menu for sorting and filtering
+ */
+export function ColumnMenu({
+  children,
+  field,
+  currentSort,
+  onSort,
+  currentFilter,
+  onFilter,
+  filterOptions = [],
+  tooltip,
+  className = ''
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [menuCoords, setMenuCoords] = useState({ top: 0, left: 0 })
+  const buttonRef = useRef(null)
+  const menuRef = useRef(null)
+
+  const isActive = currentSort?.field === field
+  const direction = isActive ? currentSort.direction : null
+  const hasActiveFilter = filterOptions.length > 0 && currentFilter
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target) &&
+          buttonRef.current && !buttonRef.current.contains(e.target)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isOpen])
+
+  const handleClick = (e) => {
+    e.stopPropagation()
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setMenuCoords({
+        top: rect.bottom + 4,
+        left: rect.left
+      })
+    }
+    setIsOpen(!isOpen)
+  }
+
+  const handleSort = (dir) => {
+    onSort({ field, direction: dir })
+    setIsOpen(false)
+  }
+
+  const handleFilter = (value) => {
+    onFilter(value)
+    setIsOpen(false)
+  }
+
+  const handleClearSort = () => {
+    if (isActive) onSort(null)
+    setIsOpen(false)
+  }
+
+  const menu = isOpen && createPortal(
+    <div
+      ref={menuRef}
+      className="fixed z-[9999] min-w-[180px] bg-gray-900 border border-gray-700 rounded-lg shadow-xl py-1"
+      style={{ top: menuCoords.top, left: menuCoords.left }}
+    >
+      {/* Sort options */}
+      <div className="px-3 py-1.5 text-xs text-gray-500 font-medium uppercase tracking-wide">
+        Sort
+      </div>
+      <button
+        onClick={() => handleSort('asc')}
+        className={clsx(
+          'w-full px-3 py-1.5 text-left text-sm hover:bg-gray-800 flex items-center gap-2',
+          isActive && direction === 'asc' ? 'text-cyan-400' : 'text-gray-300'
+        )}
+      >
+        <span className="text-xs">▲</span>
+        <span>Ascending (A→Z / Low→High)</span>
+      </button>
+      <button
+        onClick={() => handleSort('desc')}
+        className={clsx(
+          'w-full px-3 py-1.5 text-left text-sm hover:bg-gray-800 flex items-center gap-2',
+          isActive && direction === 'desc' ? 'text-cyan-400' : 'text-gray-300'
+        )}
+      >
+        <span className="text-xs">▼</span>
+        <span>Descending (Z→A / High→Low)</span>
+      </button>
+      {isActive && (
+        <button
+          onClick={handleClearSort}
+          className="w-full px-3 py-1.5 text-left text-sm text-gray-500 hover:bg-gray-800 hover:text-gray-300"
+        >
+          Clear sort
+        </button>
+      )}
+
+      {/* Filter options if provided */}
+      {filterOptions.length > 0 && (
+        <>
+          <div className="border-t border-gray-700 my-1" />
+          <div className="px-3 py-1.5 text-xs text-gray-500 font-medium uppercase tracking-wide">
+            Filter by {children}
+          </div>
+          <button
+            onClick={() => handleFilter('')}
+            className={clsx(
+              'w-full px-3 py-1.5 text-left text-sm hover:bg-gray-800 flex items-center gap-2',
+              !currentFilter ? 'text-cyan-400' : 'text-gray-300'
+            )}
+          >
+            <span className="w-2 h-2 rounded-full bg-gray-500" />
+            <span>All</span>
+          </button>
+          {filterOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => handleFilter(opt.value)}
+              className={clsx(
+                'w-full px-3 py-1.5 text-left text-sm hover:bg-gray-800 flex items-center gap-2',
+                currentFilter === opt.value ? 'text-cyan-400' : 'text-gray-300'
+              )}
+            >
+              {opt.color && <span className={`w-2 h-2 rounded-full ${opt.color}`} />}
+              <span>{opt.label}</span>
+            </button>
+          ))}
+        </>
+      )}
+
+      {/* Tooltip info at bottom */}
+      {tooltip && (
+        <>
+          <div className="border-t border-gray-700 my-1" />
+          <div className="px-3 py-2 text-xs text-gray-500">
+            {tooltip.content}
+          </div>
+        </>
+      )}
+    </div>,
+    document.body
+  )
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        onClick={handleClick}
+        className={clsx(
+          'flex items-center gap-1.5 hover:text-white transition-colors group',
+          (isActive || hasActiveFilter) ? 'text-cyan-400' : 'text-gray-400',
+          className
+        )}
+      >
+        <span className="font-medium">{children}</span>
+        <span className={clsx(
+          'text-xs transition-all',
+          isActive ? 'opacity-100' : 'opacity-30 group-hover:opacity-70'
+        )}>
+          {isActive ? (direction === 'asc' ? '▲' : '▼') : '▾'}
+        </span>
+        {hasActiveFilter && (
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+        )}
+      </button>
+      {menu}
+    </>
+  )
+}
+
+/**
+ * Simple sortable header (legacy, use ColumnMenu for new implementations)
  */
 export function SortableHeader({
   children,
