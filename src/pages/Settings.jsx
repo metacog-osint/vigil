@@ -11,6 +11,7 @@ import IntegrationsSection from '../components/IntegrationsSection'
 import { getUserSubscription, getSubscriptionDisplayInfo, createBillingPortalSession } from '../lib/stripe'
 import { useAuth } from '../hooks/useAuth'
 import { formatDistanceToNow, format } from 'date-fns'
+import { RestartTourButton } from '../components/OnboardingTour'
 
 const TIME_RANGES = [
   { value: '7d', label: '7 days' },
@@ -682,6 +683,9 @@ export default function Settings() {
             <p>
               <span className="text-gray-500">Automated sources:</span> 13 feeds updating every 6 hours
             </p>
+            <div className="pt-2">
+              <RestartTourButton />
+            </div>
             <p className="text-xs text-gray-600 mt-4">
               Vigil - Cyber Threat Intelligence Platform
             </p>
