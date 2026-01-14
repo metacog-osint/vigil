@@ -1601,4 +1601,91 @@ export const trendAnalysis = {
   }
 }
 
+// Data Sources management
+export const dataSources = {
+  // Data source definitions
+  sources: [
+    { id: 'ransomlook', name: 'RansomLook', type: 'ransomware', automated: true, frequency: '6 hours' },
+    { id: 'ransomware_live', name: 'Ransomware.live', type: 'ransomware', automated: true, frequency: '6 hours' },
+    { id: 'mitre_attack', name: 'MITRE ATT&CK', type: 'apt', automated: true, frequency: '6 hours' },
+    { id: 'malpedia', name: 'Malpedia', type: 'malware', automated: true, frequency: '6 hours' },
+    { id: 'misp_galaxy', name: 'MISP Galaxy', type: 'actors', automated: true, frequency: '6 hours' },
+    { id: 'cisa_kev', name: 'CISA KEV', type: 'vulnerabilities', automated: true, frequency: '6 hours' },
+    { id: 'nvd', name: 'NVD', type: 'vulnerabilities', automated: true, frequency: '6 hours' },
+    { id: 'threatfox', name: 'ThreatFox', type: 'iocs', automated: true, frequency: '6 hours' },
+    { id: 'urlhaus', name: 'URLhaus', type: 'iocs', automated: true, frequency: '6 hours' },
+    { id: 'feodo', name: 'Feodo Tracker', type: 'iocs', automated: true, frequency: '6 hours' },
+    { id: 'cisa_alerts', name: 'CISA Alerts', type: 'alerts', automated: true, frequency: '6 hours' },
+    { id: 'actor_types_seed', name: 'Curated Actors', type: 'actors', automated: false, frequency: 'manual' },
+    { id: 'actor_snapshot', name: 'Trend Snapshots', type: 'analytics', automated: true, frequency: '6 hours' },
+  ],
+
+  async getSyncStatus() {
+    // Get latest sync for each source
+    const { data, error } = await supabase
+      .from('sync_log')
+      .select('source, status, completed_at, records_added, error_message')
+      .order('completed_at', { ascending: false })
+
+    if (error) return { data: [], error }
+
+    // Deduplicate to get latest per source
+    const latest = new Map()
+    for (const row of data || []) {
+      if (!latest.has(row.source)) {
+        latest.set(row.source, row)
+      }
+    }
+
+    // Merge with source definitions
+    const result = this.sources.map(source => ({
+      ...source,
+      lastSync: latest.get(source.id)?.completed_at || null,
+      lastStatus: latest.get(source.id)?.status || 'never',
+      recordsAdded: latest.get(source.id)?.records_added || 0,
+      error: latest.get(source.id)?.error_message || null,
+    }))
+
+    return { data: result, error: null }
+  },
+
+  async getActorTypeCounts() {
+    const { data, error } = await supabase
+      .from('threat_actors')
+      .select('actor_type')
+
+    if (error) return { data: {}, error }
+
+    const counts = {}
+    for (const row of data || []) {
+      const type = row.actor_type || 'unknown'
+      counts[type] = (counts[type] || 0) + 1
+    }
+
+    return { data: counts, error: null }
+  },
+
+  async triggerManualUpdate(sourceId) {
+    // For manual sources, we can't trigger automatically
+    // Return instructions instead
+    const source = this.sources.find(s => s.id === sourceId)
+    if (!source) {
+      return { success: false, message: 'Unknown data source' }
+    }
+
+    if (source.automated) {
+      return {
+        success: false,
+        message: `${source.name} is automated. It updates every ${source.frequency} via GitHub Actions.`
+      }
+    }
+
+    return {
+      success: false,
+      message: `${source.name} requires manual update. Run: npm run seed:actor-types`,
+      command: 'npm run seed:actor-types'
+    }
+  }
+}
+
 export default supabase

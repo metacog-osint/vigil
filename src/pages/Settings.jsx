@@ -4,6 +4,7 @@ import { clsx } from 'clsx'
 import { userPreferences as prefsApi, savedSearches as searchesApi, tags as tagsApi, syncLog as syncLogApi, orgProfile as orgProfileApi } from '../lib/supabase'
 import { SkeletonCard, ErrorMessage, TimeAgo } from '../components'
 import { OrganizationProfileSetup, OrganizationProfileSummary } from '../components/OrganizationProfileSetup'
+import DataSourcesPanel from '../components/DataSourcesPanel'
 import { formatDistanceToNow, format } from 'date-fns'
 
 const TIME_RANGES = [
@@ -477,14 +478,22 @@ export default function Settings() {
           </div>
         </SettingSection>
 
+        {/* Data Sources */}
+        <SettingSection
+          title="Data Sources"
+          description="View data source status and trigger manual updates"
+        >
+          <DataSourcesPanel />
+        </SettingSection>
+
         {/* About */}
         <SettingSection title="About Vigil">
           <div className="text-sm text-gray-400 space-y-2">
             <p>
-              <span className="text-gray-500">Version:</span> 0.1.0
+              <span className="text-gray-500">Version:</span> 0.3.0
             </p>
             <p>
-              <span className="text-gray-500">Data sources:</span> CISA KEV, MITRE ATT&CK, AlienVault OTX
+              <span className="text-gray-500">Automated sources:</span> 13 feeds updating every 6 hours
             </p>
             <p className="text-xs text-gray-600 mt-4">
               Vigil - Cyber Threat Intelligence Platform

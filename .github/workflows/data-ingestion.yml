@@ -234,6 +234,56 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
   # ============================================
+  # MALPEDIA (Every 6 hours - malware families and actors)
+  # ============================================
+  ingest-malpedia:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'mitre'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest Malpedia actors and malware
+        run: npm run ingest:malpedia
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # MISP GALAXY (Every 6 hours - community threat actor data)
+  # ============================================
+  ingest-misp-galaxy:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'mitre'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest MISP Galaxy threat actors
+        run: npm run ingest:misp-galaxy
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
   # CISA ALERTS
   # ============================================
   ingest-cisa-alerts:
@@ -368,6 +418,8 @@ jobs:
           echo "| CISA KEV | ${{ needs.ingest-cisa-kev.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| NVD | ${{ needs.ingest-nvd.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| MITRE ATT&CK | ${{ needs.ingest-mitre.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Malpedia | ${{ needs.ingest-malpedia.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| MISP Galaxy | ${{ needs.ingest-misp-galaxy.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| CISA Alerts | ${{ needs.ingest-cisa-alerts.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Correlations | ${{ needs.seed-correlations.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Trend Calculation | ${{ needs.calculate-trends.result }} |" >> $GITHUB_STEP_SUMMARY
