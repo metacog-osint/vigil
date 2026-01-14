@@ -5,6 +5,7 @@ import { userPreferences as prefsApi, savedSearches as searchesApi, tags as tags
 import { SkeletonCard, ErrorMessage, TimeAgo } from '../components'
 import { OrganizationProfileSetup, OrganizationProfileSummary } from '../components/OrganizationProfileSetup'
 import DataSourcesPanel from '../components/DataSourcesPanel'
+import AlertRulesSection from '../components/AlertRulesSection'
 import { formatDistanceToNow, format } from 'date-fns'
 
 const TIME_RANGES = [
@@ -354,6 +355,14 @@ export default function Settings() {
               onEdit={() => setIsEditingOrgProfile(true)}
             />
           )}
+        </SettingSection>
+
+        {/* Alert Rules */}
+        <SettingSection
+          title="Alert Rules"
+          description="Configure custom alerts for threats that matter to you"
+        >
+          <AlertRulesSection />
         </SettingSection>
 
         {/* Display Preferences */}

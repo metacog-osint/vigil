@@ -2390,4 +2390,307 @@ export const unifiedEvents = {
   }
 }
 
+// Notifications - in-app user notifications
+export const notifications = {
+  // Get notifications for a user
+  async getForUser(userId = 'anonymous', options = {}) {
+    const { limit = 20, unreadOnly = false, includeExpired = false } = options
+
+    let query = supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (unreadOnly) {
+      query = query.is('read_at', null)
+    }
+
+    if (!includeExpired) {
+      query = query.or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+    }
+
+    return query
+  },
+
+  // Get unread count
+  async getUnreadCount(userId = 'anonymous') {
+    const { count, error } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .is('read_at', null)
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+
+    return { count: count || 0, error }
+  },
+
+  // Mark a notification as read
+  async markAsRead(notificationId) {
+    return supabase
+      .from('notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', notificationId)
+      .is('read_at', null)
+  },
+
+  // Mark all notifications as read for a user
+  async markAllAsRead(userId = 'anonymous') {
+    return supabase
+      .from('notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .is('read_at', null)
+  },
+
+  // Create a notification
+  async create(notification) {
+    const {
+      userId = 'anonymous',
+      type,
+      title,
+      message,
+      severity = 'info',
+      link = null,
+      relatedId = null,
+      relatedType = null,
+    } = notification
+
+    return supabase.from('notifications').insert({
+      user_id: userId,
+      notification_type: type,
+      title,
+      message,
+      severity,
+      link,
+      related_id: relatedId,
+      related_type: relatedType,
+    })
+  },
+
+  // Delete old notifications (cleanup)
+  async deleteExpired() {
+    return supabase
+      .from('notifications')
+      .delete()
+      .lt('expires_at', new Date().toISOString())
+  },
+
+  // Subscribe to new notifications for a user
+  subscribeToUser(userId, callback) {
+    const channel = supabase
+      .channel(`notifications:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        callback
+      )
+      .subscribe()
+
+    return () => channel.unsubscribe()
+  },
+}
+
+// User Alert Rules - custom alert configurations
+export const alertRules = {
+  // Get all rules for a user
+  async getForUser(userId = 'anonymous', enabledOnly = true) {
+    let query = supabase
+      .from('user_alert_rules')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (enabledOnly) {
+      query = query.eq('enabled', true)
+    }
+
+    return query
+  },
+
+  // Get a single rule by ID
+  async getById(ruleId) {
+    return supabase
+      .from('user_alert_rules')
+      .select('*')
+      .eq('id', ruleId)
+      .single()
+  },
+
+  // Create a new rule
+  async create(rule) {
+    const {
+      userId = 'anonymous',
+      ruleName,
+      ruleType,
+      conditions = {},
+      notifyEmail = true,
+      notifyInApp = true,
+    } = rule
+
+    return supabase.from('user_alert_rules').insert({
+      user_id: userId,
+      rule_name: ruleName,
+      rule_type: ruleType,
+      conditions,
+      notify_email: notifyEmail,
+      notify_in_app: notifyInApp,
+      enabled: true,
+    }).select().single()
+  },
+
+  // Update a rule
+  async update(ruleId, updates) {
+    return supabase
+      .from('user_alert_rules')
+      .update(updates)
+      .eq('id', ruleId)
+      .select()
+      .single()
+  },
+
+  // Delete a rule
+  async delete(ruleId) {
+    return supabase
+      .from('user_alert_rules')
+      .delete()
+      .eq('id', ruleId)
+  },
+
+  // Toggle rule enabled status
+  async toggle(ruleId, enabled) {
+    return supabase
+      .from('user_alert_rules')
+      .update({ enabled })
+      .eq('id', ruleId)
+      .select()
+      .single()
+  },
+
+  // Record a trigger event
+  async recordTrigger(ruleId, userId, triggerData, notificationSent = false, emailSent = false) {
+    return supabase.from('alert_triggers').insert({
+      rule_id: ruleId,
+      user_id: userId,
+      trigger_data: triggerData,
+      notification_sent: notificationSent,
+      email_sent: emailSent,
+    })
+  },
+}
+
+// Threat Hunts - actionable detection guides
+export const threatHunts = {
+  // Get all active hunts
+  async getAll(options = {}) {
+    const { limit = 50, activeOnly = true, search = '', actorId = null } = options
+
+    let query = supabase
+      .from('threat_hunts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (activeOnly) {
+      query = query.eq('is_active', true)
+    }
+
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,actor_name.ilike.%${search}%,tags.cs.{${search}}`)
+    }
+
+    if (actorId) {
+      query = query.eq('actor_id', actorId)
+    }
+
+    return query
+  },
+
+  // Get hunt by ID
+  async getById(huntId) {
+    return supabase
+      .from('threat_hunts')
+      .select('*')
+      .eq('id', huntId)
+      .single()
+  },
+
+  // Get hunts for a specific actor
+  async getForActor(actorId) {
+    return supabase
+      .from('threat_hunts')
+      .select('*')
+      .eq('actor_id', actorId)
+      .eq('is_active', true)
+      .order('confidence', { ascending: false })
+  },
+
+  // Get user's progress on hunts
+  async getUserProgress(userId = 'anonymous') {
+    return supabase
+      .from('user_hunt_progress')
+      .select(`
+        *,
+        hunt:threat_hunts(id, title, actor_name, confidence)
+      `)
+      .eq('user_id', userId)
+      .order('started_at', { ascending: false })
+  },
+
+  // Start a hunt (record user started)
+  async startHunt(userId = 'anonymous', huntId) {
+    return supabase.from('user_hunt_progress').upsert({
+      user_id: userId,
+      hunt_id: huntId,
+      status: 'in_progress',
+      completed_checks: [],
+    }, { onConflict: 'user_id,hunt_id' }).select().single()
+  },
+
+  // Update hunt progress
+  async updateProgress(userId = 'anonymous', huntId, completedChecks, notes = null) {
+    return supabase
+      .from('user_hunt_progress')
+      .update({
+        completed_checks: completedChecks,
+        notes,
+        status: 'in_progress',
+      })
+      .eq('user_id', userId)
+      .eq('hunt_id', huntId)
+      .select()
+      .single()
+  },
+
+  // Complete a hunt
+  async completeHunt(userId = 'anonymous', huntId, notes = null) {
+    return supabase
+      .from('user_hunt_progress')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        notes,
+      })
+      .eq('user_id', userId)
+      .eq('hunt_id', huntId)
+      .select()
+      .single()
+  },
+
+  // Dismiss a hunt
+  async dismissHunt(userId = 'anonymous', huntId) {
+    return supabase
+      .from('user_hunt_progress')
+      .update({ status: 'dismissed' })
+      .eq('user_id', userId)
+      .eq('hunt_id', huntId)
+  },
+}
+
 export default supabase

@@ -17,6 +17,7 @@ const Settings = lazy(() => import('./pages/Settings'))
 const Alerts = lazy(() => import('./pages/Alerts'))
 const AdvancedSearch = lazy(() => import('./pages/AdvancedSearch'))
 const TrendAnalysis = lazy(() => import('./pages/TrendAnalysis'))
+const ThreatHunts = lazy(() => import('./pages/ThreatHunts'))
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -121,6 +122,7 @@ function App() {
                 <Route path="/watchlists" element={<Watchlists />} />
                 <Route path="/alerts" element={<Alerts />} />
                 <Route path="/trends" element={<TrendAnalysis />} />
+                <Route path="/threat-hunts" element={<ThreatHunts />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </Suspense>

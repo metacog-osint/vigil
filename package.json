@@ -41,10 +41,13 @@
     "setup:db": "node scripts/setup-database.mjs",
     "ingest:cisa-alerts": "node scripts/ingest-cisa-alerts.mjs",
     "snapshot:actors": "node scripts/snapshot-actor-trends.mjs",
-    "generate:weekly-summary": "node scripts/generate-weekly-summary.mjs"
+    "generate:weekly-summary": "node scripts/generate-weekly-summary.mjs",
+    "send:digest": "node scripts/send-daily-digest.mjs",
+    "send:digest:dry-run": "node scripts/send-daily-digest.mjs --dry-run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
+    "resend": "^4.0.0",
     "clsx": "^2.0.0",
     "date-fns": "^3.0.0",
     "firebase": "^10.7.0",
