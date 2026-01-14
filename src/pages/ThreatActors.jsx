@@ -138,10 +138,8 @@ export default function ThreatActors() {
   const [focusedRowIndex, setFocusedRowIndex] = useState(-1)
   const tableRef = useRef(null)
 
-  // Feature 8: Map View
-  const [viewMode, setViewMode] = useState('table') // 'table' or 'map'
-  const [allActorsForMap, setAllActorsForMap] = useState([])
-  const [loadingMapData, setLoadingMapData] = useState(false)
+  // Feature 8: Overview View (renamed from Map - no geographic map implemented)
+  const [viewMode, setViewMode] = useState('table') // 'table' or 'overview'
 
   // Feature 9: Risk Score
   const [userOrgProfile, setUserOrgProfile] = useState(null)
@@ -226,7 +224,7 @@ export default function ThreatActors() {
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Only handle when table is visible and not typing in input
-      if (viewMode !== 'table' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return
+      if (viewMode === 'overview' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return
 
       switch (e.key) {
         case 'ArrowDown':
@@ -501,28 +499,6 @@ export default function ThreatActors() {
     }
   }
 
-  // Feature 8: Load all actors for map view (no pagination)
-  async function loadAllActorsForMap() {
-    if (allActorsForMap.length > 0) return // Already loaded
-
-    setLoadingMapData(true)
-    try {
-      const { data, error } = await threatActors.getAll({ limit: 5000 }) // Load all
-      if (error) throw error
-      setAllActorsForMap(data || [])
-    } catch (error) {
-      console.error('Error loading all actors for map:', error)
-    } finally {
-      setLoadingMapData(false)
-    }
-  }
-
-  // Load map data when switching to map view
-  useEffect(() => {
-    if (viewMode === 'map') {
-      loadAllActorsForMap()
-    }
-  }, [viewMode])
 
   // Load incidents when an actor is selected
   useEffect(() => {
@@ -666,13 +642,13 @@ export default function ThreatActors() {
               Table
             </button>
             <button
-              onClick={() => setViewMode('map')}
-              className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'map' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => setViewMode('overview')}
+              className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'overview' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
               </svg>
-              Map
+              Overview
             </button>
           </div>
         </div>
@@ -781,19 +757,20 @@ export default function ThreatActors() {
       </div>
 
       {/* Content */}
-      {viewMode === 'map' ? (
-        /* Feature 8: Map View - Enhanced with full dataset */
+      {viewMode === 'overview' ? (
+        /* Feature 8: Overview View - Actor analytics dashboard */
         <div className="space-y-6">
-          {loadingMapData ? (
+          {loading ? (
             <div className="cyber-card p-12 text-center">
               <svg className="animate-spin w-8 h-8 mx-auto mb-4 text-cyan-400" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              <div className="text-gray-400">Loading all actor data for analysis...</div>
+              <div className="text-gray-400">Loading actor data...</div>
             </div>
           ) : (() => {
-            const mapActors = allActorsForMap.length > 0 ? allActorsForMap : actors
+            // Use loaded actors for breakdowns (limited sample)
+            const sampleActors = actors
 
             // Calculate all statistics
             const typeCounts = {}
@@ -802,7 +779,7 @@ export default function ThreatActors() {
             const regionCounts = {}
             let totalIncidents7d = 0
 
-            mapActors.forEach(actor => {
+            sampleActors.forEach(actor => {
               // Type counts
               const type = actor.actor_type || 'unknown'
               typeCounts[type] = (typeCounts[type] || 0) + 1
@@ -828,34 +805,34 @@ export default function ThreatActors() {
             })
 
             // Get top active actors
-            const topActiveActors = [...mapActors]
+            const topActiveActors = [...sampleActors]
               .sort((a, b) => (b.incidents_7d || 0) - (a.incidents_7d || 0))
               .slice(0, 10)
 
             // Get recently active actors
-            const recentlyActiveActors = [...mapActors]
+            const recentlyActiveActors = [...sampleActors]
               .filter(a => a.last_seen)
               .sort((a, b) => new Date(b.last_seen) - new Date(a.last_seen))
               .slice(0, 10)
 
             return (
               <>
-                {/* Summary Stats Row */}
+                {/* Summary Stats Row - uses database totals for accuracy */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="cyber-card text-center">
-                    <div className="text-3xl font-bold text-white">{mapActors.length.toLocaleString()}</div>
+                    <div className="text-3xl font-bold text-white">{totalCount.toLocaleString()}</div>
                     <div className="text-sm text-gray-400">Total Actors</div>
                   </div>
                   <div className="cyber-card text-center">
-                    <div className="text-3xl font-bold text-red-400">{trendCounts.ESCALATING.length}</div>
+                    <div className="text-3xl font-bold text-red-400">{trendSummary.escalating}</div>
                     <div className="text-sm text-gray-400">Escalating</div>
                   </div>
                   <div className="cyber-card text-center">
                     <div className="text-3xl font-bold text-cyan-400">{totalIncidents7d}</div>
-                    <div className="text-sm text-gray-400">Incidents (7d)</div>
+                    <div className="text-sm text-gray-400">Incidents (7d)*</div>
                   </div>
                   <div className="cyber-card text-center">
-                    <div className="text-3xl font-bold text-yellow-400">{Object.keys(sectorCounts).length}</div>
+                    <div className="text-3xl font-bold text-yellow-400">{Object.keys(sectorCounts).length || '—'}</div>
                     <div className="text-sm text-gray-400">Target Sectors</div>
                   </div>
                   <div className="cyber-card text-center">
@@ -863,6 +840,7 @@ export default function ThreatActors() {
                     <div className="text-sm text-gray-400">Actor Types</div>
                   </div>
                 </div>
+                <div className="text-xs text-gray-600 text-right">* Based on loaded sample of {sampleActors.length} actors</div>
 
                 {/* Actor Type Breakdown */}
                 <div className="cyber-card p-6">
@@ -881,7 +859,7 @@ export default function ThreatActors() {
                         >
                           <div className="text-2xl font-bold">{count}</div>
                           <div className="text-xs capitalize mt-1">{type.replace(/_/g, ' ')}</div>
-                          <div className="text-xs opacity-60 mt-1">{((count / mapActors.length) * 100).toFixed(1)}%</div>
+                          <div className="text-xs opacity-60 mt-1">{((count / (sampleActors.length || 1)) * 100).toFixed(1)}%</div>
                         </button>
                       ))}
                   </div>
