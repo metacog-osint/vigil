@@ -5,23 +5,46 @@
 
 ---
 
-## Current State (v0.1.0)
+## Current State (v0.4.0)
 
-### Data Sources Integrated
-- [x] Ransomwatch - Ransomware groups and incidents (historical)
-- [x] CISA KEV - Known Exploited Vulnerabilities (1,487 entries)
-- [x] NVD - National Vulnerability Database CVEs (500+ entries)
+### Data Sources Integrated (11 Automated)
+- [x] RansomLook - Ransomware groups (~600 groups)
+- [x] Ransomware.live - Ransomware attacks (16,000+ incidents)
+- [x] MITRE ATT&CK - APT groups & techniques (172 groups, 691 techniques)
+- [x] Malpedia - Malware families & actors (864 actors, 3,638 families)
+- [x] MISP Galaxy - Community threat actor data (2,940 actors)
+- [x] CISA KEV - Known Exploited Vulnerabilities (1,100+ CVEs)
+- [x] CISA Alerts - Security advisories
+- [x] NVD - National Vulnerability Database CVEs
+- [x] Abuse.ch ThreatFox - IOCs (malware indicators)
 - [x] Abuse.ch URLhaus - Malicious URLs
 - [x] Abuse.ch Feodo Tracker - Botnet C2 IPs
-- [x] Abuse.ch ThreatFox - IOCs (IPs, domains, hashes)
+
+### Threat Actor Taxonomy (1,000+ actors)
+| Category | Count | Description |
+|----------|-------|-------------|
+| Ransomware | 578 | Encrypt & extort groups |
+| APT | 362 | State-sponsored espionage |
+| Cybercrime | 25 | Financial fraud |
+| Hacktivism | 23 | Political motivation |
+| Initial Access Broker | 9 | Sell network access |
+| Data Extortion | 3 | Steal without encrypting |
 
 ### Features Implemented
-- [x] Dashboard with real-time stats
-- [x] Threat Actors list with trend status
-- [x] Incidents page with time filtering
-- [x] Vulnerabilities page with KEV data
-- [x] IOC Search functionality
+- [x] Dashboard with AI-generated threat summary
+- [x] Threat Actors list with trend status (ESCALATING/STABLE/DECLINING)
+- [x] Incidents page with time filtering and sector classification
+- [x] Vulnerabilities page with KEV data and CVSS scores
+- [x] IOC Search with external enrichment links
+- [x] Advanced Search query language
+- [x] ATT&CK Matrix browser with heatmap view
+- [x] Organization Profile for personalized intelligence
+- [x] Relevance scoring based on sector/tech stack
+- [x] Trend Analysis with week-over-week comparisons
+- [x] Actor trajectory charts
+- [x] Keyboard shortcuts (press ? for help)
 - [x] Dark cyber-themed UI
+- [x] STIX 2.1 export format
 - [x] Deployed to vigil.theintelligence.company
 
 ---
@@ -306,8 +329,8 @@ cve:2024-* cvss:>=9.0 kev:true
 - [ ] Error boundary components
 
 ### Infrastructure
-- [ ] Set up CI/CD pipeline
-- [ ] Automated data ingestion (cron)
+- [x] Set up CI/CD pipeline (Vercel)
+- [x] Automated data ingestion (GitHub Actions every 6 hours)
 - [ ] Database backups
 - [ ] Monitoring and alerting
 
@@ -380,6 +403,38 @@ cve:2024-* cvss:>=9.0 kev:true
 
 ---
 
+## Completed: Sprint 14 Features (January 2026)
+
+### Expanded Data Sources
+- [x] Malpedia integration (864 actors, 3,638 malware families)
+- [x] MISP Galaxy integration (threat-actor.json, ransomware.json)
+- [x] MITRE ATT&CK intrusion-sets parsing (172 APT groups)
+- [x] Automated 6-hour ingestion via GitHub Actions
+
+### Actor Type Taxonomy
+- [x] 6 actor categories: ransomware, apt, cybercrime, hacktivism, initial_access_broker, data_extortion
+- [x] seed-actor-types.mjs for curated actor classification
+- [x] Actor type detection logic in all ingestion scripts
+
+### Data Sources Panel UI
+- [x] DataSourcesPanel component in Settings page
+- [x] Shows sync status for all 11 automated sources
+- [x] Actor type distribution display
+- [x] Manual update instructions for non-automated sources
+
+### Automated Trend Calculation
+- [x] calculate-trends job in GitHub Actions workflow
+- [x] Calls apply_actor_trends() after ransomware ingestion
+- [x] Automatic ESCALATING/STABLE/DECLINING status updates
+
+### Bug Fixes
+- [x] Fixed user_preferences 406 error (.single() → .maybeSingle())
+- [x] Fixed vulnerabilities 400 error (removed non-existent severity column)
+- [x] Fixed MISP Galaxy cfr.some() array check
+- [x] Fixed Malpedia supabase.sql() not a function
+
+---
+
 ## Completed: Sprint 13 Features (January 2026)
 
 ### ActorTrajectoryChart Component
@@ -443,5 +498,5 @@ cve:2024-* cvss:>=9.0 kev:true
 ---
 
 *Last updated: January 2026*
-*Version: 0.3.0*
+*Version: 0.4.0*
 

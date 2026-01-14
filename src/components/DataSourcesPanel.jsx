@@ -55,8 +55,19 @@ export default function DataSourcesPanel() {
 
   async function handleRefresh(sourceId) {
     setRefreshing(sourceId)
-    const result = await dataSources.triggerManualUpdate(sourceId)
-    alert(result.message)
+    try {
+      const result = await dataSources.triggerManualUpdate(sourceId)
+      if (result.success) {
+        // Reload data to show updated counts
+        await loadData()
+        alert(`Success: ${result.message}`)
+      } else {
+        alert(`Info: ${result.message}`)
+      }
+    } catch (error) {
+      console.error('Update failed:', error)
+      alert(`Error: ${error.message}`)
+    }
     setRefreshing(null)
   }
 

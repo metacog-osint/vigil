@@ -2,60 +2,81 @@
 
 **Cyber Threat Intelligence Dashboard**
 
-Real-time monitoring of ransomware groups, incidents, vulnerabilities, and indicators of compromise.
+Real-time monitoring of threat actors, ransomware groups, APTs, incidents, vulnerabilities, and indicators of compromise.
 
 ---
 
 ## Features
 
 ### Core Intelligence
-- **Dashboard** - Threat level gauge, sector distribution, activity charts, recent incidents
-- **Threat Actors** - 216 ransomware groups with trend status (ESCALATING/STABLE/DECLINING)
+- **Dashboard** - AI-generated threat summary, sector distribution, activity charts, recent incidents
+- **Threat Actors** - 1,000+ actors across 6 categories with trend status (ESCALATING/STABLE/DECLINING)
 - **Incidents** - 16,000+ ransomware attacks with sector classification
 - **Vulnerabilities** - CISA KEV catalog with CVSS scores
 - **IOC Search** - Hash/IP/domain lookup with external enrichment links
 - **Advanced Search** - Query language powered search across all data
-- **ATT&CK Matrix** - MITRE ATT&CK technique browser
+- **ATT&CK Matrix** - MITRE ATT&CK technique browser with heatmap view
 - **Alerts** - CISA security alerts
 - **Export** - CSV, JSON, and STIX 2.1 export formats
 
-### Differentiating Features (v0.2.0)
-- **Organization Profile** - Configure your sector, geography, and tech stack for personalized threat intelligence
-- **Relevance Scoring** - Threats scored based on relevance to your organization (sector, vendors, products)
-- **IOC Quick Lookup** - Instant enrichment with external links (VirusTotal, Shodan, AbuseIPDB, etc.)
-- **Trend Analysis** - Week-over-week comparisons, sector trends, "what changed" summaries
-- **Actor Correlations** - View TTPs, exploited CVEs, and IOCs associated with threat actors
+### Threat Actor Categories (v0.4.0)
+| Category | Count | Description |
+|----------|-------|-------------|
+| **Ransomware** | 578 | Encrypt & extort groups (LockBit, Akira, etc.) |
+| **APT** | 362 | State-sponsored espionage (APT28, Lazarus, etc.) |
+| **Cybercrime** | 25 | Financial fraud (FIN7, Magecart, Scattered Spider) |
+| **Hacktivism** | 23 | Political motivation (Anonymous, Killnet, Lapsus$) |
+| **Initial Access Broker** | 9 | Sell network access (Emotet, Qakbot operators) |
+| **Data Extortion** | 3 | Steal without encrypting (Karakurt, RansomHouse) |
 
-### New in v0.3.0
+### Analytics Features (v0.3.0)
 - **Actor Trajectory Charts** - Compare actor activity over time with multi-line charts
 - **Attack Path Visualization** - Visual attack chains (Actor → Technique → Vulnerability → IOC)
 - **Incident Flow Diagrams** - Sankey-style visualization of Actor → Sector attack flows
+- **Trend Analysis** - Week-over-week comparisons, sector trends, "what changed" summaries
+- **Automated Trend Calculation** - ESCALATING/STABLE/DECLINING based on 7-day activity
+- **AI Summaries** - Groq-powered threat intelligence summaries
+
+### User Experience
+- **Organization Profile** - Configure sector, geography, and tech stack for personalized intelligence
+- **Relevance Scoring** - Threats scored based on relevance to your organization
 - **Keyboard Shortcuts** - Press `?` for help, `g+d` for Dashboard, `Cmd+K` for search
-- **Smart Time Display** - Adaptive time formatting ("2 hours ago", "Yesterday", etc.)
-- **ATT&CK Matrix Heatmap** - Toggle between table and heatmap views on Techniques page
-- **Automated Analytics** - Daily actor snapshots and weekly summary generation
+- **Smart Time Display** - Adaptive formatting ("2 hours ago", "Yesterday", etc.)
+- **Data Sources Panel** - View sync status and trigger manual updates
 
 ## Data Sources
 
-| Source | Data | Frequency |
-|--------|------|-----------|
-| [RansomLook](https://ransomlook.io/) | Ransomware groups & victims | Every 6 hours |
-| [Ransomware.live](https://ransomware.live/) | Ransomware attacks | Every 6 hours |
-| [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Exploited vulnerabilities | Every 6 hours |
-| [CISA Alerts](https://www.cisa.gov/news-events/cybersecurity-advisories) | Security advisories | Every 6 hours |
-| [NVD](https://nvd.nist.gov/) | CVE database | Every 6 hours |
-| [Abuse.ch](https://abuse.ch/) | IOCs (ThreatFox, URLhaus, Feodo) | Every 6 hours |
-| [MITRE ATT&CK](https://attack.mitre.org/) | Techniques & tactics | Every 6 hours |
+### Automated (Every 6 Hours)
+
+| Source | Data | Actors/Records |
+|--------|------|----------------|
+| [RansomLook](https://ransomlook.io/) | Ransomware groups & victims | ~600 groups |
+| [Ransomware.live](https://ransomware.live/) | Ransomware attacks | 16,000+ incidents |
+| [MITRE ATT&CK](https://attack.mitre.org/) | APT groups & techniques | 172 groups, 691 techniques |
+| [Malpedia](https://malpedia.caad.fkie.fraunhofer.de/) | Malware families & actors | 864 actors, 3,638 families |
+| [MISP Galaxy](https://github.com/MISP/misp-galaxy) | Community threat actor data | 2,940 actors |
+| [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Exploited vulnerabilities | 1,100+ CVEs |
+| [CISA Alerts](https://www.cisa.gov/news-events/cybersecurity-advisories) | Security advisories | Latest alerts |
+| [NVD](https://nvd.nist.gov/) | CVE database | Recent CVEs |
+| [Abuse.ch ThreatFox](https://threatfox.abuse.ch/) | IOCs | Malware indicators |
+| [Abuse.ch URLhaus](https://urlhaus.abuse.ch/) | Malicious URLs | Active threats |
+| [Abuse.ch Feodo](https://feodotracker.abuse.ch/) | Botnet C2 IPs | C2 servers |
+
+### Curated (Manual Updates)
+- Hacktivism groups (no structured feed available)
+- Initial Access Brokers (from threat reports)
+- Data extortion groups (subset of ransomware)
 
 ## Quick Start
 
 ### Prerequisites
 - Node.js 18+
 - Supabase account (free tier)
+- Groq API key (optional, for AI summaries)
 
 ### Installation
 
-\`\`\`bash
+```bash
 # Clone and install
 git clone https://github.com/metacog-osint/vigil.git
 cd vigil
@@ -66,62 +87,70 @@ cp .env.example .env
 # Edit .env with your Supabase credentials
 
 # Run database migrations (in Supabase SQL Editor)
-# Execute files in supabase/migrations/ in order
+# Execute files in supabase/migrations/ in order (001-007)
 
 # Ingest data
 npm run ingest
 
 # Start development server
 npm run dev
-\`\`\`
+```
 
 Open http://localhost:5174
 
 ## Project Structure
 
-\`\`\`
+```
 vigil/
 ├── src/
-│   ├── components/     # React components (60+ components)
-│   ├── pages/          # Route pages (12 pages)
+│   ├── components/     # React components (70+ components)
+│   ├── pages/          # Route pages (13 pages)
 │   ├── hooks/          # Custom React hooks
-│   └── lib/            # Supabase client, query parser, export utilities
-├── scripts/            # Data ingestion & analytics scripts
+│   └── lib/            # Supabase client, query parser, AI, export
+├── scripts/            # Data ingestion & analytics (15 scripts)
 ├── supabase/
-│   └── migrations/     # Database schema (7 migrations)
+│   ├── migrations/     # Database schema (7 migrations)
+│   └── functions/      # Edge functions
 ├── .github/
-│   └── workflows/      # Automated ingestion & analytics
+│   └── workflows/      # Automated ingestion (every 6 hours)
 └── docs/               # Documentation
-\`\`\`
-
-## Tech Stack
-
-- **Frontend**: React 18, Vite, Tailwind CSS, Recharts
-- **Database**: Supabase (PostgreSQL)
-- **Hosting**: Vercel
-- **Data Visualization**: Recharts (charts, gauges, treemaps)
+```
 
 ## Scripts
 
-\`\`\`bash
+```bash
 # Development
 npm run dev          # Start development server
 npm run build        # Production build
 npm run test         # Run tests
 
-# Data Ingestion
-npm run ingest             # Run all data ingestion
-npm run ingest:ransomlook  # RansomLook ransomware
-npm run ingest:kev         # CISA KEV
-npm run ingest:cisa-alerts # CISA alerts
-npm run ingest:nvd         # NVD CVEs
-npm run ingest:mitre       # MITRE ATT&CK
+# Data Ingestion (automated via GitHub Actions)
+npm run ingest:ransomlook     # RansomLook ransomware
+npm run ingest:ransomware-live # Ransomware.live
+npm run ingest:mitre          # MITRE ATT&CK + APT groups
+npm run ingest:malpedia       # Malpedia actors + malware
+npm run ingest:misp-galaxy    # MISP Galaxy threat actors
+npm run ingest:kev            # CISA KEV
+npm run ingest:cisa-alerts    # CISA alerts
+npm run ingest:nvd            # NVD CVEs
+npm run ingest:threatfox      # ThreatFox IOCs
+npm run ingest:urlhaus        # URLhaus malicious URLs
+npm run ingest:feodo          # Feodo C2 trackers
 
 # Analytics
 npm run snapshot:actors         # Daily actor trend snapshot
 npm run generate:weekly-summary # Weekly summary generation
 npm run seed:correlations       # Actor-CVE correlations
-\`\`\`
+npm run seed:actor-types        # Curated actor categories
+```
+
+## Tech Stack
+
+- **Frontend**: React 18, Vite, Tailwind CSS, Recharts
+- **Database**: Supabase (PostgreSQL)
+- **AI**: Groq API (Llama 3.3 70B) for threat summaries
+- **Hosting**: Vercel
+- **Automation**: GitHub Actions (every 6 hours)
 
 ## Documentation
 
@@ -138,4 +167,5 @@ MIT
 
 ---
 
-Built for the iCOUNTER CTI Analyst position.
+*Version 0.4.0 - January 2026*
+*Built for the iCOUNTER CTI Analyst position.*
