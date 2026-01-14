@@ -5,7 +5,10 @@
 
 ---
 
-## Current State (v0.5.0)
+## Current State (v1.0.0) - BUILD PLAN COMPLETE
+
+> All 6 sprints from BUILD_PLAN.md have been completed as of January 14, 2026.
+> Vigil is now a subscription-ready CTI platform.
 
 ### Data Sources Integrated (16 Automated)
 
@@ -57,6 +60,14 @@
 - [x] Dark cyber-themed UI
 - [x] STIX 2.1 export format
 - [x] Deployed to vigil.theintelligence.company
+
+### Sprint Features (v1.0.0) - NEW
+- [x] **Sprint 1**: Sector drill-down, targeted services widget, active exploitation tracker
+- [x] **Sprint 2**: Email digests (Resend), vendor-specific alerts, in-app notifications, threat hunt guides
+- [x] **Sprint 3**: Interactive threat map, calendar heatmap, actor relationship graph, vulnerability treemap, kill chain visualization
+- [x] **Sprint 4**: Stripe subscriptions, feature gating, REST API, API key management, pricing page, API docs
+- [x] **Sprint 5**: SIEM exports (Splunk/Elastic/Sentinel/STIX), Slack/Teams/Jira integrations, outbound webhooks
+- [x] **Sprint 6**: Database indexes, cursor pagination, Sentry monitoring, unit tests, onboarding tour
 
 ### Threat Actors Page (v0.4.1)
 - [x] Pagination with Load More (50 at a time)
@@ -118,7 +129,9 @@
 
 ---
 
-## Phase 3: Visualizations
+## Phase 3: Visualizations ✅ COMPLETE
+
+> All visualization components implemented in Sprint 3.
 
 ### Dashboard Enhancements
 
