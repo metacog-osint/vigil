@@ -49,7 +49,7 @@ export function subscribeToTable(table, callback, filter = null) {
 // Threat Actors queries
 export const threatActors = {
   async getAll(options = {}) {
-    const { limit = 100, offset = 0, search = '', sector = '', trendStatus = '', actorType = '' } = options
+    const { limit = 100, offset = 0, search = '', sector = '', trendStatus = '', actorType = '', status = '' } = options
 
     let query = supabase
       .from('threat_actors')
@@ -73,6 +73,10 @@ export const threatActors = {
     if (actorType) {
       // Case-insensitive filter for actor type
       query = query.ilike('actor_type', actorType)
+    }
+
+    if (status) {
+      query = query.eq('status', status)
     }
 
     return query

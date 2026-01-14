@@ -9,7 +9,7 @@ import { WatchButton } from '../components/WatchButton'
 import { Sparkline } from '../components/Sparkline'
 import { Timeline } from '../components/Timeline'
 import { CorrelationPanel } from '../components/CorrelationPanel'
-import { Tooltip, SortableHeader, FIELD_TOOLTIPS } from '../components/Tooltip'
+import { Tooltip, ColumnMenu, SortableHeader, FIELD_TOOLTIPS } from '../components/Tooltip'
 
 const SECTORS = [
   'healthcare',
@@ -84,6 +84,28 @@ function getTypeConfig(type) {
   return ACTOR_TYPE_CONFIG[normalized] || ACTOR_TYPE_CONFIG.unknown
 }
 
+// Filter options for column menus
+const TYPE_FILTER_OPTIONS = [
+  { value: 'ransomware', label: 'Ransomware', color: 'bg-red-400' },
+  { value: 'apt', label: 'APT', color: 'bg-purple-400' },
+  { value: 'cybercrime', label: 'Cybercrime', color: 'bg-orange-400' },
+  { value: 'hacktivism', label: 'Hacktivism', color: 'bg-green-400' },
+  { value: 'initial_access_broker', label: 'Initial Access Broker', color: 'bg-yellow-400' },
+  { value: 'data_extortion', label: 'Data Extortion', color: 'bg-pink-400' },
+]
+
+const TREND_FILTER_OPTIONS = [
+  { value: 'ESCALATING', label: 'Escalating', color: 'bg-red-400' },
+  { value: 'STABLE', label: 'Stable', color: 'bg-gray-400' },
+  { value: 'DECLINING', label: 'Declining', color: 'bg-green-400' },
+]
+
+const STATUS_FILTER_OPTIONS = [
+  { value: 'active', label: 'Active', color: 'bg-green-400' },
+  { value: 'inactive', label: 'Inactive', color: 'bg-yellow-400' },
+  { value: 'defunct', label: 'Defunct', color: 'bg-gray-400' },
+]
+
 export default function ThreatActors() {
   const [actors, setActors] = useState([])
   const [loading, setLoading] = useState(true)
@@ -91,6 +113,7 @@ export default function ThreatActors() {
   const [sectorFilter, setSectorFilter] = useState('')
   const [trendFilter, setTrendFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [sortConfig, setSortConfig] = useState({ field: 'incidents_7d', direction: 'desc' })
   const [trendSummary, setTrendSummary] = useState({ escalating: 0, stable: 0, declining: 0 })
   const [selectedActor, setSelectedActor] = useState(null)
@@ -112,7 +135,7 @@ export default function ThreatActors() {
     })
 
     return () => unsubscribe()
-  }, [search, sectorFilter, trendFilter, typeFilter])
+  }, [search, sectorFilter, trendFilter, typeFilter, statusFilter])
 
   async function loadActors() {
     setLoading(true)
@@ -122,6 +145,7 @@ export default function ThreatActors() {
         sector: sectorFilter,
         trendStatus: trendFilter,
         actorType: typeFilter,
+        status: statusFilter,
         limit: 100,
       })
 
@@ -224,23 +248,7 @@ export default function ThreatActors() {
       </div>
 
       {/* Trend Summary Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <Tooltip
-          content="Show all actors regardless of trend status. Click to clear any active filters."
-          position="bottom"
-        >
-          <button
-            onClick={() => setTrendFilter('')}
-            className={`cyber-card text-center cursor-pointer transition-all w-full ${
-              trendFilter === '' ? 'ring-2 ring-cyan-500' : ''
-            }`}
-          >
-            <div className="text-2xl font-bold text-cyan-400">
-              {trendSummary.escalating + trendSummary.stable + trendSummary.declining}
-            </div>
-            <div className="text-sm text-gray-400">View All</div>
-          </button>
-        </Tooltip>
+      <div className="grid grid-cols-3 gap-4">
         <Tooltip
           content={FIELD_TOOLTIPS.escalating_summary.content}
           source={FIELD_TOOLTIPS.escalating_summary.source}
@@ -288,33 +296,21 @@ export default function ThreatActors() {
         </Tooltip>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center">
         <div className="flex-1">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search actors..."
+            placeholder="Search actors by name..."
             className="cyber-input w-full"
           />
         </div>
         <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className={`cyber-input ${typeFilter ? 'ring-2 ring-cyan-500 border-cyan-500' : ''}`}
-          title="Filter by actor type"
-        >
-          {ACTOR_TYPES.map((type) => (
-            <option key={type.key} value={type.key}>
-              {type.label}
-            </option>
-          ))}
-        </select>
-        <select
           value={sectorFilter}
           onChange={(e) => setSectorFilter(e.target.value)}
-          className="cyber-input"
+          className={`cyber-input ${sectorFilter ? 'ring-2 ring-cyan-500 border-cyan-500' : ''}`}
           title="Filter by target sector"
         >
           <option value="">All Sectors</option>
@@ -324,18 +320,25 @@ export default function ThreatActors() {
             </option>
           ))}
         </select>
-        <select
-          value={trendFilter}
-          onChange={(e) => setTrendFilter(e.target.value)}
-          className="cyber-input"
-          title="Filter by trend status"
-        >
-          {TREND_FILTERS.map((filter) => (
-            <option key={filter.key} value={filter.key}>
-              {filter.label}
-            </option>
-          ))}
-        </select>
+        {/* Active filters indicator and clear button */}
+        {(typeFilter || trendFilter || statusFilter || sectorFilter || search) && (
+          <button
+            onClick={() => {
+              setTypeFilter('')
+              setTrendFilter('')
+              setStatusFilter('')
+              setSectorFilter('')
+              setSearch('')
+              setSortConfig({ field: 'incidents_7d', direction: 'desc' })
+            }}
+            className="text-sm text-gray-400 hover:text-cyan-400 flex items-center gap-1.5 px-3 py-2 rounded border border-gray-700 hover:border-gray-600 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Clear all filters
+          </button>
+        )}
       </div>
 
       {/* Content */}
@@ -352,67 +355,82 @@ export default function ThreatActors() {
                 <thead>
                   <tr>
                     <th>
-                      <SortableHeader
+                      <ColumnMenu
                         field="name"
                         currentSort={sortConfig}
                         onSort={setSortConfig}
+                        currentFilter={null}
+                        onFilter={() => {}}
                         tooltip={FIELD_TOOLTIPS.actor_name}
                       >
                         Actor
-                      </SortableHeader>
+                      </ColumnMenu>
                     </th>
                     <th className="hidden md:table-cell">
-                      <SortableHeader
+                      <ColumnMenu
                         field="actor_type"
                         currentSort={sortConfig}
                         onSort={setSortConfig}
+                        currentFilter={typeFilter}
+                        onFilter={setTypeFilter}
+                        filterOptions={TYPE_FILTER_OPTIONS}
                         tooltip={FIELD_TOOLTIPS.actor_type}
                       >
                         Type
-                      </SortableHeader>
+                      </ColumnMenu>
                     </th>
                     <th>
-                      <SortableHeader
+                      <ColumnMenu
                         field="trend_status"
                         currentSort={sortConfig}
                         onSort={setSortConfig}
+                        currentFilter={trendFilter}
+                        onFilter={setTrendFilter}
+                        filterOptions={TREND_FILTER_OPTIONS}
                         tooltip={FIELD_TOOLTIPS.trend_status}
                       >
                         Trend
-                      </SortableHeader>
+                      </ColumnMenu>
                     </th>
                     <th className="hidden lg:table-cell">
-                      <SortableHeader
+                      <ColumnMenu
                         field="incidents_7d"
                         currentSort={sortConfig}
                         onSort={setSortConfig}
+                        currentFilter={null}
+                        onFilter={() => {}}
                         tooltip={{
                           content: 'Current week incidents / previous week incidents. Velocity shows incidents per day.',
                           source: 'ransomware.live'
                         }}
                       >
                         7d / Prev
-                      </SortableHeader>
+                      </ColumnMenu>
                     </th>
                     <th className="hidden md:table-cell">
-                      <SortableHeader
+                      <ColumnMenu
                         field="last_seen"
                         currentSort={sortConfig}
                         onSort={setSortConfig}
+                        currentFilter={null}
+                        onFilter={() => {}}
                         tooltip={FIELD_TOOLTIPS.last_seen}
                       >
                         Last Seen
-                      </SortableHeader>
+                      </ColumnMenu>
                     </th>
                     <th>
-                      <SortableHeader
+                      <ColumnMenu
                         field="status"
                         currentSort={sortConfig}
                         onSort={setSortConfig}
+                        currentFilter={statusFilter}
+                        onFilter={setStatusFilter}
+                        filterOptions={STATUS_FILTER_OPTIONS}
                         tooltip={FIELD_TOOLTIPS.status}
                       >
                         Status
-                      </SortableHeader>
+                      </ColumnMenu>
                     </th>
                   </tr>
                 </thead>
