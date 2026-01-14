@@ -500,25 +500,32 @@ export default function Incidents() {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
 
-    // Timeline data - last 30 days
+    // Timeline data - adapts to selected time range
     const timelineData = []
     const now = new Date()
-    for (let i = 29; i >= 0; i--) {
+    const days = timeRange === 0 ? 90 : timeRange // Default to 90 for "All"
+
+    // Determine label interval based on time range
+    let labelInterval
+    if (days <= 7) labelInterval = 1
+    else if (days <= 30) labelInterval = 5
+    else if (days <= 90) labelInterval = 10
+    else labelInterval = 30
+
+    for (let i = days - 1; i >= 0; i--) {
       const date = new Date(now)
       date.setDate(date.getDate() - i)
       const dateKey = date.toISOString().split('T')[0]
-      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
       const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
       timelineData.push({
         date: dateKey,
-        label: i % 5 === 0 ? monthDay : '',
-        day: dayName,
+        label: i % labelInterval === 0 ? monthDay : '',
         incidents: dailyCounts[dateKey] || 0
       })
     }
 
     return { topActors, topSectors, sectorPieData, topCountries, statuses, timelineData }
-  }, [incidentList])
+  }, [incidentList, timeRange])
 
   const hasActiveFilters = search || sectorFilter || statusFilter || countryFilter || actorFilter || timeRange !== 30
 
@@ -792,7 +799,9 @@ export default function Incidents() {
             <>
               {/* Incident Timeline Chart */}
               <div className="cyber-card p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Incident Activity (Last 30 Days)</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  Incident Activity ({timeRange === 0 ? 'Last 90 Days' : timeRange === 365 ? 'Last Year' : `Last ${timeRange} Days`})
+                </h3>
                 <ResponsiveContainer width="100%" height={250}>
                   <AreaChart data={analytics.timelineData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
