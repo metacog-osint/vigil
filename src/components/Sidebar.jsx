@@ -189,56 +189,58 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
           ))}
         </nav>
 
-        {/* Collapse toggle button - desktop only */}
-        <div className="hidden lg:block absolute bottom-20 left-0 right-0 px-4">
-          <button
-            onClick={onToggleCollapse}
-            className={clsx(
-              'w-full flex items-center gap-2 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors',
-              isCollapsed ? 'justify-center px-2' : 'px-3'
-            )}
-            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            <svg
-              className={clsx('w-5 h-5 transition-transform', isCollapsed && 'rotate-180')}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        {/* Bottom Section: Collapse + Data Sources */}
+        <div className="absolute bottom-0 left-0 right-0 border-t border-gray-800">
+          {/* Collapse toggle button - desktop only */}
+          <div className={clsx('hidden lg:block px-4 py-2', isCollapsed && 'px-2')}>
+            <button
+              onClick={onToggleCollapse}
+              className={clsx(
+                'w-full flex items-center gap-2 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors',
+                isCollapsed ? 'justify-center px-2' : 'px-3'
+              )}
+              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-            </svg>
-            {!isCollapsed && <span>Collapse</span>}
-          </button>
-        </div>
-
-        {/* Data Sources Status */}
-        <div className={clsx(
-          'absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800',
-          isCollapsed && 'hidden'
-        )}>
-          <div className="text-xs text-gray-500 mb-2">Data Sources</div>
-          <div className="space-y-1 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Ransomwatch</span>
-              <span className="w-2 h-2 bg-green-500 rounded-full live-indicator"></span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">CISA KEV</span>
-              <span className="w-2 h-2 bg-green-500 rounded-full live-indicator"></span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Abuse.ch</span>
-              <span className="w-2 h-2 bg-green-500 rounded-full live-indicator"></span>
-            </div>
+              <svg
+                className={clsx('w-5 h-5 transition-transform', isCollapsed && 'rotate-180')}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+              {!isCollapsed && <span>Collapse</span>}
+            </button>
           </div>
-        </div>
 
-        {/* Collapsed: Just show green dot */}
-        {isCollapsed && (
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800 flex justify-center">
-            <span className="w-2 h-2 bg-green-500 rounded-full live-indicator" title="Data sources online"></span>
-          </div>
-        )}
+          {/* Data Sources Status - expanded view */}
+          {!isCollapsed && (
+            <div className="px-4 pb-4 pt-2 border-t border-gray-800/50">
+              <div className="text-xs text-gray-500 mb-2">Data Sources</div>
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Ransomware</span>
+                  <span className="w-2 h-2 bg-green-500 rounded-full live-indicator"></span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">CISA KEV</span>
+                  <span className="w-2 h-2 bg-green-500 rounded-full live-indicator"></span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Abuse.ch</span>
+                  <span className="w-2 h-2 bg-green-500 rounded-full live-indicator"></span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Collapsed: Just show green dot */}
+          {isCollapsed && (
+            <div className="p-4 flex justify-center">
+              <span className="w-2 h-2 bg-green-500 rounded-full live-indicator" title="Data sources online"></span>
+            </div>
+          )}
+        </div>
       </aside>
     </>
   )

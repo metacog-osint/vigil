@@ -9,6 +9,7 @@ import { WatchButton } from '../components/WatchButton'
 import { Sparkline } from '../components/Sparkline'
 import { Timeline } from '../components/Timeline'
 import { CorrelationPanel } from '../components/CorrelationPanel'
+import { Tooltip, SortableHeader, FIELD_TOOLTIPS } from '../components/Tooltip'
 
 const SECTORS = [
   'healthcare',
@@ -28,12 +29,34 @@ const TREND_FILTERS = [
   { key: 'DECLINING', label: 'Declining' },
 ]
 
+const ACTOR_TYPES = [
+  { key: '', label: 'All Types' },
+  { key: 'ransomware', label: 'Ransomware' },
+  { key: 'apt', label: 'APT' },
+  { key: 'cybercrime', label: 'Cybercrime' },
+  { key: 'hacktivism', label: 'Hacktivism' },
+  { key: 'initial_access_broker', label: 'Initial Access Broker' },
+  { key: 'data_extortion', label: 'Data Extortion' },
+]
+
+// Tooltip content for actor types
+const ACTOR_TYPE_TOOLTIPS = {
+  ransomware: 'Ransomware operators encrypt victim data and demand payment for decryption keys.',
+  apt: 'Advanced Persistent Threat - state-sponsored groups conducting espionage operations.',
+  cybercrime: 'Financially motivated criminals (fraud, theft, carding, etc.).',
+  hacktivism: 'Politically or ideologically motivated hackers (Anonymous, Killnet, etc.).',
+  initial_access_broker: 'Actors who sell initial network access to other criminals.',
+  data_extortion: 'Groups that steal data without encryption and extort victims with leak threats.',
+}
+
 export default function ThreatActors() {
   const [actors, setActors] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [sectorFilter, setSectorFilter] = useState('')
   const [trendFilter, setTrendFilter] = useState('')
+  const [typeFilter, setTypeFilter] = useState('')
+  const [sortConfig, setSortConfig] = useState({ field: 'incidents_7d', direction: 'desc' })
   const [trendSummary, setTrendSummary] = useState({ escalating: 0, stable: 0, declining: 0 })
   const [selectedActor, setSelectedActor] = useState(null)
   const [actorIncidents, setActorIncidents] = useState([])
@@ -54,7 +77,7 @@ export default function ThreatActors() {
     })
 
     return () => unsubscribe()
-  }, [search, sectorFilter, trendFilter])
+  }, [search, sectorFilter, trendFilter, typeFilter])
 
   async function loadActors() {
     setLoading(true)
@@ -63,7 +86,8 @@ export default function ThreatActors() {
         search,
         sector: sectorFilter,
         trendStatus: trendFilter,
-        limit: 50,
+        actorType: typeFilter,
+        limit: 100,
       })
 
       if (error) throw error
@@ -83,6 +107,42 @@ export default function ThreatActors() {
       console.error('Error loading trend summary:', error)
     }
   }
+
+  // Sort actors based on current config
+  const sortedActors = [...actors].sort((a, b) => {
+    if (!sortConfig) return 0
+
+    const { field, direction } = sortConfig
+    let aVal = a[field]
+    let bVal = b[field]
+
+    // Handle nulls
+    if (aVal == null) aVal = field === 'name' ? '' : -Infinity
+    if (bVal == null) bVal = field === 'name' ? '' : -Infinity
+
+    // String comparison for text fields
+    if (field === 'name' || field === 'actor_type' || field === 'status') {
+      aVal = String(aVal).toLowerCase()
+      bVal = String(bVal).toLowerCase()
+    }
+
+    // Date comparison
+    if (field === 'last_seen' || field === 'first_seen') {
+      aVal = aVal ? new Date(aVal).getTime() : 0
+      bVal = bVal ? new Date(bVal).getTime() : 0
+    }
+
+    // Trend status ordering
+    if (field === 'trend_status') {
+      const order = { 'ESCALATING': 3, 'STABLE': 2, 'DECLINING': 1 }
+      aVal = order[aVal] || 0
+      bVal = order[bVal] || 0
+    }
+
+    if (aVal < bVal) return direction === 'asc' ? -1 : 1
+    if (aVal > bVal) return direction === 'asc' ? 1 : -1
+    return 0
+  })
 
   // Load incidents when an actor is selected
   useEffect(() => {
@@ -122,35 +182,69 @@ export default function ThreatActors() {
         </p>
       </div>
 
-      {/* Trend Summary */}
-      <div className="grid grid-cols-3 gap-4">
-        <button
-          onClick={() => setTrendFilter(trendFilter === 'ESCALATING' ? '' : 'ESCALATING')}
-          className={`cyber-card text-center cursor-pointer transition-all ${
-            trendFilter === 'ESCALATING' ? 'ring-2 ring-red-500' : ''
-          }`}
+      {/* Trend Summary Cards */}
+      <div className="grid grid-cols-4 gap-4">
+        <Tooltip
+          content="Show all actors regardless of trend status. Click to clear any active filters."
+          position="bottom"
         >
-          <div className="text-2xl font-bold text-red-400">{trendSummary.escalating}</div>
-          <div className="text-sm text-gray-400">Escalating</div>
-        </button>
-        <button
-          onClick={() => setTrendFilter(trendFilter === 'STABLE' ? '' : 'STABLE')}
-          className={`cyber-card text-center cursor-pointer transition-all ${
-            trendFilter === 'STABLE' ? 'ring-2 ring-gray-500' : ''
-          }`}
+          <button
+            onClick={() => setTrendFilter('')}
+            className={`cyber-card text-center cursor-pointer transition-all w-full ${
+              trendFilter === '' ? 'ring-2 ring-cyan-500' : ''
+            }`}
+          >
+            <div className="text-2xl font-bold text-cyan-400">
+              {trendSummary.escalating + trendSummary.stable + trendSummary.declining}
+            </div>
+            <div className="text-sm text-gray-400">View All</div>
+          </button>
+        </Tooltip>
+        <Tooltip
+          content={FIELD_TOOLTIPS.escalating_summary.content}
+          source={FIELD_TOOLTIPS.escalating_summary.source}
+          position="bottom"
         >
-          <div className="text-2xl font-bold text-gray-400">{trendSummary.stable}</div>
-          <div className="text-sm text-gray-400">Stable</div>
-        </button>
-        <button
-          onClick={() => setTrendFilter(trendFilter === 'DECLINING' ? '' : 'DECLINING')}
-          className={`cyber-card text-center cursor-pointer transition-all ${
-            trendFilter === 'DECLINING' ? 'ring-2 ring-green-500' : ''
-          }`}
+          <button
+            onClick={() => setTrendFilter(trendFilter === 'ESCALATING' ? '' : 'ESCALATING')}
+            className={`cyber-card text-center cursor-pointer transition-all w-full ${
+              trendFilter === 'ESCALATING' ? 'ring-2 ring-red-500' : ''
+            }`}
+          >
+            <div className="text-2xl font-bold text-red-400">{trendSummary.escalating}</div>
+            <div className="text-sm text-gray-400">Escalating</div>
+          </button>
+        </Tooltip>
+        <Tooltip
+          content={FIELD_TOOLTIPS.stable_summary.content}
+          source={FIELD_TOOLTIPS.stable_summary.source}
+          position="bottom"
         >
-          <div className="text-2xl font-bold text-green-400">{trendSummary.declining}</div>
-          <div className="text-sm text-gray-400">Declining</div>
-        </button>
+          <button
+            onClick={() => setTrendFilter(trendFilter === 'STABLE' ? '' : 'STABLE')}
+            className={`cyber-card text-center cursor-pointer transition-all w-full ${
+              trendFilter === 'STABLE' ? 'ring-2 ring-gray-500' : ''
+            }`}
+          >
+            <div className="text-2xl font-bold text-gray-400">{trendSummary.stable}</div>
+            <div className="text-sm text-gray-400">Stable</div>
+          </button>
+        </Tooltip>
+        <Tooltip
+          content={FIELD_TOOLTIPS.declining_summary.content}
+          source={FIELD_TOOLTIPS.declining_summary.source}
+          position="bottom"
+        >
+          <button
+            onClick={() => setTrendFilter(trendFilter === 'DECLINING' ? '' : 'DECLINING')}
+            className={`cyber-card text-center cursor-pointer transition-all w-full ${
+              trendFilter === 'DECLINING' ? 'ring-2 ring-green-500' : ''
+            }`}
+          >
+            <div className="text-2xl font-bold text-green-400">{trendSummary.declining}</div>
+            <div className="text-sm text-gray-400">Declining</div>
+          </button>
+        </Tooltip>
       </div>
 
       {/* Filters */}
@@ -165,9 +259,22 @@ export default function ThreatActors() {
           />
         </div>
         <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="cyber-input"
+          title="Filter by actor type"
+        >
+          {ACTOR_TYPES.map((type) => (
+            <option key={type.key} value={type.key}>
+              {type.label}
+            </option>
+          ))}
+        </select>
+        <select
           value={sectorFilter}
           onChange={(e) => setSectorFilter(e.target.value)}
           className="cyber-input"
+          title="Filter by target sector"
         >
           <option value="">All Sectors</option>
           {SECTORS.map((sector) => (
@@ -180,6 +287,7 @@ export default function ThreatActors() {
           value={trendFilter}
           onChange={(e) => setTrendFilter(e.target.value)}
           className="cyber-input"
+          title="Filter by trend status"
         >
           {TREND_FILTERS.map((filter) => (
             <option key={filter.key} value={filter.key}>
@@ -194,72 +302,201 @@ export default function ThreatActors() {
         {/* Actor List */}
         <div className="flex-1">
           {loading ? (
-            <SkeletonTable rows={8} cols={5} />
-          ) : actors.length === 0 ? (
+            <SkeletonTable rows={8} cols={6} />
+          ) : sortedActors.length === 0 ? (
             <EmptyActors />
           ) : (
             <div className="cyber-card overflow-hidden">
               <table className="cyber-table">
                 <thead>
                   <tr>
-                    <th>Actor</th>
-                    <th className="hidden md:table-cell">Type</th>
-                    <th>Trend</th>
-                    <th className="hidden lg:table-cell">7d / Prev</th>
-                    <th className="hidden md:table-cell">Last Seen</th>
-                    <th>Status</th>
+                    <th>
+                      <SortableHeader
+                        field="name"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                        tooltip={FIELD_TOOLTIPS.actor_name}
+                      >
+                        Actor
+                      </SortableHeader>
+                    </th>
+                    <th className="hidden md:table-cell">
+                      <SortableHeader
+                        field="actor_type"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                        tooltip={FIELD_TOOLTIPS.actor_type}
+                      >
+                        Type
+                      </SortableHeader>
+                    </th>
+                    <th>
+                      <SortableHeader
+                        field="trend_status"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                        tooltip={FIELD_TOOLTIPS.trend_status}
+                      >
+                        Trend
+                      </SortableHeader>
+                    </th>
+                    <th className="hidden lg:table-cell">
+                      <SortableHeader
+                        field="incidents_7d"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                        tooltip={{
+                          content: 'Current week incidents / previous week incidents. Velocity shows incidents per day.',
+                          source: 'ransomware.live'
+                        }}
+                      >
+                        7d / Prev
+                      </SortableHeader>
+                    </th>
+                    <th className="hidden md:table-cell">
+                      <SortableHeader
+                        field="last_seen"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                        tooltip={FIELD_TOOLTIPS.last_seen}
+                      >
+                        Last Seen
+                      </SortableHeader>
+                    </th>
+                    <th>
+                      <SortableHeader
+                        field="status"
+                        currentSort={sortConfig}
+                        onSort={setSortConfig}
+                        tooltip={FIELD_TOOLTIPS.status}
+                      >
+                        Status
+                      </SortableHeader>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {actors.map((actor) => (
+                  {sortedActors.map((actor) => (
                     <tr
                       key={actor.id}
                       onClick={() => setSelectedActor(actor)}
                       className="cursor-pointer"
                     >
+                      {/* Actor Name Cell */}
                       <td>
                         <div className="flex items-center gap-2">
                           <WatchButton entityType="threat_actor" entityId={actor.id} size="sm" />
                           <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-white">{actor.name}</span>
-                              <NewBadge date={actor.last_seen} thresholdHours={48} />
-                            </div>
-                            {actor.aliases?.length > 0 && (
-                              <div className="text-xs text-gray-500">
-                                aka {actor.aliases.slice(0, 2).join(', ')}
+                            <Tooltip
+                              content={FIELD_TOOLTIPS.actor_name.content}
+                              source={actor.source || 'Multiple sources'}
+                              position="right"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-white">{actor.name}</span>
+                                <NewBadge date={actor.last_seen} thresholdHours={48} />
                               </div>
+                            </Tooltip>
+                            {actor.aliases?.length > 0 && (
+                              <Tooltip
+                                content={`All aliases: ${actor.aliases.join(', ')}`}
+                                source={FIELD_TOOLTIPS.aliases.source}
+                                position="bottom"
+                              >
+                                <div className="text-xs text-gray-500">
+                                  aka {actor.aliases.slice(0, 2).join(', ')}
+                                  {actor.aliases.length > 2 && ` +${actor.aliases.length - 2}`}
+                                </div>
+                              </Tooltip>
                             )}
                           </div>
                         </div>
                       </td>
+
+                      {/* Actor Type Cell */}
                       <td className="hidden md:table-cell">
-                        <span className="badge-info">{actor.actor_type || 'ransomware'}</span>
-                      </td>
-                      <td>
-                        <TrendBadge status={actor.trend_status} showLabel={false} />
-                      </td>
-                      <td className="hidden lg:table-cell text-sm">
-                        <span className="text-white">{actor.incidents_7d || 0}</span>
-                        <span className="text-gray-500"> / </span>
-                        <span className="text-gray-400">{actor.incidents_prev_7d || 0}</span>
-                        {actor.incident_velocity > 0 && (
-                          <span className="text-xs text-gray-500 ml-1">
-                            ({actor.incident_velocity}/d)
-                          </span>
-                        )}
-                      </td>
-                      <td className="hidden md:table-cell text-sm text-gray-400">
-                        <SmartTime date={actor.last_seen} />
-                      </td>
-                      <td>
-                        <span
-                          className={`badge-${
-                            actor.status === 'active' ? 'high' : 'low'
-                          }`}
+                        <Tooltip
+                          content={ACTOR_TYPE_TOOLTIPS[actor.actor_type] || FIELD_TOOLTIPS.actor_type.content}
+                          source={FIELD_TOOLTIPS.actor_type.source}
+                          position="right"
                         >
-                          {actor.status || 'active'}
-                        </span>
+                          <span className="badge-info">
+                            {(actor.actor_type || 'ransomware').replace(/_/g, ' ')}
+                          </span>
+                        </Tooltip>
+                      </td>
+
+                      {/* Trend Status Cell */}
+                      <td>
+                        <Tooltip
+                          content={
+                            actor.trend_status === 'ESCALATING'
+                              ? `Activity increased ${actor.incidents_7d > 0 && actor.incidents_prev_7d > 0 ? Math.round(((actor.incidents_7d - actor.incidents_prev_7d) / actor.incidents_prev_7d) * 100) : ''}% vs previous week.`
+                              : actor.trend_status === 'DECLINING'
+                              ? `Activity decreased vs previous week.`
+                              : 'Activity is stable compared to previous week.'
+                          }
+                          source={FIELD_TOOLTIPS.trend_status.source}
+                          position="right"
+                        >
+                          <span>
+                            <TrendBadge status={actor.trend_status} showLabel={false} />
+                          </span>
+                        </Tooltip>
+                      </td>
+
+                      {/* Incidents 7d / Prev Cell */}
+                      <td className="hidden lg:table-cell text-sm">
+                        <Tooltip
+                          content={`This week: ${actor.incidents_7d || 0} incidents. Last week: ${actor.incidents_prev_7d || 0} incidents.${
+                            actor.incident_velocity > 0
+                              ? ` Averaging ${actor.incident_velocity} incidents per day.`
+                              : ''
+                          }`}
+                          source="ransomware.live"
+                          position="left"
+                        >
+                          <span>
+                            <span className="text-white font-medium">{actor.incidents_7d || 0}</span>
+                            <span className="text-gray-500"> / </span>
+                            <span className="text-gray-400">{actor.incidents_prev_7d || 0}</span>
+                            {actor.incident_velocity > 0 && (
+                              <span className="text-xs text-gray-500 ml-1">
+                                ({actor.incident_velocity}/d)
+                              </span>
+                            )}
+                          </span>
+                        </Tooltip>
+                      </td>
+
+                      {/* Last Seen Cell */}
+                      <td className="hidden md:table-cell text-sm text-gray-400">
+                        <Tooltip
+                          content={FIELD_TOOLTIPS.last_seen.content}
+                          source={FIELD_TOOLTIPS.last_seen.source}
+                          position="left"
+                        >
+                          <span>
+                            <SmartTime date={actor.last_seen} />
+                          </span>
+                        </Tooltip>
+                      </td>
+
+                      {/* Status Cell */}
+                      <td>
+                        <Tooltip
+                          content={FIELD_TOOLTIPS.status.content}
+                          source={FIELD_TOOLTIPS.status.source}
+                          position="left"
+                        >
+                          <span
+                            className={`badge-${
+                              actor.status === 'active' ? 'high' : 'low'
+                            }`}
+                          >
+                            {actor.status || 'active'}
+                          </span>
+                        </Tooltip>
                       </td>
                     </tr>
                   ))}

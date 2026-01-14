@@ -15,6 +15,7 @@
 7. [Incident Flow Visualization](#7-incident-flow-visualization)
 8. [Keyboard Shortcuts](#8-keyboard-shortcuts)
 9. [Smart Time Display](#9-smart-time-display)
+10. [Data Sources & Actor Taxonomy](#10-data-sources--actor-taxonomy)
 
 ---
 
@@ -411,6 +412,89 @@ import { SmartTime, FullDate, TimeAgo } from '../components/TimeDisplay'
 
 ---
 
+## 10. Data Sources & Actor Taxonomy
+
+### Purpose
+Comprehensive threat intelligence from 11 automated data sources covering ransomware, APT groups, malware, vulnerabilities, and IOCs.
+
+### Automated Data Sources
+
+| Source | Type | Data | Update Frequency |
+|--------|------|------|------------------|
+| [RansomLook](https://ransomlook.io/) | Ransomware | ~600 groups, victims | Every 6 hours |
+| [Ransomware.live](https://ransomware.live/) | Incidents | 16,000+ attacks | Every 6 hours |
+| [MITRE ATT&CK](https://attack.mitre.org/) | TTPs | 172 APT groups, 691 techniques | Every 6 hours |
+| [Malpedia](https://malpedia.caad.fkie.fraunhofer.de/) | Malware | 864 actors, 3,638 families | Every 6 hours |
+| [MISP Galaxy](https://github.com/MISP/misp-galaxy) | Actors | 2,940 community actors | Every 6 hours |
+| [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Vulnerabilities | 1,100+ exploited CVEs | Every 6 hours |
+| [CISA Alerts](https://www.cisa.gov/news-events/cybersecurity-advisories) | Advisories | Security alerts | Every 6 hours |
+| [NVD](https://nvd.nist.gov/) | Vulnerabilities | Recent CVEs | Every 6 hours |
+| [Abuse.ch ThreatFox](https://threatfox.abuse.ch/) | IOCs | Malware indicators | Every 6 hours |
+| [Abuse.ch URLhaus](https://urlhaus.abuse.ch/) | IOCs | Malicious URLs | Every 6 hours |
+| [Abuse.ch Feodo](https://feodotracker.abuse.ch/) | IOCs | Botnet C2 IPs | Every 6 hours |
+
+### Actor Type Taxonomy
+
+Vigil classifies threat actors into 6 categories:
+
+| Category | Count | Description | Examples |
+|----------|-------|-------------|----------|
+| **Ransomware** | 578 | Encrypt & extort groups | LockBit, ALPHV, Akira |
+| **APT** | 362 | State-sponsored espionage | APT28, Lazarus, Cozy Bear |
+| **Cybercrime** | 25 | Financial fraud | FIN7, Magecart, Scattered Spider |
+| **Hacktivism** | 23 | Political motivation | Anonymous, Killnet, Lapsus$ |
+| **Initial Access Broker** | 9 | Sell network access | Emotet, Qakbot operators |
+| **Data Extortion** | 3 | Steal without encrypting | Karakurt, RansomHouse |
+
+### Data Sources Panel
+
+The Settings page includes a **Data Sources** panel showing:
+
+1. **Actor Type Distribution** - Breakdown of actors by category
+2. **Sync Status** - Status of each automated source (success/error/partial)
+3. **Last Sync Time** - When each source was last updated
+4. **Records Added** - Count of records from last sync
+
+### How to Access
+
+1. Navigate to **Settings** from the sidebar
+2. Scroll to the **Data Sources** section
+3. View sync status and actor counts
+
+### Manual Updates
+
+For sources without automated feeds (hacktivism groups, IABs), run:
+
+```bash
+npm run seed:actor-types
+```
+
+### Ingestion Scripts
+
+| Script | Command | Source |
+|--------|---------|--------|
+| `ingest-ransomlook.mjs` | `npm run ingest:ransomlook` | RansomLook |
+| `ingest-ransomware-live.mjs` | `npm run ingest:ransomware-live` | Ransomware.live |
+| `ingest-mitre.mjs` | `npm run ingest:mitre` | MITRE ATT&CK |
+| `ingest-malpedia.mjs` | `npm run ingest:malpedia` | Malpedia |
+| `ingest-misp-galaxy.mjs` | `npm run ingest:misp-galaxy` | MISP Galaxy |
+| `ingest-kev.mjs` | `npm run ingest:kev` | CISA KEV |
+| `ingest-cisa-alerts.mjs` | `npm run ingest:cisa-alerts` | CISA Alerts |
+| `ingest-nvd.mjs` | `npm run ingest:nvd` | NVD |
+| `ingest-threatfox.mjs` | `npm run ingest:threatfox` | ThreatFox |
+| `ingest-urlhaus.mjs` | `npm run ingest:urlhaus` | URLhaus |
+| `ingest-feodo.mjs` | `npm run ingest:feodo` | Feodo Tracker |
+| `seed-actor-types.mjs` | `npm run seed:actor-types` | Curated actors |
+
+### Components
+
+| File | Purpose |
+|------|---------|
+| `src/components/DataSourcesPanel.jsx` | Data sources status UI |
+| `src/lib/supabase.js` (dataSources module) | Sync status queries |
+
+---
+
 ## Implementation Details
 
 ### Supabase Modules
@@ -424,6 +508,7 @@ All features use modular functions in `src/lib/supabase.js`:
 | `correlations` | getActorCorrelations(), getAttackPath(), getVulnActors(), getTechniqueActors() |
 | `trendAnalysis` | getWeeklyComparison(), getWeekOverWeekChange(), getSectorTrends(), getChangeSummary() |
 | `iocs` | quickLookup(), getEnrichmentLinks() |
+| `dataSources` | sources, getSyncStatus(), getActorTypeCounts() |
 
 ### Routes
 
@@ -436,6 +521,17 @@ All features use modular functions in `src/lib/supabase.js`:
 ---
 
 ## Version History
+
+### v0.4.0 (January 2026)
+- Added Malpedia integration (864 actors, 3,638 malware families)
+- Added MISP Galaxy integration (2,940 community actors)
+- Added MITRE ATT&CK intrusion-sets parsing (172 APT groups with TTPs)
+- Added Data Sources Panel UI showing sync status and actor counts
+- Expanded actor taxonomy to 6 categories (1,000+ total actors)
+- Added automated trend calculation in GitHub Actions workflow
+- Added curated actor types script (cybercrime, hacktivism, IABs, data extortion)
+- Fixed user_preferences 406 error
+- Fixed vulnerabilities 400 error
 
 ### v0.3.0 (January 2026)
 - Added Actor Trajectory Charts for historical trend comparison

@@ -16,12 +16,12 @@
 
 | Table | Description | Primary Key | Rows (Est.) |
 |-------|-------------|-------------|-------------|
-| `threat_actors` | Ransomware groups, APTs, cybercrime gangs | UUID | ~162 |
-| `incidents` | Ransomware attacks, breaches, claims | UUID | ~8,000 |
+| `threat_actors` | Ransomware groups, APTs, cybercrime gangs | UUID | ~1,000+ |
+| `incidents` | Ransomware attacks, breaches, claims | UUID | ~16,000 |
 | `iocs` | Indicators of Compromise | UUID | ~700 |
 | `vulnerabilities` | CVEs with CISA KEV and NVD data | CVE ID (text) | ~2,000 |
 | `malware` | Malware samples | UUID | 0 |
-| `sync_log` | Data ingestion logs | UUID | ~50 |
+| `sync_log` | Data ingestion logs | UUID | ~100 |
 | `sector_keywords` | Keyword → sector mapping | keyword (text) | ~50 |
 | `actor_aliases` | Alias → actor mapping | alias (text) | ~20 |
 | `weekly_summaries` | Weekly aggregated statistics | UUID | ~52/year |
@@ -38,7 +38,7 @@ CREATE TABLE threat_actors (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL UNIQUE,
   aliases TEXT[] DEFAULT '{}',
-  actor_type TEXT DEFAULT 'ransomware',  -- ransomware, apt, cybercrime, hacktivism
+  actor_type TEXT DEFAULT 'ransomware',  -- ransomware, apt, cybercrime, hacktivism, initial_access_broker, data_extortion
   first_seen DATE,
   last_seen DATE,
   target_sectors TEXT[] DEFAULT '{}',
@@ -567,19 +567,31 @@ SELECT snapshot_actor_trends();  -- Returns count of actors snapshotted
 
 | Source | Table(s) | Frequency | Notes |
 |--------|----------|-----------|-------|
-| Ransomwatch | threat_actors, incidents | Historical | Data from June 2025 |
-| RansomLook | threat_actors, incidents | Every 6 hours | Active ransomware tracker |
-| Ransomware.live | incidents | Every 6 hours | Corroborates RansomLook |
-| CISA KEV | vulnerabilities | Every 6 hours | ~1,500 entries |
+| RansomLook | threat_actors, incidents | Every 6 hours | ~600 ransomware groups |
+| Ransomware.live | incidents | Every 6 hours | 16,000+ attacks |
+| MITRE ATT&CK | threat_actors, techniques | Every 6 hours | 172 APT groups, 691 techniques |
+| Malpedia | threat_actors | Every 6 hours | 864 actors, 3,638 malware families |
+| MISP Galaxy | threat_actors | Every 6 hours | 2,940 community actors |
+| CISA KEV | vulnerabilities | Every 6 hours | 1,100+ exploited CVEs |
 | CISA Alerts | alerts | Every 6 hours | Security advisories |
-| NVD | vulnerabilities | Every 6 hours | ~500 recent CVEs |
+| NVD | vulnerabilities | Every 6 hours | Recent CVEs |
+| ThreatFox | iocs | Every 6 hours | Malware indicators |
 | URLhaus | iocs | Every 6 hours | Malicious URLs |
 | Feodo Tracker | iocs | Every 6 hours | Botnet C2 IPs |
-| ThreatFox | iocs | Every 6 hours | Mixed IOCs |
-| Abuse.ch | iocs | Every 6 hours | SSL certificates |
-| MITRE ATT&CK | techniques | Every 6 hours | TTPs database |
+| Curated Actors | threat_actors | Manual | Hacktivism, IABs, data extortion |
 | Actor Snapshots | actor_trend_history | Daily | Automated via GitHub Actions |
 | Weekly Summary | weekly_summaries | Weekly | Automated every Monday |
+
+### Actor Type Distribution
+
+| Type | Count | Sources |
+|------|-------|---------|
+| Ransomware | 578 | RansomLook, MISP Galaxy, Malpedia |
+| APT | 362 | MITRE ATT&CK, Malpedia, MISP Galaxy |
+| Cybercrime | 25 | Curated, Malpedia |
+| Hacktivism | 23 | Curated, MISP Galaxy |
+| Initial Access Broker | 9 | Curated |
+| Data Extortion | 3 | Curated |
 
 ---
 
