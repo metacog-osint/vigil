@@ -837,10 +837,10 @@ export const userPreferences = {
       .from('user_preferences')
       .select('*')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle()
 
-    if (error && (error.code === 'PGRST116' || error.code === '406' || error.message?.includes('406'))) {
-      // No row found or 406 Not Acceptable (single() with 0 results), return defaults
+    // maybeSingle() returns null data (no error) when no row exists
+    if (!data) {
       return {
         data: {
           user_id: userId,
