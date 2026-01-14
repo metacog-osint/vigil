@@ -16,6 +16,7 @@
 8. [Keyboard Shortcuts](#8-keyboard-shortcuts)
 9. [Smart Time Display](#9-smart-time-display)
 10. [Data Sources & Actor Taxonomy](#10-data-sources--actor-taxonomy)
+11. [Threat Actors Page Enhancements](#11-threat-actors-page-enhancements-v041)
 
 ---
 
@@ -495,6 +496,100 @@ npm run seed:actor-types
 
 ---
 
+## 11. Threat Actors Page Enhancements (v0.4.1)
+
+### Purpose
+Comprehensive improvements to the Threat Actors page for better usability, navigation, and data analysis.
+
+### Features
+
+#### 1. Pagination / Load More
+- Displays 50 actors at a time for faster initial load
+- "Load More" button shows progress (e.g., "50 of 3,294")
+- Maintains filter state while loading more
+
+#### 2. CSV Export
+- Click "Export" button in header toolbar
+- Exports all visible columns: Name, Type, Trend, Incidents, Last Seen, Status, Risk Score, Aliases, Sectors
+- Filename includes date (e.g., `threat-actors-2026-01-14.csv`)
+
+#### 3. Saved Filters
+- Click "Saved Filters" dropdown in header
+- Enter name and click "Save" to store current filter combination
+- Click saved filter name to apply
+- Click X to delete saved filter
+- Stores: search, sector, type, trend, status filters + sort configuration
+
+#### 4. Activity Sparklines
+- Mini trend visualization in the "7d / Prev" column
+- Shows 5-point interpolated line from previous week to current week
+- Color indicates direction: red (increasing), green (decreasing), gray (stable)
+- Only shows for actors with activity data
+
+#### 5. Related Actors (Detail Panel)
+- "Similar Actors" section in actor detail panel
+- Shows top 5 actors with highest similarity score
+- Similarity based on: same type (20pts), shared sectors (15pts each), shared TTPs (10pts each)
+- Click to switch to that actor's details
+
+#### 6. Quick Watchlist (Shift+Click)
+- Hold Shift and click rows to select multiple actors
+- Selected rows highlighted in cyan
+- "Add X to Watchlist" button appears when rows selected
+- Bulk adds all selected actors to watchlist
+
+#### 7. Keyboard Navigation
+- `↑` / `↓` - Navigate between rows
+- `Enter` - Open selected actor's detail panel
+- `Escape` - Close detail panel, clear selection
+- `/` - Focus search input
+- Keyboard hints bar shown below header
+
+#### 8. Map View
+- Toggle between "Table" and "Map" view in header
+- Map view shows actors grouped by:
+  - **Target Region** - Countries/regions targeted
+  - **Target Sector** - Industries targeted (clickable to filter)
+  - **Actor Type** - Color-coded type breakdown (clickable to filter)
+
+#### 9. Risk Score
+- Requires Organization Profile setup in Settings
+- Shows relevance score (0-100) based on:
+  - Sector match: 50 points
+  - Country/region match: 30 points
+  - Escalating status: 20 points
+- Color-coded badge: Red (80+), Orange (60+), Yellow (40+), Blue (<40)
+- Sortable column (hidden on smaller screens)
+
+### Components
+
+| Component | Purpose |
+|-----------|---------|
+| `ColumnMenu` | Dropdown menu for column headers with sort/filter options |
+| `Sparkline` | Mini line chart for activity visualization |
+| Table row selection | Shift+click multi-select functionality |
+| View mode toggle | Table/Map view switcher |
+
+### Keyboard Shortcuts Reference
+
+| Shortcut | Action |
+|----------|--------|
+| `↑` / `↓` | Navigate rows |
+| `Enter` | View actor details |
+| `Escape` | Close panel / Clear selection |
+| `/` | Focus search |
+| `Shift+Click` | Select multiple rows |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/pages/ThreatActors.jsx` | All 9 features implemented |
+| `src/components/Tooltip.jsx` | Added ColumnMenu component |
+| `src/lib/supabase.js` | Added status filter support |
+
+---
+
 ## Implementation Details
 
 ### Supabase Modules
@@ -521,6 +616,21 @@ All features use modular functions in `src/lib/supabase.js`:
 ---
 
 ## Version History
+
+### v0.4.1 (January 2026)
+- Added Threat Actors page enhancements:
+  - Pagination/Load More (50 actors at a time)
+  - CSV export with all columns
+  - Saved filters functionality
+  - Activity sparklines in 7d/Prev column
+  - Related actors in detail panel
+  - Quick watchlist (Shift+click multi-select)
+  - Keyboard navigation (arrow keys, Enter, /, Escape)
+  - Map view toggle (region, sector, type breakdown)
+  - Risk score column based on org profile
+- Added ColumnMenu component for table headers with sort/filter options
+- Added color-coded actor type badges
+- Improved column sorting with type grouping
 
 ### v0.4.0 (January 2026)
 - Added Malpedia integration (864 actors, 3,638 malware families)

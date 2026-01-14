@@ -5,7 +5,7 @@
 
 ---
 
-## Current State (v0.4.0)
+## Current State (v0.4.1)
 
 ### Data Sources Integrated (11 Automated)
 - [x] RansomLook - Ransomware groups (~600 groups)
@@ -46,6 +46,19 @@
 - [x] Dark cyber-themed UI
 - [x] STIX 2.1 export format
 - [x] Deployed to vigil.theintelligence.company
+
+### Threat Actors Page (v0.4.1)
+- [x] Pagination with Load More (50 at a time)
+- [x] CSV export for filtered results
+- [x] Saved filters functionality
+- [x] Activity sparklines in incident columns
+- [x] Related actors based on TTPs/sectors
+- [x] Quick watchlist (Shift+click multi-select)
+- [x] Keyboard navigation (arrows, Enter, /, Escape)
+- [x] Map view toggle (region/sector/type breakdown)
+- [x] Risk score column with org profile relevance
+- [x] Column menu dropdowns with sort/filter options
+- [x] Color-coded actor type badges
 
 ---
 
@@ -485,6 +498,55 @@ cve:2024-* cvss:>=9.0 kev:true
 
 ---
 
+## Completed: Sprint 15 - Threat Actors Page Enhancements (January 2026)
+
+### Pagination & Data Loading
+- [x] Load More button showing 50 actors at a time
+- [x] Progress indicator ("50 of 3,294")
+- [x] Maintains filter state while loading more
+
+### Export & Saved Filters
+- [x] CSV export with all columns including risk score
+- [x] Saved filters dropdown to store/load filter combinations
+- [x] Delete saved filters functionality
+
+### Activity Visualization
+- [x] Sparkline mini-charts in 7d/Prev column
+- [x] Color-coded trend direction (red/green/gray)
+
+### Actor Relationships
+- [x] Related Actors section in detail panel
+- [x] Similarity scoring based on type, sectors, TTPs
+- [x] Click-through to related actor details
+
+### Bulk Operations
+- [x] Shift+click multi-select for rows
+- [x] "Add X to Watchlist" bulk action button
+- [x] Visual highlighting of selected rows
+
+### Keyboard Navigation
+- [x] Arrow key navigation through table rows
+- [x] Enter to open detail panel
+- [x] Escape to close/clear selection
+- [x] / to focus search input
+- [x] Keyboard shortcuts hint bar
+
+### Alternative Views
+- [x] Map View toggle showing actors by region/sector/type
+- [x] Clickable category cards to filter
+
+### Risk Scoring
+- [x] Risk score column based on org profile match
+- [x] Color-coded badges (red 80+, orange 60+, yellow 40+, blue <40)
+- [x] Sortable by risk score
+
+### Column Improvements
+- [x] ColumnMenu component with sort/filter dropdown
+- [x] Color-coded actor type badges
+- [x] Type sorting groups logically (ransomware, apt, cybercrime, etc.)
+
+---
+
 ## Deferred: Future Enhancements
 
 ### Vulnerabilities "Known Actors" Section
@@ -498,5 +560,5 @@ cve:2024-* cvss:>=9.0 kev:true
 ---
 
 *Last updated: January 2026*
-*Version: 0.4.0*
+*Version: 0.4.1*
 
