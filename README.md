@@ -44,6 +44,17 @@ Real-time monitoring of threat actors, ransomware groups, APTs, incidents, vulne
 - **Smart Time Display** - Adaptive formatting ("2 hours ago", "Yesterday", etc.)
 - **Data Sources Panel** - View sync status and trigger manual updates
 
+### Threat Actors Page (v0.4.1)
+- **Pagination** - Load 50 actors at a time with "Load More" button
+- **CSV Export** - Export filtered results with all columns
+- **Saved Filters** - Save and load filter combinations for quick access
+- **Activity Sparklines** - Mini trend charts showing 7-day activity patterns
+- **Related Actors** - Shows similar actors based on shared TTPs and target sectors
+- **Quick Watchlist** - Shift+click to select multiple actors, bulk add to watchlist
+- **Keyboard Navigation** - Arrow keys to navigate, Enter to view details, / to search
+- **Map View** - Visual breakdown of actors by region, sector, and type
+- **Risk Score** - Relevance scoring (0-100) based on org profile match
+
 ## Data Sources
 
 ### Automated (Every 6 Hours)
@@ -167,5 +178,5 @@ MIT
 
 ---
 
-*Version 0.4.0 - January 2026*
+*Version 0.4.1 - January 2026*
 *Built for the iCOUNTER CTI Analyst position.*
