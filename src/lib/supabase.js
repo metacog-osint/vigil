@@ -71,7 +71,8 @@ export const threatActors = {
     }
 
     if (actorType) {
-      query = query.eq('actor_type', actorType)
+      // Case-insensitive filter for actor type
+      query = query.ilike('actor_type', actorType)
     }
 
     return query

@@ -39,14 +39,49 @@ const ACTOR_TYPES = [
   { key: 'data_extortion', label: 'Data Extortion' },
 ]
 
-// Tooltip content for actor types
-const ACTOR_TYPE_TOOLTIPS = {
-  ransomware: 'Ransomware operators encrypt victim data and demand payment for decryption keys.',
-  apt: 'Advanced Persistent Threat - state-sponsored groups conducting espionage operations.',
-  cybercrime: 'Financially motivated criminals (fraud, theft, carding, etc.).',
-  hacktivism: 'Politically or ideologically motivated hackers (Anonymous, Killnet, etc.).',
-  initial_access_broker: 'Actors who sell initial network access to other criminals.',
-  data_extortion: 'Groups that steal data without encryption and extort victims with leak threats.',
+// Tooltip content and styling for actor types
+const ACTOR_TYPE_CONFIG = {
+  ransomware: {
+    tooltip: 'Ransomware operators encrypt victim data and demand payment for decryption keys.',
+    color: 'bg-red-900/50 text-red-400 border-red-800',
+    sortOrder: 1
+  },
+  apt: {
+    tooltip: 'Advanced Persistent Threat - state-sponsored groups conducting espionage operations.',
+    color: 'bg-purple-900/50 text-purple-400 border-purple-800',
+    sortOrder: 2
+  },
+  cybercrime: {
+    tooltip: 'Financially motivated criminals (fraud, theft, carding, etc.).',
+    color: 'bg-orange-900/50 text-orange-400 border-orange-800',
+    sortOrder: 3
+  },
+  hacktivism: {
+    tooltip: 'Politically or ideologically motivated hackers (Anonymous, Killnet, etc.).',
+    color: 'bg-green-900/50 text-green-400 border-green-800',
+    sortOrder: 4
+  },
+  initial_access_broker: {
+    tooltip: 'Actors who sell initial network access to other criminals.',
+    color: 'bg-yellow-900/50 text-yellow-400 border-yellow-800',
+    sortOrder: 5
+  },
+  data_extortion: {
+    tooltip: 'Groups that steal data without encryption and extort victims with leak threats.',
+    color: 'bg-pink-900/50 text-pink-400 border-pink-800',
+    sortOrder: 6
+  },
+  unknown: {
+    tooltip: 'Actor type not yet classified.',
+    color: 'bg-gray-800/50 text-gray-400 border-gray-700',
+    sortOrder: 99
+  }
+}
+
+// Helper to get type config with fallback
+function getTypeConfig(type) {
+  const normalized = (type || 'unknown').toLowerCase()
+  return ACTOR_TYPE_CONFIG[normalized] || ACTOR_TYPE_CONFIG.unknown
 }
 
 export default function ThreatActors() {
@@ -120,8 +155,14 @@ export default function ThreatActors() {
     if (aVal == null) aVal = field === 'name' ? '' : -Infinity
     if (bVal == null) bVal = field === 'name' ? '' : -Infinity
 
-    // String comparison for text fields
-    if (field === 'name' || field === 'actor_type' || field === 'status') {
+    // Actor type uses sortOrder for logical grouping
+    if (field === 'actor_type') {
+      aVal = getTypeConfig(aVal).sortOrder
+      bVal = getTypeConfig(bVal).sortOrder
+    }
+
+    // String comparison for other text fields
+    if (field === 'name' || field === 'status') {
       aVal = String(aVal).toLowerCase()
       bVal = String(bVal).toLowerCase()
     }
@@ -261,7 +302,7 @@ export default function ThreatActors() {
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="cyber-input"
+          className={`cyber-input ${typeFilter ? 'ring-2 ring-cyan-500 border-cyan-500' : ''}`}
           title="Filter by actor type"
         >
           {ACTOR_TYPES.map((type) => (
@@ -416,12 +457,12 @@ export default function ThreatActors() {
                       {/* Actor Type Cell */}
                       <td className="hidden md:table-cell">
                         <Tooltip
-                          content={ACTOR_TYPE_TOOLTIPS[actor.actor_type] || FIELD_TOOLTIPS.actor_type.content}
+                          content={getTypeConfig(actor.actor_type).tooltip}
                           source={FIELD_TOOLTIPS.actor_type.source}
                           position="right"
                         >
-                          <span className="badge-info">
-                            {(actor.actor_type || 'ransomware').replace(/_/g, ' ')}
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium border ${getTypeConfig(actor.actor_type).color}`}>
+                            {(actor.actor_type || 'unknown').replace(/_/g, ' ')}
                           </span>
                         </Tooltip>
                       </td>
