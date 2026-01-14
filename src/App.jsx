@@ -5,6 +5,7 @@ import { useState, useEffect, lazy, Suspense } from 'react'
 import Dashboard from './pages/Dashboard'
 
 // Lazy loaded pages - code split for smaller initial bundle
+const Events = lazy(() => import('./pages/Events'))
 const ThreatActors = lazy(() => import('./pages/ThreatActors'))
 const Incidents = lazy(() => import('./pages/Incidents'))
 const Vulnerabilities = lazy(() => import('./pages/Vulnerabilities'))
@@ -108,7 +109,9 @@ function App() {
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/events" element={<Events />} />
                 <Route path="/actors" element={<ThreatActors />} />
+                <Route path="/ransomware" element={<Incidents />} />
                 <Route path="/incidents" element={<Incidents />} />
                 <Route path="/vulnerabilities" element={<Vulnerabilities />} />
                 <Route path="/iocs" element={<IOCSearch />} />
