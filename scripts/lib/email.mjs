@@ -2,8 +2,14 @@
 // Handles all transactional email sending for Vigil
 import { Resend } from 'resend'
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy-initialize Resend client (only when needed)
+let resend = null
+function getResend() {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resend
+}
 
 const FROM_EMAIL = 'Vigil <alerts@vigil.theintelligence.company>'
 const REPLY_TO = 'support@theintelligence.company'
@@ -24,7 +30,7 @@ export async function sendEmail({ to, subject, html, text }) {
   }
 
   try {
-    const response = await resend.emails.send({
+    const response = await getResend().emails.send({
       from: FROM_EMAIL,
       to,
       subject,
