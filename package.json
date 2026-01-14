@@ -27,6 +27,7 @@
     "ingest:ransomware": "node scripts/ingest-ransomlook.mjs && node scripts/ingest-ransomware-live.mjs",
     "reclassify:sectors": "node scripts/reclassify-sectors.mjs",
     "seed:correlations": "node scripts/seed-correlations.mjs",
+    "seed:actor-types": "node scripts/seed-actor-types.mjs",
     "setup:db": "node scripts/setup-database.mjs",
     "ingest:cisa-alerts": "node scripts/ingest-cisa-alerts.mjs",
     "snapshot:actors": "node scripts/snapshot-actor-trends.mjs",
