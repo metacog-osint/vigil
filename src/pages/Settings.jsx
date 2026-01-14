@@ -12,6 +12,7 @@ import { getUserSubscription, getSubscriptionDisplayInfo, createBillingPortalSes
 import { useAuth } from '../hooks/useAuth'
 import { formatDistanceToNow, format } from 'date-fns'
 import { RestartTourButton } from '../components/OnboardingTour'
+import PersonalizationWizard, { PersonalizeButton } from '../components/PersonalizationWizard'
 
 const TIME_RANGES = [
   { value: '7d', label: '7 days' },
@@ -376,6 +377,7 @@ export default function Settings() {
   const [isSaving, setIsSaving] = useState(false)
   const [isTagModalOpen, setIsTagModalOpen] = useState(false)
   const [isEditingOrgProfile, setIsEditingOrgProfile] = useState(false)
+  const [showPersonalizationWizard, setShowPersonalizationWizard] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -481,6 +483,13 @@ export default function Settings() {
       </div>
 
       {error && <ErrorMessage message={error} className="mb-4" />}
+
+      {/* Quick Setup - Personalization Wizard */}
+      {!orgProfile?.sector && (
+        <div className="mb-6">
+          <PersonalizeButton onClick={() => setShowPersonalizationWizard(true)} />
+        </div>
+      )}
 
       <div className="space-y-6">
                 {/* Subscription */}
@@ -706,6 +715,17 @@ export default function Settings() {
         onClose={() => setIsTagModalOpen(false)}
         onCreate={createTag}
       />
+
+      {/* Personalization Wizard Modal */}
+      {showPersonalizationWizard && (
+        <PersonalizationWizard
+          onComplete={() => {
+            setShowPersonalizationWizard(false)
+            loadData() // Refresh data after completing wizard
+          }}
+          onSkip={() => setShowPersonalizationWizard(false)}
+        />
+      )}
     </div>
   )
 }
