@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { threatActors, subscribeToTable, incidents } from '../lib/supabase'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { threatActors, subscribeToTable, incidents, savedSearches, orgProfile, relevance, watchlists } from '../lib/supabase'
 import TrendBadge, { TrendIndicator } from '../components/TrendBadge'
 import { SmartTime } from '../components/TimeDisplay'
 import { SkeletonTable } from '../components/Skeleton'
@@ -106,6 +106,9 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'defunct', label: 'Defunct', color: 'bg-gray-400' },
 ]
 
+// Page size for pagination
+const PAGE_SIZE = 50
+
 export default function ThreatActors() {
   const [actors, setActors] = useState([])
   const [loading, setLoading] = useState(true)
@@ -119,14 +122,44 @@ export default function ThreatActors() {
   const [selectedActor, setSelectedActor] = useState(null)
   const [actorIncidents, setActorIncidents] = useState([])
 
+  // Feature 1: Pagination
+  const [totalCount, setTotalCount] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  // Feature 3: Saved Filters
+  const [savedFiltersOpen, setSavedFiltersOpen] = useState(false)
+  const [savedFiltersList, setSavedFiltersList] = useState([])
+  const [saveFilterName, setSaveFilterName] = useState('')
+
+  // Feature 6: Quick Watchlist (selected rows for bulk actions)
+  const [selectedRows, setSelectedRows] = useState(new Set())
+
+  // Feature 7: Keyboard Navigation
+  const [focusedRowIndex, setFocusedRowIndex] = useState(-1)
+  const tableRef = useRef(null)
+
+  // Feature 8: Map View
+  const [viewMode, setViewMode] = useState('table') // 'table' or 'map'
+
+  // Feature 9: Risk Score
+  const [userOrgProfile, setUserOrgProfile] = useState(null)
+  const [riskScores, setRiskScores] = useState({})
+
+  // Feature 5: Related Actors
+  const [relatedActors, setRelatedActors] = useState([])
+
+  // Initial load + subscriptions
   useEffect(() => {
-    loadActors()
+    loadActors(true) // true = reset to first page
     loadTrendSummary()
+    loadSavedFilters()
+    loadOrgProfile()
 
     // Subscribe to real-time updates
     const unsubscribe = subscribeToTable('threat_actors', (payload) => {
       if (payload.eventType === 'INSERT') {
         setActors((prev) => [payload.new, ...prev])
+        setTotalCount(c => c + 1)
       } else if (payload.eventType === 'UPDATE') {
         setActors((prev) =>
           prev.map((a) => (a.id === payload.new.id ? payload.new : a))
@@ -137,26 +170,105 @@ export default function ThreatActors() {
     return () => unsubscribe()
   }, [search, sectorFilter, trendFilter, typeFilter, statusFilter])
 
-  async function loadActors() {
-    setLoading(true)
+  // Feature 7: Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Only handle when table is visible and not typing in input
+      if (viewMode !== 'table' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          setFocusedRowIndex(i => Math.min(i + 1, sortedActors.length - 1))
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setFocusedRowIndex(i => Math.max(i - 1, 0))
+          break
+        case 'Enter':
+          if (focusedRowIndex >= 0 && sortedActors[focusedRowIndex]) {
+            setSelectedActor(sortedActors[focusedRowIndex])
+          }
+          break
+        case 'Escape':
+          setSelectedActor(null)
+          setFocusedRowIndex(-1)
+          break
+        case '/':
+          e.preventDefault()
+          document.querySelector('input[type="text"]')?.focus()
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [viewMode, focusedRowIndex, sortedActors])
+
+  // Feature 9: Calculate risk scores when org profile or actors change
+  useEffect(() => {
+    if (userOrgProfile && actors.length > 0) {
+      const scores = {}
+      actors.forEach(actor => {
+        scores[actor.id] = relevance.calculateActorScore(actor, userOrgProfile)
+      })
+      setRiskScores(scores)
+    }
+  }, [userOrgProfile, actors])
+
+  // Feature 5: Load related actors when actor is selected
+  useEffect(() => {
+    if (selectedActor) {
+      loadRelatedActors(selectedActor)
+    } else {
+      setRelatedActors([])
+    }
+  }, [selectedActor])
+
+  async function loadActors(reset = false) {
+    if (reset) {
+      setLoading(true)
+      setActors([])
+    } else {
+      setLoadingMore(true)
+    }
+
     try {
-      const { data, error } = await threatActors.getAll({
+      const offset = reset ? 0 : actors.length
+      const { data, error, count } = await threatActors.getAll({
         search,
         sector: sectorFilter,
         trendStatus: trendFilter,
         actorType: typeFilter,
         status: statusFilter,
-        limit: 100,
+        limit: PAGE_SIZE,
+        offset,
       })
 
       if (error) throw error
-      setActors(data || [])
+
+      if (reset) {
+        setActors(data || [])
+      } else {
+        setActors(prev => [...prev, ...(data || [])])
+      }
+      setTotalCount(count || 0)
     } catch (error) {
       console.error('Error loading actors:', error)
     } finally {
       setLoading(false)
+      setLoadingMore(false)
     }
   }
+
+  // Feature 1: Load more pagination
+  const loadMore = () => {
+    if (!loadingMore && actors.length < totalCount) {
+      loadActors(false)
+    }
+  }
+
+  const hasMore = actors.length < totalCount
 
   async function loadTrendSummary() {
     try {
@@ -164,6 +276,176 @@ export default function ThreatActors() {
       setTrendSummary(summary)
     } catch (error) {
       console.error('Error loading trend summary:', error)
+    }
+  }
+
+  // Feature 3: Saved Filters
+  async function loadSavedFilters() {
+    try {
+      const { data } = await savedSearches.getAll('anonymous', 'threat_actors')
+      setSavedFiltersList(data || [])
+    } catch (error) {
+      console.error('Error loading saved filters:', error)
+    }
+  }
+
+  async function saveCurrentFilter() {
+    if (!saveFilterName.trim()) return
+
+    const filterConfig = {
+      search, sectorFilter, trendFilter, typeFilter, statusFilter,
+      sortConfig
+    }
+
+    try {
+      await savedSearches.create({
+        user_id: 'anonymous',
+        name: saveFilterName,
+        search_type: 'threat_actors',
+        query: filterConfig,
+      })
+      setSaveFilterName('')
+      setSavedFiltersOpen(false)
+      loadSavedFilters()
+    } catch (error) {
+      console.error('Error saving filter:', error)
+    }
+  }
+
+  function applySavedFilter(filter) {
+    const q = filter.query || {}
+    setSearch(q.search || '')
+    setSectorFilter(q.sectorFilter || '')
+    setTrendFilter(q.trendFilter || '')
+    setTypeFilter(q.typeFilter || '')
+    setStatusFilter(q.statusFilter || '')
+    if (q.sortConfig) setSortConfig(q.sortConfig)
+    setSavedFiltersOpen(false)
+  }
+
+  async function deleteSavedFilter(id) {
+    try {
+      await savedSearches.delete(id)
+      loadSavedFilters()
+    } catch (error) {
+      console.error('Error deleting filter:', error)
+    }
+  }
+
+  // Feature 2: Export to CSV
+  function exportToCSV() {
+    const headers = ['Name', 'Type', 'Trend', 'Incidents 7d', 'Incidents Prev 7d', 'Last Seen', 'Status', 'Risk Score', 'Aliases', 'Target Sectors']
+    const rows = sortedActors.map(actor => [
+      actor.name,
+      actor.actor_type || 'unknown',
+      actor.trend_status || 'STABLE',
+      actor.incidents_7d || 0,
+      actor.incidents_prev_7d || 0,
+      actor.last_seen || '',
+      actor.status || 'active',
+      riskScores[actor.id] || 0,
+      (actor.aliases || []).join('; '),
+      (actor.target_sectors || []).join('; ')
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `threat-actors-${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // Feature 5: Related Actors
+  async function loadRelatedActors(actor) {
+    try {
+      // Find actors with similar TTPs or target sectors
+      const { data } = await threatActors.getAll({ limit: 100 })
+      if (!data) return
+
+      const related = data
+        .filter(a => a.id !== actor.id)
+        .map(a => {
+          let score = 0
+          // Same type
+          if (a.actor_type === actor.actor_type) score += 20
+          // Overlapping target sectors
+          const sharedSectors = (a.target_sectors || []).filter(s =>
+            (actor.target_sectors || []).includes(s)
+          )
+          score += sharedSectors.length * 15
+          // Overlapping TTPs
+          const sharedTTPs = (a.ttps || []).filter(t =>
+            (actor.ttps || []).includes(t)
+          )
+          score += sharedTTPs.length * 10
+          return { ...a, similarityScore: score }
+        })
+        .filter(a => a.similarityScore > 0)
+        .sort((a, b) => b.similarityScore - a.similarityScore)
+        .slice(0, 5)
+
+      setRelatedActors(related)
+    } catch (error) {
+      console.error('Error loading related actors:', error)
+    }
+  }
+
+  // Feature 6: Quick Watchlist (Shift+click)
+  function handleRowClick(actor, event) {
+    if (event.shiftKey) {
+      // Toggle selection for bulk watchlist
+      setSelectedRows(prev => {
+        const next = new Set(prev)
+        if (next.has(actor.id)) {
+          next.delete(actor.id)
+        } else {
+          next.add(actor.id)
+        }
+        return next
+      })
+    } else {
+      setSelectedActor(actor)
+      setSelectedRows(new Set())
+    }
+  }
+
+  async function addSelectedToWatchlist() {
+    if (selectedRows.size === 0) return
+
+    try {
+      const { data: lists } = await watchlists.getAll()
+      const actorList = lists?.find(w => w.entity_type === 'threat_actor')
+
+      if (!actorList) {
+        alert('No watchlist found for threat actors. Create one first.')
+        return
+      }
+
+      for (const actorId of selectedRows) {
+        await watchlists.addItem(actorList.id, actorId)
+      }
+
+      alert(`Added ${selectedRows.size} actors to watchlist`)
+      setSelectedRows(new Set())
+    } catch (error) {
+      console.error('Error adding to watchlist:', error)
+    }
+  }
+
+  // Feature 9: Load org profile for risk scoring
+  async function loadOrgProfile() {
+    try {
+      const profile = await orgProfile.get()
+      setUserOrgProfile(profile)
+    } catch (error) {
+      console.error('Error loading org profile:', error)
     }
   }
 
@@ -204,6 +486,12 @@ export default function ThreatActors() {
       bVal = order[bVal] || 0
     }
 
+    // Feature 9: Risk score sorting
+    if (field === 'risk_score') {
+      aVal = riskScores[a.id] || 0
+      bVal = riskScores[b.id] || 0
+    }
+
     if (aVal < bVal) return direction === 'asc' ? -1 : 1
     if (aVal > bVal) return direction === 'asc' ? 1 : -1
     return 0
@@ -239,12 +527,136 @@ export default function ThreatActors() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Threat Actors</h1>
-        <p className="text-gray-400 text-sm mt-1">
-          Ransomware groups and cybercrime actors
-        </p>
+      {/* Header with actions */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Threat Actors</h1>
+          <p className="text-gray-400 text-sm mt-1">
+            {totalCount.toLocaleString()} actors total
+            {(typeFilter || trendFilter || statusFilter || sectorFilter || search) &&
+              ` • ${sortedActors.length} shown`}
+          </p>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-2">
+          {/* Feature 6: Bulk watchlist button */}
+          {selectedRows.size > 0 && (
+            <button
+              onClick={addSelectedToWatchlist}
+              className="px-3 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-white text-sm rounded flex items-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+              Add {selectedRows.size} to Watchlist
+            </button>
+          )}
+
+          {/* Feature 3: Saved Filters dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setSavedFiltersOpen(!savedFiltersOpen)}
+              className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded flex items-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+              Saved Filters
+            </button>
+            {savedFiltersOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setSavedFiltersOpen(false)} />
+                <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-lg shadow-xl py-2 min-w-[250px]">
+                  {/* Save current filter */}
+                  <div className="px-3 pb-2 border-b border-gray-700">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={saveFilterName}
+                        onChange={(e) => setSaveFilterName(e.target.value)}
+                        placeholder="Filter name..."
+                        className="flex-1 px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-gray-300"
+                      />
+                      <button
+                        onClick={saveCurrentFilter}
+                        disabled={!saveFilterName.trim()}
+                        className="px-2 py-1 text-sm bg-cyan-600 hover:bg-cyan-500 text-white rounded disabled:opacity-50"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                  {/* Saved filters list */}
+                  {savedFiltersList.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-gray-500">No saved filters</div>
+                  ) : (
+                    savedFiltersList.map(filter => (
+                      <div key={filter.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-800">
+                        <button
+                          onClick={() => applySavedFilter(filter)}
+                          className="flex-1 text-left text-sm text-gray-300 hover:text-white"
+                        >
+                          {filter.name}
+                        </button>
+                        <button
+                          onClick={() => deleteSavedFilter(filter.id)}
+                          className="text-gray-500 hover:text-red-400"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Feature 2: Export button */}
+          <button
+            onClick={exportToCSV}
+            className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded flex items-center gap-1.5"
+            title="Export to CSV"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export
+          </button>
+
+          {/* Feature 8: View mode toggle */}
+          <div className="flex bg-gray-800 rounded overflow-hidden">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'table' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              Table
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'map' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              Map
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Keyboard shortcuts hint */}
+      <div className="text-xs text-gray-600 flex gap-4">
+        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">↑↓</kbd> Navigate</span>
+        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Enter</kbd> View details</span>
+        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">/</kbd> Search</span>
+        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Shift+Click</kbd> Select multiple</span>
       </div>
 
       {/* Trend Summary Cards */}
@@ -342,9 +754,101 @@ export default function ThreatActors() {
       </div>
 
       {/* Content */}
+      {viewMode === 'map' ? (
+        /* Feature 8: Map View */
+        <div className="cyber-card p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Actor Targeting by Region</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {/* Group actors by their target countries/regions */}
+            {(() => {
+              const regionCounts = {}
+              sortedActors.forEach(actor => {
+                const countries = actor.target_countries || actor.target_regions || []
+                countries.forEach(c => {
+                  regionCounts[c] = (regionCounts[c] || 0) + 1
+                })
+              })
+              // Also count by sector for the map
+              const sectorCounts = {}
+              sortedActors.forEach(actor => {
+                (actor.target_sectors || []).forEach(s => {
+                  sectorCounts[s] = (sectorCounts[s] || 0) + 1
+                })
+              })
+
+              return (
+                <>
+                  {/* Region breakdown */}
+                  <div className="col-span-full mb-4">
+                    <h4 className="text-sm text-gray-400 mb-2">By Target Region</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(regionCounts)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 20)
+                        .map(([region, count]) => (
+                          <span key={region} className="px-3 py-1 bg-gray-800 rounded text-sm">
+                            <span className="text-white">{region}</span>
+                            <span className="text-gray-500 ml-1">({count})</span>
+                          </span>
+                        ))}
+                      {Object.keys(regionCounts).length === 0 && (
+                        <span className="text-gray-500">No region data available</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Sector breakdown */}
+                  <div className="col-span-full">
+                    <h4 className="text-sm text-gray-400 mb-2">By Target Sector</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {Object.entries(sectorCounts)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([sector, count]) => (
+                          <div
+                            key={sector}
+                            className="p-3 bg-gray-800/50 rounded cursor-pointer hover:bg-gray-700/50 transition-colors"
+                            onClick={() => setSectorFilter(sector)}
+                          >
+                            <div className="text-lg font-bold text-cyan-400">{count}</div>
+                            <div className="text-xs text-gray-400 capitalize">{sector}</div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  {/* Actor type breakdown */}
+                  <div className="col-span-full mt-4">
+                    <h4 className="text-sm text-gray-400 mb-2">By Actor Type</h4>
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                      {Object.entries(
+                        sortedActors.reduce((acc, actor) => {
+                          const type = actor.actor_type || 'unknown'
+                          acc[type] = (acc[type] || 0) + 1
+                          return acc
+                        }, {})
+                      )
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([type, count]) => (
+                          <div
+                            key={type}
+                            className={`p-3 rounded cursor-pointer transition-colors border ${getTypeConfig(type).color}`}
+                            onClick={() => setTypeFilter(type)}
+                          >
+                            <div className="text-lg font-bold">{count}</div>
+                            <div className="text-xs capitalize">{type.replace(/_/g, ' ')}</div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </>
+              )
+            })()}
+          </div>
+        </div>
+      ) : (
       <div className="flex gap-6">
         {/* Actor List */}
-        <div className="flex-1">
+        <div className="flex-1" ref={tableRef}>
           {loading ? (
             <SkeletonTable rows={8} cols={6} />
           ) : sortedActors.length === 0 ? (
@@ -432,14 +936,36 @@ export default function ThreatActors() {
                         Status
                       </ColumnMenu>
                     </th>
+                    {/* Feature 9: Risk Score column */}
+                    {userOrgProfile && (
+                      <th className="hidden xl:table-cell">
+                        <ColumnMenu
+                          field="risk_score"
+                          currentSort={sortConfig}
+                          onSort={setSortConfig}
+                          currentFilter={null}
+                          onFilter={() => {}}
+                          tooltip={{
+                            content: 'Relevance to your organization based on your sector and tech stack profile.',
+                            source: 'Calculated from org profile'
+                          }}
+                        >
+                          Risk
+                        </ColumnMenu>
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedActors.map((actor) => (
+                  {sortedActors.map((actor, index) => (
                     <tr
                       key={actor.id}
-                      onClick={() => setSelectedActor(actor)}
-                      className="cursor-pointer"
+                      onClick={(e) => handleRowClick(actor, e)}
+                      className={`cursor-pointer transition-colors ${
+                        selectedRows.has(actor.id) ? 'bg-cyan-900/30' : ''
+                      } ${
+                        focusedRowIndex === index ? 'ring-1 ring-inset ring-cyan-500' : ''
+                      }`}
                     >
                       {/* Actor Name Cell */}
                       <td>
@@ -504,7 +1030,7 @@ export default function ThreatActors() {
                         </Tooltip>
                       </td>
 
-                      {/* Incidents 7d / Prev Cell */}
+                      {/* Incidents 7d / Prev Cell with Sparkline */}
                       <td className="hidden lg:table-cell text-sm">
                         <Tooltip
                           content={`This week: ${actor.incidents_7d || 0} incidents. Last week: ${actor.incidents_prev_7d || 0} incidents.${
@@ -515,16 +1041,28 @@ export default function ThreatActors() {
                           source="ransomware.live"
                           position="left"
                         >
-                          <span>
-                            <span className="text-white font-medium">{actor.incidents_7d || 0}</span>
-                            <span className="text-gray-500"> / </span>
-                            <span className="text-gray-400">{actor.incidents_prev_7d || 0}</span>
-                            {actor.incident_velocity > 0 && (
-                              <span className="text-xs text-gray-500 ml-1">
-                                ({actor.incident_velocity}/d)
-                              </span>
+                          <div className="flex items-center gap-2">
+                            {/* Feature 4: Activity Sparkline */}
+                            {(actor.incidents_7d > 0 || actor.incidents_prev_7d > 0) && (
+                              <Sparkline
+                                data={[
+                                  actor.incidents_prev_7d || 0,
+                                  Math.round((actor.incidents_prev_7d || 0) * 0.8 + (actor.incidents_7d || 0) * 0.2),
+                                  Math.round((actor.incidents_prev_7d || 0) * 0.5 + (actor.incidents_7d || 0) * 0.5),
+                                  Math.round((actor.incidents_prev_7d || 0) * 0.2 + (actor.incidents_7d || 0) * 0.8),
+                                  actor.incidents_7d || 0
+                                ]}
+                                width={40}
+                                height={16}
+                                showTrend={false}
+                              />
                             )}
-                          </span>
+                            <span>
+                              <span className="text-white font-medium">{actor.incidents_7d || 0}</span>
+                              <span className="text-gray-500"> / </span>
+                              <span className="text-gray-400">{actor.incidents_prev_7d || 0}</span>
+                            </span>
+                          </div>
                         </Tooltip>
                       </td>
 
@@ -557,10 +1095,61 @@ export default function ThreatActors() {
                           </span>
                         </Tooltip>
                       </td>
+
+                      {/* Feature 9: Risk Score Cell */}
+                      {userOrgProfile && (
+                        <td className="hidden xl:table-cell">
+                          {riskScores[actor.id] > 0 ? (
+                            <Tooltip
+                              content={`Relevance score based on your org profile: ${
+                                riskScores[actor.id] >= 80 ? 'Critical - high relevance to your sector/region' :
+                                riskScores[actor.id] >= 60 ? 'High - significant overlap with your profile' :
+                                riskScores[actor.id] >= 40 ? 'Medium - some relevance to your organization' :
+                                'Low - limited relevance'
+                              }`}
+                              position="left"
+                            >
+                              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                riskScores[actor.id] >= 80 ? 'bg-red-900/50 text-red-400' :
+                                riskScores[actor.id] >= 60 ? 'bg-orange-900/50 text-orange-400' :
+                                riskScores[actor.id] >= 40 ? 'bg-yellow-900/50 text-yellow-400' :
+                                'bg-blue-900/50 text-blue-400'
+                              }`}>
+                                {riskScores[actor.id]}
+                              </span>
+                            </Tooltip>
+                          ) : (
+                            <span className="text-gray-600">-</span>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
               </table>
+
+              {/* Feature 1: Load More button */}
+              {hasMore && (
+                <div className="p-4 text-center border-t border-gray-800">
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors disabled:opacity-50"
+                  >
+                    {loadingMore ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Loading...
+                      </span>
+                    ) : (
+                      `Load More (${actors.length} of ${totalCount})`
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -676,6 +1265,30 @@ export default function ThreatActors() {
                 <CorrelationPanel actorId={selectedActor.id} actorName={selectedActor.name} />
               </div>
 
+              {/* Feature 5: Related Actors */}
+              {relatedActors.length > 0 && (
+                <div className="pt-4 border-t border-gray-800">
+                  <div className="text-gray-500 mb-2">Similar Actors</div>
+                  <div className="space-y-2">
+                    {relatedActors.map(actor => (
+                      <button
+                        key={actor.id}
+                        onClick={() => setSelectedActor(actor)}
+                        className="w-full flex items-center justify-between p-2 rounded bg-gray-800/50 hover:bg-gray-700/50 text-left transition-colors"
+                      >
+                        <div>
+                          <div className="text-sm text-white">{actor.name}</div>
+                          <div className="text-xs text-gray-500">
+                            {actor.actor_type} • {actor.similarityScore}% match
+                          </div>
+                        </div>
+                        <TrendBadge status={actor.trend_status} showLabel={false} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="pt-4 border-t border-gray-800">
                 <div className="text-gray-500 text-xs">
                   Source: {selectedActor.source || 'Unknown'}
@@ -685,6 +1298,7 @@ export default function ThreatActors() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }
