@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { dashboard, incidents, threatActors, vulnerabilities, syncLog, orgProfile, relevance, trendAnalysis } from '../lib/supabase'
 import { generateBLUF } from '../lib/ai'
+import { getTopTargetedServices } from '../lib/service-categories'
 import StatCard from '../components/StatCard'
 import ActivityChart from '../components/ActivityChart'
 import RecentIncidents from '../components/RecentIncidents'
@@ -17,6 +18,9 @@ import ChangeSummaryCard from '../components/ChangeSummaryCard'
 import { RelevanceBadge } from '../components/RelevanceBadge'
 import { SmartTime } from '../components/TimeDisplay'
 import { NewBadge } from '../components/NewIndicator'
+import { TargetedServicesWidget } from '../components/TargetedServicesWidget'
+import { ActiveExploitationWidget } from '../components/ActiveExploitationWidget'
+import { SectorDrilldown } from '../components/SectorDrilldown'
 
 // Calculate threat level on a reasonable scale
 // Baseline: ~300 incidents/month is "normal" (score ~50)
@@ -54,6 +58,12 @@ export default function Dashboard() {
   const [relevantVulns, setRelevantVulns] = useState([])
   const [weekComparison, setWeekComparison] = useState(null)
   const [changeSummary, setChangeSummary] = useState(null)
+
+  // New Sprint 1 widgets data
+  const [targetedServices, setTargetedServices] = useState([])
+  const [activeExploits, setActiveExploits] = useState([])
+  const [sectorDetails, setSectorDetails] = useState([])
+  const [widgetsLoading, setWidgetsLoading] = useState(true)
 
   useEffect(() => {
     async function loadDashboard() {
@@ -105,6 +115,9 @@ export default function Dashboard() {
 
         // Load trend data (non-blocking)
         loadTrendData()
+
+        // Load Sprint 1 widgets data (non-blocking)
+        loadWidgetsData()
       } catch (error) {
         console.error('Dashboard load error:', error)
       } finally {
@@ -145,6 +158,28 @@ export default function Dashboard() {
       setChangeSummary(changeData)
     } catch (error) {
       console.error('Error loading trend data:', error)
+    }
+  }
+
+  // Load Sprint 1 widgets data (non-blocking)
+  async function loadWidgetsData() {
+    setWidgetsLoading(true)
+    try {
+      const [servicesVulns, exploitedCVEs, sectors] = await Promise.all([
+        vulnerabilities.getRecentForServices(30),
+        vulnerabilities.getActivelyExploited(30, 8),
+        incidents.getSectorDetails(30),
+      ])
+
+      // Process services data
+      const servicesData = getTopTargetedServices(servicesVulns, 8)
+      setTargetedServices(servicesData)
+      setActiveExploits(exploitedCVEs)
+      setSectorDetails(sectors)
+    } catch (error) {
+      console.error('Error loading widgets data:', error)
+    } finally {
+      setWidgetsLoading(false)
     }
   }
 
@@ -270,6 +305,29 @@ export default function Dashboard() {
         <WeekComparisonCard data={weekComparison} loading={!weekComparison} />
         <ChangeSummaryCard data={changeSummary} loading={!changeSummary} />
       </div>
+
+      {/* Actionable Intelligence Row - Sprint 1 Widgets */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TargetedServicesWidget
+          data={targetedServices}
+          loading={widgetsLoading}
+          timeRange="30 days"
+        />
+        <ActiveExploitationWidget
+          data={activeExploits}
+          loading={widgetsLoading}
+          userProfile={userProfile}
+          timeRange="30 days"
+        />
+      </div>
+
+      {/* Sector Drilldown - Expandable sectors with incident activity */}
+      <SectorDrilldown
+        sectors={sectorDetails}
+        loading={widgetsLoading}
+        userSector={userProfile?.sector}
+        onSectorClick={(sector) => console.log('Sector clicked:', sector.name)}
+      />
 
       {/* Relevant to You Section (if org profile exists) */}
       {userProfile && (relevantActors.length > 0 || relevantVulns.length > 0) && (

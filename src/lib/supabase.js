@@ -316,6 +316,83 @@ export const incidents = {
     // Convert to array format for calendar
     return Object.entries(counts).map(([date, count]) => ({ date, count }))
   },
+
+  // Get detailed sector data with top actors and recent incidents (for SectorDrilldown)
+  async getSectorDetails(days = 30) {
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - days)
+    const prevCutoff = new Date()
+    prevCutoff.setDate(prevCutoff.getDate() - (days * 2))
+
+    // Get current period incidents with actor info
+    const { data: currentData, error } = await supabase
+      .from('incidents')
+      .select(`
+        id,
+        victim_name,
+        victim_sector,
+        discovered_date,
+        threat_actor:threat_actors(id, name)
+      `)
+      .gte('discovered_date', cutoffDate.toISOString())
+      .order('discovered_date', { ascending: false })
+
+    if (error || !currentData) return []
+
+    // Get previous period for trend calculation
+    const { data: prevData } = await supabase
+      .from('incidents')
+      .select('victim_sector')
+      .gte('discovered_date', prevCutoff.toISOString())
+      .lt('discovered_date', cutoffDate.toISOString())
+
+    const prevCounts = {}
+    for (const row of prevData || []) {
+      const sector = row.victim_sector || 'Unknown'
+      prevCounts[sector] = (prevCounts[sector] || 0) + 1
+    }
+
+    // Aggregate by sector
+    const sectorMap = {}
+    for (const incident of currentData) {
+      const sector = incident.victim_sector || 'Unknown'
+      if (!sectorMap[sector]) {
+        sectorMap[sector] = {
+          name: sector,
+          count: 0,
+          actorCounts: {},
+          recentIncidents: []
+        }
+      }
+      sectorMap[sector].count++
+
+      // Track actor activity
+      const actorName = incident.threat_actor?.name || 'Unknown'
+      sectorMap[sector].actorCounts[actorName] = (sectorMap[sector].actorCounts[actorName] || 0) + 1
+
+      // Keep recent incidents
+      if (sectorMap[sector].recentIncidents.length < 5) {
+        sectorMap[sector].recentIncidents.push(incident)
+      }
+    }
+
+    // Convert to array with top actors and trend
+    return Object.values(sectorMap)
+      .map(sector => ({
+        name: sector.name,
+        count: sector.count,
+        recentIncidents: sector.recentIncidents,
+        topActors: Object.entries(sector.actorCounts)
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5),
+        trend: prevCounts[sector.name]
+          ? Math.round(((sector.count - prevCounts[sector.name]) / prevCounts[sector.name]) * 100)
+          : null
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 12)
+  },
 }
 
 // IOCs queries
@@ -660,6 +737,85 @@ export const vulnerabilities = {
     }
 
     return result
+  },
+
+  // Get actively exploited CVEs with actor attribution (for ActiveExploitationWidget)
+  async getActivelyExploited(days = 30, limit = 10) {
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - days)
+
+    // Get KEV vulnerabilities
+    const { data: kevs, error } = await supabase
+      .from('vulnerabilities')
+      .select('*')
+      .not('kev_date', 'is', null)
+      .order('kev_date', { ascending: false })
+      .limit(limit * 2) // Get more to filter
+
+    if (error || !kevs) return []
+
+    // Get actor-CVE correlations
+    const { data: correlations } = await supabase
+      .from('actor_vulnerabilities')
+      .select(`
+        cve_id,
+        actor:threat_actors(id, name, actor_type)
+      `)
+      .in('cve_id', kevs.map(k => k.cve_id))
+
+    // Build actor map
+    const actorMap = {}
+    for (const corr of correlations || []) {
+      if (!actorMap[corr.cve_id]) {
+        actorMap[corr.cve_id] = []
+      }
+      if (corr.actor) {
+        actorMap[corr.cve_id].push(corr.actor)
+      }
+    }
+
+    // Enrich KEVs with actor data and sort by relevance
+    const enriched = kevs.map(kev => ({
+      ...kev,
+      actors: actorMap[kev.cve_id] || [],
+      severity: kev.cvss_score >= 9 ? 'critical' :
+                kev.cvss_score >= 7 ? 'high' :
+                kev.cvss_score >= 4 ? 'medium' : 'low'
+    }))
+
+    // Sort by: has actors > ransomware use > CVSS score > recency
+    enriched.sort((a, b) => {
+      // Prioritize CVEs with known actor usage
+      if (a.actors.length > 0 && b.actors.length === 0) return -1
+      if (b.actors.length > 0 && a.actors.length === 0) return 1
+      // Then ransomware usage
+      if (a.ransomware_campaign_use && !b.ransomware_campaign_use) return -1
+      if (b.ransomware_campaign_use && !a.ransomware_campaign_use) return 1
+      // Then CVSS score
+      return (b.cvss_score || 0) - (a.cvss_score || 0)
+    })
+
+    return enriched.slice(0, limit)
+  },
+
+  // Get recent CVEs for service category analysis (for TargetedServicesWidget)
+  async getRecentForServices(days = 30) {
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - days)
+
+    const { data, error } = await supabase
+      .from('vulnerabilities')
+      .select('cve_id, affected_products, affected_vendors, description, cvss_score')
+      .gte('published_date', cutoffDate.toISOString().split('T')[0])
+      .order('published_date', { ascending: false })
+      .limit(500)
+
+    if (error) {
+      console.error('Error fetching vulnerabilities for services:', error)
+      return []
+    }
+
+    return data || []
   },
 }
 
