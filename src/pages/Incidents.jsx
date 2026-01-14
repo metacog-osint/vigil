@@ -6,9 +6,26 @@ import { EmptyIncidents } from '../components/EmptyState'
 import { NewBadge } from '../components/NewIndicator'
 import { WatchButton } from '../components/WatchButton'
 import { SmartTime, FullDate } from '../components/TimeDisplay'
-// Removed IncidentFlow - using simpler inline visualization
 import { Tooltip, ColumnMenu } from '../components/Tooltip'
 import { Sparkline } from '../components/Sparkline'
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
+  ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Legend
+} from 'recharts'
+
+// Chart colors
+const CHART_COLORS = ['#06b6d4', '#f59e0b', '#ef4444', '#8b5cf6', '#10b981', '#f97316', '#ec4899', '#6366f1']
+const SECTOR_COLORS = {
+  technology: '#06b6d4',
+  finance: '#10b981',
+  healthcare: '#ef4444',
+  manufacturing: '#f59e0b',
+  retail: '#8b5cf6',
+  education: '#ec4899',
+  energy: '#f97316',
+  government: '#6366f1',
+  other: '#6b7280',
+}
 
 const SECTORS = [
   'healthcare',
@@ -430,12 +447,12 @@ export default function Incidents() {
     const sectorCounts = {}
     const countryCounts = {}
     const statusCounts = {}
-    const actorSectorLinks = {}
+    const dailyCounts = {}
 
     for (const incident of incidentList) {
       const actorName = incident.threat_actor?.name || 'Unknown'
       const actorId = incident.actor_id
-      const sectorName = incident.victim_sector || 'Unknown'
+      const sectorName = incident.victim_sector || 'Other'
       const countryName = incident.victim_country || 'Unknown'
       const status = incident.status || 'unknown'
 
@@ -449,8 +466,11 @@ export default function Incidents() {
       countryCounts[countryName] = (countryCounts[countryName] || 0) + 1
       statusCounts[status] = (statusCounts[status] || 0) + 1
 
-      const linkKey = `${actorName}|${sectorName}`
-      actorSectorLinks[linkKey] = (actorSectorLinks[linkKey] || 0) + 1
+      // Daily timeline
+      if (incident.discovered_date) {
+        const dateKey = incident.discovered_date.split('T')[0]
+        dailyCounts[dateKey] = (dailyCounts[dateKey] || 0) + 1
+      }
     }
 
     const topActors = Object.entries(actorCounts)
@@ -463,6 +483,13 @@ export default function Incidents() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10)
 
+    // Sector data for pie chart (with colors)
+    const sectorPieData = topSectors.slice(0, 8).map(s => ({
+      name: s.name.charAt(0).toUpperCase() + s.name.slice(1),
+      value: s.count,
+      color: SECTOR_COLORS[s.name.toLowerCase()] || SECTOR_COLORS.other
+    }))
+
     const topCountries = Object.entries(countryCounts)
       .filter(([name]) => name !== 'Unknown')
       .map(([name, count]) => ({ name, count }))
@@ -473,21 +500,24 @@ export default function Incidents() {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
 
-    // Build flows for visualization
-    const topActorNames = new Set(topActors.slice(0, 5).map(a => a.name))
-    const topSectorNames = new Set(topSectors.slice(0, 5).map(s => s.name))
-
-    const flows = Object.entries(actorSectorLinks)
-      .filter(([key]) => {
-        const [actor, sector] = key.split('|')
-        return topActorNames.has(actor) && topSectorNames.has(sector)
+    // Timeline data - last 30 days
+    const timelineData = []
+    const now = new Date()
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(now)
+      date.setDate(date.getDate() - i)
+      const dateKey = date.toISOString().split('T')[0]
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
+      const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      timelineData.push({
+        date: dateKey,
+        label: i % 5 === 0 ? monthDay : '',
+        day: dayName,
+        incidents: dailyCounts[dateKey] || 0
       })
-      .map(([key, value]) => {
-        const [source, target] = key.split('|')
-        return { source, target, value, sourceCategory: 'actor', targetCategory: 'sector' }
-      })
+    }
 
-    return { topActors, topSectors, topCountries, statuses, flows }
+    return { topActors, topSectors, sectorPieData, topCountries, statuses, timelineData }
   }, [incidentList])
 
   const hasActiveFilters = search || sectorFilter || statusFilter || countryFilter || actorFilter || timeRange !== 30
@@ -760,69 +790,121 @@ export default function Incidents() {
             </div>
           ) : analytics && (
             <>
+              {/* Incident Timeline Chart */}
+              <div className="cyber-card p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Incident Activity (Last 30 Days)</h3>
+                <ResponsiveContainer width="100%" height={250}>
+                  <AreaChart data={analytics.timelineData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="incidentGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis
+                      dataKey="label"
+                      stroke="#6b7280"
+                      fontSize={11}
+                      tickLine={false}
+                    />
+                    <YAxis stroke="#6b7280" fontSize={11} tickLine={false} axisLine={false} />
+                    <RechartsTooltip
+                      contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                      labelStyle={{ color: '#9ca3af' }}
+                      itemStyle={{ color: '#06b6d4' }}
+                      formatter={(value) => [value, 'Incidents']}
+                      labelFormatter={(label, payload) => payload?.[0]?.payload?.date || label}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="incidents"
+                      stroke="#06b6d4"
+                      strokeWidth={2}
+                      fill="url(#incidentGradient)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Charts Row - Pie and Bar */}
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Top Actors */}
+                {/* Sector Distribution Pie */}
                 <div className="cyber-card p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Top Actors</h3>
-                  <div className="space-y-2">
-                    {analytics.topActors.map((actor, i) => (
-                      <button
-                        key={actor.name}
-                        onClick={() => {
-                          if (actor.id) {
-                            setActorFilter(actor.id)
-                            setActorName(actor.name)
+                  <h3 className="text-lg font-semibold text-white mb-4">Sector Distribution</h3>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie
+                        data={analytics.sectorPieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={2}
+                        dataKey="value"
+                        onClick={(data) => {
+                          setSectorFilter(data.name.toLowerCase())
+                          setViewMode('table')
+                        }}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {analytics.sectorPieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip
+                        contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                        formatter={(value, name) => [value, name]}
+                      />
+                      <Legend
+                        layout="vertical"
+                        align="right"
+                        verticalAlign="middle"
+                        formatter={(value) => <span style={{ color: '#d1d5db', fontSize: '12px' }}>{value}</span>}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Top Actors Bar Chart */}
+                <div className="cyber-card p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Most Active Threat Actors</h3>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart
+                      data={analytics.topActors.slice(0, 8)}
+                      layout="vertical"
+                      margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
+                      <XAxis type="number" stroke="#6b7280" fontSize={11} />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        stroke="#6b7280"
+                        fontSize={11}
+                        width={75}
+                        tickFormatter={(value) => value.length > 12 ? value.slice(0, 12) + '...' : value}
+                      />
+                      <RechartsTooltip
+                        contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                        formatter={(value) => [value, 'Incidents']}
+                        cursor={{ fill: 'rgba(6, 182, 212, 0.1)' }}
+                      />
+                      <Bar
+                        dataKey="count"
+                        fill="#ef4444"
+                        radius={[0, 4, 4, 0]}
+                        onClick={(data) => {
+                          if (data.id) {
+                            setActorFilter(data.id)
+                            setActorName(data.name)
                             setViewMode('table')
                           }
                         }}
-                        className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-800/50 transition-colors text-left"
-                      >
-                        <span className="text-gray-500 text-sm w-5">{i + 1}.</span>
-                        <span className="flex-1 text-white">{actor.name}</span>
-                        {actorTrends[actor.id] && (
-                          <Sparkline
-                            data={[
-                              actorTrends[actor.id].week4,
-                              actorTrends[actor.id].week3,
-                              actorTrends[actor.id].week2,
-                              actorTrends[actor.id].week1
-                            ]}
-                            width={50}
-                            height={20}
-                          />
-                        )}
-                        <span className="text-cyan-400 font-mono w-8 text-right">{actor.count}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Top Sectors */}
-                <div className="cyber-card p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Top Sectors</h3>
-                  <div className="space-y-2">
-                    {analytics.topSectors.map((sector) => (
-                      <button
-                        key={sector.name}
-                        onClick={() => {
-                          setSectorFilter(sector.name.toLowerCase())
-                          setViewMode('table')
-                        }}
-                        className="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-800/50 transition-colors"
-                      >
-                        <div className="flex-1">
-                          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400"
-                              style={{ width: `${(sector.count / analytics.topSectors[0].count) * 100}%` }}
-                            />
-                          </div>
-                        </div>
-                        <span className="text-gray-300 capitalize w-28 text-left">{sector.name}</span>
-                        <span className="text-cyan-400 font-mono w-8 text-right">{sector.count}</span>
-                      </button>
-                    ))}
-                  </div>
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 
@@ -830,19 +912,22 @@ export default function Incidents() {
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Top Countries */}
                 <div className="cyber-card p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Top Countries</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">Top Targeted Countries</h3>
                   <div className="flex flex-wrap gap-2">
-                    {analytics.topCountries.map((country) => (
+                    {analytics.topCountries.map((country, i) => (
                       <button
                         key={country.name}
                         onClick={() => {
                           setCountryFilter(country.name)
                           setViewMode('table')
                         }}
-                        className="px-3 py-1.5 bg-gray-800 rounded hover:bg-gray-700 transition-colors text-sm"
+                        className="px-3 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors text-sm flex items-center gap-2"
+                        style={{
+                          borderLeft: `3px solid ${CHART_COLORS[i % CHART_COLORS.length]}`
+                        }}
                       >
-                        <span className="text-white">{country.name}</span>
-                        <span className="text-gray-500 ml-2">({country.count})</span>
+                        <span className="text-white font-medium">{country.name}</span>
+                        <span className="text-cyan-400 font-mono">{country.count}</span>
                       </button>
                     ))}
                     {analytics.topCountries.length === 0 && (
@@ -853,7 +938,7 @@ export default function Incidents() {
 
                 {/* Status Breakdown */}
                 <div className="cyber-card p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">By Status</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">Incident Status</h3>
                   <div className="grid grid-cols-2 gap-3">
                     {analytics.statuses.map((status) => (
                       <button
