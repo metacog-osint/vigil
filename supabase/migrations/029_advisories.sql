@@ -7,7 +7,7 @@
 -- GitHub Security Advisories for npm, PyPI, Maven, Go, Rust, etc.
 -- ============================================
 CREATE TABLE IF NOT EXISTS advisories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   ghsa_id TEXT UNIQUE NOT NULL,  -- GHSA-xxxx-xxxx-xxxx
   cve_id TEXT,  -- Associated CVE if exists
   summary TEXT NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS advisories (
   withdrawn_at TIMESTAMPTZ,
 
   -- References
-  references JSONB DEFAULT '[]',  -- Array of {type, url}
+  "references" JSONB DEFAULT '[]',  -- Array of {type, url}
   credits JSONB DEFAULT '[]',  -- Array of {type, user}
 
   -- Source tracking

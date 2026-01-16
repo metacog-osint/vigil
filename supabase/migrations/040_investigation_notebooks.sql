@@ -1,16 +1,19 @@
 -- Migration 040: Enhanced Investigation Notebooks
 -- Adds rich text notes, activity timeline, and templates
 
--- Add markdown content column for rich text notes
-ALTER TABLE investigations
-ADD COLUMN IF NOT EXISTS notes_markdown TEXT,
-ADD COLUMN IF NOT EXISTS notes_html TEXT,
-ADD COLUMN IF NOT EXISTS template_id UUID REFERENCES investigation_templates(id),
-ADD COLUMN IF NOT EXISTS priority TEXT DEFAULT 'medium' CHECK (priority IN ('critical', 'high', 'medium', 'low')),
-ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ,
-ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES auth.users(id),
-ADD COLUMN IF NOT EXISTS estimated_hours DECIMAL(5,2),
-ADD COLUMN IF NOT EXISTS actual_hours DECIMAL(5,2);
+-- Add markdown content column for rich text notes (only if investigations table exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'investigations') THEN
+    ALTER TABLE investigations
+    ADD COLUMN IF NOT EXISTS notes_markdown TEXT,
+    ADD COLUMN IF NOT EXISTS notes_html TEXT,
+    ADD COLUMN IF NOT EXISTS priority TEXT DEFAULT 'medium',
+    ADD COLUMN IF NOT EXISTS due_date TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS estimated_hours DECIMAL(5,2),
+    ADD COLUMN IF NOT EXISTS actual_hours DECIMAL(5,2);
+  END IF;
+END $$;
 
 -- Create investigation templates table
 CREATE TABLE IF NOT EXISTS investigation_templates (

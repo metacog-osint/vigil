@@ -62,11 +62,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for auto-alerting on asset matches
-DROP TRIGGER IF EXISTS trigger_asset_match_alert ON asset_matches;
-CREATE TRIGGER trigger_asset_match_alert
-    AFTER INSERT ON asset_matches
-    FOR EACH ROW
-    EXECUTE FUNCTION trigger_queue_asset_match_alert();
+-- Create trigger for auto-alerting on asset matches (only if table exists)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'asset_matches') THEN
+        DROP TRIGGER IF EXISTS trigger_asset_match_alert ON asset_matches;
+        CREATE TRIGGER trigger_asset_match_alert
+            AFTER INSERT ON asset_matches
+            FOR EACH ROW
+            EXECUTE FUNCTION trigger_queue_asset_match_alert();
+    END IF;
+END $$;
 
 COMMIT;
