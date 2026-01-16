@@ -9,8 +9,24 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.js'],
     include: ['src/**/*.{test,spec}.{js,jsx}'],
     coverage: {
-      reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', 'src/test/'],
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.test.{js,jsx}',
+        '**/__tests__/**',
+        'scripts/',
+        'e2e/',
+        '*.config.*',
+      ],
+      thresholds: {
+        statements: 35,
+        branches: 25,
+        functions: 25,
+        lines: 35,
+      },
     },
   },
 })

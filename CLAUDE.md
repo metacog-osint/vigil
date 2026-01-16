@@ -1,6 +1,12 @@
 # CLAUDE.md - AI Assistant Context
 
-This file provides context for AI assistants working on this codebase.
+> **Last Updated:** January 2026 | **Version:** 0.4.0
+
+This file provides context for AI assistants working on this codebase. For detailed documentation, see:
+- **Data Sources:** `DATA_SOURCES.md` - All threat intel feeds and rollout plan
+- **Data Ingestion:** `docs/DATA_INGESTION.md` - Scripts, scheduling, and troubleshooting
+- **Database Schema:** `docs/DATABASE.md` - Table definitions and relationships
+- **API Documentation:** `docs/API.md` - REST API reference
 
 ## Project Overview
 
@@ -8,8 +14,8 @@ This file provides context for AI assistants working on this codebase.
 
 - **Live URL:** https://vigil.theintelligence.company
 - **Brand:** The Intelligence Company
-- **Roadmap:** See `ROADMAP.md` for planned features, data sources, and visualizations
-- **Implementation Plan:** See `IMPLEMENTATION_PLAN.md` for sprint-by-sprint development guide
+- **Roadmap:** See `ROADMAP.md` for planned features
+- **Build Plan:** See `BUILD_PLAN_V2.md` for current development tasks
 
 ## Architecture Decisions
 
@@ -186,23 +192,19 @@ export default function PageName() {
 }
 ```
 
-## Data Source APIs
+## Data Sources & Ingestion
 
-### Ransomwatch
-- URL: `https://raw.githubusercontent.com/joshhighet/ransomwatch/main/posts.json`
-- Format: Array of posts with `group_name`, `post_title`, `discovered`
+> **Full documentation:** See `DATA_SOURCES.md` for all feeds and `docs/DATA_INGESTION.md` for scripts.
 
-### CISA KEV
-- URL: `https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json`
-- Format: `{ vulnerabilities: [...] }` with CVE details
+**Quick Reference:**
+```bash
+npm run ingest              # All sources
+npm run ingest:ransomlook   # Ransomware data
+npm run ingest:kev          # CISA KEV vulnerabilities
+npm run ingest:threatfox    # ThreatFox IOCs
+```
 
-### Abuse.ch ThreatFox
-- URL: `https://threatfox-api.abuse.ch/api/v1/`
-- Method: POST with `{ query: 'get_iocs', days: 7 }`
-
-### Abuse.ch MalwareBazaar
-- URL: `https://mb-api.abuse.ch/api/v1/`
-- Method: POST with `query=get_recent&selector=100`
+**Automated:** GitHub Actions runs every 6 hours via `.github/workflows/data-ingestion.yml`
 
 ## Environment Variables
 
@@ -213,83 +215,15 @@ VITE_SUPABASE_ANON_KEY
 VITE_FIREBASE_API_KEY
 VITE_FIREBASE_AUTH_DOMAIN
 VITE_FIREBASE_PROJECT_ID
-VITE_FIREBASE_STORAGE_BUCKET
-VITE_FIREBASE_MESSAGING_SENDER_ID
-VITE_FIREBASE_APP_ID
 ```
 
-## Data Ingestion Scripts
-
-Local Node.js scripts for data ingestion (in `scripts/` folder):
-
-```bash
-# Run all ingestion
-npm run ingest
-
-# Individual sources
-npm run ingest:kev           # CISA KEV vulnerabilities
-npm run ingest:nvd           # NVD CVEs
-npm run ingest:abusech       # URLhaus, Feodo, ThreatFox IOCs
-npm run ingest:ransomlook    # RansomLook ransomware data
-npm run ingest:ransomware-live # Ransomware.live data
-npm run ingest:mitre         # MITRE ATT&CK techniques
-npm run ingest:threatfox     # ThreatFox IOCs
-npm run ingest:urlhaus       # URLhaus malware URLs
-npm run ingest:feodo         # Feodo C2 trackers
+Optional for enrichment:
 ```
-
-Scripts read credentials from `.env` file automatically.
-
-### Automated Ingestion (GitHub Actions)
-
-Data is automatically ingested every 6 hours via `.github/workflows/data-ingestion.yml`:
-- Ransomware feeds: RansomLook, Ransomware.live
-- IOC feeds: ThreatFox, URLhaus, Feodo, Abuse.ch
-- Vulnerability feeds: CISA KEV, NVD
-- MITRE ATT&CK: Techniques and tactics
-
-Manual dispatch available via GitHub Actions UI with source filtering.
-
-## Sector Classification
-
-The `scripts/lib/sector-classifier.mjs` module provides comprehensive victim sector classification:
-
-### Sectors Supported (21 total)
-- healthcare, pharmaceuticals, finance, technology, manufacturing
-- retail, education, energy, government, defense
-- legal, construction, real_estate, transportation, telecommunications
-- media, hospitality, agriculture, nonprofit, professional_services, Other
-
-### Classification Priority
-1. API-provided sector (if valid)
-2. TLD detection (.edu → education, .gov → government, .mil → defense)
-3. Victim name keyword matching
-4. Description keyword matching
-5. Website URL keyword matching
-6. Default to "Other"
-
-### Usage in Ingestion Scripts
-
-```javascript
-import { classifySector, SECTORS } from './lib/sector-classifier.mjs'
-
-const sector = classifySector({
-  victimName: 'General Hospital',
-  website: 'generalhospital.org',
-  description: 'Healthcare provider',
-  apiSector: '',  // From API if available
-  activity: ''    // Alternative sector field
-})
-// Returns: 'healthcare'
+VITE_GROQ_API_KEY          # AI summaries
+VIRUSTOTAL_API_KEY         # IOC enrichment
+RESEND_API_KEY             # Email alerts
+VAPID_PUBLIC_KEY           # Push notifications
 ```
-
-### Batch Reclassification
-
-```bash
-npm run reclassify-sectors
-```
-
-Reclassifies all existing incidents with improved classification logic.
 
 ## AI Integration
 
@@ -492,4 +426,89 @@ import WeekComparisonCard from '../components/WeekComparisonCard'
 ### Sidebar Navigation
 
 Trends page added to sidebar navigation between Alerts and Watchlists.
+
+---
+
+## Real-Time Alerting System (v0.3.0)
+
+### Overview
+
+The alerting system delivers security events to users faster than news outlets by:
+- Ingesting critical feeds every 30 minutes (ransomware, KEV, IOCs)
+- Automatic alert queuing via database triggers
+- Multi-channel delivery (push, email, webhooks)
+
+### Key Files
+
+```
+src/lib/alerts.js           # Push subscriptions, webhook CRUD, preferences
+src/lib/email.js            # Resend API integration with HTML templates
+src/components/AlertSettingsSection.jsx  # Settings UI component
+scripts/process-alerts.mjs  # Alert queue processor
+public/sw.js                # Push notification handlers
+.github/workflows/critical-alerts-ingestion.yml  # 30-min fast ingestion
+```
+
+### Database Tables
+
+| Table | Purpose |
+|-------|---------|
+| `push_subscriptions` | Browser push notification endpoints |
+| `alert_webhooks` | Slack/Discord/Teams webhook configs |
+| `alert_queue` | Pending alerts for processing |
+| `alert_deliveries` | Delivery tracking and history |
+
+### Using the Alerts Library
+
+```javascript
+import { subscribeToPush, createWebhook, getAlertPreferences } from '../lib/alerts'
+
+// Subscribe to push notifications
+const subscription = await subscribeToPush(userId)
+
+// Create a Slack webhook
+await createWebhook(userId, {
+  name: 'SOC Slack',
+  type: 'slack',
+  url: 'https://hooks.slack.com/...',
+  eventTypes: ['ransomware', 'kev']
+})
+
+// Get user preferences
+const prefs = await getAlertPreferences(userId)
+```
+
+### Sending Email Alerts
+
+```javascript
+import { sendEmail, generateRansomwareAlertEmail } from '../lib/email'
+
+const { html, text, subject } = generateRansomwareAlertEmail({
+  victim_name: 'Acme Corp',
+  threat_actor: 'LockBit',
+  sector: 'healthcare',
+  country: 'United States'
+})
+
+await sendEmail({ to: 'analyst@company.com', subject, html, text })
+```
+
+### Processing Alerts
+
+```bash
+# Process pending alerts (runs in GitHub Actions every 30 min)
+npm run process:alerts
+
+# Manually trigger the fast ingestion workflow
+gh workflow run "Critical Alerts Ingestion (Fast)"
+```
+
+### Environment Variables
+
+```
+VAPID_PUBLIC_KEY=...        # For web push (server + client)
+VAPID_PRIVATE_KEY=...       # For web push (server only)
+VITE_VAPID_PUBLIC_KEY=...   # Exposed to client
+RESEND_API_KEY=re_...       # Email delivery
+```
 

@@ -5,8 +5,8 @@
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { canAccess } from '../lib/features'
 import { useAuth } from '../hooks/useAuth'
+import { useSubscription } from '../contexts/SubscriptionContext'
 
 const API_BASE = 'https://vigil.theintelligence.company/api/v1'
 
@@ -256,9 +256,8 @@ function EndpointCard({ endpoint }) {
 
 export default function ApiDocs() {
   const { user } = useAuth()
-  // For demo purposes, assume free tier - in production this would come from user's subscription
-  const userTier = 'free'
-  const hasApiAccess = canAccess(userTier, 'api_access')
+  const { tier, canAccess } = useSubscription()
+  const hasApiAccess = canAccess('api_access')
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">

@@ -18,6 +18,25 @@ on:
           - greynoise
           - hibp
           - geolocation
+          - phishtank
+          - virustotal
+          - hybridanalysis
+          - shodan
+          - epss
+          - ghsa
+          - tor-exits
+          - firehol
+          - openphish
+          - c2-tracker
+          - maltrail
+          - crtsh
+          - exploitdb
+          - emerging-threats
+          - blocklist-de
+          - nuclei-templates
+          - vuln-priority
+          - asset-monitoring
+          - search-alerts
 
 env:
   NODE_VERSION: '20'
@@ -173,6 +192,32 @@ jobs:
           echo "| Geolocation | ${{ needs.enrich-geolocation.result }} |" >> $GITHUB_STEP_SUMMARY
 
   # ============================================
+  # PHISHTANK (Daily - verified phishing URLs)
+  # ============================================
+  ingest-phishtank:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'phishtank'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest PhishTank data
+        run: npm run ingest:phishtank
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          PHISHTANK_API_KEY: ${{ secrets.PHISHTANK_API_KEY }}
+
+  # ============================================
   # VIRUSTOTAL (Daily - IOC reputation, rate limited)
   # ============================================
   enrich-virustotal:
@@ -245,6 +290,405 @@ jobs:
 
       - name: Enrich IPs with Shodan InternetDB
         run: npm run enrich:shodan
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # EPSS (Daily - exploit prediction scores)
+  # Critical for vulnerability prioritization
+  # ============================================
+  ingest-epss:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'epss'
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update EPSS scores for CVEs
+        run: npm run ingest:epss
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+  # ============================================
+  # GITHUB GHSA (Daily - supply chain advisories)
+  # Critical for software composition analysis
+  # ============================================
+  ingest-ghsa:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'ghsa'
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest GitHub Security Advisories
+        run: npm run ingest:ghsa
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================
+  # TOR EXIT NODES (Daily - anonymization network)
+  # Free feed from Tor Project
+  # ============================================
+  ingest-tor-exits:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'tor-exits'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest Tor exit node IPs
+        run: npm run ingest:tor-exits
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # FIREHOL LEVEL 1 (Daily - aggregated blocklist)
+  # Free feed from Firehol project
+  # ============================================
+  ingest-firehol:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'firehol'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest Firehol Level 1 blocklist
+        run: npm run ingest:firehol
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # OPENPHISH (Daily - phishing URLs)
+  # Free community phishing feed
+  # ============================================
+  ingest-openphish:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'openphish'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest OpenPhish URLs
+        run: npm run ingest:openphish
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # C2-TRACKER (Daily - C2 framework servers)
+  # Cobalt Strike, Metasploit, Havoc, Sliver, etc.
+  # ============================================
+  ingest-c2-tracker:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'c2-tracker'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest C2 framework IPs
+        run: npm run ingest:c2-tracker
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # MALTRAIL (Daily - malware indicators)
+  # IPs, domains for malware, ransomware, cryptominers
+  # ============================================
+  ingest-maltrail:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'maltrail'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest Maltrail indicators
+        run: npm run ingest:maltrail
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # CRT.SH (Weekly - certificate transparency)
+  # Subdomain discovery for monitored domains
+  # ============================================
+  ingest-crtsh:
+    runs-on: ubuntu-latest
+    # Only run on Sundays or manual trigger (rate limited service)
+    if: github.event.schedule == '0 2 * * 0' || github.event.inputs.source == 'crtsh'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Discover subdomains via CT logs
+        run: npm run ingest:crtsh
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # EXPLOIT-DB (Weekly - CVE exploit correlation)
+  # PoC and exploit availability for CVEs
+  # ============================================
+  ingest-exploitdb:
+    runs-on: ubuntu-latest
+    # Only run on Mondays or manual trigger (large dataset)
+    if: github.event.schedule == '0 2 * * 1' || github.event.inputs.source == 'exploitdb'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest Exploit-DB CVE correlations
+        run: npm run ingest:exploitdb
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # ASSET MONITORING (Every 30 min)
+  # Check monitored assets against IOC feeds
+  # ============================================
+  monitor-assets:
+    runs-on: ubuntu-latest
+    # Run on every schedule (daily) plus manual trigger
+    if: github.event_name == 'schedule' || github.event.inputs.source == 'asset-monitoring'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run asset monitoring
+        run: npm run monitor:assets
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # EMERGING THREATS (Daily - community blocklists)
+  # Free rulesets from Proofpoint/ET
+  # ============================================
+  ingest-emerging-threats:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'emerging-threats'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest Emerging Threats IPs
+        run: npm run ingest:emerging-threats
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # BLOCKLIST.DE (Daily - attack source IPs)
+  # SSH, mail, web attack blocklists
+  # ============================================
+  ingest-blocklist-de:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'blocklist-de'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest Blocklist.de feeds
+        run: npm run ingest:blocklist-de
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # NUCLEI TEMPLATES (Weekly - CVE detection templates)
+  # Links vulnerabilities to detection coverage
+  # ============================================
+  ingest-nuclei-templates:
+    runs-on: ubuntu-latest
+    # Only run on Tuesdays or manual trigger (GitHub API rate limits)
+    if: github.event.schedule == '0 2 * * 2' || github.event.inputs.source == 'nuclei-templates'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ingest Nuclei CVE templates
+        run: npm run ingest:nuclei-templates
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================
+  # VULNERABILITY PRIORITIZATION (Daily)
+  # Calculate priority scores for all CVEs
+  # ============================================
+  prioritize-vulnerabilities:
+    runs-on: ubuntu-latest
+    needs: [ingest-epss, ingest-exploitdb]
+    if: always() && (needs.ingest-epss.result == 'success' || github.event.inputs.source == 'vuln-priority')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Calculate vulnerability priorities
+        run: npm run prioritize:vulnerabilities -- --limit=5000
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  # ============================================
+  # SEARCH ALERTS (Hourly - saved search monitoring)
+  # Notify users of new search results
+  # ============================================
+  process-search-alerts:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.source == 'search-alerts'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Process search alerts
+        run: npm run process:search-alerts -- --frequency=daily
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}

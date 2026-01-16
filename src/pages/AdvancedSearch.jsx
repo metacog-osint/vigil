@@ -5,6 +5,7 @@ import { clsx } from 'clsx'
 import { supabase } from '../lib/supabase'
 import { parseQuery, buildSupabaseQuery, validateQuery, getQuerySuggestions } from '../lib/queryParser'
 import { SkeletonTable, EmptySearch, ErrorMessage, TimeAgo, SeverityBadge, ExportButton } from '../components'
+import { FeatureGate } from '../components/UpgradePrompt'
 
 const ENTITY_TYPES = [
   { value: 'actors', label: 'Threat Actors', table: 'threat_actors' },
@@ -102,14 +103,15 @@ export default function AdvancedSearch() {
   const totalPages = Math.ceil(totalCount / pageSize)
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Advanced Search</h1>
-        <p className="text-gray-400 mt-1">
-          Use the query language to search across all threat data
-        </p>
-      </div>
+    <FeatureGate feature="advanced_search">
+      <div className="p-6">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-white">Advanced Search</h1>
+          <p className="text-gray-400 mt-1">
+            Use the query language to search across all threat data
+          </p>
+        </div>
 
       {/* Search Form */}
       <form onSubmit={handleSubmit} className="space-y-4 mb-6">
@@ -215,29 +217,30 @@ export default function AdvancedSearch() {
         </div>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <button
-            onClick={() => executeSearch(page - 1)}
-            disabled={page === 0}
-            className="px-3 py-1.5 text-sm text-gray-400 hover:text-white disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-gray-500">
-            Page {page + 1} of {totalPages}
-          </span>
-          <button
-            onClick={() => executeSearch(page + 1)}
-            disabled={page >= totalPages - 1}
-            className="px-3 py-1.5 text-sm text-gray-400 hover:text-white disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      )}
-    </div>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-6">
+            <button
+              onClick={() => executeSearch(page - 1)}
+              disabled={page === 0}
+              className="px-3 py-1.5 text-sm text-gray-400 hover:text-white disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-500">
+              Page {page + 1} of {totalPages}
+            </span>
+            <button
+              onClick={() => executeSearch(page + 1)}
+              disabled={page >= totalPages - 1}
+              className="px-3 py-1.5 text-sm text-gray-400 hover:text-white disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
+    </FeatureGate>
   )
 }
 

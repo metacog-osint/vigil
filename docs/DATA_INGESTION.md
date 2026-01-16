@@ -1,5 +1,7 @@
 # Data Ingestion System
 
+> **Last Updated:** January 2026 | **Related:** [`DATA_SOURCES.md`](../DATA_SOURCES.md) for full source catalog
+
 Vigil uses a comprehensive automated data ingestion system that pulls from multiple threat intelligence sources every 6 hours.
 
 ## Overview

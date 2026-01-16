@@ -165,12 +165,27 @@ npm run seed:actor-types        # Curated actor categories
 
 ## Documentation
 
+### Product & Features
 - [FEATURES.md](./FEATURES.md) - Detailed feature documentation
-- [DATABASE.md](./DATABASE.md) - Database schema documentation
-- [DATA_INGESTION.md](./docs/DATA_INGESTION.md) - Data sources and automation
-- [DEPLOYMENT.md](./docs/DEPLOYMENT.md) - Hosting, pricing, deployment guide
-- [DEVELOPMENT.md](./docs/DEVELOPMENT.md) - Development notes and architecture
 - [ROADMAP.md](./ROADMAP.md) - Future feature plans
+- [CHANGELOG.md](./CHANGELOG.md) - Version history
+
+### Technical
+- [DATABASE.md](./DATABASE.md) - Database schema documentation
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System architecture
+- [docs/DATA_INGESTION.md](./docs/DATA_INGESTION.md) - Data sources and automation
+- [DATA_SOURCES.md](./DATA_SOURCES.md) - All data sources with status
+
+### Operations
+- [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) - Hosting, pricing, deployment guide
+- [docs/SECURITY_AUDIT.md](./docs/SECURITY_AUDIT.md) - Security review findings
+- [ALERTING_SYSTEM.md](./ALERTING_SYSTEM.md) - Real-time alerts documentation
+
+### Development
+- [CLAUDE.md](./CLAUDE.md) - AI assistant context
+- [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) - Development notes
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contributor guidelines
+- [BUILD_PLAN_V2.md](./BUILD_PLAN_V2.md) - Consolidated development roadmap
 
 ## License
 

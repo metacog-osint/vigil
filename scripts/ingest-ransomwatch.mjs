@@ -4,7 +4,8 @@
 // Run: node scripts/ingest-ransomwatch.mjs
 
 import { createClient } from '@supabase/supabase-js'
-import https from 'https'
+import { fetchJSON } from './lib/http.mjs'
+import { classifySector } from './lib/sector-classifier.mjs'
 
 // Load env from parent directory
 const supabaseUrl = process.env.VITE_SUPABASE_URL
@@ -35,33 +36,7 @@ const supabase = createClient(
 const POSTS_URL = 'https://raw.githubusercontent.com/joshhighet/ransomwatch/main/posts.json'
 const GROUPS_URL = 'https://raw.githubusercontent.com/joshhighet/ransomwatch/main/groups.json'
 
-// Sector keywords for classification
-const SECTOR_KEYWORDS = {
-  healthcare: ['hospital', 'health', 'medical', 'clinic', 'pharma', 'dental', 'care'],
-  finance: ['bank', 'financial', 'insurance', 'credit', 'capital', 'invest', 'loan'],
-  technology: ['tech', 'software', 'IT', 'cyber', 'data', 'cloud', 'digital'],
-  manufacturing: ['manufacturing', 'industrial', 'factory', 'production', 'auto'],
-  retail: ['retail', 'store', 'shop', 'commerce', 'market', 'consumer'],
-  education: ['school', 'university', 'college', 'education', 'academy', 'institute'],
-  energy: ['energy', 'oil', 'gas', 'power', 'utility', 'electric'],
-  government: ['gov', 'city', 'county', 'municipal', 'state', 'federal', 'public'],
-  legal: ['law', 'legal', 'attorney', 'lawyer', 'court'],
-  construction: ['construction', 'building', 'contractor', 'architect', 'engineering'],
-  transportation: ['transport', 'logistics', 'shipping', 'freight', 'cargo'],
-  real_estate: ['real estate', 'property', 'realty', 'housing'],
-}
-
-function classifySector(victimName) {
-  if (!victimName) return 'Unknown'
-  const lower = victimName.toLowerCase()
-
-  for (const [sector, keywords] of Object.entries(SECTOR_KEYWORDS)) {
-    if (keywords.some(kw => lower.includes(kw))) {
-      return sector
-    }
-  }
-  return 'Other'
-}
+// Using shared sector classifier - see ./lib/sector-classifier.mjs
 
 function parseDate(dateStr) {
   if (!dateStr) return null
@@ -76,21 +51,7 @@ function parseDate(dateStr) {
   }
 }
 
-function fetchJSON(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
-      let data = ''
-      res.on('data', chunk => data += chunk)
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(data))
-        } catch (e) {
-          reject(e)
-        }
-      })
-    }).on('error', reject)
-  })
-}
+// Using shared HTTP module - see ./lib/http.mjs
 
 async function ingestRansomwatch() {
   console.log('Fetching Ransomwatch data...')
@@ -182,7 +143,7 @@ async function ingestRansomwatch() {
       const incidentData = {
         actor_id: actorId,
         victim_name: post.post_title || 'Unknown',
-        victim_sector: classifySector(post.post_title),
+        victim_sector: classifySector({ victimName: post.post_title }),
         discovered_date: post.parsedDate,
         status: 'claimed',
         source: 'ransomwatch',

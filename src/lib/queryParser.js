@@ -109,18 +109,18 @@ function tokenize(query) {
 
 function parseTokens(tokens) {
   const conditions = []
-  let currentOp = 'AND'
+  let currentBoolOp = 'AND'
 
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i]
 
     // Boolean operators
     if (token.toUpperCase() === 'AND') {
-      currentOp = 'AND'
+      currentBoolOp = 'AND'
       continue
     }
     if (token.toUpperCase() === 'OR') {
-      currentOp = 'OR'
+      currentBoolOp = 'OR'
       continue
     }
     if (token.toUpperCase() === 'NOT') {
@@ -129,7 +129,7 @@ function parseTokens(tokens) {
         const nextCondition = parseCondition(tokens[++i])
         if (nextCondition) {
           nextCondition.negate = true
-          conditions.push({ ...nextCondition, operator: currentOp })
+          conditions.push({ ...nextCondition, booleanOp: currentBoolOp })
         }
       }
       continue
@@ -138,7 +138,7 @@ function parseTokens(tokens) {
     // Parse condition
     const condition = parseCondition(token)
     if (condition) {
-      conditions.push({ ...condition, operator: currentOp })
+      conditions.push({ ...condition, booleanOp: currentBoolOp })
     }
   }
 
@@ -147,7 +147,8 @@ function parseTokens(tokens) {
 
 function parseCondition(token) {
   // Match field:operator:value patterns
-  const match = token.match(/^([a-zA-Z_]+)(:|:>|:>=|:<|:<=|:!)(.+)$/)
+  // NOTE: Longer operators must come first in alternation to match correctly
+  const match = token.match(/^([a-zA-Z_]+)(:>=|:<=|:>|:<|:!|:)(.+)$/)
 
   if (!match) {
     // Free text search

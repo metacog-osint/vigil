@@ -239,7 +239,7 @@ export default function Events() {
         </select>
 
         {/* Search */}
-        <div className="relative flex-1 min-w-[200px] max-w-xs">
+        <div className="relative flex-1 min-w-[150px] sm:min-w-[200px] max-w-xs">
           <input
             type="text"
             value={search}
@@ -325,7 +325,7 @@ export default function Events() {
           )}
         </div>
 
-        {/* Detail panel */}
+        {/* Detail panel - desktop sidebar */}
         {selectedEvent && viewMode === 'table' && (
           <div className="hidden lg:block">
             <EventDetailPanel
@@ -335,6 +335,31 @@ export default function Events() {
           </div>
         )}
       </div>
+
+      {/* Detail panel - mobile modal */}
+      {selectedEvent && viewMode === 'table' && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-cyber-darker/95 overflow-auto">
+          <div className="min-h-screen p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">Event Details</h2>
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white"
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <EventDetailPanel
+              event={selectedEvent}
+              onClose={() => setSelectedEvent(null)}
+              isMobile
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

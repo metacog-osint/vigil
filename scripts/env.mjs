@@ -33,3 +33,9 @@ export const abusechApiKey = process.env.ABUSECH_API_KEY
 export const greynoiseApiKey = process.env.GREYNOISE_API_KEY
 export const virustotalApiKey = process.env.VIRUSTOTAL_API_KEY
 export const hybridAnalysisApiKey = process.env.HYBRID_ANALYSIS_API_KEY
+export const phishtankApiKey = process.env.PHISHTANK_API_KEY
+
+// Alerting Configuration
+export const resendApiKey = process.env.RESEND_API_KEY
+export const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
+export const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY

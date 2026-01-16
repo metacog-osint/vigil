@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { SkeletonList } from '../components/Skeleton'
 import { EmptyIOCs } from '../components/EmptyState'
 import { ExportButton } from '../components/ExportButton'
+import { EnrichmentPanel, EnrichmentBadges } from '../components/EnrichmentPanel'
 
 const IOC_TYPES = [
   { key: '', label: 'All Types' },
@@ -90,7 +91,7 @@ export default function IOCSearch() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">IOC Search</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-white">IOC Search</h1>
         <p className="text-gray-400 text-sm mt-1">
           Search indicators of compromise (hashes, IPs, domains)
         </p>
@@ -180,6 +181,7 @@ export default function IOCSearch() {
                         <span>{ioc.tags.slice(0, 3).join(', ')}</span>
                       )}
                     </div>
+                    <EnrichmentBadges metadata={ioc.metadata} ioc={ioc} />
                   </div>
 
                   <div className="text-right text-xs text-gray-500">
@@ -259,6 +261,9 @@ export default function IOCSearch() {
                     </a>
                   )}
                 </div>
+
+                {/* Enrichment Data Panel */}
+                <EnrichmentPanel ioc={ioc} />
               </div>
             ))}
           </div>

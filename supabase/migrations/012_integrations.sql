@@ -8,7 +8,7 @@
 -- Stores integration configurations per user
 -- ============================================
 CREATE TABLE IF NOT EXISTS user_integrations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id TEXT NOT NULL,  -- Firebase UID
 
   -- Integration type
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS user_integrations (
 -- Audit log of integration activities
 -- ============================================
 CREATE TABLE IF NOT EXISTS integration_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   integration_id UUID REFERENCES user_integrations(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL,
 
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS integration_logs (
 -- Custom webhooks for programmatic integrations
 -- ============================================
 CREATE TABLE IF NOT EXISTS outbound_webhooks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id TEXT NOT NULL,
 
   -- Webhook configuration

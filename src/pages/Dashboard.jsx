@@ -246,9 +246,9 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-white">Vigil Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Vigil Dashboard</h1>
           <p className="text-gray-400 text-sm mt-1">
             Real-time cyber threat intelligence overview
           </p>
@@ -392,15 +392,15 @@ export default function Dashboard() {
 
       {/* Global Threat Map - Sprint 3 */}
       <div className="cyber-card">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
             <h2 className="text-lg font-semibold text-white">Global Threat Map</h2>
-            <p className="text-sm text-gray-400">Geographic distribution of attacks (30 days)</p>
+            <p className="text-sm text-gray-400 hidden sm:block">Geographic distribution of attacks (30 days)</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setMapViewMode('victims')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
+              className={`px-3 py-1.5 text-sm rounded transition-colors ${
                 mapViewMode === 'victims'
                   ? 'bg-cyan-600 text-white'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
@@ -410,7 +410,7 @@ export default function Dashboard() {
             </button>
             <button
               onClick={() => setMapViewMode('attackers')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
+              className={`px-3 py-1.5 text-sm rounded transition-colors ${
                 mapViewMode === 'attackers'
                   ? 'bg-red-600 text-white'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
@@ -524,7 +524,7 @@ export default function Dashboard() {
       )}
 
       {/* Visualizations Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Threat Level Gauge */}
         <ThreatGauge
           score={calculateThreatLevel(stats?.incidents24h || 0, escalatingActors?.length || 0)}
@@ -532,7 +532,7 @@ export default function Dashboard() {
         />
 
         {/* Sector Distribution */}
-        <div className="cyber-card lg:col-span-2">
+        <div className="cyber-card sm:col-span-2">
           <h2 className="text-sm font-semibold text-gray-400 mb-3">Targeted Sectors</h2>
           <SectorChart data={sectorData} height={200} />
         </div>

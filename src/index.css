@@ -154,3 +154,74 @@
 .threat-gradient-medium {
   background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, transparent 100%);
 }
+
+/* Mobile-specific utilities */
+@layer utilities {
+  /* Hide on mobile, show on desktop */
+  .mobile-hide {
+    @apply hidden sm:block;
+  }
+
+  /* Show on mobile, hide on desktop */
+  .mobile-only {
+    @apply block sm:hidden;
+  }
+
+  /* Better touch targets for mobile (44px minimum) */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Mobile-friendly scrollable container */
+  .mobile-scroll {
+    @apply overflow-x-auto -mx-4 px-4;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Card that becomes full-width on mobile */
+  .mobile-full {
+    @apply -mx-4 sm:mx-0 rounded-none sm:rounded-lg;
+  }
+}
+
+/* Improve table responsiveness */
+@layer components {
+  .cyber-table-responsive {
+    @apply w-full text-sm;
+  }
+
+  .cyber-table-responsive th,
+  .cyber-table-responsive td {
+    @apply py-3 px-3 text-left;
+  }
+
+  /* Stack table cells on mobile */
+  @media (max-width: 640px) {
+    .cyber-table-stack tbody tr {
+      @apply block border-b border-gray-800 py-3;
+    }
+
+    .cyber-table-stack tbody td {
+      @apply block py-1 px-0;
+    }
+
+    .cyber-table-stack tbody td::before {
+      content: attr(data-label);
+      @apply font-medium text-gray-500 mr-2;
+    }
+
+    .cyber-table-stack thead {
+      @apply hidden;
+    }
+  }
+}
+
+/* Better modal/panel positioning on mobile */
+.mobile-panel {
+  @apply fixed inset-0 sm:relative sm:inset-auto;
+}
+
+/* Prevent body scroll when modal is open on mobile */
+.body-scroll-lock {
+  @apply overflow-hidden;
+}

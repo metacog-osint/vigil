@@ -7,21 +7,7 @@
 import { useState, useEffect } from 'react'
 import { orgProfile as orgProfileApi, alertRules, userPreferences } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-
-const SECTORS = [
-  { value: 'healthcare', label: 'Healthcare', icon: '🏥' },
-  { value: 'finance', label: 'Finance & Banking', icon: '🏦' },
-  { value: 'technology', label: 'Technology', icon: '💻' },
-  { value: 'manufacturing', label: 'Manufacturing', icon: '🏭' },
-  { value: 'retail', label: 'Retail', icon: '🛒' },
-  { value: 'education', label: 'Education', icon: '🎓' },
-  { value: 'government', label: 'Government', icon: '🏛️' },
-  { value: 'energy', label: 'Energy & Utilities', icon: '⚡' },
-  { value: 'transportation', label: 'Transportation', icon: '🚛' },
-  { value: 'telecommunications', label: 'Telecommunications', icon: '📡' },
-  { value: 'legal', label: 'Legal', icon: '⚖️' },
-  { value: 'defense', label: 'Defense', icon: '🛡️' },
-]
+import { SECTORS_WITH_DETAILS as SECTORS } from '../lib/constants'
 
 const POPULAR_VENDORS = [
   { name: 'Microsoft', category: 'OS & Cloud' },

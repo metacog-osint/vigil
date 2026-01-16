@@ -1,10 +1,11 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   classifySeverity,
   detectIOCType,
   formatNumber,
   truncate,
   parseDate,
+  relativeTime,
   sanitize,
   stringToColor,
 } from './utils'
@@ -35,6 +36,69 @@ describe('classifySeverity', () => {
     expect(classifySeverity(null)).toBe('unknown')
     expect(classifySeverity(undefined)).toBe('unknown')
   })
+
+  it('returns none for score of 0', () => {
+    expect(classifySeverity(0)).toBe('none')
+  })
+})
+
+describe('relativeTime', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2025-01-15T12:00:00Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('returns "just now" for recent times', () => {
+    const date = new Date('2025-01-15T11:59:30Z') // 30 seconds ago
+    expect(relativeTime(date)).toBe('just now')
+  })
+
+  it('returns minutes ago for times within the hour', () => {
+    const date = new Date('2025-01-15T11:30:00Z') // 30 minutes ago
+    expect(relativeTime(date)).toBe('30m ago')
+  })
+
+  it('returns hours ago for times within the day', () => {
+    const date = new Date('2025-01-15T06:00:00Z') // 6 hours ago
+    expect(relativeTime(date)).toBe('6h ago')
+  })
+
+  it('returns days ago for times within the week', () => {
+    const date = new Date('2025-01-12T12:00:00Z') // 3 days ago
+    expect(relativeTime(date)).toBe('3d ago')
+  })
+
+  it('returns weeks ago for times within the month', () => {
+    const date = new Date('2025-01-01T12:00:00Z') // 2 weeks ago
+    expect(relativeTime(date)).toBe('2w ago')
+  })
+
+  it('returns months ago for times within the year', () => {
+    const date = new Date('2024-11-15T12:00:00Z') // 2 months ago
+    expect(relativeTime(date)).toBe('2mo ago')
+  })
+
+  it('returns formatted date for times over a year ago', () => {
+    const date = new Date('2023-01-15T12:00:00Z') // 2 years ago
+    expect(relativeTime(date)).toMatch(/\d+\/\d+\/\d+/)
+  })
+
+  it('handles string dates', () => {
+    expect(relativeTime('2025-01-15T11:30:00Z')).toBe('30m ago')
+  })
+
+  it('returns "Unknown" for null/undefined', () => {
+    expect(relativeTime(null)).toBe('Unknown')
+    expect(relativeTime(undefined)).toBe('Unknown')
+  })
+
+  it('returns "Invalid date" for invalid date strings', () => {
+    expect(relativeTime('not a date')).toBe('Invalid date')
+  })
 })
 
 describe('detectIOCType', () => {
@@ -44,6 +108,10 @@ describe('detectIOCType', () => {
     expect(detectIOCType('192.168.1.1:8080')).toBe('ip')
   })
 
+  it('detects IPv6 addresses', () => {
+    expect(detectIOCType('2001:0db8:85a3:0000:0000:8a2e:0370:7334')).toBe('ip')
+  })
+
   it('detects URLs', () => {
     expect(detectIOCType('http://example.com')).toBe('url')
     expect(detectIOCType('https://malware.com/payload.exe')).toBe('url')
@@ -51,6 +119,10 @@ describe('detectIOCType', () => {
 
   it('detects MD5 hashes', () => {
     expect(detectIOCType('d41d8cd98f00b204e9800998ecf8427e')).toBe('hash_md5')
+  })
+
+  it('detects SHA1 hashes', () => {
+    expect(detectIOCType('da39a3ee5e6b4b0d3255bfef95601890afd80709')).toBe('hash_sha1')
   })
 
   it('detects SHA256 hashes', () => {
