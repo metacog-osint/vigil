@@ -1,78 +1,49 @@
-#!/usr/bin/env node
-/**
- * Run SQL Migration via Supabase pg API
- *
- * Uses the Supabase pg/v1/query endpoint to execute SQL migrations.
- * Requires SUPABASE_SERVICE_ROLE_KEY.
- */
-
+// Run a migration SQL file directly against the remote database
+import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import './env.mjs'
+import { supabaseUrl, supabaseKey } from './env.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!supabaseUrl || !serviceRoleKey) {
-  console.error('Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing Supabase credentials')
   process.exit(1)
 }
 
-const migrationFile = process.argv[2] || 'supabase/migrations/010_notifications_and_alerts.sql'
-const migrationPath = join(__dirname, '..', migrationFile)
+const supabase = createClient(supabaseUrl, supabaseKey)
 
-async function runSQL(sql) {
-  // Try the pg/v1/query endpoint (experimental)
-  const response = await fetch(`${supabaseUrl}/pg/v1/query`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${serviceRoleKey}`,
-      'apikey': serviceRoleKey,
-    },
-    body: JSON.stringify({ query: sql }),
-  })
+async function runMigration() {
+  const migrationFile = process.argv[2] || '051_sandbox_reports.sql'
+  const migrationPath = join(__dirname, '..', 'supabase', 'migrations', migrationFile)
 
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`SQL execution failed: ${response.status} ${text}`)
-  }
-
-  return response.json()
-}
-
-async function main() {
-  console.log('╔════════════════════════════════════════════════════╗')
-  console.log('║   Running SQL Migration                            ║')
-  console.log('╚════════════════════════════════════════════════════╝')
-  console.log()
-  console.log(`Migration: ${migrationFile}`)
-  console.log()
-
-  const sql = readFileSync(migrationPath, 'utf-8')
-  console.log(`SQL length: ${sql.length} characters`)
-  console.log()
+  console.log('Running migration:', migrationFile)
 
   try {
-    console.log('Executing migration...')
-    const result = await runSQL(sql)
-    console.log('✓ Migration applied successfully!')
-    console.log()
-    if (result) {
-      console.log('Result:', JSON.stringify(result, null, 2).substring(0, 500))
+    const sql = readFileSync(migrationPath, 'utf-8')
+    console.log('SQL loaded, length:', sql.length)
+    
+    // Use Supabase's SQL execution via REST
+    const response = await fetch(supabaseUrl + '/rest/v1/rpc/exec_sql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey
+      },
+      body: JSON.stringify({ query: sql })
+    })
+    
+    if (!response.ok) {
+      console.log('RPC method not available - this is expected')
+      console.log('Please run the migration manually in Supabase Dashboard > SQL Editor')
+      console.log('')
+      console.log('Migration file:', migrationPath)
     }
-  } catch (error) {
-    console.error('✗ Migration failed:', error.message)
-    console.log()
-    console.log('The pg/v1/query endpoint may not be available.')
-    console.log('Please apply the migration manually via the Supabase dashboard:')
-    console.log()
-    console.log('  https://supabase.com/dashboard/project/faqazkwdkajhxmwxchop/sql')
-    process.exit(1)
+  } catch (e) {
+    console.error('Error:', e.message)
   }
 }
 
-main().catch(console.error)
+runMigration()

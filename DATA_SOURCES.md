@@ -4,7 +4,7 @@ This document provides a comprehensive overview of all threat intelligence data 
 
 ---
 
-## Current Data Sources (22 Active)
+## Current Data Sources (28 Active)
 
 ### Ransomware Intelligence
 
@@ -53,6 +53,32 @@ This document provides a comprehensive overview of all threat intelligence data 
 |--------|----------|-----------|----------|--------|------|
 | Have I Been Pwned | `https://haveibeenpwned.com/api/v3/breaches` | Data breach information | Weekly | `ingest-hibp.mjs` | None |
 
+### Sandbox & Malware Analysis
+
+| Source | Endpoint | Data Type | Schedule | Script | Auth |
+|--------|----------|-----------|----------|--------|------|
+| ANY.RUN | `https://api.any.run/v1` | Interactive sandbox reports, IOCs | Daily | `ingest-anyrun.mjs` | API Key |
+| Triage (Hatching) | `https://api.tria.ge/v0` | Automated malware triage | Daily | `ingest-triage.mjs` | API Key |
+| InQuest Labs | `https://labs.inquest.net/api` | Document-based threats (Office, PDF) | Daily | `ingest-inquest.mjs` | Optional |
+
+### Enhanced Vulnerability Intelligence
+
+| Source | Endpoint | Data Type | Schedule | Script | Auth |
+|--------|----------|-----------|----------|--------|------|
+| VulnCheck KEV | `https://api.vulncheck.com/v3` | Extended KEV (173% larger than CISA) | Daily | `ingest-vulncheck.mjs` | API Key |
+
+### Community Threat Intelligence
+
+| Source | Endpoint | Data Type | Schedule | Script | Auth |
+|--------|----------|-----------|----------|--------|------|
+| Pulsedive | `https://pulsedive.com/api` | Community intel with risk scoring | Daily | `ingest-pulsedive.mjs` | API Key |
+
+### Infrastructure Intelligence
+
+| Source | Endpoint | Data Type | Schedule | Script | Auth |
+|--------|----------|-----------|----------|--------|------|
+| Censys | `https://search.censys.io/api/v2` | Certificate/service data, C2 detection | Daily | `ingest-censys.mjs` | API Key |
+
 ### Enrichment Services
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
@@ -82,24 +108,25 @@ These sources use simple JSON/text formats similar to existing integrations.
 
 ### Priority 2: High-Value Additions (Free/Freemium)
 
-| Source | Endpoint | Data Type | Value Add | Auth |
-|--------|----------|-----------|-----------|------|
-| Exploit-DB | `https://www.exploit-db.com/` | PoC exploits | Exploit availability for CVEs | None |
-| Blocklist.de | `https://www.blocklist.de/lists/` | Brute-force attacker IPs | Attack source identification | None |
-| Emerging Threats | `https://rules.emergingthreats.net/` | IP lists, Suricata rules | Network-level threat indicators | None |
-| TweetFeed.live | `https://tweetfeed.live/` | Security Twitter IOCs | Real-time community intel | None |
-| CIRCL Passive DNS | `https://www.circl.lu/services/passive-dns/` | Historical DNS data | Domain resolution history | API Key |
-| Censys | `https://search.censys.io/api` | Certificate/service data | Infrastructure reconnaissance | API Key |
+| Source | Endpoint | Data Type | Value Add | Auth | Status |
+|--------|----------|-----------|-----------|------|--------|
+| Exploit-DB | `https://www.exploit-db.com/` | PoC exploits | Exploit availability for CVEs | None | ✅ Implemented |
+| Blocklist.de | `https://www.blocklist.de/lists/` | Brute-force attacker IPs | Attack source identification | None | ✅ Implemented |
+| Emerging Threats | `https://rules.emergingthreats.net/` | IP lists, Suricata rules | Network-level threat indicators | None | ✅ Implemented |
+| TweetFeed.live | `https://tweetfeed.live/` | Security Twitter IOCs | Real-time community intel | None | ⚠️ Deprioritized (API concerns) |
+| CIRCL Passive DNS | `https://www.circl.lu/services/passive-dns/` | Historical DNS data | Domain resolution history | API Key | ✅ Implemented |
+| Censys | `https://search.censys.io/api` | Certificate/service data | Infrastructure reconnaissance | API Key | ✅ Implemented |
+| Pulsedive | `https://pulsedive.com/api` | Community threat intel | Risk scoring, aggregated feeds | API Key | ✅ Implemented |
 
 ### Priority 3: Enhanced Coverage (API Key Required)
 
-| Source | Endpoint | Data Type | Value Add | Auth |
-|--------|----------|-----------|-----------|------|
-| ANY.RUN | `https://any.run/api/` | Sandbox reports | Public malware analysis | API Key |
-| Triage (Hatching) | `https://tria.ge/api/` | Fast malware triage | Quick sample analysis | API Key |
-| VulnCheck KEV | `https://vulncheck.com/api/` | Extended KEV data | Exploit metadata enrichment | API Key |
-| SecurityTrails | `https://securitytrails.com/api/` | Historical DNS/WHOIS | Domain intelligence | API Key |
-| InQuest Labs | `https://labs.inquest.net/api` | Malicious documents | Document-based threats | API Key |
+| Source | Endpoint | Data Type | Value Add | Auth | Status |
+|--------|----------|-----------|-----------|------|--------|
+| ANY.RUN | `https://any.run/api/` | Sandbox reports | Public malware analysis | API Key | ✅ Implemented |
+| Triage (Hatching) | `https://tria.ge/api/` | Fast malware triage | Quick sample analysis | API Key | ✅ Implemented |
+| VulnCheck KEV | `https://vulncheck.com/api/` | Extended KEV data | Exploit metadata enrichment | API Key | ✅ Implemented |
+| SecurityTrails | `https://securitytrails.com/api/` | Historical DNS/WHOIS | Domain intelligence | API Key | Planned |
+| InQuest Labs | `https://labs.inquest.net/api` | Malicious documents | Document-based threats | API Key | ✅ Implemented |
 
 ### Priority 4: Nice to Have (Future Consideration)
 
@@ -340,15 +367,40 @@ GREYNOISE_API_KEY=
 PHISHTANK_API_KEY=
 ```
 
-### New Keys Required (By Phase)
+### New Threat Intel API Keys (Implemented)
 
-| Phase | Source | Variable |
-|-------|--------|----------|
-| Phase 3 | CIRCL | `CIRCL_API_KEY` |
-| Phase 3 | Censys | `CENSYS_API_ID`, `CENSYS_API_SECRET` |
-| Phase 4 | ANY.RUN | `ANYRUN_API_KEY` |
-| Phase 4 | Triage | `TRIAGE_API_KEY` |
-| Phase 5 | VulnCheck | `VULNCHECK_API_KEY` |
+```bash
+# VulnCheck - Extended KEV catalog
+VULNCHECK_API_KEY=           # Free tier at https://vulncheck.com/
+
+# Pulsedive - Community threat intel
+PULSEDIVE_API_KEY=           # Free tier at https://pulsedive.com/api/
+
+# Censys - Certificate/service intelligence
+CENSYS_API_ID=               # Free tier at https://search.censys.io/account/api
+CENSYS_API_SECRET=
+
+# ANY.RUN - Interactive malware sandbox
+ANYRUN_API_KEY=              # Free tier at https://any.run/api-documentation/
+
+# Triage (Hatching) - Malware triage
+TRIAGE_API_KEY=              # Free tier at https://tria.ge/account
+
+# InQuest Labs - Document threats
+INQUEST_API_KEY=             # Optional, free tier works without key
+```
+
+### Legacy Keys Reference (By Phase)
+
+| Phase | Source | Variable | Status |
+|-------|--------|----------|--------|
+| Phase 3 | CIRCL | `CIRCL_API_KEY` | ✅ Implemented |
+| Phase 3 | Censys | `CENSYS_API_ID`, `CENSYS_API_SECRET` | ✅ Implemented |
+| Phase 4 | ANY.RUN | `ANYRUN_API_KEY` | ✅ Implemented |
+| Phase 4 | Triage | `TRIAGE_API_KEY` | ✅ Implemented |
+| Phase 5 | VulnCheck | `VULNCHECK_API_KEY` | ✅ Implemented |
+| Phase 5 | Pulsedive | `PULSEDIVE_API_KEY` | ✅ Implemented |
+| Phase 5 | InQuest | `INQUEST_API_KEY` | ✅ Implemented |
 
 ---
 
