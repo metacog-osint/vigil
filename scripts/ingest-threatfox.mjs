@@ -3,7 +3,7 @@
 // Run: node scripts/ingest-threatfox.mjs
 
 import { createClient } from '@supabase/supabase-js'
-import https from 'https'
+import { postJSON } from './lib/http.mjs'
 import { supabaseUrl, supabaseKey } from './env.mjs'
 
 const THREATFOX_API = 'https://threatfox-api.abuse.ch/api/v1/'
@@ -15,38 +15,7 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-function postRequest(url, data) {
-  return new Promise((resolve, reject) => {
-    const postData = JSON.stringify(data)
-    const urlObj = new URL(url)
-
-    const options = {
-      hostname: urlObj.hostname,
-      path: urlObj.pathname,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData)
-      }
-    }
-
-    const req = https.request(options, (res) => {
-      let data = ''
-      res.on('data', chunk => data += chunk)
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(data))
-        } catch (e) {
-          reject(e)
-        }
-      })
-    })
-
-    req.on('error', reject)
-    req.write(postData)
-    req.end()
-  })
-}
+// Using shared HTTP module - see ./lib/http.mjs
 
 function mapIOCType(threatfoxType) {
   const typeMap = {
@@ -63,7 +32,7 @@ async function ingestThreatFox() {
   console.log('Fetching ThreatFox IOCs (last 7 days)...')
 
   // Get IOCs from the last 7 days
-  const response = await postRequest(THREATFOX_API, {
+  const response = await postJSON(THREATFOX_API, {
     query: 'get_iocs',
     days: 7
   })

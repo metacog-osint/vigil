@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react'
 import { iocs, vulnerabilities } from '../lib/supabase'
 import { detectIOCType } from '../lib/utils'
 import { SkeletonList } from '../components/Skeleton'
+import { FeatureGate } from '../components/UpgradePrompt'
 
 const MAX_BULK_ITEMS = 1000
 
@@ -148,14 +149,15 @@ export default function BulkSearch() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Bulk IOC Search</h1>
-        <p className="text-gray-400 text-sm mt-1">
-          Search multiple indicators at once. Paste a list or upload a file.
-        </p>
-      </div>
+    <FeatureGate feature="bulk_search">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold text-white">Bulk IOC Search</h1>
+          <p className="text-gray-400 text-sm mt-1">
+            Search multiple indicators at once. Paste a list or upload a file.
+          </p>
+        </div>
 
       {/* Input area */}
       <div className="cyber-card">
@@ -299,11 +301,12 @@ export default function BulkSearch() {
         </div>
       )}
 
-      {/* Help text */}
-      <div className="text-xs text-gray-500 space-y-1">
-        <p>Supported formats: IP addresses, SHA256/MD5 hashes, domains, URLs, CVE IDs</p>
-        <p>Results can be exported to CSV for further analysis.</p>
+        {/* Help text */}
+        <div className="text-xs text-gray-500 space-y-1">
+          <p>Supported formats: IP addresses, SHA256/MD5 hashes, domains, URLs, CVE IDs</p>
+          <p>Results can be exported to CSV for further analysis.</p>
+        </div>
       </div>
-    </div>
+    </FeatureGate>
   )
 }

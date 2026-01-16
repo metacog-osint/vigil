@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { TIER_INFO, getRequiredTier, FEATURE_DESCRIPTIONS } from '../lib/features'
+import { TIER_INFO, getRequiredTier, FEATURE_DESCRIPTIONS, canAccess as canAccessFn, isLimitReached as isLimitReachedFn, getLimit as getLimitFn, getUpgradeTier } from '../lib/features'
+import { useSubscription } from '../contexts/SubscriptionContext'
 
 /**
  * Upgrade prompt shown when user tries to access a feature they don't have
@@ -88,10 +89,10 @@ export function UpgradePrompt({ feature, currentTier = 'free', variant = 'defaul
 /**
  * Feature gate wrapper - shows content if user has access, upgrade prompt if not
  */
-export function FeatureGate({ children, feature, userTier = 'free', fallback = null }) {
-  const { canAccess } = require('../lib/features')
+export function FeatureGate({ children, feature, fallback = null }) {
+  const { tier } = useSubscription()
 
-  if (canAccess(userTier, feature)) {
+  if (canAccessFn(tier, feature)) {
     return children
   }
 
@@ -99,18 +100,18 @@ export function FeatureGate({ children, feature, userTier = 'free', fallback = n
     return fallback
   }
 
-  return <UpgradePrompt feature={feature} currentTier={userTier} />
+  return <UpgradePrompt feature={feature} currentTier={tier} />
 }
 
 /**
  * Limit gate - shows content if under limit, warning/upgrade prompt if at/over limit
  */
-export function LimitGate({ children, limitType, currentCount, userTier = 'free' }) {
-  const { isLimitReached, getLimit, getUpgradeTier } = require('../lib/features')
+export function LimitGate({ children, limitType, currentCount }) {
+  const { tier } = useSubscription()
 
-  const limit = getLimit(userTier, limitType)
-  const reached = isLimitReached(userTier, limitType, currentCount)
-  const nextTier = getUpgradeTier(userTier)
+  const limit = getLimitFn(tier, limitType)
+  const reached = isLimitReachedFn(tier, limitType, currentCount)
+  const nextTier = getUpgradeTier(tier)
 
   if (!reached) {
     return children

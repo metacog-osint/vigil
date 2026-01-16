@@ -3,6 +3,7 @@ import { threatHunts } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import ThreatHuntCard from '../components/ThreatHuntCard'
 import { Tooltip } from '../components/Tooltip'
+import { FeatureGate } from '../components/UpgradePrompt'
 
 const CONFIDENCE_FILTERS = [
   { value: '', label: 'All Confidence' },
@@ -130,24 +131,25 @@ export default function ThreatHunts() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            Threat Hunts
-            <Tooltip content="Actionable detection guides with step-by-step checks and SIEM queries to hunt for threats in your environment">
-              <span className="text-gray-500 cursor-help">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </span>
-            </Tooltip>
-          </h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Step-by-step guides to detect threats in your environment
-          </p>
-        </div>
+    <FeatureGate feature="threat_hunts">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+              Threat Hunts
+              <Tooltip content="Actionable detection guides with step-by-step checks and SIEM queries to hunt for threats in your environment">
+                <span className="text-gray-500 cursor-help">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+              </Tooltip>
+            </h1>
+            <p className="text-gray-400 text-sm mt-1">
+              Step-by-step guides to detect threats in your environment
+            </p>
+          </div>
 
         {/* Stats */}
         <div className="flex items-center gap-4">
@@ -301,15 +303,16 @@ export default function ThreatHunts() {
         </div>
       )}
 
-      {/* Info box at bottom */}
-      <div className="mt-8 p-4 bg-gray-800/30 rounded-lg border border-gray-700">
-        <h3 className="text-sm font-medium text-white mb-2">About Threat Hunts</h3>
-        <p className="text-sm text-gray-400">
-          These guides provide practical, actionable steps to detect specific threats in your environment.
-          Each hunt includes quick checks you can run manually, SIEM queries for automated detection,
-          and defensive recommendations. Progress is saved automatically as you work through each hunt.
-        </p>
+        {/* Info box at bottom */}
+        <div className="mt-8 p-4 bg-gray-800/30 rounded-lg border border-gray-700">
+          <h3 className="text-sm font-medium text-white mb-2">About Threat Hunts</h3>
+          <p className="text-sm text-gray-400">
+            These guides provide practical, actionable steps to detect specific threats in your environment.
+            Each hunt includes quick checks you can run manually, SIEM queries for automated detection,
+            and defensive recommendations. Progress is saved automatically as you work through each hunt.
+          </p>
+        </div>
       </div>
-    </div>
+    </FeatureGate>
   )
 }

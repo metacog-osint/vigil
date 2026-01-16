@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { watchlists as watchlistsApi } from '../lib/supabase'
 import { EmptyState, SkeletonCard, ErrorMessage, TimeAgo } from '../components'
+import { FeatureGate } from '../components/UpgradePrompt'
 
 const ENTITY_TYPES = [
   { value: 'actor', label: 'Threat Actors', icon: '👤', color: 'bg-red-500' },
@@ -224,13 +225,14 @@ export default function Watchlists() {
   }
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Watchlists</h1>
-          <p className="text-gray-400 mt-1">Track entities of interest</p>
-        </div>
+    <FeatureGate feature="watchlist">
+      <div className="p-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-white">Watchlists</h1>
+            <p className="text-gray-400 mt-1">Track entities of interest</p>
+          </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
           className="flex items-center gap-2 px-4 py-2 bg-cyber-accent text-white rounded-lg hover:bg-cyber-accent/80 transition-colors"
@@ -278,6 +280,7 @@ export default function Watchlists() {
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreate}
       />
-    </div>
+      </div>
+    </FeatureGate>
   )
 }

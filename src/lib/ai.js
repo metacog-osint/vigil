@@ -224,4 +224,188 @@ Focus on: threat level, recent activity changes, and recommended defensive prior
   }
 }
 
-export default { generateBLUF, generateActorSummary }
+/**
+ * Parse a natural language query into structured search parameters
+ * Examples:
+ * - "show me ransomware in healthcare" -> { type: 'actors', sectors: ['healthcare'] }
+ * - "find IPs from LockBit" -> { type: 'iocs', actor: 'LockBit', iocType: 'ip' }
+ * - "critical CVEs with exploits" -> { type: 'vulnerabilities', severity: 'critical', hasExploit: true }
+ */
+export async function parseNaturalQuery(query) {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY
+
+  if (!apiKey) {
+    // Fallback to basic keyword parsing
+    return parseQueryKeywords(query)
+  }
+
+  const prompt = `Parse this threat intelligence search query into structured JSON parameters.
+
+Query: "${query}"
+
+Output a JSON object with these possible fields:
+{
+  "type": "actors" | "incidents" | "vulnerabilities" | "iocs" | "malware" | "events",
+  "search": "free text search term",
+  "actor": "threat actor name if mentioned",
+  "sectors": ["array of sectors if mentioned"],
+  "severity": "critical" | "high" | "medium" | "low",
+  "trendStatus": "ESCALATING" | "STABLE" | "DECLINING",
+  "iocType": "ip" | "domain" | "url" | "hash" | "email",
+  "hasExploit": true/false,
+  "isKev": true/false,
+  "dateRange": "7d" | "30d" | "90d",
+  "limit": number
+}
+
+Only include fields that are relevant to the query. Output ONLY valid JSON, no explanation.
+
+Examples:
+- "LockBit victims" -> {"type":"incidents","actor":"LockBit"}
+- "escalating ransomware groups" -> {"type":"actors","trendStatus":"ESCALATING"}
+- "critical vulnerabilities with public exploits" -> {"type":"vulnerabilities","severity":"critical","hasExploit":true}
+- "malicious IPs from the last week" -> {"type":"iocs","iocType":"ip","dateRange":"7d"}`
+
+  try {
+    const response = await fetch(GROQ_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant', // Fast model for parsing
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a query parser. Output only valid JSON, nothing else.'
+          },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.1,
+        max_tokens: 200,
+      }),
+    })
+
+    if (!response.ok) {
+      return parseQueryKeywords(query)
+    }
+
+    const result = await response.json()
+    const content = result.choices?.[0]?.message?.content
+
+    if (!content) return parseQueryKeywords(query)
+
+    // Extract JSON from response (handle markdown code blocks)
+    const jsonMatch = content.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) return parseQueryKeywords(query)
+
+    const parsed = JSON.parse(jsonMatch[0])
+    return { ...parsed, parsed: true, aiParsed: true }
+  } catch (error) {
+    console.error('Natural query parsing failed:', error)
+    return parseQueryKeywords(query)
+  }
+}
+
+/**
+ * Fallback keyword-based query parsing
+ */
+function parseQueryKeywords(query) {
+  const q = query.toLowerCase()
+  const result = { parsed: true, aiParsed: false }
+
+  // Detect entity type
+  if (q.includes('actor') || q.includes('group') || q.includes('gang') || q.includes('ransomware')) {
+    result.type = 'actors'
+  } else if (q.includes('victim') || q.includes('incident') || q.includes('attack')) {
+    result.type = 'incidents'
+  } else if (q.includes('cve') || q.includes('vulnerability') || q.includes('vuln')) {
+    result.type = 'vulnerabilities'
+  } else if (q.includes('ioc') || q.includes('ip') || q.includes('domain') || q.includes('hash') || q.includes('indicator')) {
+    result.type = 'iocs'
+  } else if (q.includes('malware') || q.includes('sample')) {
+    result.type = 'malware'
+  }
+
+  // Detect sectors
+  const sectors = []
+  if (q.includes('healthcare') || q.includes('hospital') || q.includes('medical')) sectors.push('healthcare')
+  if (q.includes('finance') || q.includes('bank') || q.includes('financial')) sectors.push('finance')
+  if (q.includes('education') || q.includes('school') || q.includes('university')) sectors.push('education')
+  if (q.includes('government') || q.includes('gov')) sectors.push('government')
+  if (q.includes('manufacturing') || q.includes('industrial')) sectors.push('manufacturing')
+  if (q.includes('retail') || q.includes('store')) sectors.push('retail')
+  if (q.includes('technology') || q.includes('tech') || q.includes('software')) sectors.push('technology')
+  if (sectors.length > 0) result.sectors = sectors
+
+  // Detect severity
+  if (q.includes('critical')) result.severity = 'critical'
+  else if (q.includes('high')) result.severity = 'high'
+  else if (q.includes('medium')) result.severity = 'medium'
+  else if (q.includes('low')) result.severity = 'low'
+
+  // Detect trend status
+  if (q.includes('escalating') || q.includes('rising') || q.includes('increasing')) result.trendStatus = 'ESCALATING'
+  else if (q.includes('declining') || q.includes('decreasing')) result.trendStatus = 'DECLINING'
+
+  // Detect IOC type
+  if (q.includes(' ip ') || q.includes('ip address')) result.iocType = 'ip'
+  else if (q.includes('domain')) result.iocType = 'domain'
+  else if (q.includes('url')) result.iocType = 'url'
+  else if (q.includes('hash') || q.includes('md5') || q.includes('sha')) result.iocType = 'hash'
+
+  // Detect exploit/KEV
+  if (q.includes('exploit') || q.includes('poc')) result.hasExploit = true
+  if (q.includes('kev') || q.includes('known exploited')) result.isKev = true
+
+  // Detect time range
+  if (q.includes('week') || q.includes('7 day')) result.dateRange = '7d'
+  else if (q.includes('month') || q.includes('30 day')) result.dateRange = '30d'
+  else if (q.includes('quarter') || q.includes('90 day')) result.dateRange = '90d'
+
+  // Extract potential actor names (common ones)
+  const actorPatterns = [
+    'lockbit', 'blackcat', 'alphv', 'cl0p', 'clop', 'play', 'akira',
+    'rhysida', 'blackbasta', 'black basta', 'bianlian', 'royal',
+    'medusa', 'hunters', '8base', 'cactus', 'qilin', 'ransomhub'
+  ]
+  for (const actor of actorPatterns) {
+    if (q.includes(actor)) {
+      result.actor = actor.charAt(0).toUpperCase() + actor.slice(1)
+      break
+    }
+  }
+
+  // Extract remaining as search term
+  let searchTerm = query
+    .replace(/show|me|find|search|for|all|the|with|from|in|and|or/gi, '')
+    .trim()
+  if (searchTerm.length > 2 && !result.actor) {
+    result.search = searchTerm
+  }
+
+  return result
+}
+
+/**
+ * Convert parsed query to Supabase filter parameters
+ */
+export function queryToFilters(parsed) {
+  const filters = {}
+
+  if (parsed.search) filters.search = parsed.search
+  if (parsed.actor) filters.actor = parsed.actor
+  if (parsed.sectors?.length) filters.sectors = parsed.sectors
+  if (parsed.severity) filters.severity = parsed.severity
+  if (parsed.trendStatus) filters.trendStatus = parsed.trendStatus
+  if (parsed.iocType) filters.type = parsed.iocType
+  if (parsed.hasExploit) filters.hasExploit = true
+  if (parsed.isKev) filters.isKev = true
+  if (parsed.dateRange) filters.dateRange = parsed.dateRange
+  if (parsed.limit) filters.limit = parsed.limit
+
+  return filters
+}
+
+export default { generateBLUF, generateActorSummary, parseNaturalQuery, queryToFilters }

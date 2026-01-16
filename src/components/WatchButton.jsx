@@ -49,10 +49,20 @@ export function WatchButton({
     lg: 'w-6 h-6',
   }
 
+  // Close on Escape key
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape' && isOpen) {
+      setIsOpen(false)
+    }
+  }
+
   return (
-    <div className="relative">
+    <div className="relative" onKeyDown={handleKeyDown}>
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-label={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
         className={clsx(
           'transition-colors',
           isWatched ? 'text-yellow-400 hover:text-yellow-300' : 'text-gray-500 hover:text-gray-300',
@@ -78,8 +88,12 @@ export function WatchButton({
       {/* Dropdown */}
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-50 bg-cyber-dark border border-gray-700 rounded-lg shadow-lg py-1 min-w-[200px]">
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} aria-hidden="true" />
+          <div
+            className="absolute right-0 top-full mt-1 z-50 bg-cyber-dark border border-gray-700 rounded-lg shadow-lg py-1 min-w-[200px]"
+            role="listbox"
+            aria-label="Watchlist options"
+          >
             {watchlists.length === 0 ? (
               <div className="px-3 py-2 text-sm text-gray-500">
                 No watchlists for this type

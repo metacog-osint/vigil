@@ -17,6 +17,9 @@ on:
           - iocs
           - vulnerabilities
           - mitre
+          - malpedia
+          - misp-galaxy
+          - all-actors
 
 env:
   NODE_VERSION: '20'
@@ -238,7 +241,7 @@ jobs:
   # ============================================
   ingest-malpedia:
     runs-on: ubuntu-latest
-    if: github.event.inputs.source == '' || github.event.inputs.source == 'mitre'
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'malpedia' || github.event.inputs.source == 'all-actors'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -263,7 +266,7 @@ jobs:
   # ============================================
   ingest-misp-galaxy:
     runs-on: ubuntu-latest
-    if: github.event.inputs.source == '' || github.event.inputs.source == 'mitre'
+    if: github.event.inputs.source == '' || github.event.inputs.source == 'misp-galaxy' || github.event.inputs.source == 'all-actors'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -398,6 +401,8 @@ jobs:
       - ingest-cisa-alerts
       - ingest-nvd
       - ingest-mitre
+      - ingest-malpedia
+      - ingest-misp-galaxy
       - seed-correlations
       - calculate-trends
       - snapshot-actor-trends
@@ -437,6 +442,8 @@ jobs:
           [[ "${{ needs.ingest-cisa-kev.result }}" == "failure" ]] && FAILED=1
           [[ "${{ needs.ingest-nvd.result }}" == "failure" ]] && FAILED=1
           [[ "${{ needs.ingest-mitre.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.ingest-malpedia.result }}" == "failure" ]] && FAILED=1
+          [[ "${{ needs.ingest-misp-galaxy.result }}" == "failure" ]] && FAILED=1
           [[ "${{ needs.ingest-cisa-alerts.result }}" == "failure" ]] && FAILED=1
           [[ "${{ needs.seed-correlations.result }}" == "failure" ]] && FAILED=1
           [[ "${{ needs.calculate-trends.result }}" == "failure" ]] && FAILED=1

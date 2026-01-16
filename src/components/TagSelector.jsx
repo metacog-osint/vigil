@@ -42,8 +42,15 @@ export function TagSelector({
     }
   }
 
+  // Close on Escape key
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape' && isOpen) {
+      setIsOpen(false)
+    }
+  }
+
   return (
-    <div className={clsx('', className)}>
+    <div className={clsx('', className)} onKeyDown={handleKeyDown}>
       {/* Current tags */}
       <div className="flex flex-wrap gap-1 items-center">
         {entityTags.map((tag) => (
@@ -56,6 +63,7 @@ export function TagSelector({
             <button
               onClick={() => toggleTag(tag)}
               className="hover:text-white transition-colors"
+              aria-label={`Remove tag ${tag.name}`}
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -67,6 +75,9 @@ export function TagSelector({
           onClick={() => setIsOpen(!isOpen)}
           className="text-gray-500 hover:text-gray-300 transition-colors p-1"
           title="Add tag"
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+          aria-label="Add tag"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -77,8 +88,12 @@ export function TagSelector({
       {/* Dropdown */}
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute mt-1 z-50 bg-cyber-dark border border-gray-700 rounded-lg shadow-lg py-1 min-w-[180px]">
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} aria-hidden="true" />
+          <div
+            className="absolute mt-1 z-50 bg-cyber-dark border border-gray-700 rounded-lg shadow-lg py-1 min-w-[180px]"
+            role="listbox"
+            aria-label="Available tags"
+          >
             {allTags.length === 0 ? (
               <div className="px-3 py-2 text-sm text-gray-500">
                 No tags created yet

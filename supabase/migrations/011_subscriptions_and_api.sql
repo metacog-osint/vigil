@@ -8,7 +8,7 @@
 -- Tracks subscription status per user
 -- ============================================
 CREATE TABLE IF NOT EXISTS user_subscriptions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id TEXT NOT NULL UNIQUE,  -- Firebase UID
   tier TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'professional', 'team', 'enterprise')),
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'past_due', 'canceled', 'trialing')),
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
 -- Stores API keys for Team+ users
 -- ============================================
 CREATE TABLE IF NOT EXISTS api_keys (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id TEXT NOT NULL,  -- Firebase UID
   name TEXT NOT NULL,  -- User-provided key name (e.g., "Production", "Testing")
   key_hash TEXT NOT NULL,  -- SHA-256 hash of the actual key
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
 -- Logs API requests for analytics and rate limiting
 -- ============================================
 CREATE TABLE IF NOT EXISTS api_request_log (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   api_key_id UUID REFERENCES api_keys(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL,
 
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS api_request_log (
 -- Audit log of subscription changes
 -- ============================================
 CREATE TABLE IF NOT EXISTS subscription_events (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id TEXT NOT NULL,
   event_type TEXT NOT NULL,  -- 'created', 'upgraded', 'downgraded', 'canceled', 'renewed', 'payment_failed'
 

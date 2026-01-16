@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { iocs, threatActors, vulnerabilities, incidents } from '../lib/supabase'
+import { iocs, threatActors, vulnerabilities, incidents, supabase } from '../lib/supabase'
+import { parseNaturalQuery, queryToFilters } from '../lib/ai'
 import IOCQuickLookupCard from './IOCQuickLookupCard'
 
 const SEARCH_TYPES = {
@@ -11,6 +12,35 @@ const SEARCH_TYPES = {
   incidents: { label: 'Incidents', icon: '⚠️' },
   vulnerabilities: { label: 'CVEs', icon: '🛡️' },
   iocs: { label: 'IOCs', icon: '📋' },
+}
+
+// Keywords that suggest natural language query
+const NL_KEYWORDS = [
+  'show', 'find', 'list', 'get', 'search', 'what', 'which', 'who',
+  'latest', 'recent', 'top', 'active', 'escalating', 'critical', 'high',
+  'targeting', 'affecting', 'attacks', 'victims', 'from', 'in', 'with',
+]
+
+// Detect if query looks like natural language vs structured/IOC search
+function isNaturalLanguageQuery(query) {
+  if (!query || query.length < 5) return false
+
+  const trimmed = query.toLowerCase().trim()
+  const words = trimmed.split(/\s+/)
+
+  // If only one word, not natural language
+  if (words.length < 2) return false
+
+  // If contains structured query syntax (field:value), not NL
+  if (/\w+:[<>=!*]?\w+/.test(trimmed)) return false
+
+  // Check for NL keywords
+  const hasNLKeyword = words.some(word => NL_KEYWORDS.includes(word))
+
+  // Contains common NL patterns
+  const hasNLPattern = /\b(show me|find all|list|get|what are|which|who is|recent|latest|top \d+|attacks on|targeting|affecting|from the|in the|with)\b/i.test(trimmed)
+
+  return hasNLKeyword || hasNLPattern
 }
 
 export function SearchModal({ isOpen, onClose }) {
@@ -27,6 +57,8 @@ export function SearchModal({ isOpen, onClose }) {
   const [recentSearches, setRecentSearches] = useState([])
   const [iocLookupMode, setIocLookupMode] = useState(false)
   const [iocLookupData, setIocLookupData] = useState(null)
+  const [nlMode, setNlMode] = useState(false)
+  const [nlParsedQuery, setNlParsedQuery] = useState(null)
   const inputRef = useRef(null)
   const navigate = useNavigate()
 
@@ -47,6 +79,8 @@ export function SearchModal({ isOpen, onClose }) {
       setSelectedIndex(0)
       setIocLookupMode(false)
       setIocLookupData(null)
+      setNlMode(false)
+      setNlParsedQuery(null)
     }
   }, [isOpen])
 
@@ -95,6 +129,8 @@ export function SearchModal({ isOpen, onClose }) {
       setResults({ actors: [], incidents: [], vulnerabilities: [], iocs: [] })
       setIocLookupMode(false)
       setIocLookupData(null)
+      setNlMode(false)
+      setNlParsedQuery(null)
       return
     }
 
@@ -104,9 +140,121 @@ export function SearchModal({ isOpen, onClose }) {
     // Check if this looks like a specific IOC - enable quick lookup mode
     const isSpecificIOC = ['ip', 'hash', 'cve', 'url', 'domain'].includes(searchType)
 
+    // Check if this looks like natural language
+    const isNL = isNaturalLanguageQuery(searchQuery)
+
     try {
+      // Natural language query mode
+      if (isNL) {
+        setIocLookupMode(false)
+        setIocLookupData(null)
+        setNlMode(true)
+
+        // Parse the natural language query
+        const parsed = await parseNaturalQuery(searchQuery)
+        const filters = queryToFilters(parsed)
+        setNlParsedQuery(parsed)
+
+        const searchPromises = []
+        const targetType = parsed.type
+
+        // Search actors if type matches or not specified
+        if (!targetType || targetType === 'actors') {
+          const actorFilters = { limit: 5 }
+          if (filters.search) actorFilters.search = filters.search
+          if (filters.actor) actorFilters.search = filters.actor
+          if (filters.trendStatus) actorFilters.trendStatus = filters.trendStatus
+          if (filters.sectors?.length) actorFilters.sectors = filters.sectors
+
+          searchPromises.push(
+            threatActors.getAll(actorFilters)
+              .then(({ data }) => ({ type: 'actors', data: data || [] }))
+              .catch(() => ({ type: 'actors', data: [] }))
+          )
+        }
+
+        // Search vulnerabilities if type matches or not specified
+        if (!targetType || targetType === 'vulnerabilities') {
+          searchPromises.push(
+            (async () => {
+              let query = supabase
+                .from('vulnerabilities')
+                .select('*')
+                .limit(5)
+
+              if (filters.severity) {
+                query = query.eq('severity', filters.severity)
+              }
+              if (filters.isKev) {
+                query = query.not('kev_date', 'is', null)
+              }
+              if (filters.hasExploit) {
+                query = query.eq('has_exploit', true)
+              }
+
+              const { data } = await query.order('cvss_score', { ascending: false })
+              return { type: 'vulnerabilities', data: data || [] }
+            })().catch(() => ({ type: 'vulnerabilities', data: [] }))
+          )
+        }
+
+        // Search IOCs if type matches or not specified
+        if (!targetType || targetType === 'iocs') {
+          searchPromises.push(
+            iocs.search(filters.search || filters.actor || '', filters.type || null)
+              .then(({ data }) => ({ type: 'iocs', data: (data || []).slice(0, 5) }))
+              .catch(() => ({ type: 'iocs', data: [] }))
+          )
+        }
+
+        // Search incidents if type matches or not specified
+        if (!targetType || targetType === 'incidents') {
+          searchPromises.push(
+            (async () => {
+              let query = supabase
+                .from('incidents')
+                .select('*, threat_actor:threat_actors(name)')
+                .limit(5)
+
+              if (filters.actor) {
+                const { data: actorData } = await threatActors.getAll({ search: filters.actor, limit: 1 })
+                if (actorData?.[0]?.id) {
+                  query = query.eq('threat_actor_id', actorData[0].id)
+                }
+              }
+              if (filters.sectors?.length) {
+                query = query.in('victim_sector', filters.sectors)
+              }
+
+              const { data } = await query.order('discovered_date', { ascending: false })
+              return { type: 'incidents', data: data || [] }
+            })().catch(() => ({ type: 'incidents', data: [] }))
+          )
+        }
+
+        const searchResults = await Promise.all(searchPromises)
+
+        const newResults = {
+          actors: [],
+          incidents: [],
+          vulnerabilities: [],
+          iocs: [],
+        }
+
+        searchResults.forEach(({ type, data }) => {
+          newResults[type] = data
+        })
+
+        setResults(newResults)
+        setSelectedIndex(0)
+        setLoading(false)
+        return
+      }
+
       // If it's a specific IOC, use quick lookup for enriched results
       if (isSpecificIOC) {
+        setNlMode(false)
+        setNlParsedQuery(null)
         const lookupResult = await iocs.quickLookup(searchQuery)
         lookupResult.searchValue = searchQuery
         setIocLookupData(lookupResult)
@@ -130,6 +278,8 @@ export function SearchModal({ isOpen, onClose }) {
       // Regular search mode
       setIocLookupMode(false)
       setIocLookupData(null)
+      setNlMode(false)
+      setNlParsedQuery(null)
 
       const searchPromises = []
 
@@ -360,7 +510,94 @@ export function SearchModal({ isOpen, onClose }) {
               )}
               <div className="text-xs text-gray-500 mt-4">
                 Type to search across all threat data. Auto-detects IPs, CVEs, hashes, and domains.
+                <br />
+                <span className="text-cyber-accent">Try natural language:</span> "show escalating actors" or "critical CVEs with exploits"
               </div>
+            </div>
+          ) : nlMode && nlParsedQuery ? (
+            // Natural Language Mode - show interpreted query
+            <div className="p-4">
+              <div className="text-xs text-purple-400 mb-3 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                Natural Language Search
+                {nlParsedQuery.aiParsed && (
+                  <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded text-[10px]">AI</span>
+                )}
+              </div>
+              {/* Show interpreted filters */}
+              <div className="text-xs text-gray-400 mb-3 bg-gray-800/50 rounded p-2">
+                <span className="text-gray-500">Interpreted as:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {nlParsedQuery.type && (
+                    <span className="px-1.5 py-0.5 bg-gray-700 rounded">{nlParsedQuery.type}</span>
+                  )}
+                  {nlParsedQuery.trendStatus && (
+                    <span className="px-1.5 py-0.5 bg-red-500/20 text-red-300 rounded">{nlParsedQuery.trendStatus}</span>
+                  )}
+                  {nlParsedQuery.severity && (
+                    <span className="px-1.5 py-0.5 bg-orange-500/20 text-orange-300 rounded">{nlParsedQuery.severity}</span>
+                  )}
+                  {nlParsedQuery.sectors?.map((s, i) => (
+                    <span key={i} className="px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded">{s}</span>
+                  ))}
+                  {nlParsedQuery.actor && (
+                    <span className="px-1.5 py-0.5 bg-green-500/20 text-green-300 rounded">{nlParsedQuery.actor}</span>
+                  )}
+                  {nlParsedQuery.isKev && (
+                    <span className="px-1.5 py-0.5 bg-red-500/20 text-red-300 rounded">KEV</span>
+                  )}
+                  {nlParsedQuery.hasExploit && (
+                    <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-300 rounded">Has Exploit</span>
+                  )}
+                </div>
+              </div>
+              {/* Results */}
+              {allResults.length === 0 && !loading ? (
+                <div className="text-center text-gray-400 py-4">
+                  No results found for this query
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {allResults.map((item, index) => (
+                    <button
+                      key={`${item._type}-${item.id || item.cve_id || item.value}`}
+                      onClick={() => handleSelect(item)}
+                      className={clsx(
+                        'w-full flex items-center gap-3 px-3 py-2 rounded text-left transition-colors',
+                        index === selectedIndex
+                          ? 'bg-cyber-accent/20 text-white'
+                          : 'text-gray-300 hover:bg-gray-800'
+                      )}
+                    >
+                      <span className="text-lg">
+                        {item._type === 'actor' && '👥'}
+                        {item._type === 'vulnerability' && '🛡️'}
+                        {item._type === 'ioc' && '📋'}
+                        {item._type === 'incident' && '⚠️'}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">
+                          {item._type === 'actor' && item.name}
+                          {item._type === 'vulnerability' && item.cve_id}
+                          {item._type === 'ioc' && item.value}
+                          {item._type === 'incident' && (item.victim_name || 'Unknown Victim')}
+                        </div>
+                        <div className="text-xs text-gray-500 truncate">
+                          {item._type === 'actor' && (item.trend_status || item.actor_type || 'Threat Actor')}
+                          {item._type === 'vulnerability' && `CVSS ${item.cvss_score} • ${item.description?.slice(0, 40)}...`}
+                          {item._type === 'ioc' && `${item.type} • ${item.source || 'Unknown source'}`}
+                          {item._type === 'incident' && `${item.threat_actor?.name || 'Unknown'} • ${item.victim_sector || 'Unknown sector'}`}
+                        </div>
+                      </div>
+                      <span className="text-xs px-2 py-0.5 rounded bg-gray-800 text-gray-400">
+                        {item._type}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : iocLookupMode && iocLookupData ? (
             // IOC Quick Lookup Mode - show enriched results
@@ -447,8 +684,8 @@ export function SearchModal({ isOpen, onClose }) {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-2 border-t border-gray-800 text-xs text-gray-500">
+        {/* Footer - hidden on mobile since keyboard shortcuts don't apply to touch */}
+        <div className="hidden sm:flex items-center justify-between px-4 py-2 border-t border-gray-800 text-xs text-gray-500">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-700 rounded">↑↓</kbd>

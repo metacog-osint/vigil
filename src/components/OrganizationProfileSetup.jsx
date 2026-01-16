@@ -1,35 +1,7 @@
 // Organization Profile Setup - Wizard for collecting org profile data
 import { useState } from 'react'
 import { clsx } from 'clsx'
-
-const SECTORS = [
-  'Healthcare',
-  'Financial Services',
-  'Government',
-  'Technology',
-  'Manufacturing',
-  'Energy',
-  'Education',
-  'Retail',
-  'Transportation',
-  'Telecommunications',
-  'Defense',
-  'Legal',
-  'Media & Entertainment',
-  'Real Estate',
-  'Hospitality',
-  'Non-Profit',
-  'Other',
-]
-
-const REGIONS = [
-  { value: 'north_america', label: 'North America' },
-  { value: 'europe', label: 'Europe' },
-  { value: 'asia_pacific', label: 'Asia Pacific' },
-  { value: 'middle_east', label: 'Middle East' },
-  { value: 'latin_america', label: 'Latin America' },
-  { value: 'africa', label: 'Africa' },
-]
+import { SECTORS_TITLE_CASE as SECTORS, REGIONS } from '../lib/constants'
 
 const COUNTRIES = [
   'United States', 'United Kingdom', 'Canada', 'Germany', 'France',

@@ -2693,4 +2693,371 @@ export const threatHunts = {
   },
 }
 
+// ============================================
+// TEAMS & COLLABORATION
+// ============================================
+export const teams = {
+  // Get user's teams
+  async getUserTeams(userId) {
+    const { data, error } = await supabase
+      .from('team_members')
+      .select(`
+        team_id,
+        role,
+        joined_at,
+        teams (
+          id,
+          name,
+          slug,
+          description,
+          owner_id,
+          settings,
+          created_at
+        )
+      `)
+      .eq('user_id', userId)
+      .order('joined_at', { ascending: false })
+
+    if (error) return { data: null, error }
+    return { data: data?.map(m => ({ ...m.teams, role: m.role, joined_at: m.joined_at })), error: null }
+  },
+
+  // Get team by ID
+  async getTeam(teamId) {
+    return supabase
+      .from('teams')
+      .select('*')
+      .eq('id', teamId)
+      .single()
+  },
+
+  // Create a new team
+  async createTeam(userId, name, description = '') {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
+    // Create team
+    const { data: team, error: teamError } = await supabase
+      .from('teams')
+      .insert({
+        name,
+        slug,
+        description,
+        owner_id: userId,
+      })
+      .select()
+      .single()
+
+    if (teamError) return { data: null, error: teamError }
+
+    // Add owner as member
+    const { error: memberError } = await supabase
+      .from('team_members')
+      .insert({
+        team_id: team.id,
+        user_id: userId,
+        email: '', // Will be updated from Firebase
+        role: 'owner',
+        joined_at: new Date().toISOString(),
+      })
+
+    if (memberError) return { data: null, error: memberError }
+
+    return { data: team, error: null }
+  },
+
+  // Update team
+  async updateTeam(teamId, updates) {
+    return supabase
+      .from('teams')
+      .update(updates)
+      .eq('id', teamId)
+      .select()
+      .single()
+  },
+
+  // Delete team
+  async deleteTeam(teamId) {
+    return supabase
+      .from('teams')
+      .delete()
+      .eq('id', teamId)
+  },
+
+  // Get team members
+  async getMembers(teamId) {
+    return supabase
+      .from('team_members')
+      .select('*')
+      .eq('team_id', teamId)
+      .order('role', { ascending: true })
+      .order('joined_at', { ascending: true })
+  },
+
+  // Add team member
+  async addMember(teamId, email, role = 'viewer', invitedBy) {
+    return supabase
+      .from('team_members')
+      .insert({
+        team_id: teamId,
+        user_id: '', // Will be set when user accepts
+        email,
+        role,
+        invited_by: invitedBy,
+      })
+      .select()
+      .single()
+  },
+
+  // Update member role
+  async updateMemberRole(teamId, userId, role) {
+    return supabase
+      .from('team_members')
+      .update({ role })
+      .eq('team_id', teamId)
+      .eq('user_id', userId)
+      .select()
+      .single()
+  },
+
+  // Remove member
+  async removeMember(teamId, userId) {
+    return supabase
+      .from('team_members')
+      .delete()
+      .eq('team_id', teamId)
+      .eq('user_id', userId)
+  },
+
+  // Create invitation
+  async createInvitation(teamId, email, role, invitedBy) {
+    const token = crypto.randomUUID() + crypto.randomUUID()
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + 7) // 7 day expiry
+
+    return supabase
+      .from('team_invitations')
+      .upsert({
+        team_id: teamId,
+        email,
+        role,
+        token,
+        invited_by: invitedBy,
+        expires_at: expiresAt.toISOString(),
+      }, { onConflict: 'team_id,email' })
+      .select()
+      .single()
+  },
+
+  // Accept invitation
+  async acceptInvitation(token, userId, displayName) {
+    // Get invitation
+    const { data: invite, error: inviteError } = await supabase
+      .from('team_invitations')
+      .select('*')
+      .eq('token', token)
+      .is('accepted_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .single()
+
+    if (inviteError || !invite) {
+      return { data: null, error: { message: 'Invalid or expired invitation' } }
+    }
+
+    // Add member
+    const { error: memberError } = await supabase
+      .from('team_members')
+      .insert({
+        team_id: invite.team_id,
+        user_id: userId,
+        email: invite.email,
+        display_name: displayName,
+        role: invite.role,
+        invited_by: invite.invited_by,
+        joined_at: new Date().toISOString(),
+      })
+
+    if (memberError) return { data: null, error: memberError }
+
+    // Mark invitation as accepted
+    await supabase
+      .from('team_invitations')
+      .update({ accepted_at: new Date().toISOString() })
+      .eq('id', invite.id)
+
+    return { data: invite, error: null }
+  },
+
+  // Get pending invitations for a team
+  async getPendingInvitations(teamId) {
+    return supabase
+      .from('team_invitations')
+      .select('*')
+      .eq('team_id', teamId)
+      .is('accepted_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+  },
+
+  // Cancel invitation
+  async cancelInvitation(invitationId) {
+    return supabase
+      .from('team_invitations')
+      .delete()
+      .eq('id', invitationId)
+  },
+
+  // Log activity
+  async logActivity(teamId, userId, action, entityType = null, entityId = null, details = {}) {
+    return supabase
+      .from('team_activity_log')
+      .insert({
+        team_id: teamId,
+        user_id: userId,
+        action,
+        entity_type: entityType,
+        entity_id: entityId,
+        details,
+      })
+  },
+
+  // Get activity log
+  async getActivityLog(teamId, limit = 50) {
+    return supabase
+      .from('team_activity_log')
+      .select('*')
+      .eq('team_id', teamId)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+  },
+}
+
+// ============================================
+// SHARED WATCHLISTS
+// ============================================
+export const sharedWatchlists = {
+  // Get team's watchlists
+  async getTeamWatchlists(teamId) {
+    return supabase
+      .from('shared_watchlists')
+      .select(`
+        *,
+        items:shared_watchlist_items(count)
+      `)
+      .eq('team_id', teamId)
+      .order('created_at', { ascending: false })
+  },
+
+  // Get watchlist by ID
+  async getWatchlist(watchlistId) {
+    return supabase
+      .from('shared_watchlists')
+      .select('*')
+      .eq('id', watchlistId)
+      .single()
+  },
+
+  // Create watchlist
+  async createWatchlist(teamId, name, description, createdBy) {
+    return supabase
+      .from('shared_watchlists')
+      .insert({
+        team_id: teamId,
+        name,
+        description,
+        created_by: createdBy,
+      })
+      .select()
+      .single()
+  },
+
+  // Update watchlist
+  async updateWatchlist(watchlistId, updates) {
+    return supabase
+      .from('shared_watchlists')
+      .update(updates)
+      .eq('id', watchlistId)
+      .select()
+      .single()
+  },
+
+  // Delete watchlist
+  async deleteWatchlist(watchlistId) {
+    return supabase
+      .from('shared_watchlists')
+      .delete()
+      .eq('id', watchlistId)
+  },
+
+  // Get watchlist items with entity details
+  async getWatchlistItems(watchlistId) {
+    const { data: items, error } = await supabase
+      .from('shared_watchlist_items')
+      .select('*')
+      .eq('watchlist_id', watchlistId)
+      .order('created_at', { ascending: false })
+
+    if (error || !items) return { data: null, error }
+
+    // Group by entity type and fetch details
+    const enrichedItems = await Promise.all(
+      items.map(async (item) => {
+        let entity = null
+        const table = {
+          actor: 'threat_actors',
+          incident: 'incidents',
+          vulnerability: 'vulnerabilities',
+          ioc: 'iocs',
+          technique: 'attack_techniques',
+        }[item.entity_type]
+
+        if (table) {
+          const { data } = await supabase
+            .from(table)
+            .select('*')
+            .eq('id', item.entity_id)
+            .single()
+          entity = data
+        }
+
+        return { ...item, entity }
+      })
+    )
+
+    return { data: enrichedItems, error: null }
+  },
+
+  // Add item to watchlist
+  async addItem(watchlistId, entityType, entityId, addedBy, notes = null) {
+    return supabase
+      .from('shared_watchlist_items')
+      .insert({
+        watchlist_id: watchlistId,
+        entity_type: entityType,
+        entity_id: entityId,
+        added_by: addedBy,
+        notes,
+      })
+      .select()
+      .single()
+  },
+
+  // Remove item from watchlist
+  async removeItem(itemId) {
+    return supabase
+      .from('shared_watchlist_items')
+      .delete()
+      .eq('id', itemId)
+  },
+
+  // Update item notes
+  async updateItemNotes(itemId, notes) {
+    return supabase
+      .from('shared_watchlist_items')
+      .update({ notes })
+      .eq('id', itemId)
+      .select()
+      .single()
+  },
+}
+
 export default supabase

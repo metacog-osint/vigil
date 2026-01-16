@@ -9,7 +9,10 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Disable sourcemaps in production for smaller bundles
+    sourcemap: process.env.NODE_ENV !== 'production',
+    // Use esbuild for faster minification (default)
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -21,8 +24,8 @@ export default defineConfig({
         },
       },
     },
-    // Increase chunk size warning limit since we're using visualizations
-    chunkSizeWarningLimit: 600,
+    // Lower chunk size warning to catch regressions
+    chunkSizeWarningLimit: 500,
   },
   // Optimize dependencies
   optimizeDeps: {

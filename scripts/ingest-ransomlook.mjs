@@ -4,7 +4,7 @@
 // Run: node scripts/ingest-ransomlook.mjs
 
 import { createClient } from '@supabase/supabase-js'
-import https from 'https'
+import { fetchJSON } from './lib/http.mjs'
 import { classifySector } from './lib/sector-classifier.mjs'
 
 // Load env from parent directory
@@ -45,28 +45,7 @@ function parseDate(dateStr) {
   }
 }
 
-function fetchJSON(url) {
-  return new Promise((resolve, reject) => {
-    const options = {
-      headers: {
-        'User-Agent': 'Vigil-CTI-Dashboard/1.0',
-        'Accept': 'application/json',
-      }
-    }
-
-    https.get(url, options, (res) => {
-      let data = ''
-      res.on('data', chunk => data += chunk)
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(data))
-        } catch (e) {
-          reject(new Error(`Failed to parse JSON from ${url}: ${e.message}`))
-        }
-      })
-    }).on('error', reject)
-  })
-}
+// Using shared HTTP module - see ./lib/http.mjs
 
 async function ingestRansomLook() {
   console.log('Fetching RansomLook data...')
