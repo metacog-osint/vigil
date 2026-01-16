@@ -1,9 +1,9 @@
-// ANY.RUN Public Sandbox Reports Ingestion
-// Fetches public malware analysis reports from ANY.RUN
+// ANY.RUN Sandbox Reports Ingestion
+// Fetches malware analysis reports from ANY.RUN
 // Run: node scripts/ingest-anyrun.mjs
 //
 // ANY.RUN provides interactive malware sandbox analysis
-// Public reports are available via API with free tier
+// NOTE: API requires paid subscription (Hunter or Enterprise plan)
 // API docs: https://any.run/api-documentation/
 
 import { createClient } from '@supabase/supabase-js'
@@ -18,8 +18,10 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 if (!anyrunApiKey) {
-  console.error('Missing ANYRUN_API_KEY. Get a key at https://any.run/api-documentation/')
-  process.exit(1)
+  console.log('ANYRUN_API_KEY not set - skipping ANY.RUN ingestion')
+  console.log('Note: ANY.RUN API requires a paid subscription (Hunter or Enterprise)')
+  console.log('See: https://any.run/plans/')
+  process.exit(0) // Exit gracefully, not an error
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey)
