@@ -43,8 +43,8 @@ function fetch(url) {
   })
 }
 
-// Fetch recent threats from Pulsedive
-async function fetchRecentThreats(type = 'indicator', limit = 100, page = 0) {
+// Fetch recent threats from Pulsedive (free tier limited to 50 results per query)
+async function fetchRecentThreats(type = 'indicator', limit = 50, page = 0) {
   const url = `${PULSEDIVE_API_BASE}/explore.php?q=risk%3Ahigh+OR+risk%3Acritical&type=${type}&limit=${limit}&page=${page}&key=${pulsediveApiKey}`
   return await fetch(url)
 }
@@ -61,14 +61,33 @@ async function fetchFeeds() {
   return await fetch(url)
 }
 
-// Fetch indicators from a specific feed
-async function fetchFeedIndicators(feedId, limit = 100) {
+// Fetch indicators from a specific feed (free tier max 50)
+async function fetchFeedIndicators(feedId, limit = 50) {
   const url = `${PULSEDIVE_API_BASE}/explore.php?q=feed%3D${feedId}&type=indicator&limit=${limit}&key=${pulsediveApiKey}`
   return await fetch(url)
 }
 
+// Helper function with retry logic for rate limits
+async function fetchWithRetry(url, maxRetries = 3) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fetch(url)
+    } catch (e) {
+      if (e.message.includes('429') && attempt < maxRetries - 1) {
+        // Exponential backoff: 3s, 6s, 12s
+        const delay = 3000 * Math.pow(2, attempt)
+        console.log(`    Rate limited, waiting ${delay/1000}s...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+      } else {
+        throw e
+      }
+    }
+  }
+}
+
 async function ingestPulsedive() {
   console.log('Starting Pulsedive ingestion...')
+  console.log('Free tier: 50 results per query, 1 req/sec rate limit')
   console.log('')
 
   let added = 0
@@ -76,102 +95,116 @@ async function ingestPulsedive() {
   let failed = 0
   let processed = 0
 
-  // Fetch high and critical risk indicators
-  const indicatorTypes = ['ip', 'domain', 'url', 'hash']
+  // Pulsedive valid types: ip, domain, url (hash is called 'artifact' or use 'sha256', 'md5')
+  const indicatorTypes = ['ip', 'domain', 'url']
+  const riskLevels = ['critical', 'high']  // Focus on critical/high only to reduce API calls
+  const LIMIT = 50 // Free tier max
 
+  // Strategy: Fetch critical and high risk indicators with retry logic
   for (const type of indicatorTypes) {
     console.log(`Fetching ${type} indicators...`)
+    let typeCount = 0
 
-    try {
-      // Fetch critical risk indicators
-      const criticalResponse = await fetch(
-        `${PULSEDIVE_API_BASE}/explore.php?q=risk%3Acritical+type%3A${type}&limit=100&key=${pulsediveApiKey}`
-      )
+    for (const risk of riskLevels) {
+      try {
+        // Wait before each request to respect rate limit
+        await new Promise(resolve => setTimeout(resolve, 1500))
 
-      // Fetch high risk indicators
-      const highResponse = await fetch(
-        `${PULSEDIVE_API_BASE}/explore.php?q=risk%3Ahigh+type%3A${type}&limit=100&key=${pulsediveApiKey}`
-      )
+        const response = await fetchWithRetry(
+          `${PULSEDIVE_API_BASE}/explore.php?q=risk%3D${risk}+type%3D${type}&limit=${LIMIT}&key=${pulsediveApiKey}`
+        )
 
-      const indicators = [
-        ...(criticalResponse.results || []),
-        ...(highResponse.results || [])
-      ]
+        const indicators = response.results || []
 
-      console.log(`  Found ${indicators.length} ${type} indicators`)
+        if (indicators.length === 0) {
+          console.log(`  ${risk} risk: no results`)
+          continue
+        }
 
-      for (const indicator of indicators) {
-        try {
-          processed++
+        console.log(`  ${risk} risk: ${indicators.length} results`)
+        typeCount += indicators.length
 
-          // Map Pulsedive indicator to our IOC schema
-          const record = {
-            value: indicator.indicator,
-            type: mapIndicatorType(indicator.type),
-            source: 'pulsedive',
-            confidence: mapRiskToConfidence(indicator.risk),
-            severity: indicator.risk || 'medium',
-            first_seen: indicator.stamp_added ? new Date(indicator.stamp_added).toISOString() : null,
-            last_seen: indicator.stamp_updated ? new Date(indicator.stamp_updated).toISOString() : null,
-            tags: indicator.threats || [],
-            metadata: {
-              pulsedive_id: indicator.iid,
-              risk: indicator.risk,
-              risk_factors: indicator.riskfactors || [],
-              feeds: indicator.feeds || [],
-              threats: indicator.threats || [],
-              summary: indicator.summary || null
-            },
-            updated_at: new Date().toISOString()
-          }
+        for (const indicator of indicators) {
+          try {
+            processed++
 
-          const { error } = await supabase
-            .from('iocs')
-            .upsert(record, {
-              onConflict: 'value,type',
-              ignoreDuplicates: false
-            })
-
-          if (error) {
-            failed++
-            if (failed <= 5) {
-              console.error(`    Error upserting ${indicator.indicator}:`, error.message)
+            const record = {
+              value: indicator.indicator,
+              type: mapIndicatorType(indicator.type),
+              source: 'pulsedive',
+              confidence: mapRiskToConfidence(indicator.risk),
+              severity: indicator.risk || 'medium',
+              first_seen: indicator.stamp_added ? new Date(indicator.stamp_added).toISOString() : null,
+              last_seen: indicator.stamp_updated ? new Date(indicator.stamp_updated).toISOString() : null,
+              tags: indicator.threats || [],
+              metadata: {
+                pulsedive_id: indicator.iid,
+                risk: indicator.risk,
+                risk_factors: indicator.riskfactors || [],
+                feeds: indicator.feeds || [],
+                threats: indicator.threats || [],
+                summary: indicator.summary || null
+              },
+              updated_at: new Date().toISOString()
             }
-          } else {
-            updated++
-          }
 
-        } catch (e) {
-          failed++
+            const { error } = await supabase
+              .from('iocs')
+              .upsert(record, {
+                onConflict: 'value,type',
+                ignoreDuplicates: false
+              })
+
+            if (error) {
+              failed++
+              if (failed <= 5) {
+                console.error(`    Error upserting ${indicator.indicator}:`, error.message)
+              }
+            } else {
+              updated++
+            }
+
+          } catch (e) {
+            failed++
+          }
+        }
+
+      } catch (e) {
+        if (e.message.includes('429')) {
+          console.log(`  ${risk} risk: rate limited after retries`)
+        } else {
+          console.error(`  Error fetching ${risk} ${type}:`, e.message)
         }
       }
-
-      // Rate limiting - Pulsedive free tier has limits
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-    } catch (e) {
-      console.error(`  Error fetching ${type} indicators:`, e.message)
     }
+
+    console.log(`  Total ${type}: ${typeCount} indicators`)
   }
 
-  // Also fetch from curated threat feeds
+  // Skip feed queries - Pulsedive explore API doesn't support type=feed
+  // Feeds would need a different API endpoint
   console.log('')
-  console.log('Fetching curated threat feeds...')
+  console.log('Skipping curated feeds (requires different API endpoint)')
 
+  /*
   try {
-    const feedsResponse = await fetchFeeds()
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    const feedsResponse = await fetchWithRetry(`${PULSEDIVE_API_BASE}/explore.php?q=type%3Dfeed&limit=50&key=${pulsediveApiKey}`)
     const feeds = feedsResponse.results || []
 
     console.log(`  Found ${feeds.length} feeds`)
 
-    // Process top feeds
-    const topFeeds = feeds.slice(0, 10)
+    // Process top 5 feeds only to reduce API calls
+    const topFeeds = feeds.slice(0, 5)
 
     for (const feed of topFeeds) {
       try {
+        await new Promise(resolve => setTimeout(resolve, 1500))
         console.log(`  Processing feed: ${feed.indicator}`)
 
-        const feedIndicators = await fetchFeedIndicators(feed.iid, 50)
+        const feedIndicators = await fetchWithRetry(
+          `${PULSEDIVE_API_BASE}/explore.php?q=feed%3D${feed.iid}&limit=50&key=${pulsediveApiKey}`
+        )
         const indicators = feedIndicators.results || []
 
         for (const indicator of indicators) {
@@ -210,9 +243,6 @@ async function ingestPulsedive() {
           }
         }
 
-        // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1000))
-
       } catch (e) {
         console.error(`    Error processing feed ${feed.indicator}:`, e.message)
       }
@@ -221,6 +251,7 @@ async function ingestPulsedive() {
   } catch (e) {
     console.error('  Error fetching feeds:', e.message)
   }
+  */
 
   console.log('')
   console.log('Pulsedive Ingestion Complete:')

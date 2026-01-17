@@ -3,13 +3,22 @@
 // Run: node scripts/ingest-censys.mjs
 //
 // Censys provides internet-wide scanning data for certificates, hosts, and services
-// API docs: https://search.censys.io/api
+// API docs: https://docs.censys.com/
+//
+// Note: This script supports both:
+// - Legacy API (v2): Requires API ID + Secret (Basic Auth)
+// - Platform API (v3): Requires Personal Access Token (Bearer Auth)
+// Your token format determines which API is used.
 
 import { createClient } from '@supabase/supabase-js'
 import https from 'https'
 import { supabaseUrl, supabaseKey, censysApiKey } from './env.mjs'
 
-const CENSYS_API_BASE = 'https://search.censys.io/api/v2'
+// Detect token type and use appropriate API
+const isPAT = censysApiKey?.startsWith('censys_')
+const CENSYS_API_BASE = isPAT
+  ? 'https://app.censys.io/api'  // Platform API for PATs
+  : 'https://search.censys.io/api/v2'  // Legacy API for ID:Secret
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase credentials. Check your .env file.')
@@ -26,14 +35,21 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 function fetch(url, options = {}) {
   return new Promise((resolve, reject) => {
     const urlObj = new URL(url)
+
+    // PAT uses Bearer auth, legacy uses Basic auth (ID:Secret base64)
+    const authHeader = isPAT
+      ? `Bearer ${censysApiKey}`
+      : `Basic ${Buffer.from(censysApiKey).toString('base64')}`
+
     const reqOptions = {
       hostname: urlObj.hostname,
       path: urlObj.pathname + urlObj.search,
       method: options.method || 'GET',
       headers: {
-        'Authorization': `Bearer ${censysApiKey}`,
+        'Authorization': authHeader,
         'Accept': 'application/json',
         'Content-Type': 'application/json',
+        'User-Agent': 'Vigil-ThreatIntel/1.0',
         ...options.headers
       }
     }
