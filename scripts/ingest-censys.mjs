@@ -1,14 +1,13 @@
-// Censys Certificate & Service Intelligence Ingestion
-// Fetches certificate transparency and service data from Censys
+// Censys IP Enrichment Script
+// Enriches existing IOC IPs with Censys host data (services, ASN, location)
 // Run: node scripts/ingest-censys.mjs
 //
-// Censys provides internet-wide scanning data for certificates, hosts, and services
-// API docs: https://docs.censys.com/
+// Censys Platform free tier only supports individual host lookups.
+// This script enriches IPs already in our database from other sources
+// (Pulsedive, ThreatFox, Feodo, etc.) with Censys host intelligence.
 //
-// Note: This script supports both:
-// - Legacy API (v2): Requires API ID + Secret (Basic Auth)
-// - Platform API (v3): Requires Personal Access Token (Bearer Auth)
-// Your token format determines which API is used.
+// For search functionality, upgrade to Censys Starter or Enterprise.
+// API docs: https://docs.censys.com/
 
 import { createClient } from '@supabase/supabase-js'
 import https from 'https'
@@ -161,228 +160,145 @@ async function getCertificateDetails(fingerprint) {
 }
 
 async function ingestCensys() {
-  console.log('Starting Censys ingestion...')
+  console.log('Starting Censys enrichment...')
   console.log('')
-
-  // Check if PAT user has search access (will fail on free tier)
-  if (isPAT) {
-    console.log('⚠️  Platform API v3 search requires paid subscription.')
-    console.log('   Free tier PATs can only access data via the web UI.')
-    console.log('')
-    console.log('   Options:')
-    console.log('   1. Get Legacy API credentials (ID + Secret) from:')
-    console.log('      https://search.censys.io/account/api')
-    console.log('      Then set: CENSYS_API_KEY=your_api_id:your_api_secret')
-    console.log('')
-    console.log('   2. Upgrade to Censys paid plan for API search access')
-    console.log('')
-    console.log('   Attempting search anyway (will fail on free tier)...')
-    console.log('')
-  }
+  console.log('Note: Censys Platform free tier only supports individual IP lookups.')
+  console.log('      This script enriches existing IPs from other threat feeds.')
+  console.log('      (Search requires Starter/Enterprise subscription)')
+  console.log('')
 
   let added = 0
   let updated = 0
   let failed = 0
   let processed = 0
+  let enriched = 0
 
-  // Define searches for threat-related infrastructure
-  // Platform API v3 uses slightly different query syntax
-  const hostSearches = isPAT ? [
-    // Platform API v3 queries
-    { name: 'Cobalt Strike C2', query: 'host.services.software.product: "Cobalt Strike"' },
-    { name: 'Metasploit', query: 'host.services.software.product: "Metasploit"' },
-    { name: 'Brute Ratel C4', query: 'host.services.software.product: "Brute Ratel"' },
-    { name: 'Open RDP', query: 'host.services.port: 3389' },
-    { name: 'Exposed MongoDB', query: 'host.services.port: 27017' },
-    { name: 'Exposed Redis', query: 'host.services.port: 6379' }
-  ] : [
-    // Legacy API v2 queries
-    { name: 'Cobalt Strike C2', query: 'services.software.product: "Cobalt Strike"' },
-    { name: 'Metasploit', query: 'services.software.product: "Metasploit"' },
-    { name: 'Brute Ratel C4', query: 'services.software.product: "Brute Ratel"' },
-    { name: 'Sliver C2', query: 'services.http.response.body: "sliver"' },
-    { name: 'Open RDP', query: 'services.port: 3389 and services.service_name: RDP' },
-    { name: 'Exposed Databases', query: 'services.port: 27017 or services.port: 6379 or services.port: 9200' }
-  ]
+  // Get IPs from our database that could benefit from Censys enrichment
+  // Focus on high-risk IPs without Censys metadata
+  console.log('Fetching IPs to enrich from database...')
 
-  // Search for malicious infrastructure
-  for (const search of hostSearches) {
-    console.log(`Searching for: ${search.name}...`)
+  const { data: ipsToEnrich, error: fetchError } = await supabase
+    .from('iocs')
+    .select('id, value, metadata, source')
+    .eq('type', 'ip')
+    .or('metadata->>censys_enriched.is.null,metadata->>censys_enriched.eq.false')
+    .in('source', ['pulsedive', 'threatfox', 'feodo', 'tor-exits', 'abusech'])
+    .order('created_at', { ascending: false })
+    .limit(50) // Limit to conserve API quota (free tier has 1 concurrent action)
 
-    try {
-      let cursor = null
-      let pageCount = 0
-      const maxPages = 5 // Limit pages per search to conserve API quota
-
-      do {
-        const response = await searchHosts(search.query, cursor, 100)
-
-        // Handle different response formats between v2 and v3
-        let hosts, nextCursor
-        if (isPAT) {
-          // Platform API v3 response format
-          hosts = response.hits || response.result?.hits || []
-          nextCursor = response.cursor || response.links?.next || null
-        } else {
-          // Legacy API v2 response format
-          hosts = response.result?.hits || []
-          nextCursor = response.result?.links?.next || null
-        }
-        cursor = nextCursor
-        pageCount++
-
-        console.log(`  Page ${pageCount}: Found ${hosts.length} hosts`)
-
-        for (const host of hosts) {
-          processed++
-
-          try {
-            // Store as IOC (IP address)
-            const iocRecord = {
-              value: host.ip,
-              type: 'ip',
-              source: 'censys',
-              confidence: 70,
-              severity: determineSeverity(search.name),
-              tags: [search.name.toLowerCase().replace(/\s+/g, '-')],
-              first_seen: host.last_updated_at ? new Date(host.last_updated_at).toISOString() : null,
-              last_seen: new Date().toISOString(),
-              metadata: {
-                censys_search: search.name,
-                autonomous_system: host.autonomous_system || null,
-                location: host.location || null,
-                services: (host.services || []).map(s => ({
-                  port: s.port,
-                  service_name: s.service_name,
-                  software: s.software || []
-                })),
-                operating_system: host.operating_system || null
-              },
-              updated_at: new Date().toISOString()
-            }
-
-            const { error } = await supabase
-              .from('iocs')
-              .upsert(iocRecord, {
-                onConflict: 'value,type',
-                ignoreDuplicates: false
-              })
-
-            if (error) {
-              failed++
-              if (failed <= 5) {
-                console.error(`    Error upserting ${host.ip}:`, error.message)
-              }
-            } else {
-              updated++
-            }
-
-          } catch (e) {
-            failed++
-          }
-        }
-
-        // Rate limiting - Censys has quota limits
-        await new Promise(resolve => setTimeout(resolve, 500))
-
-      } while (cursor && pageCount < maxPages)
-
-    } catch (e) {
-      console.error(`  Error searching ${search.name}:`, e.message)
-    }
+  if (fetchError) {
+    console.error('Error fetching IPs:', fetchError.message)
+    return { processed: 0, added: 0, updated: 0, failed: 0 }
   }
 
-  // Search for suspicious certificates (optional, if certificates table exists)
+  console.log(`Found ${ipsToEnrich?.length || 0} IPs to enrich`)
   console.log('')
-  console.log('Searching for suspicious certificates...')
 
-  const certSearches = [
-    { name: 'Self-signed recent', query: 'parsed.issuer.common_name: * and parsed.validity.start: [now-7d TO now]' },
-    { name: 'Let\'s Encrypt suspicious', query: 'parsed.issuer.organization: "Let\'s Encrypt" and names: *login*' }
-  ]
+  if (!ipsToEnrich || ipsToEnrich.length === 0) {
+    console.log('No IPs need enrichment. Run other ingestion scripts first.')
+    return { processed: 0, added: 0, updated: 0, failed: 0 }
+  }
 
-  for (const search of certSearches) {
-    console.log(`  Searching: ${search.name}...`)
+  // Enrich each IP with Censys data
+  for (const ioc of ipsToEnrich) {
+    processed++
+    console.log(`[${processed}/${ipsToEnrich.length}] Enriching ${ioc.value}...`)
 
     try {
-      const response = await searchCertificates(search.query, null, 50)
-      const certs = response.result?.hits || []
+      const hostData = await getHostDetails(ioc.value)
 
-      console.log(`    Found ${certs.length} certificates`)
+      if (hostData && (hostData.result || hostData.ip)) {
+        const host = hostData.result || hostData
 
-      for (const cert of certs) {
-        processed++
-
-        try {
-          // Store certificate data (using schema from migration 033)
-          const certRecord = {
-            fingerprint_sha256: cert.fingerprint_sha256,
-            subject_cn: cert.parsed?.subject?.common_name?.[0] || null,
-            subject_org: cert.parsed?.subject?.organization?.[0] || null,
-            subject_san: cert.names || [],
-            issuer_cn: cert.parsed?.issuer?.common_name?.[0] || null,
-            issuer_org: cert.parsed?.issuer?.organization?.[0] || null,
-            is_self_signed: cert.parsed?.issuer?.common_name?.[0] === cert.parsed?.subject?.common_name?.[0],
-            not_before: cert.parsed?.validity?.start || null,
-            not_after: cert.parsed?.validity?.end || null,
-            key_algorithm: cert.parsed?.subject_key_info?.key_algorithm?.name || null,
-            signature_algorithm: cert.parsed?.signature?.signature_algorithm?.name || null,
-            source: 'censys',
-            last_seen: new Date().toISOString(),
-            metadata: {
-              serial_number: cert.parsed?.serial_number || null,
-              search_category: search.name
-            },
-            updated_at: new Date().toISOString()
-          }
-
-          const { error } = await supabase
-            .from('certificates')
-            .upsert(certRecord, {
-              onConflict: 'fingerprint_sha256',
-              ignoreDuplicates: false
-            })
-
-          if (error) {
-            // Table might not exist, that's okay
-            if (!error.message.includes('does not exist')) {
-              failed++
-            }
-          } else {
-            updated++
-          }
-
-        } catch (e) {
-          failed++
+        // Merge Censys data into existing metadata
+        const enrichedMetadata = {
+          ...ioc.metadata,
+          censys_enriched: true,
+          censys_updated: new Date().toISOString(),
+          autonomous_system: host.autonomous_system || null,
+          location: host.location || null,
+          operating_system: host.operating_system || null,
+          services: (host.services || []).slice(0, 10).map(s => ({
+            port: s.port,
+            service_name: s.service_name,
+            software: s.software?.map(sw => sw.product)?.slice(0, 5) || []
+          })),
+          last_updated_at: host.last_updated_at || null
         }
+
+        const { error: updateError } = await supabase
+          .from('iocs')
+          .update({
+            metadata: enrichedMetadata,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', ioc.id)
+
+        if (updateError) {
+          failed++
+          console.log(`  ❌ Error: ${updateError.message}`)
+        } else {
+          enriched++
+          updated++
+          const services = host.services?.length || 0
+          const asn = host.autonomous_system?.asn || 'unknown'
+          console.log(`  ✓ Enriched: ${services} services, ASN ${asn}`)
+        }
+      } else {
+        // No data found, mark as checked to avoid re-querying
+        await supabase
+          .from('iocs')
+          .update({
+            metadata: { ...ioc.metadata, censys_enriched: true, censys_no_data: true },
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', ioc.id)
+
+        console.log(`  - No Censys data available`)
       }
 
-      // Rate limiting
-      await new Promise(resolve => setTimeout(resolve, 500))
-
     } catch (e) {
-      console.error(`    Error searching certificates:`, e.message)
+      if (e.message.includes('404')) {
+        // IP not in Censys, mark as checked
+        await supabase
+          .from('iocs')
+          .update({
+            metadata: { ...ioc.metadata, censys_enriched: true, censys_no_data: true },
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', ioc.id)
+        console.log(`  - Not found in Censys`)
+      } else if (e.message.includes('429')) {
+        console.log(`  ⚠ Rate limited, stopping...`)
+        break
+      } else {
+        failed++
+        console.log(`  ❌ Error: ${e.message}`)
+      }
     }
+
+    // Rate limiting - free tier has 1 concurrent action limit
+    await new Promise(resolve => setTimeout(resolve, 1000))
   }
 
   console.log('')
-  console.log('Censys Ingestion Complete:')
+  console.log('Censys Enrichment Complete:')
   console.log(`  Processed: ${processed}`)
-  console.log(`  Added/Updated: ${updated}`)
+  console.log(`  Enriched: ${enriched}`)
   console.log(`  Failed: ${failed}`)
 
   // Log sync
   await supabase.from('sync_log').insert({
-    source: 'censys',
-    status: failed > updated ? 'error' : 'success',
+    source: 'censys-enrichment',
+    status: failed > enriched ? 'error' : 'success',
     completed_at: new Date().toISOString(),
     records_processed: processed,
-    records_added: added,
-    records_updated: updated,
-    metadata: { failed }
+    records_added: 0,
+    records_updated: enriched,
+    metadata: { failed, enriched }
   })
 
-  return { processed, added, updated, failed }
+  return { processed, added: 0, updated: enriched, failed }
 }
 
 function determineSeverity(searchName) {
