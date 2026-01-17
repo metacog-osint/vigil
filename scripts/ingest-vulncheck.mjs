@@ -34,6 +34,7 @@ function fetch(url, options = {}) {
       headers: {
         'Authorization': `Bearer ${vulncheckApiKey}`,
         'Accept': 'application/json',
+        'User-Agent': 'Vigil-ThreatIntel/1.0',
         ...options.headers
       }
     }
