@@ -15,10 +15,23 @@ import https from 'https'
 import { supabaseUrl, supabaseKey, censysApiKey } from './env.mjs'
 
 // Detect token type and use appropriate API
+// PAT tokens (censys_xxx) = Platform API v3 (requires paid tier for search)
+// Legacy ID:Secret format (xxxx:yyyy) = Legacy API v2 (free tier supports limited searches)
 const isPAT = censysApiKey?.startsWith('censys_')
+const isLegacy = censysApiKey?.includes(':') && !isPAT
 const CENSYS_API_BASE = isPAT
-  ? 'https://app.censys.io/api'  // Platform API for PATs
+  ? 'https://api.platform.censys.io/v3/global'  // Platform API v3 for PATs
   : 'https://search.censys.io/api/v2'  // Legacy API for ID:Secret
+
+if (isPAT) {
+  console.log('Using Platform API v3 (PAT token detected)')
+  console.log('Note: Search endpoint requires paid subscription.')
+} else if (isLegacy) {
+  console.log('Using Legacy API v2 (ID:Secret credentials)')
+} else {
+  console.log('Warning: Unrecognized credential format')
+  console.log('Expected: PAT (censys_xxx) or Legacy (api_id:api_secret)')
+}
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase credentials. Check your .env file.')
@@ -81,43 +94,91 @@ function fetch(url, options = {}) {
 
 // Search for hosts with specific criteria
 async function searchHosts(query, cursor = null, perPage = 100) {
-  const url = `${CENSYS_API_BASE}/hosts/search`
-  const body = {
-    q: query,
-    per_page: perPage,
-    ...(cursor && { cursor })
+  if (isPAT) {
+    // Platform API v3 uses unified search endpoint
+    const url = `${CENSYS_API_BASE}/search/query`
+    const body = {
+      query: query,
+      page_size: Math.min(perPage, 50), // Platform API max is 50 per page
+      ...(cursor && { cursor })
+    }
+    return await fetch(url, { method: 'POST', body })
+  } else {
+    // Legacy API v2
+    const url = `${CENSYS_API_BASE}/hosts/search`
+    const body = {
+      q: query,
+      per_page: perPage,
+      ...(cursor && { cursor })
+    }
+    return await fetch(url, { method: 'POST', body })
   }
-
-  return await fetch(url, { method: 'POST', body })
 }
 
 // Search for certificates
 async function searchCertificates(query, cursor = null, perPage = 100) {
-  const url = `${CENSYS_API_BASE}/certificates/search`
-  const body = {
-    q: query,
-    per_page: perPage,
-    ...(cursor && { cursor })
+  if (isPAT) {
+    // Platform API v3 - certificates are searched via unified endpoint with type filter
+    const url = `${CENSYS_API_BASE}/search/query`
+    const body = {
+      query: `${query} and labels: certificate`,
+      page_size: Math.min(perPage, 50),
+      ...(cursor && { cursor })
+    }
+    return await fetch(url, { method: 'POST', body })
+  } else {
+    // Legacy API v2
+    const url = `${CENSYS_API_BASE}/certificates/search`
+    const body = {
+      q: query,
+      per_page: perPage,
+      ...(cursor && { cursor })
+    }
+    return await fetch(url, { method: 'POST', body })
   }
-
-  return await fetch(url, { method: 'POST', body })
 }
 
 // Get host details
 async function getHostDetails(ip) {
-  const url = `${CENSYS_API_BASE}/hosts/${ip}`
-  return await fetch(url)
+  if (isPAT) {
+    const url = `${CENSYS_API_BASE}/asset/host/${ip}`
+    return await fetch(url)
+  } else {
+    const url = `${CENSYS_API_BASE}/hosts/${ip}`
+    return await fetch(url)
+  }
 }
 
 // Get certificate details
 async function getCertificateDetails(fingerprint) {
-  const url = `${CENSYS_API_BASE}/certificates/${fingerprint}`
-  return await fetch(url)
+  if (isPAT) {
+    const url = `${CENSYS_API_BASE}/asset/certificate/${fingerprint}`
+    return await fetch(url)
+  } else {
+    const url = `${CENSYS_API_BASE}/certificates/${fingerprint}`
+    return await fetch(url)
+  }
 }
 
 async function ingestCensys() {
   console.log('Starting Censys ingestion...')
   console.log('')
+
+  // Check if PAT user has search access (will fail on free tier)
+  if (isPAT) {
+    console.log('⚠️  Platform API v3 search requires paid subscription.')
+    console.log('   Free tier PATs can only access data via the web UI.')
+    console.log('')
+    console.log('   Options:')
+    console.log('   1. Get Legacy API credentials (ID + Secret) from:')
+    console.log('      https://search.censys.io/account/api')
+    console.log('      Then set: CENSYS_API_KEY=your_api_id:your_api_secret')
+    console.log('')
+    console.log('   2. Upgrade to Censys paid plan for API search access')
+    console.log('')
+    console.log('   Attempting search anyway (will fail on free tier)...')
+    console.log('')
+  }
 
   let added = 0
   let updated = 0
@@ -125,7 +186,17 @@ async function ingestCensys() {
   let processed = 0
 
   // Define searches for threat-related infrastructure
-  const hostSearches = [
+  // Platform API v3 uses slightly different query syntax
+  const hostSearches = isPAT ? [
+    // Platform API v3 queries
+    { name: 'Cobalt Strike C2', query: 'host.services.software.product: "Cobalt Strike"' },
+    { name: 'Metasploit', query: 'host.services.software.product: "Metasploit"' },
+    { name: 'Brute Ratel C4', query: 'host.services.software.product: "Brute Ratel"' },
+    { name: 'Open RDP', query: 'host.services.port: 3389' },
+    { name: 'Exposed MongoDB', query: 'host.services.port: 27017' },
+    { name: 'Exposed Redis', query: 'host.services.port: 6379' }
+  ] : [
+    // Legacy API v2 queries
     { name: 'Cobalt Strike C2', query: 'services.software.product: "Cobalt Strike"' },
     { name: 'Metasploit', query: 'services.software.product: "Metasploit"' },
     { name: 'Brute Ratel C4', query: 'services.software.product: "Brute Ratel"' },
@@ -145,8 +216,19 @@ async function ingestCensys() {
 
       do {
         const response = await searchHosts(search.query, cursor, 100)
-        const hosts = response.result?.hits || []
-        cursor = response.result?.links?.next || null
+
+        // Handle different response formats between v2 and v3
+        let hosts, nextCursor
+        if (isPAT) {
+          // Platform API v3 response format
+          hosts = response.hits || response.result?.hits || []
+          nextCursor = response.cursor || response.links?.next || null
+        } else {
+          // Legacy API v2 response format
+          hosts = response.result?.hits || []
+          nextCursor = response.result?.links?.next || null
+        }
+        cursor = nextCursor
         pageCount++
 
         console.log(`  Page ${pageCount}: Found ${hosts.length} hosts`)
