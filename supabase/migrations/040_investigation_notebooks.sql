@@ -197,12 +197,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for entity activity
-DROP TRIGGER IF EXISTS trigger_investigation_entity_activity ON investigation_entities;
-CREATE TRIGGER trigger_investigation_entity_activity
-AFTER INSERT OR DELETE ON investigation_entities
-FOR EACH ROW
-EXECUTE FUNCTION log_investigation_entity_activity();
+-- Create trigger for entity activity (only if investigation_entries table exists)
+-- Note: The function expects entity_type/entity_id columns, but investigation_entries
+-- uses entry_type. This trigger is kept for future investigation_entities table.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'investigation_entities') THEN
+    DROP TRIGGER IF EXISTS trigger_investigation_entity_activity ON investigation_entities;
+    CREATE TRIGGER trigger_investigation_entity_activity
+    AFTER INSERT OR DELETE ON investigation_entities
+    FOR EACH ROW
+    EXECUTE FUNCTION log_investigation_entity_activity();
+  END IF;
+END $$;
 
 -- Insert default templates
 INSERT INTO investigation_templates (user_id, name, description, category, notes_template, checklist, is_public)
