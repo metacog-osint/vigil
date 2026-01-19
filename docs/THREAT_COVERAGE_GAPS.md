@@ -3,6 +3,7 @@
 This document identifies cybersecurity domains and threat categories not yet captured in Vigil, along with potential data sources and prioritization recommendations.
 
 *Created: January 15, 2026*
+*Updated: January 19, 2026*
 
 ---
 
@@ -31,9 +32,9 @@ Vigil currently provides intelligence across these domains:
 | SBOM Analysis | No software bill of materials tracking | None | Dependency-Track, OWASP Dependency-Check |
 | Package Tampering | No tracking of compromised npm/PyPI/Maven packages | None | Socket.dev, Snyk Vulnerability DB |
 | Build Pipeline Attacks | No CI/CD compromise intelligence | None | - |
-| Open Source Advisories | Limited OSS vulnerability tracking | Planned | **GitHub GHSA** (planned Phase 1) |
+| Open Source Advisories | Limited OSS vulnerability tracking | **Implemented** | **GitHub GHSA** ✅ |
 
-**Assessment:** GitHub GHSA (now planned) addresses open source advisories but doesn't cover SBOM analysis or dependency graphs. This remains a significant gap for software supply chain visibility.
+**Assessment:** GitHub GHSA is now integrated (`ingest-ghsa.mjs`), addressing open source advisories. SBOM analysis and dependency graphs remain gaps for full software supply chain visibility.
 
 **Priority:** HIGH - Supply chain attacks are increasing (SolarWinds, Log4j, XZ Utils)
 
@@ -446,8 +447,8 @@ ALTER TABLE threat_actors ADD COLUMN nation_state_attribution TEXT;
 2. [ ] Register for UMD Cyber Events Database access
 3. [ ] Integrate CISA ICS-CERT advisories (easy win, 3 hours)
 4. [ ] Add Ransomwhere payment tracking (easy win, 2 hours)
-5. [ ] Add EPSS scoring to vulnerabilities (critical, 3 hours)
-6. [ ] Add GitHub GHSA advisories (critical, 4 hours)
+5. [x] Add EPSS scoring to vulnerabilities - **COMPLETE** (`ingest-epss.mjs`)
+6. [x] Add GitHub GHSA advisories - **COMPLETE** (`ingest-ghsa.mjs`)
 
 ### Short-Term (Phase 2)
 7. [ ] Implement UMD Cyber Events Database ingestion (6-8 hours)
@@ -481,9 +482,9 @@ GDELT and the UMD Cyber Events Database together address several critical gaps:
 
 ## Related Documentation
 
-- **[ALERTING_SYSTEM.md](./ALERTING_SYSTEM.md)** - Real-time alerting architecture to beat Bleeping Computer
-- **[COST_ANALYSIS.md](./COST_ANALYSIS.md)** - Infrastructure cost breakdown and projections
-- **[DATA_SOURCES.md](./DATA_SOURCES.md)** - Current and proposed data source inventory
+- **[ALERTING.md](./ALERTING.md)** - Real-time alerting system
+- **[PRICING_ANALYSIS.md](./PRICING_ANALYSIS.md)** - Infrastructure cost breakdown and projections
+- **[../DATA_SOURCES.md](../DATA_SOURCES.md)** - Current and proposed data source inventory
 
 ---
 
@@ -511,11 +512,12 @@ Stakeholder feedback requested Vigil notify users of events **before** security 
 3. **Smart filtering** - Alert only on relevant events (org profile match)
 4. **GDELT integration** - Catch news before articles are written
 
-See [ALERTING_SYSTEM.md](./ALERTING_SYSTEM.md) for full implementation plan.
+See [ALERTING.md](./ALERTING.md) for alerting implementation details.
 
 ---
 
-*Document Version: 1.2*
-*Last Updated: January 15, 2026*
+*Document Version: 1.3*
+*Last Updated: January 19, 2026*
 *GDELT Research: Complete*
-*Alerting Analysis: Complete*
+*EPSS Integration: Complete*
+*GHSA Integration: Complete*
