@@ -1403,3 +1403,72 @@ supabase/migrations/
 └── 068_ux_improvements.sql
 ```
 
+### Dashboard Data Fixes (v1.3.1)
+
+Three data quality issues were identified and fixed:
+
+#### 1. Global Threat Map "No Data" on Hover
+
+**Problem:** Hovering over countries showed "No data" despite incidents existing.
+
+**Root Cause:** Data stored with ISO-2 codes (US, GB), but map uses ISO-3 codes (USA, GBR). The reverse lookup was incomplete.
+
+**Fix:** Added comprehensive `ISO3_TO_ISO2` mapping with 100+ countries in `src/components/ThreatAttributionMap.jsx`:
+
+```javascript
+const ISO3_TO_ISO2 = {
+  USA: 'US', GBR: 'GB', DEU: 'DE', FRA: 'FR', CAN: 'CA',
+  // ... 100+ mappings
+}
+
+// Direct lookup instead of slow reverse search
+const iso2 = countryCode?.length === 3 ? ISO3_TO_ISO2[countryCode] : countryCode
+```
+
+#### 2. Threat Level Always 100/100
+
+**Problem:** Threat level gauge always showed 100/100 "Critical".
+
+**Root Cause:** Using `log2` scale which maxed out too quickly. ~1000 incidents + 5 escalating actors = 100.
+
+**Fix:** Updated calculation in `src/pages/dashboard/useDashboardData.js` to use `log10` scale:
+
+```javascript
+// Old: log2(incidents) * 7, maxed at 70
+// New: log10(incidents) * 20, maxed at 60
+export function calculateThreatLevel(incidents30d, escalatingActors = 0) {
+  const incidentScore = incidents30d > 0
+    ? Math.min(60, Math.round(Math.log10(incidents30d + 1) * 20))
+    : 0
+  const escalationScore = Math.min(20, escalatingActors * 4)
+  const escalationBonus = escalatingActors >= 3 ? 10 : (escalatingActors >= 1 ? 5 : 0)
+  return Math.min(100, incidentScore + escalationScore + escalationBonus)
+}
+```
+
+**New scale:**
+- 100 incidents → 33 base score
+- 500 incidents → 45 base score
+- 1000 incidents → 50 base score
+- 5000 incidents → 60 base score
+
+#### 3. Targeted Sectors 905 "Unknown"
+
+**Problem:** Most incidents showed "Unknown" sector in the dashboard chart.
+
+**Root Cause:** Sector classification exists but wasn't applied to existing data.
+
+**Fix:**
+1. Ingestion scripts already use `classifySector()` for new data
+2. Run reclassification for existing data:
+
+```bash
+npm run reclassify:sectors
+```
+
+The script in `scripts/reclassify-sectors.mjs` uses keyword matching on victim names, websites, and descriptions to classify sectors.
+
+**Classifier location:** `scripts/lib/sector-classifier.mjs`
+
+---
+
