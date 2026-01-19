@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { signOut, signInWithGoogle } from '../lib/firebase'
 import { useNavigate } from 'react-router-dom'
 import NotificationBell from './NotificationBell'
+import WhatsNewBadge from './common/WhatsNewBadge'
+import FocusModeToggle from './common/FocusModeToggle'
+import QuickIOCInput from './common/QuickIOCInput'
 
 export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -64,21 +67,32 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
           </svg>
         </button>
 
-        {/* Desktop search button */}
+        {/* Quick IOC Input - Desktop only */}
+        <div className="hidden lg:block w-56">
+          <QuickIOCInput />
+        </div>
+
+        {/* Desktop search button - enhanced prominence */}
         <button
           onClick={onSearchClick}
           data-tour="search-button"
-          className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 bg-gray-800/50 border border-gray-700 rounded-lg hover:border-gray-600 hover:text-gray-300 transition-colors"
+          className="hidden md:flex items-center gap-2 px-3 py-2 text-sm text-gray-300 bg-gray-800/70 border border-gray-700 rounded-lg hover:border-cyan-500/50 hover:bg-gray-800 hover:text-white transition-all group"
           aria-label="Open search (Ctrl+K)"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <svg className="w-4 h-4 text-gray-500 group-hover:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <span>Search...</span>
-          <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-xs text-gray-500 bg-gray-800 border border-gray-700 rounded" aria-hidden="true">
-            ⌘K
+          <span className="text-gray-500 group-hover:text-gray-300">Search</span>
+          <kbd className="inline-flex items-center px-1.5 py-0.5 text-xs text-gray-500 bg-gray-900/50 border border-gray-700 rounded group-hover:border-cyan-500/30 group-hover:text-cyan-400 transition-colors" aria-hidden="true">
+            {navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}K
           </kbd>
         </button>
+
+        {/* Focus Mode Toggle */}
+        <FocusModeToggle />
+
+        {/* What's New */}
+        <WhatsNewBadge />
 
         {/* Notifications */}
         <NotificationBell userId={user?.uid || 'anonymous'} />
