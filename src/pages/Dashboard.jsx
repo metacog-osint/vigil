@@ -17,6 +17,8 @@ import ActivityTab from './dashboard/tabs/ActivityTab'
 import ThreatsTab from './dashboard/tabs/ThreatsTab'
 import VulnerabilitiesTab from './dashboard/tabs/VulnerabilitiesTab'
 import GeographyTab from './dashboard/tabs/GeographyTab'
+import IndustryThreatsTab from './dashboard/tabs/IndustryThreatsTab'
+import CountryThreatsTab from './dashboard/tabs/CountryThreatsTab'
 
 export default function Dashboard() {
   const [searchParams] = useSearchParams()
@@ -47,6 +49,10 @@ export default function Dashboard() {
     activeExploits,
     sectorDetails,
     widgetsLoading,
+    // Correlations
+    industryThreats,
+    countryThreats,
+    correlationsLoading,
     // Computed
     threatLevel,
   } = useDashboardData()
@@ -112,6 +118,20 @@ export default function Dashboard() {
 
         {activeTab === 'geography' && (
           <GeographyTab />
+        )}
+
+        {activeTab === 'industries' && (
+          <IndustryThreatsTab
+            industryThreats={industryThreats}
+            loading={correlationsLoading}
+          />
+        )}
+
+        {activeTab === 'countries' && (
+          <CountryThreatsTab
+            countryThreats={countryThreats}
+            loading={correlationsLoading}
+          />
         )}
       </div>
     </div>

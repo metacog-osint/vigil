@@ -309,3 +309,56 @@ export {
   NoisyRulesTable,
   AlertVolumeTrend,
 } from './AlertAnalyticsDashboard'
+
+// Dashboard components
+export { default as WidgetPicker } from './dashboard/WidgetPicker'
+export { default as WeeklyTrendsWidget } from './dashboard/WeeklyTrendsWidget'
+
+// Additional panel exports
+export {
+  VulnerabilityActorsPanel,
+  TechniqueActorsPanel,
+  SimilarIncidentsPanel,
+} from './panels'
+
+// ============================================
+// PATTERN COMPONENTS
+// ============================================
+export {
+  CampaignCard,
+  CampaignCardCompact,
+  AnomalyAlert,
+  AnomalyAlertInline,
+  AnomalyAlertList,
+  TemporalClusterChart,
+  TemporalClusterMini,
+  ClusterSummaryCard,
+  ClusterSummaryList,
+} from './patterns'
+
+// ============================================
+// UPGRADE PROMPT COMPONENTS
+// ============================================
+export {
+  BlurredContent,
+  BlurredHistoricalData,
+  BlurredListTeaser,
+  BlurredSearchResults,
+  BlurredCorrelationPreview,
+  ExportBlockedModal,
+  LimitReachedModal,
+  LimitWarningToast,
+  useLimitCheck,
+  TierBadge,
+  LockedBadge,
+  FeatureLabel,
+  LockedIcon,
+  NavItemWithTier,
+  ButtonWithTier,
+  UpgradeInline,
+  NewFeatureBadge,
+  MissedAlertsWidget,
+  MissedAlertsCard,
+} from './upgrade'
+
+export { default as ApiPlayground } from './upgrade/ApiPlayground'

@@ -91,8 +91,13 @@
     "correlate:actor-iocs": "node scripts/correlate-actor-iocs.mjs",
     "correlate:actor-cves": "node scripts/correlate-actor-cves.mjs",
     "build:attack-chains": "node scripts/build-attack-chains.mjs",
-    "correlate:all": "node scripts/correlate-actor-iocs.mjs && node scripts/correlate-actor-cves.mjs && node scripts/build-attack-chains.mjs",
-    "setup:correlations": "node scripts/setup-correlations.mjs"
+    "persist:patterns": "node scripts/persist-patterns.mjs",
+    "compute:incident-correlations": "node scripts/compute-incident-correlations.mjs",
+    "detect:temporal-patterns": "node scripts/detect-temporal-patterns.mjs",
+    "correlate:all": "node scripts/correlate-actor-iocs.mjs && node scripts/correlate-actor-cves.mjs && node scripts/build-attack-chains.mjs && node scripts/persist-patterns.mjs && node scripts/compute-incident-correlations.mjs",
+    "setup:correlations": "node scripts/setup-correlations.mjs",
+    "send:missed-alerts": "node scripts/send-missed-alerts.mjs",
+    "send:missed-alerts:dry-run": "node scripts/send-missed-alerts.mjs --dry-run"
   },
   "dependencies": {
     "@sentry/react": "^8.0.0",

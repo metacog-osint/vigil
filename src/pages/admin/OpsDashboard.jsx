@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { syncLog } from '../../lib/supabase'
 import { formatDistanceToNow, format } from 'date-fns'
+import { isSystemAdmin } from '../../lib/adminAuth'
 
 // Status badge component
 function StatusBadge({ status }) {
@@ -224,12 +225,26 @@ export default function OpsDashboard() {
     setSourceHistory(data || [])
   }
 
-  // Check if user is admin (you might want to add proper admin check)
-  // For now, allow any authenticated user to view ops dashboard
+  // Check if user is a system admin
   if (!user) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-400">Please sign in to view operations dashboard.</p>
+      </div>
+    )
+  }
+
+  if (!isSystemAdmin(user)) {
+    return (
+      <div className="text-center py-12">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-4">
+          <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-semibold text-white mb-2">Access Denied</h2>
+        <p className="text-gray-400">You don't have permission to view the Operations Dashboard.</p>
+        <p className="text-gray-500 text-sm mt-2">Contact your administrator if you need access.</p>
       </div>
     )
   }

@@ -5,7 +5,7 @@
  * Extracts all state variables and loading logic from Dashboard.jsx.
  */
 import { useState, useEffect, useCallback } from 'react'
-import { dashboard, incidents, threatActors, vulnerabilities, syncLog, orgProfile, relevance, trendAnalysis } from '../../lib/supabase'
+import { dashboard, incidents, threatActors, vulnerabilities, syncLog, orgProfile, relevance, trendAnalysis, correlations } from '../../lib/supabase'
 import { generateBLUF } from '../../lib/ai'
 import { getTopTargetedServices } from '../../lib/service-categories'
 
@@ -55,6 +55,11 @@ export default function useDashboardData() {
   const [activeExploits, setActiveExploits] = useState([])
   const [sectorDetails, setSectorDetails] = useState([])
   const [widgetsLoading, setWidgetsLoading] = useState(true)
+
+  // Correlation dashboard data
+  const [industryThreats, setIndustryThreats] = useState([])
+  const [countryThreats, setCountryThreats] = useState([])
+  const [correlationsLoading, setCorrelationsLoading] = useState(true)
 
   // Track which tabs have been loaded (for lazy loading)
   const [loadedTabs, setLoadedTabs] = useState({ activity: false, threats: false, vulnerabilities: false, geography: false })
@@ -108,6 +113,23 @@ export default function useDashboardData() {
       console.error('Error loading widgets data:', error)
     } finally {
       setWidgetsLoading(false)
+    }
+  }, [])
+
+  // Load correlation dashboard data (industry and country threats)
+  const loadCorrelationsData = useCallback(async () => {
+    setCorrelationsLoading(true)
+    try {
+      const [industryData, countryData] = await Promise.all([
+        correlations.getAllIndustryThreats(50),
+        correlations.getAllCountryThreats(50),
+      ])
+      setIndustryThreats(industryData.data || [])
+      setCountryThreats(countryData.data || [])
+    } catch (error) {
+      console.error('Error loading correlations data:', error)
+    } finally {
+      setCorrelationsLoading(false)
     }
   }, [])
 
@@ -166,6 +188,9 @@ export default function useDashboardData() {
         // Load Sprint 1 widgets data (non-blocking)
         loadWidgetsData()
 
+        // Load correlations data (non-blocking)
+        loadCorrelationsData()
+
       } catch (error) {
         console.error('Dashboard load error:', error)
       } finally {
@@ -174,7 +199,7 @@ export default function useDashboardData() {
     }
 
     loadDashboard()
-  }, [loadPersonalizationData, loadTrendData, loadWidgetsData])
+  }, [loadPersonalizationData, loadTrendData, loadWidgetsData, loadCorrelationsData])
 
   // Mark a tab as loaded (for lazy loading support)
   const markTabLoaded = useCallback((tabId) => {
@@ -212,6 +237,11 @@ export default function useDashboardData() {
     activeExploits,
     sectorDetails,
     widgetsLoading,
+
+    // Correlations
+    industryThreats,
+    countryThreats,
+    correlationsLoading,
 
     // Computed
     threatLevel,
