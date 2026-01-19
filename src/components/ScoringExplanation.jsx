@@ -175,7 +175,7 @@ function ContributionChart({ factors }) {
 
   return (
     <div className="space-y-3">
-      {sortedFactors.map((f, i) => (
+      {sortedFactors.map((f, _i) => (
         <FactorBar
           key={f.factor}
           factor={f.factor}
@@ -266,7 +266,7 @@ export default function ScoringExplanation({
   level,
   factors = [],
   weights = {},
-  entityType,
+  entityType: _entityType,
   showGauge = true,
   showFactors = true,
   showWeightEditor = false,

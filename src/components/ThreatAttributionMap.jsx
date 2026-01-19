@@ -87,8 +87,8 @@ const ISO3_TO_ISO2 = {
   ISL: 'IS', MCO: 'MC', AND: 'AD', LIE: 'LI', SMR: 'SM', VAT: 'VA',
 }
 
-// Create reverse mapping for compatibility
-const ISO2_TO_ISO3 = Object.fromEntries(
+// Create reverse mapping for compatibility (reserved for future use)
+const _ISO2_TO_ISO3 = Object.fromEntries(
   Object.entries(ISO3_TO_ISO2).map(([iso3, iso2]) => [iso2, iso3])
 )
 

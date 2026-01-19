@@ -5,7 +5,7 @@ import { useSubscription } from '../contexts/SubscriptionContext'
 /**
  * Upgrade prompt shown when user tries to access a feature they don't have
  */
-export function UpgradePrompt({ feature, currentTier = 'free', variant = 'default' }) {
+export function UpgradePrompt({ feature, currentTier: _currentTier = 'free', variant = 'default' }) {
   const requiredTier = getRequiredTier(feature)
   const tierInfo = TIER_INFO[requiredTier]
   const featureDescription = FEATURE_DESCRIPTIONS[feature] || feature

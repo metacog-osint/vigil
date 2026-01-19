@@ -45,7 +45,7 @@ import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import { ErrorBoundary } from './components'
 import SearchModal from './components/SearchModal'
-import { KeyboardShortcutsModal, SkeletonDashboard, OnboardingTour } from './components'
+import { KeyboardShortcutsModal, OnboardingTour } from './components'
 import PersonalizationWizard, { usePersonalizationWizard } from './components/PersonalizationWizard'
 
 // Hooks

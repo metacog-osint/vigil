@@ -754,7 +754,7 @@ export function SearchModal({ isOpen, onClose }) {
               {results.actors.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-gray-700">
                   <div className="text-xs text-gray-500 mb-2">Related Actors</div>
-                  {results.actors.map((actor, i) => (
+                  {results.actors.map((actor, _i) => (
                     <button
                       key={actor.id}
                       onClick={() => handleSelect({ ...actor, _type: 'actor' })}

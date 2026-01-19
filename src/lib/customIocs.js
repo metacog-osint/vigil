@@ -9,7 +9,7 @@ import { supabase } from './supabase'
 export const IOC_TYPES = {
   ip: { label: 'IP Address', icon: 'server', color: 'blue', pattern: /^(\d{1,3}\.){3}\d{1,3}$/ },
   ipv6: { label: 'IPv6 Address', icon: 'server', color: 'blue', pattern: /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/ },
-  domain: { label: 'Domain', icon: 'globe', color: 'green', pattern: /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/ },
+  domain: { label: 'Domain', icon: 'globe', color: 'green', pattern: /^[a-z0-9]+([-.]{1}[a-z0-9]+)*\.[a-z]{2,}$/ },
   url: { label: 'URL', icon: 'link', color: 'purple', pattern: /^https?:\/\/.+/ },
   email: { label: 'Email', icon: 'mail', color: 'yellow', pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
   md5: { label: 'MD5 Hash', icon: 'fingerprint', color: 'red', pattern: /^[a-fA-F0-9]{32}$/ },

@@ -12,7 +12,6 @@ import {
   ExclamationTriangleIcon,
   LightBulbIcon,
   ShieldExclamationIcon,
-  DocumentTextIcon,
 } from '@heroicons/react/24/outline'
 
 // Summary templates for different entity types
@@ -149,7 +148,7 @@ async function generateSummary(entityType, entity, additionalData = {}) {
 }
 
 // Template-based fallback summary
-function generateTemplateSummary(entityType, entity, additionalData = {}) {
+function generateTemplateSummary(entityType, entity, _additionalData = {}) {
   switch (entityType) {
     case 'actor': {
       const trend = entity.trend_status === 'ESCALATING' ? 'increasing activity' :

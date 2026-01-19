@@ -8,7 +8,7 @@ import QuickIOCInput from './common/QuickIOCInput'
 
 export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const navigate = useNavigate()
+  const _navigate = useNavigate()
 
   const handleSignOut = async () => {
     try {

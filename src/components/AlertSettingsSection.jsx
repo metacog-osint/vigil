@@ -58,7 +58,7 @@ const SEVERITY_LEVELS = [
 
 export default function AlertSettingsSection() {
   const { user } = useAuth()
-  const { canAccess, tier } = useSubscription()
+  const { canAccess, tier: _tier } = useSubscription()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)

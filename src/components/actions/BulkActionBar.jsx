@@ -8,7 +8,7 @@ import { clsx } from 'clsx'
 
 export function BulkActionBar({
   selectedIds = [],
-  entityType, // 'actors', 'incidents', 'iocs', 'vulnerabilities'
+  entityType: _entityType, // 'actors', 'incidents', 'iocs', 'vulnerabilities'
   onClear,
   onExport,
   onAddToWatchlist,
