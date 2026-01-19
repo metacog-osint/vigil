@@ -1,50 +1,15 @@
-import { createClient } from '@supabase/supabase-js'
+/**
+ * Supabase Query Functions
+ *
+ * IMPORTANT: This file imports the Supabase client from ./supabase/client.js
+ * DO NOT create a new client here - that causes "Multiple GoTrueClient instances" warnings.
+ * All Supabase client creation should happen in ONE place: src/lib/supabase/client.js
+ */
 
-// Supabase configuration
-// These should be set in your .env file:
-// VITE_SUPABASE_URL=https://your-project.supabase.co
-// VITE_SUPABASE_ANON_KEY=your-anon-key
+import { supabase, subscribeToTable } from './supabase/client'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase credentials not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env')
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
-    },
-  },
-})
-
-// Helper to subscribe to real-time changes
-export function subscribeToTable(table, callback, filter = null) {
-  let channel = supabase.channel(`${table}-changes`)
-
-  const subscription = channel.on(
-    'postgres_changes',
-    {
-      event: '*',
-      schema: 'public',
-      table: table,
-      ...(filter && { filter }),
-    },
-    (payload) => callback(payload)
-  )
-
-  channel.subscribe()
-
-  return () => {
-    channel.unsubscribe()
-  }
-}
+// Re-export the centralized client and subscription helper
+export { supabase, subscribeToTable }
 
 // Threat Actors queries
 export const threatActors = {
@@ -806,8 +771,8 @@ export const vulnerabilities = {
     const { data, error } = await supabase
       .from('vulnerabilities')
       .select('cve_id, affected_products, affected_vendors, description, cvss_score')
-      .gte('published_date', cutoffDate.toISOString().split('T')[0])
-      .order('published_date', { ascending: false })
+      .gte('created_at', cutoffDate.toISOString())
+      .order('created_at', { ascending: false })
       .limit(500)
 
     if (error) {
@@ -1899,7 +1864,7 @@ export const dataSources = {
   },
 
   async seedCuratedActors() {
-    console.log('Seeding curated actors...')
+    logger.info('Seeding curated actors...')
     let totalAdded = 0
     let totalErrors = 0
 

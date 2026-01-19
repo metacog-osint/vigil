@@ -4,6 +4,131 @@ All notable changes to Vigil are documented in this file.
 
 ---
 
+## [0.4.2] - January 18, 2026
+
+### Bug Fixes
+
+**Critical Production Fixes:**
+- Fixed "Cannot access 'T' before initialization" crash caused by circular chunk dependencies in Vite build
+- Fixed "Multiple GoTrueClient instances" warning by consolidating to single Supabase client
+- Fixed CSP blocking world map data from cdn.jsdelivr.net
+- Fixed `vulnerabilities.published_date does not exist` error (changed to `created_at`)
+- Fixed service worker failing to cache partial (206) responses
+
+**Code Quality:**
+- Consolidated Supabase client creation to single source (`src/lib/supabase/client.js`)
+- `src/lib/supabase.js` now re-exports from centralized client instead of creating duplicate
+- Added graceful 404 handling for optional tables (analytics_events, mitre_techniques)
+- Updated deprecated `apple-mobile-web-app-capable` meta tag
+
+**Database:**
+- Created migration `067_analytics_and_techniques.sql` with:
+  - `analytics_events` table for user analytics
+  - `mitre_techniques` table for MITRE ATT&CK data
+
+**Vite Configuration:**
+- Simplified chunk splitting to avoid circular dependencies
+- Combined react/recharts/d3 into single vendor chunk
+
+**Vercel Configuration:**
+- Renamed `api/lib/` to `api/_lib/` to prevent files being deployed as serverless functions
+- Added `https://cdn.jsdelivr.net` to CSP connect-src
+
+**Documentation:**
+- Added "Critical Patterns & Common Pitfalls" section to CLAUDE.md
+- Documented single Supabase client pattern
+- Documented optional table handling pattern
+- Documented Vite chunk configuration gotchas
+- Documented API lib directory naming convention
+
+---
+
+## [1.2.1] - January 18, 2026
+
+### Architecture Improvements
+
+Comprehensive architectural improvements addressing 11 critical issues identified during code review.
+
+**Infrastructure:**
+- Redis-based distributed rate limiting via Upstash Redis (replaces in-memory rate limiting that didn't work across Vercel Edge instances)
+- Sentry error tracking integration with source maps and user context
+- Environment variable validation on startup with clear error messages
+- Exponential backoff retry logic for API calls
+
+**API Enhancements:**
+- API key rotation mechanism with configurable grace period
+- Rotation warning headers (`X-API-Key-Deprecated`, `X-API-Key-Expires`)
+- Database migration `063_api_key_rotation.sql` with rotation functions
+
+**Developer Experience:**
+- Standardized `LoadingState` component for consistent loading/error/empty states
+- `withRetry()` utility for resilient API calls
+- State management documentation (`docs/STATE_MANAGEMENT.md`)
+- Real-time subscription audit confirming proper cleanup in all components
+
+**Code Quality:**
+- Component tests for TrendBadge, SeverityBadge, ErrorBoundary, LoadingState (96 new tests)
+- Test utilities in `src/test/utils.jsx`
+- All 727 tests passing
+
+**Bundle Optimization:**
+- Improved Vite code splitting (vendor-react, vendor-charts, vendor-supabase, vendor-sentry, vendor-firebase, vendor-dates)
+- Bundle analyzer configuration (`vite.config.analyze.js`)
+- ES2020 target for smaller bundles
+
+**New Files:**
+- `api/lib/rateLimit.js` - Distributed rate limiting
+- `src/lib/sentry.js` - Error tracking
+- `src/lib/retry.js` - Retry utility
+- `src/lib/env.js` - Environment validation
+- `src/components/common/LoadingState.jsx` - Loading states
+- `docs/STATE_MANAGEMENT.md` - State patterns
+
+**Documentation:**
+- `ARCHITECTURE_IMPROVEMENTS.md` - Detailed plan and implementation status
+
+---
+
+## [1.2.0] - January 2026
+
+### Infrastructure - Cloudflare Workers Migration
+
+Migrated all data ingestion from GitHub Actions to Cloudflare Workers for improved reliability and reduced latency.
+
+**New Architecture:**
+- 15 threat intel feeds running on Cloudflare Workers with Cron Triggers
+- Edge-based execution for faster response times
+- Automatic retries and error handling
+- Reduced dependency on GitHub Actions minutes
+
+**Worker Schedules:**
+| Schedule | Feeds |
+|----------|-------|
+| Every 30 min | Ransomlook, CISA KEV, ThreatFox, Feodo, URLhaus |
+| Every 6 hours | NVD, VulnCheck, EPSS |
+| Daily (00:00 UTC) | Malpedia, MISP Galaxy, MITRE ATT&CK |
+| Daily (06:00 UTC) | MalwareBazaar, Tor Exits |
+| Daily (12:00 UTC) | Pulsedive, Censys |
+
+**Feeds Fixed:**
+- CISA KEV: Updated schema mapping (removed non-existent columns)
+- NVD: Moved `references` to metadata (SQL reserved keyword issue)
+- VulnCheck: Fixed array handling for `cve` field, added pagination limits
+- Ransomlook: Fixed column names (`actor_id`, `victim_sector`), date parsing
+- Malpedia/MISP/MITRE: Fixed `actor_type` column, array normalization
+- ThreatFox/URLhaus/MalwareBazaar: Added `Auth-Key` header for abuse.ch APIs
+
+**Database Migrations:**
+- `053_fix_alert_triggers.sql` - Fixed incident alert trigger column references
+- `054_fix_changelog_vulnerabilities.sql` - Updated changelog for TEXT primary keys
+- `055_disable_vuln_changelog.sql` - Disabled changelog for vulnerabilities table
+
+**Environment:**
+- Added `ABUSECH_API_KEY` to Cloudflare secrets (required for abuse.ch APIs)
+- Worker deployed at: `vigil-ingest.theintelligencecompany.workers.dev`
+
+---
+
 ## [1.1.0] - January 2026
 
 ### Code Quality - Large Page Refactoring

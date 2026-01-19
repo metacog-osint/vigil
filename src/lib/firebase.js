@@ -61,6 +61,19 @@ export async function signInWithGoogle() {
 
 export async function signOut() {
   if (!auth) throw new Error('Firebase not configured')
+
+  // Clear session data on logout
+  try {
+    // Clear local storage auth data
+    localStorage.removeItem('vigil_auth_user')
+    localStorage.removeItem('vigil_push_subscription')
+    sessionStorage.removeItem('vigil_auth_token')
+    sessionStorage.removeItem('vigil_session_id')
+    sessionStorage.removeItem('vigil_last_activity')
+  } catch {
+    // Ignore storage errors
+  }
+
   return firebaseSignOut(auth)
 }
 

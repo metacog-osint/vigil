@@ -7,6 +7,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
+import crypto from 'crypto'
 
 // Environment variables
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
@@ -230,6 +231,15 @@ async function sendPushAlert(userId, eventType, eventData) {
   }
 }
 
+/**
+ * Generate HMAC-SHA256 signature for webhook payload
+ */
+function generateWebhookSignature(payload, secret) {
+  const hmac = crypto.createHmac('sha256', secret)
+  hmac.update(typeof payload === 'string' ? payload : JSON.stringify(payload))
+  return `sha256=${hmac.digest('hex')}`
+}
+
 async function sendWebhookAlerts(userId, eventType, eventData) {
   try {
     // Get user's active webhooks that match this event type
@@ -247,13 +257,26 @@ async function sendWebhookAlerts(userId, eventType, eventData) {
     for (const webhook of webhooks) {
       try {
         const payload = formatWebhookPayload(webhook.webhook_type, eventType, eventData)
+        const payloadString = JSON.stringify(payload)
+
+        // Build headers with HMAC signature for generic webhooks
+        const headers = {
+          'Content-Type': 'application/json'
+        }
+
+        // Add HMAC signature if webhook has a secret configured
+        if (webhook.secret && webhook.webhook_type === 'generic') {
+          const signature = generateWebhookSignature(payloadString, webhook.secret)
+          const signatureHeader = webhook.hmac_header || 'X-Signature-256'
+          headers[signatureHeader] = signature
+          // Also add timestamp for replay attack prevention
+          headers['X-Webhook-Timestamp'] = Date.now().toString()
+        }
 
         const response = await fetch(webhook.webhook_url, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
+          headers,
+          body: payloadString
         })
 
         if (response.ok) {

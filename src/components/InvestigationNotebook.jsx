@@ -21,6 +21,7 @@ import {
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid'
 import { TimeAgo } from './common'
 import { supabase } from '../lib/supabase'
+import { sanitizeMarkdown } from '../lib/sanitize'
 
 // Activity type icons and colors
 const ACTIVITY_TYPES = {
@@ -421,7 +422,7 @@ export default function InvestigationNotebook({
                     )}
                     <div
                       className="prose prose-invert prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: renderMarkdown(notes) || '<p class="text-gray-500">No notes yet. Click Edit to add notes.</p>' }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeMarkdown(renderMarkdown(notes)) || '<p class="text-gray-500">No notes yet. Click Edit to add notes.</p>' }}
                     />
                   </>
                 )}

@@ -147,24 +147,24 @@ describe('trendAnalysis module', () => {
 
   describe('getWeekStart', () => {
     it('returns Monday of the week', () => {
-      // Wednesday Jan 15, 2025
-      const date = new Date('2025-01-15')
+      // Wednesday Jan 15, 2025 at noon local time (avoids timezone shift issues)
+      const date = new Date(2025, 0, 15, 12, 0, 0)
       const result = trendAnalysis.getWeekStart(date)
 
       expect(result).toBe('2025-01-13') // Monday
     })
 
     it('handles Sunday', () => {
-      // Sunday Jan 19, 2025
-      const date = new Date('2025-01-19')
+      // Sunday Jan 19, 2025 at noon local time
+      const date = new Date(2025, 0, 19, 12, 0, 0)
       const result = trendAnalysis.getWeekStart(date)
 
       expect(result).toBe('2025-01-13') // Previous Monday
     })
 
     it('handles Monday', () => {
-      // Monday Jan 13, 2025
-      const date = new Date('2025-01-13')
+      // Monday Jan 13, 2025 at noon local time
+      const date = new Date(2025, 0, 13, 12, 0, 0)
       const result = trendAnalysis.getWeekStart(date)
 
       expect(result).toBe('2025-01-13') // Same day

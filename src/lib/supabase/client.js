@@ -1,6 +1,13 @@
 /**
  * Supabase Client Configuration
  * Centralized client initialization for the Vigil application
+ *
+ * IMPORTANT: This is the ONLY place where createClient() should be called.
+ * Creating multiple Supabase clients causes "Multiple GoTrueClient instances" warnings
+ * and can lead to undefined behavior with authentication state.
+ *
+ * All other files should import { supabase } from this module or from '../supabase.js'
+ * (which re-exports this client).
  */
 
 import { createClient } from '@supabase/supabase-js'

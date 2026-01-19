@@ -1,10 +1,11 @@
 // Error boundary component for graceful error handling
 import { Component } from 'react'
+import { captureException } from '../../lib/sentry'
 
 export class ErrorBoundary extends Component {
   constructor(props) {
     super(props)
-    this.state = { hasError: false, error: null, errorInfo: null }
+    this.state = { hasError: false, error: null, errorInfo: null, eventId: null }
   }
 
   static getDerivedStateFromError(error) {
@@ -13,7 +14,15 @@ export class ErrorBoundary extends Component {
 
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo })
+
+    // Log to console in development
     console.error('ErrorBoundary caught an error:', error, errorInfo)
+
+    // Report to Sentry in production
+    captureException(error, {
+      componentStack: errorInfo?.componentStack,
+      boundaryName: this.props.name || 'unknown',
+    })
   }
 
   handleRetry = () => {

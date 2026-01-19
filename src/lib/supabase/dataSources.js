@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './client'
+import { logger } from '../logger'
 
 export const dataSources = {
   // Data source definitions
@@ -125,7 +126,7 @@ export const dataSources = {
   },
 
   async seedCuratedActors() {
-    console.log('Seeding curated actors...')
+    logger.info('Seeding curated actors...')
     let totalAdded = 0
     let totalErrors = 0
 

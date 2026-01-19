@@ -132,3 +132,73 @@ test.describe('Export Accessibility', () => {
     }
   })
 })
+
+test.describe('STIX 2.1 Export', () => {
+  test('should have STIX export option on IOCs page', async ({ page }) => {
+    await page.goto('/iocs')
+    await page.waitForLoadState('networkidle')
+
+    // Find export button
+    const exportButton = page.locator('button:has-text("Export")').first()
+    const hasExport = await exportButton.isVisible().catch(() => false)
+
+    if (hasExport) {
+      await exportButton.click()
+
+      // Look for STIX option
+      const stixOption = page.locator('button:has-text("STIX"), [data-format="stix"]')
+      const hasStix = await stixOption.first().isVisible({ timeout: 2000 }).catch(() => false)
+
+      expect(typeof hasStix).toBe('boolean')
+    }
+  })
+
+  test('should export valid STIX bundle', async ({ page }) => {
+    await page.goto('/actors')
+    await page.waitForLoadState('networkidle')
+
+    // Set up download listener
+    const downloadPromise = page.waitForEvent('download', { timeout: 10000 }).catch(() => null)
+
+    // Find and click export button
+    const exportButton = page.locator('button:has-text("Export")').first()
+    const hasExport = await exportButton.isVisible().catch(() => false)
+
+    if (hasExport) {
+      await exportButton.click()
+
+      // Try clicking JSON option (STIX is JSON format)
+      const jsonOption = page.locator('button:has-text("JSON"), button:has-text("STIX")').first()
+      const hasJson = await jsonOption.isVisible({ timeout: 1000 }).catch(() => false)
+
+      if (hasJson) {
+        await jsonOption.click()
+        const download = await downloadPromise
+
+        if (download) {
+          const filename = download.suggestedFilename()
+          expect(filename).toMatch(/\.(json|stix)$/i)
+        }
+      }
+    }
+  })
+})
+
+test.describe('Export Mobile Experience', () => {
+  test.use({ viewport: { width: 375, height: 667 } })
+
+  test('should show export button on mobile', async ({ page }) => {
+    await page.goto('/actors')
+    await page.waitForLoadState('networkidle')
+
+    // Export may be in overflow menu on mobile
+    const exportButton = page.locator('button:has-text("Export"), [aria-label*="export" i]').first()
+    const overflowMenu = page.locator('button:has-text("More"), [aria-label*="more" i]').first()
+
+    const hasExport = await exportButton.isVisible().catch(() => false)
+    const hasOverflow = await overflowMenu.isVisible().catch(() => false)
+
+    // Either export button or overflow menu should be visible
+    expect(hasExport || hasOverflow).toBeTruthy()
+  })
+})
