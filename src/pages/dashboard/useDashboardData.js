@@ -5,7 +5,17 @@
  * Extracts all state variables and loading logic from Dashboard.jsx.
  */
 import { useState, useEffect, useCallback } from 'react'
-import { dashboard, incidents, threatActors, vulnerabilities, syncLog, orgProfile, relevance, trendAnalysis, correlations } from '../../lib/supabase'
+import {
+  dashboard,
+  incidents,
+  threatActors,
+  vulnerabilities,
+  syncLog,
+  orgProfile,
+  relevance,
+  trendAnalysis,
+  correlations,
+} from '../../lib/supabase'
 import { generateBLUF } from '../../lib/ai'
 import { getTopTargetedServices } from '../../lib/service-categories'
 
@@ -19,13 +29,12 @@ import { getTopTargetedServices } from '../../lib/service-categories'
 // This ensures score reflects actual threat increase, not just volume
 export function calculateThreatLevel(incidents30d, escalatingActors = 0) {
   // Use log10 for gentler scaling, multiply by 15 to spread values
-  const incidentScore = incidents30d > 0
-    ? Math.min(60, Math.round(Math.log10(incidents30d + 1) * 20))
-    : 0
+  const incidentScore =
+    incidents30d > 0 ? Math.min(60, Math.round(Math.log10(incidents30d + 1) * 20)) : 0
   // Each escalating actor adds to risk, but capped
   const escalationScore = Math.min(20, escalatingActors * 4)
   // Additional factor: if many actors are escalating, it's more concerning
-  const escalationBonus = escalatingActors >= 3 ? 10 : (escalatingActors >= 1 ? 5 : 0)
+  const escalationBonus = escalatingActors >= 3 ? 10 : escalatingActors >= 1 ? 5 : 0
   return Math.min(100, incidentScore + escalationScore + escalationBonus)
 }
 
@@ -42,6 +51,7 @@ export default function useDashboardData() {
   const [lastSync, setLastSync] = useState(null)
   const [aiSummary, setAiSummary] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   // Personalization and trend data
   const [userProfile, setUserProfile] = useState(null)
@@ -62,7 +72,12 @@ export default function useDashboardData() {
   const [correlationsLoading, setCorrelationsLoading] = useState(true)
 
   // Track which tabs have been loaded (for lazy loading)
-  const [loadedTabs, setLoadedTabs] = useState({ activity: false, threats: false, vulnerabilities: false, geography: false })
+  const [loadedTabs, setLoadedTabs] = useState({
+    activity: false,
+    threats: false,
+    vulnerabilities: false,
+    geography: false,
+  })
 
   // Load personalization data (org profile + relevance scores)
   const loadPersonalizationData = useCallback(async () => {
@@ -137,7 +152,17 @@ export default function useDashboardData() {
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const [statsData, incidentsData, actorsData, kevsData, sectorStats, vulnStats, escalatingData, syncData, calendarStats] = await Promise.all([
+        const [
+          statsData,
+          incidentsData,
+          actorsData,
+          kevsData,
+          sectorStats,
+          vulnStats,
+          escalatingData,
+          syncData,
+          calendarStats,
+        ] = await Promise.all([
           dashboard.getOverview(),
           incidents.getRecent({ limit: 10, days: 365 }),
           threatActors.getTopActive(365, 5),
@@ -169,15 +194,17 @@ export default function useDashboardData() {
           topSectors: sectorStats || [],
           recentIncidents: incidentsData.data || [],
           topActors: actorsData.data || [],
-        }).then(summary => {
-          if (summary) {
-            setAiSummary(summary)
-          } else {
-            console.warn('AI summary returned null - check VITE_GROQ_API_KEY')
-          }
-        }).catch(err => {
-          console.error('AI summary generation error:', err)
         })
+          .then((summary) => {
+            if (summary) {
+              setAiSummary(summary)
+            } else {
+              console.warn('AI summary returned null - check VITE_GROQ_API_KEY')
+            }
+          })
+          .catch((err) => {
+            console.error('AI summary generation error:', err)
+          })
 
         // Load personalization data (non-blocking)
         loadPersonalizationData()
@@ -190,9 +217,17 @@ export default function useDashboardData() {
 
         // Load correlations data (non-blocking)
         loadCorrelationsData()
-
-      } catch (error) {
-        console.error('Dashboard load error:', error)
+      } catch (err) {
+        console.error('Dashboard load error:', err)
+        setError(err.message || 'Failed to load dashboard data')
+        // Set default stats so dashboard still renders
+        setStats({
+          totalActors: 0,
+          incidents30d: 0,
+          incidentsTotal: 0,
+          kevTotal: 0,
+          iocTotal: 0,
+        })
       } finally {
         setLoading(false)
       }
@@ -203,7 +238,7 @@ export default function useDashboardData() {
 
   // Mark a tab as loaded (for lazy loading support)
   const markTabLoaded = useCallback((tabId) => {
-    setLoadedTabs(prev => ({ ...prev, [tabId]: true }))
+    setLoadedTabs((prev) => ({ ...prev, [tabId]: true }))
   }, [])
 
   // Computed values - use incidents30d for proper threat calculation
@@ -222,6 +257,7 @@ export default function useDashboardData() {
     lastSync,
     aiSummary,
     loading,
+    error,
 
     // Personalization
     userProfile,
