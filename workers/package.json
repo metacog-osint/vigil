@@ -1,0 +1,21 @@
+{
+  "name": "vigil-ingestion-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for Vigil threat intelligence ingestion",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "secret:supabase-url": "wrangler secret put SUPABASE_URL",
+    "secret:supabase-key": "wrangler secret put SUPABASE_KEY",
+    "secret:pulsedive": "wrangler secret put PULSEDIVE_API_KEY",
+    "secret:vulncheck": "wrangler secret put VULNCHECK_API_KEY",
+    "secret:censys": "wrangler secret put CENSYS_API_KEY",
+    "secrets:all": "npm run secret:supabase-url && npm run secret:supabase-key"
+  },
+  "devDependencies": {
+    "wrangler": "^4.59.2"
+  }
+}

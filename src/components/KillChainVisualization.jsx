@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 
+// Check if MITRE techniques feature is enabled (disabled by default to prevent 404s)
+const MITRE_ENABLED = import.meta.env.VITE_ENABLE_MITRE === 'true'
+
 // MITRE ATT&CK Tactics mapped to Lockheed Martin Kill Chain
 const KILL_CHAIN_PHASES = [
   {
@@ -76,11 +79,21 @@ export default function KillChainVisualization({
       setLoading(true)
 
       // Get techniques with their tactics
-      let query = supabase
-        .from('mitre_techniques')
-        .select('technique_id, name, tactic, description')
+      // Skip if MITRE feature is disabled (prevents 404 errors if table doesn't exist)
+      let techniques = []
+      if (MITRE_ENABLED) {
+        try {
+          const { data, error } = await supabase
+            .from('mitre_techniques')
+            .select('technique_id, name, tactic, description')
 
-      const { data: techniques } = await query
+          if (!error && data) {
+            techniques = data
+          }
+        } catch {
+          // Table may not exist - continue with empty techniques
+        }
+      }
 
       // If we have an actor, get their specific TTPs
       let actorTtps = []

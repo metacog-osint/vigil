@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import { threatHunts } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import ThreatHuntCard from '../components/ThreatHuntCard'
-import { Tooltip } from '../components/Tooltip'
-import { FeatureGate } from '../components/UpgradePrompt'
+import { ThreatHuntCard, Tooltip, FeatureGate } from '../components'
 
 const CONFIDENCE_FILTERS = [
   { value: '', label: 'All Confidence' },

@@ -5,7 +5,7 @@
  * vulnerabilities, attack surface, and risk factors.
  */
 
-import { supabase } from './supabaseClient'
+import { supabase } from './supabase/client'
 
 // ============================================
 // CONSTANTS

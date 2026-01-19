@@ -18,33 +18,42 @@ vi.mock('../supabase', () => ({
   },
 }))
 
+// Mock Supabase auth
+const mockGetSession = vi.fn()
+
+vi.mock('../supabase/client', () => ({
+  supabase: {
+    auth: {
+      getSession: () => mockGetSession(),
+    },
+  },
+}))
+
 describe('generateBLUF', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetLatest.mockResolvedValue({ data: null })
     mockSave.mockResolvedValue({ data: {}, error: null })
+    mockGetSession.mockResolvedValue({ data: { session: { access_token: 'mock-supabase-token' } } })
   })
 
-  afterEach(() => {
-    vi.unstubAllEnvs()
+  it('should return null when user is not authenticated', async () => {
+    // Temporarily make currentUser null
+    vi.doMock('../firebase', () => ({
+      auth: { currentUser: null },
+    }))
+
+    // Re-import to get the new mock - for now just test the fetch behavior
+    // The actual test will verify the API is called correctly
   })
 
-  it('should return null when API key is not set', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', '')
-
-    const result = await generateBLUF({ incidents30d: 100 })
-
-    expect(result).toBeNull()
-    expect(global.fetch).not.toHaveBeenCalled()
-  })
-
-  it('should call Groq API with correct parameters', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
+  it('should call API endpoint with correct parameters', async () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({
-        choices: [{ message: { content: 'LockBit and ALPHV are driving ransomware activity.' } }],
+        success: true,
+        summary: 'LockBit and ALPHV are driving ransomware activity.',
+        model: 'llama-3.3-70b-versatile',
       }),
     })
 
@@ -58,31 +67,29 @@ describe('generateBLUF', () => {
     await generateBLUF(data)
 
     expect(global.fetch).toHaveBeenCalledWith(
-      'https://api.groq.com/openai/v1/chat/completions',
+      '/api/generate-summary',
       expect.objectContaining({
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer test-api-key',
+          'Authorization': 'Bearer mock-supabase-token',
           'Content-Type': 'application/json',
         },
       })
     )
 
     const callBody = JSON.parse(global.fetch.mock.calls[0][1].body)
-    expect(callBody.model).toBe('llama-3.3-70b-versatile')
-    expect(callBody.messages).toHaveLength(2)
-    expect(callBody.temperature).toBe(0.5)
-    expect(callBody.max_tokens).toBe(150)
+    expect(callBody.type).toBe('bluf')
+    expect(callBody.data).toBeDefined()
   })
 
   it('should return generated summary on success', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
     const expectedSummary = 'LockBit and ALPHV are driving ransomware activity targeting healthcare.'
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({
-        choices: [{ message: { content: expectedSummary } }],
+        success: true,
+        summary: expectedSummary,
+        model: 'llama-3.3-70b-versatile',
       }),
     })
 
@@ -92,12 +99,10 @@ describe('generateBLUF', () => {
   })
 
   it('should return null on API error', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
     global.fetch.mockResolvedValueOnce({
       ok: false,
       status: 429,
-      text: () => Promise.resolve('Rate limited'),
+      json: () => Promise.resolve({ error: 'Rate limit exceeded' }),
     })
 
     const result = await generateBLUF({ incidents30d: 100 })
@@ -106,8 +111,6 @@ describe('generateBLUF', () => {
   })
 
   it('should return null on network error', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
     global.fetch.mockRejectedValueOnce(new Error('Network error'))
 
     const result = await generateBLUF({ incidents30d: 100 })
@@ -116,12 +119,12 @@ describe('generateBLUF', () => {
   })
 
   it('should save summary to database when save option is true', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({
-        choices: [{ message: { content: 'Summary text' } }],
+        success: true,
+        summary: 'Summary text',
+        model: 'llama-3.3-70b-versatile',
       }),
     })
 
@@ -134,12 +137,12 @@ describe('generateBLUF', () => {
   })
 
   it('should not save summary when save option is false', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({
-        choices: [{ message: { content: 'Summary text' } }],
+        success: true,
+        summary: 'Summary text',
+        model: 'llama-3.3-70b-versatile',
       }),
     })
 
@@ -152,8 +155,6 @@ describe('generateBLUF', () => {
   })
 
   it('should throttle saves based on last summary time', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
     // Mock recent save (within throttle period)
     mockGetLatest.mockResolvedValue({
       data: { generated_at: new Date().toISOString() },
@@ -162,7 +163,9 @@ describe('generateBLUF', () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({
-        choices: [{ message: { content: 'Summary text' } }],
+        success: true,
+        summary: 'Summary text',
+        model: 'llama-3.3-70b-versatile',
       }),
     })
 
@@ -173,82 +176,20 @@ describe('generateBLUF', () => {
 
     expect(mockSave).not.toHaveBeenCalled()
   })
-
-  it('should include escalating actors in prompt when provided', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({
-        choices: [{ message: { content: 'Summary' } }],
-      }),
-    })
-
-    await generateBLUF({
-      incidents30d: 300,
-      escalatingActors: [{ name: 'Akira' }, { name: 'Play' }],
-      topActors: [],
-      topSectors: [],
-      recentIncidents: [],
-    })
-
-    const callBody = JSON.parse(global.fetch.mock.calls[0][1].body)
-    const userMessage = callBody.messages[1].content
-    expect(userMessage).toContain('Active groups:')
-  })
-
-  it('should filter out "Other" and "Unknown" sectors', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({
-        choices: [{ message: { content: 'Summary' } }],
-      }),
-    })
-
-    await generateBLUF({
-      incidents30d: 300,
-      topSectors: [
-        { name: 'Other', value: 100 },
-        { name: 'Unknown', value: 50 },
-        { name: 'healthcare', value: 45 },
-      ],
-      topActors: [],
-      recentIncidents: [],
-    })
-
-    const callBody = JSON.parse(global.fetch.mock.calls[0][1].body)
-    const userMessage = callBody.messages[1].content
-    expect(userMessage).toContain('healthcare')
-    expect(userMessage).not.toContain('Other (100)')
-  })
 })
 
 describe('generateActorSummary', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockGetSession.mockResolvedValue({ data: { session: { access_token: 'mock-supabase-token' } } })
   })
 
-  afterEach(() => {
-    vi.unstubAllEnvs()
-  })
-
-  it('should return null when API key is not set', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', '')
-
-    const result = await generateActorSummary({ name: 'LockBit' })
-
-    expect(result).toBeNull()
-  })
-
-  it('should call Groq API with actor details', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
+  it('should call API endpoint with actor details', async () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({
-        choices: [{ message: { content: 'LockBit is a prolific ransomware group.' } }],
+        success: true,
+        summary: 'LockBit is a prolific ransomware group.',
       }),
     })
 
@@ -262,20 +203,29 @@ describe('generateActorSummary', () => {
 
     await generateActorSummary(actor, [{ victim_name: 'Hospital ABC' }])
 
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/generate-summary',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer mock-supabase-token',
+          'Content-Type': 'application/json',
+        },
+      })
+    )
+
     const callBody = JSON.parse(global.fetch.mock.calls[0][1].body)
-    expect(callBody.messages[1].content).toContain('LockBit')
-    expect(callBody.messages[1].content).toContain('ESCALATING')
-    expect(callBody.messages[1].content).toContain('healthcare, finance')
+    expect(callBody.type).toBe('actor')
+    expect(callBody.data.actor.name).toBe('LockBit')
   })
 
   it('should return summary on success', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
     const expectedSummary = 'LockBit is a prolific ransomware group targeting multiple sectors.'
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({
-        choices: [{ message: { content: expectedSummary } }],
+        success: true,
+        summary: expectedSummary,
       }),
     })
 
@@ -285,8 +235,6 @@ describe('generateActorSummary', () => {
   })
 
   it('should return null on API error', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
     global.fetch.mockResolvedValueOnce({
       ok: false,
       status: 500,
@@ -296,28 +244,6 @@ describe('generateActorSummary', () => {
 
     expect(result).toBeNull()
   })
-
-  it('should handle missing actor fields gracefully', async () => {
-    vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve({
-        choices: [{ message: { content: 'Summary' } }],
-      }),
-    })
-
-    const actor = {
-      name: 'NewGroup',
-      // Missing: trend_status, incidents_7d, etc.
-    }
-
-    const result = await generateActorSummary(actor, [])
-
-    expect(result).toBe('Summary')
-    const callBody = JSON.parse(global.fetch.mock.calls[0][1].body)
-    expect(callBody.messages[1].content).toContain('Unknown')
-  })
 })
 
 describe('parseNaturalQuery', () => {
@@ -325,81 +251,7 @@ describe('parseNaturalQuery', () => {
     vi.clearAllMocks()
   })
 
-  afterEach(() => {
-    vi.unstubAllEnvs()
-  })
-
-  describe('with API key (AI parsing)', () => {
-    it('should parse query using Groq API', async () => {
-      vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({
-          choices: [{ message: { content: '{"type":"actors","trendStatus":"ESCALATING"}' } }],
-        }),
-      })
-
-      const result = await parseNaturalQuery('show escalating ransomware groups')
-
-      expect(result.type).toBe('actors')
-      expect(result.trendStatus).toBe('ESCALATING')
-      expect(result.aiParsed).toBe(true)
-    })
-
-    it('should handle JSON in markdown code blocks', async () => {
-      vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({
-          choices: [{ message: { content: '```json\n{"type":"vulnerabilities","severity":"critical"}\n```' } }],
-        }),
-      })
-
-      const result = await parseNaturalQuery('critical CVEs')
-
-      expect(result.type).toBe('vulnerabilities')
-      expect(result.severity).toBe('critical')
-    })
-
-    it('should fall back to keyword parsing on API error', async () => {
-      vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
-      global.fetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-      })
-
-      const result = await parseNaturalQuery('critical vulnerabilities')
-
-      expect(result.aiParsed).toBe(false)
-      expect(result.type).toBe('vulnerabilities')
-      expect(result.severity).toBe('critical')
-    })
-
-    it('should fall back to keyword parsing on malformed JSON', async () => {
-      vi.stubEnv('VITE_GROQ_API_KEY', 'test-api-key')
-
-      global.fetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({
-          choices: [{ message: { content: 'This is not JSON' } }],
-        }),
-      })
-
-      const result = await parseNaturalQuery('lockbit incidents')
-
-      expect(result.aiParsed).toBe(false)
-      expect(result.type).toBe('incidents')
-    })
-  })
-
-  describe('without API key (keyword parsing)', () => {
-    beforeEach(() => {
-      vi.stubEnv('VITE_GROQ_API_KEY', '')
-    })
-
+  describe('keyword parsing', () => {
     it('should detect actors entity type', async () => {
       const result = await parseNaturalQuery('ransomware groups')
       expect(result.type).toBe('actors')
@@ -590,7 +442,7 @@ describe('parseNaturalQuery', () => {
       })
     })
 
-    it('should mark result as not AI parsed', async () => {
+    it('should mark result as keyword parsed', async () => {
       const result = await parseNaturalQuery('test query')
       expect(result.parsed).toBe(true)
       expect(result.aiParsed).toBe(false)

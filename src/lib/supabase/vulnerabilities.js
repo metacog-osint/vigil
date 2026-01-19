@@ -194,8 +194,8 @@ export const vulnerabilities = {
     const { data, error } = await supabase
       .from('vulnerabilities')
       .select('cve_id, affected_products, affected_vendors, description, cvss_score')
-      .gte('published_date', cutoffDate.toISOString().split('T')[0])
-      .order('published_date', { ascending: false })
+      .gte('created_at', cutoffDate.toISOString())
+      .order('created_at', { ascending: false })
       .limit(500)
 
     if (error) {

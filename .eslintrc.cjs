@@ -27,7 +27,7 @@ module.exports = {
   plugins: ['react', 'react-hooks'],
   rules: {
     'react/prop-types': 'off',
-    'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-debugger': 'error',
     'react/no-unescaped-entities': 'warn',

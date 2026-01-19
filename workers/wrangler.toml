@@ -1,0 +1,26 @@
+# Cloudflare Workers Configuration for Vigil
+# Deploy: npx wrangler deploy
+# Test locally: npx wrangler dev
+
+name = "vigil-ingestion"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# Cron triggers - these replace GitHub Actions schedules
+[triggers]
+crons = [
+  "15 * * * *",      # Hourly at :15 - critical (ransomware, threatfox)
+  "0 */6 * * *",     # Every 6 hours - main (IOCs, vulns)
+  "0 3 * * *",       # Daily at 3am UTC - slow sources
+  "0 4 * * SUN"      # Weekly Sunday 4am - reference data
+]
+
+# Environment variables (set via `wrangler secret put`)
+# SUPABASE_URL
+# SUPABASE_KEY
+# PULSEDIVE_API_KEY
+# VULNCHECK_API_KEY
+# CENSYS_API_KEY
+
+[vars]
+ENVIRONMENT = "production"

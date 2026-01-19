@@ -5,7 +5,7 @@
 
 export { default as CorrelationPanel } from './CorrelationPanel'
 export { default as DataSourcesPanel } from './DataSourcesPanel'
-export { default as EnrichmentPanel } from './EnrichmentPanel'
+export { default as EnrichmentPanel, EnrichmentBadges } from './EnrichmentPanel'
 export { default as EventDetailPanel } from './EventDetailPanel'
 export { default as SectorDrilldown } from './SectorDrilldown'
 export { default as CountryAttackPanel } from './CountryAttackPanel'

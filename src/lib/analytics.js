@@ -1,9 +1,16 @@
 /**
  * Usage Analytics Module
  * Tracks user engagement and feature usage
+ *
+ * NOTE: Analytics is disabled by default to prevent 404 errors if the
+ * analytics_events table doesn't exist. Enable by setting:
+ * VITE_ENABLE_ANALYTICS=true
  */
 
 import { supabase } from './supabase'
+
+// Check if analytics is enabled (disabled by default to prevent 404s)
+const ANALYTICS_ENABLED = import.meta.env.VITE_ENABLE_ANALYTICS === 'true'
 
 // Event types
 export const EVENT_TYPES = {
@@ -21,7 +28,11 @@ export const EVENT_TYPES = {
 function getSessionId() {
   let sessionId = sessionStorage.getItem('vigil_session_id')
   if (!sessionId) {
-    sessionId = `sess_${Date.now()}_${Math.random().toString(36).slice(2)}`
+    // Use cryptographically secure random generation
+    const randomBytes = new Uint8Array(16)
+    crypto.getRandomValues(randomBytes)
+    const randomHex = Array.from(randomBytes, b => b.toString(16).padStart(2, '0')).join('')
+    sessionId = `sess_${Date.now()}_${randomHex}`
     sessionStorage.setItem('vigil_session_id', sessionId)
   }
   return sessionId
@@ -46,6 +57,9 @@ function getUserId() {
  * Track an analytics event
  */
 export async function trackEvent(eventType, eventName, eventData = {}) {
+  // Skip if analytics is disabled (prevents 404 errors if table doesn't exist)
+  if (!ANALYTICS_ENABLED) return
+
   try {
     const event = {
       user_id: getUserId(),

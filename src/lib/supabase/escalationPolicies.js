@@ -4,7 +4,7 @@
  * Manages alert escalation policies, on-call schedules, and escalation tracking.
  */
 
-import { supabase } from '../supabaseClient'
+import { supabase } from './client'
 
 // ============================================
 // ESCALATION POLICIES
