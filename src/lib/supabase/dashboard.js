@@ -28,12 +28,18 @@ export const dashboard = {
     ])
 
     return {
+      // Correct property names - use these
       totalActors: actorCount.count || 0,
       incidents30d: incidentCount30d.count || 0,
       incidentsTotal: incidentCountTotal.count || 0,
       kevTotal: kevCount.count || 0,
       iocTotal: iocCount.count || 0,
-      // Legacy aliases (for backwards compatibility)
+
+      // @deprecated Legacy aliases - MISLEADING NAMES, will be removed in v2.0
+      // incidents24h actually contains 30-day data - use incidents30d instead
+      // incidents7d actually contains total incidents - use incidentsTotal instead
+      // newKEV7d actually contains total KEVs - use kevTotal instead
+      // newIOCs24h actually contains total IOCs - use iocTotal instead
       incidents24h: incidentCount30d.count || 0,
       incidents7d: incidentCountTotal.count || 0,
       newKEV7d: kevCount.count || 0,
