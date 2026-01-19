@@ -19,6 +19,10 @@
 export {
   EmptyState,
   ErrorBoundary,
+  LoadingState,
+  InlineSpinner,
+  FullPageLoader,
+  useLoadingState,
   Skeleton,
   SkeletonDashboard,
   Sparkline,
@@ -143,6 +147,7 @@ export {
   CorrelationPanel,
   DataSourcesPanel,
   EnrichmentPanel,
+  EnrichmentBadges,
   EventDetailPanel,
   SectorDrilldown,
   CountryAttackPanel,
@@ -182,19 +187,40 @@ export {
 } from './settings'
 
 // ============================================
-// REMAINING ROOT-LEVEL COMPONENTS
+// NAVIGATION & LAYOUT COMPONENTS
 // ============================================
 export { default as Sidebar } from './Sidebar'
 export { default as Header } from './Header'
 export { default as SearchModal } from './SearchModal'
+export { default as Breadcrumbs, BreadcrumbsCompact } from './Breadcrumbs'
+export { default as CopyButton, CopyableText, CopyableCode, CopyIOC } from './CopyButton'
+
+// Additional exports from EmptyState
+export { EmptyList, EmptyChart } from './common/EmptyState'
+
+// Additional exports from Skeleton (extended)
+export {
+  SkeletonAvatar,
+  SkeletonBadge,
+  SkeletonButton,
+  SkeletonChart,
+  SkeletonDetailPanel,
+  SkeletonPage,
+  SkeletonActorCard,
+  SkeletonActorGrid,
+} from './common/Skeleton'
+
+// ============================================
+// REMAINING ROOT-LEVEL COMPONENTS
+// ============================================
 export { default as OrganizationProfileSetup } from './OrganizationProfileSetup'
 export { default as PersonalizationWizard } from './PersonalizationWizard'
 export { default as AnalyticsDashboard } from './AnalyticsDashboard'
 export { default as NotificationBell } from './NotificationBell'
 export { default as OnboardingTour } from './OnboardingTour'
 export { default as SavedSearches } from './SavedSearches'
-export { default as UpgradePrompt } from './UpgradePrompt'
-export { default as KillChainVisualization } from './KillChainVisualization'
+export { default as UpgradePrompt, FeatureGate } from './UpgradePrompt'
+export { default as KillChainVisualization, KillChainMini } from './KillChainVisualization'
 export { default as ThreatAttributionMap } from './ThreatAttributionMap'
 export { default as Timeline } from './Timeline'
 export { default as IncidentFlow } from './IncidentFlow'
@@ -211,6 +237,9 @@ export { TagSelector, TagBadges } from './TagSelector'
 
 // Export functionality
 export { ExportButton, QuickExportButton } from './ExportButton'
+
+// One-click actions
+export { ExportIOCsButton, CreateAlertButton, BulkActionBar } from './actions'
 
 // Keyboard shortcuts
 export { KeyboardShortcutsModal, useKeyboardShortcutsModal } from './KeyboardShortcutsModal'

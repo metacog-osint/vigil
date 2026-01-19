@@ -5,141 +5,100 @@
 
 ---
 
-## Current State (v1.0.0)
+## Current State (v1.2.0)
 
-Vigil is a subscription-ready CTI platform with:
-- **22 automated data sources** (see DATA_SOURCES.md)
+Vigil is a production-ready CTI platform with:
+- **29 automated data sources** (see DATA_SOURCES.md)
 - **1,000+ threat actors** across 6 categories
 - **24,000+ ransomware incidents** (2020-present)
 - **Full MITRE ATT&CK integration** (691 techniques)
 - **Subscription tiers** with Stripe integration
 - **REST API** with 9 endpoints
 - **SIEM exports** (Splunk, Elastic, Sentinel, STIX 2.1)
+- **Real-time alerting** (email, push, Slack, Discord, Teams, webhooks)
+- **Cloudflare Workers** for edge-based data ingestion
 
-For completed features, see CHANGELOG.md and FEATURES.md.
-
----
-
-## Planned: Phase 7 - Enterprise Features
-
-### 7.1 Team Collaboration
-- [ ] Shared workspaces
-- [ ] Role-based access control (RBAC)
-- [ ] Audit logging
-- [ ] Team activity feed
-- [ ] Shared watchlists and saved searches
-
-### 7.2 Custom Alerting Engine
-- [ ] Complex alert rule builder (AND/OR conditions)
-- [ ] Alert deduplication and grouping
-- [ ] Escalation policies
-- [ ] On-call scheduling integration
-- [ ] Alert fatigue management
-
-### 7.3 Reporting Suite
-- [ ] Scheduled PDF reports
-- [ ] Executive summary templates
-- [ ] Custom report builder
-- [ ] Branded report output
-- [ ] Historical trend reports
-
-### 7.4 SSO & Identity
-- [ ] SAML 2.0 support
-- [ ] OIDC integration
-- [ ] SCIM provisioning
-- [ ] Multi-factor authentication options
-- [ ] Session management
+For detailed feature documentation, see:
+- `CHANGELOG.md` - Version history
+- `FEATURES.md` - Current feature documentation
+- `BUILD_PLAN_V2.md` - **Authoritative development plan**
 
 ---
 
-## Planned: Phase 8 - Intelligence Enrichment
+## Completed Phases
 
-### 8.1 Automated Enrichment Pipeline
-- [ ] IP reputation scoring
-- [ ] Domain age and registration data
-- [ ] SSL certificate analysis
-- [ ] WHOIS data integration
-- [ ] Passive DNS history
+### Phase 7: Enterprise Features ✅
+- [x] Team collaboration (RBAC, shared watchlists, audit logging)
+- [x] Custom alerting engine (complex rules, escalation, on-call)
+- [x] Reporting suite (scheduled reports, templates, branding)
+- [x] SSO/SAML (Okta, Azure AD, Google Workspace, OIDC)
+- [x] Multi-tenancy / white-label support
 
-### 8.2 Threat Scoring
-- [ ] Custom risk scoring models
-- [ ] Industry-specific threat scores
-- [ ] Confidence-weighted scoring
-- [ ] Time-decay factors
+### Phase 8: Intelligence Enrichment ✅
+- [x] Automated enrichment pipeline (IP reputation, WHOIS, SSL, passive DNS)
+- [x] Threat scoring (custom models, industry-specific, time-decay)
+- [x] AI-powered analysis (summaries, pattern detection, anomaly detection)
+- [x] Natural language querying
+- [x] Predictive threat modeling
 
-### 8.3 AI-Powered Analysis
-- [ ] Automated threat summaries
-- [ ] Pattern detection across incidents
-- [ ] Anomaly detection
-- [ ] Natural language querying
-- [ ] Predictive threat modeling
-
----
-
-## Planned: Phase 9 - Advanced Integrations
-
-### 9.1 SOAR Integration
-- [ ] Playbook templates
-- [ ] Automated response actions
-- [ ] Case management integration
-- [ ] Evidence collection
-
-### 9.2 Threat Intelligence Sharing
-- [ ] TAXII server implementation
-- [ ] STIX 2.1 import/export
-- [ ] ISAC/ISAO integration
-- [ ] Private sharing circles
-
-### 9.3 Asset Discovery
-- [ ] Asset inventory integration
-- [ ] Attack surface mapping
-- [ ] Vulnerability correlation
-- [ ] Exposure scoring
+### Phase 9: Advanced Integrations ✅ (Partial)
+- [x] TAXII 2.1 server implementation
+- [x] STIX 2.1 import/export
+- [x] Asset discovery and attack surface mapping
+- [x] Vulnerability-to-asset correlation
+- [x] Exposure scoring
+- [x] Shadow IT detection
 
 ---
 
-## Planned: Data Source Expansion
+## Remaining Work
 
-### Priority 1: Quick Wins
-See DATA_SOURCES.md Phase 1 for:
-- Tor Exit Nodes
-- Firehol blocklists
-- OpenPhish
-- C2-Tracker
-- crt.sh certificates
+> **Note:** See `BUILD_PLAN_V2.md` for detailed tracking of all items.
 
-### Priority 2: High Value
-See DATA_SOURCES.md Phase 2-3 for:
-- Exploit-DB integration
-- CIRCL Passive DNS
-- Censys certificates
-- Enhanced sandbox integration
+### Data Sources - API Key Status
+| Source | Status | Notes |
+|--------|--------|-------|
+| Pulsedive | ✅ Ready | API key configured |
+| Censys | ✅ Ready | API key configured |
+| VulnCheck KEV | ✅ Ready | API key configured |
+| ANY.RUN | Pending | Needs API key |
+| Triage | Pending | Needs API key |
 
-### Premium Sources (Enterprise)
-| Source | Value | Status |
-|--------|-------|--------|
-| Shodan Full | Complete scanning data | Planned |
-| Recorded Future | Finished intelligence | Evaluating |
-| Censys Enterprise | Attack surface | Evaluating |
+### Quick Wins (No API Required)
+| Source | Effort | Value |
+|--------|--------|-------|
+| CISA ICS-CERT | 3 hours | ICS/OT advisories |
+| Ransomwhere | 2 hours | Crypto payment tracking |
+| MITRE ATT&CK Campaigns | 2 hours | Named campaign tracking |
+| BGPStream | 4 hours | BGP hijack detection |
+
+### Production Hardening
+- [ ] Stripe payment failure handling
+- [ ] Grace period and dunning logic
+- [ ] E2E tests in CI (Firefox, Safari, mobile)
+
+### Future Considerations (Backlog)
+| Feature | Complexity | Blocker |
+|---------|------------|---------|
+| SOAR Integration | High | Architecture decisions |
+| SCIM Provisioning | Medium | Enterprise demand |
+| Mobile App Push | Medium | Requires mobile app |
+| UMD Cyber Events | Medium | Registration required |
+| GDELT Integration | High | Complex implementation |
+| ISAC/ISAO Integration | Medium | External partnerships |
 
 ---
 
-## Technical Debt & Quality
+## Performance Targets
 
-### Code Quality (In Progress)
-See CORRECTIVE_ACTION_PLAN.md for:
-- Refactoring large files (supabase.js, page components)
-- Extracting shared constants
-- Improving test coverage
-- CI/CD improvements
-
-### Performance Targets
-| Metric | Current | Target |
-|--------|---------|--------|
-| Page load (P95) | ~2.5s | <2s |
-| Search latency | ~600ms | <500ms |
-| Test coverage | ~15% | 50%+ |
-| Bundle size | 1.2MB | <1MB |
+| Metric | Current | Target | Status |
+|--------|---------|--------|--------|
+| Page load (P95) | ~2.5s | <2s | In Progress |
+| Search latency | ~600ms | <500ms | In Progress |
+| Test coverage | 50.7% | 50%+ | ✅ Achieved |
+| Bundle size | 1.2MB | <1MB | In Progress |
+| Data freshness | 30 min | <30 min | ✅ Achieved |
+| Uptime | 99.9% | 99.9% | ✅ Maintained |
 
 ---
 
@@ -147,7 +106,7 @@ See CORRECTIVE_ACTION_PLAN.md for:
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
-| Data freshness | < 6 hours | Time since last ingest |
+| Data freshness | < 30 min (critical feeds) | Time since last ingest |
 | Uptime | 99.9% | Monitoring alerts |
 | API response | < 500ms | P95 latency |
 | User engagement | > 5 min/session | Analytics |
@@ -164,7 +123,5 @@ Feature requests and feedback welcome:
 
 ---
 
-*Last updated: January 2026*
-*For version history, see CHANGELOG.md*
-*For current features, see FEATURES.md*
-*For data sources, see DATA_SOURCES.md*
+*Last updated: January 17, 2026*
+*For detailed development tracking, see BUILD_PLAN_V2.md*

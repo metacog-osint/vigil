@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { notifications, subscribeToTable, alerts, vulnerabilities, threatActors } from '../lib/supabase'
+import { notifications, alerts, vulnerabilities, threatActors } from '../lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 

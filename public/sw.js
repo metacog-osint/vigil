@@ -106,7 +106,8 @@ async function networkFirstWithCache(request, cacheName) {
   try {
     const response = await fetch(request)
 
-    if (response.ok) {
+    // Only cache complete responses (not partial 206 responses)
+    if (response.ok && response.status !== 206) {
       const cache = await caches.open(cacheName)
       cache.put(request, response.clone())
     }

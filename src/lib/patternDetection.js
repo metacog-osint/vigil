@@ -5,7 +5,7 @@
  * Provides intelligence on attack trends and emerging threats.
  */
 
-import { supabase } from './supabaseClient'
+import { supabase } from './supabase/client'
 
 // ============================================
 // CONSTANTS

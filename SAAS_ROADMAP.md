@@ -1,10 +1,12 @@
 # Vigil SaaS Product Roadmap
 
-> Comprehensive plan for building Vigil into a successful subscription-based threat intelligence platform.
+> **Note:** This document contains SaaS feature planning and business analysis.
+> For the authoritative technical roadmap, see **BUILD_PLAN_V2.md**.
+> Most Phase 1-2 items are now complete.
 
 **Document Created:** January 2026
-**Last Updated:** January 2026
-**Status:** Planning Phase
+**Last Updated:** January 17, 2026
+**Status:** Phase 1-2 Complete, Phase 3-4 In Progress
 
 ---
 

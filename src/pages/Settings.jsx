@@ -9,18 +9,23 @@
  */
 import { useState } from 'react'
 import { clsx } from 'clsx'
-import { SkeletonCard, ErrorMessage } from '../components'
-import { OrganizationProfileSetup, OrganizationProfileSummary } from '../components/OrganizationProfileSetup'
-import DataSourcesPanel from '../components/DataSourcesPanel'
-import AlertRulesSection from '../components/AlertRulesSection'
+import {
+  SkeletonCard,
+  ErrorMessage,
+  OrganizationProfileSetup,
+  DataSourcesPanel,
+  AlertRulesSection,
+  ApiKeysSection,
+  IntegrationsSection,
+  SSOConfigSection,
+  BrandingConfigSection,
+  PersonalizationWizard,
+} from '../components'
+import { OrganizationProfileSummary } from '../components/OrganizationProfileSetup'
 import AlertSettingsSection from '../components/AlertSettingsSection'
-import ApiKeysSection from '../components/ApiKeysSection'
-import IntegrationsSection from '../components/IntegrationsSection'
-import SSOConfigSection from '../components/SSOConfigSection'
-import BrandingConfigSection from '../components/BrandingConfigSection'
 import { useAuth } from '../hooks/useAuth'
 import { RestartTourButton } from '../components/OnboardingTour'
-import PersonalizationWizard, { PersonalizeButton } from '../components/PersonalizationWizard'
+import { PersonalizeButton } from '../components/PersonalizationWizard'
 import { TIME_RANGES, ITEMS_PER_PAGE } from './settings/SettingsConstants'
 import { SettingSection, Toggle, SavedSearchesList, TagsList, CreateTagModal, SyncLogList } from './settings/SettingsComponents.jsx'
 import SubscriptionSection from './settings/SubscriptionSection.jsx'

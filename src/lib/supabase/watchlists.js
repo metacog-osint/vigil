@@ -17,15 +17,26 @@ export const watchlists = {
       .order('created_at', { ascending: false })
   },
 
-  async getById(id) {
-    return supabase
+  /**
+   * Get watchlist by ID with ownership verification
+   * @param {string} id - Watchlist ID
+   * @param {string} userId - User ID for ownership check
+   */
+  async getById(id, userId) {
+    const query = supabase
       .from('watchlists')
       .select(`
         *,
         items:watchlist_items(*)
       `)
       .eq('id', id)
-      .single()
+
+    // If userId provided, verify ownership
+    if (userId) {
+      query.eq('user_id', userId)
+    }
+
+    return query.single()
   },
 
   async create(watchlist) {
@@ -36,23 +47,67 @@ export const watchlists = {
       .single()
   },
 
-  async update(id, updates) {
+  /**
+   * Update watchlist with ownership verification
+   * @param {string} id - Watchlist ID
+   * @param {object} updates - Fields to update
+   * @param {string} userId - User ID for ownership check
+   */
+  async update(id, updates, userId) {
+    if (!userId) {
+      return { data: null, error: { message: 'User ID required for update' } }
+    }
+
     return supabase
       .from('watchlists')
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', id)
+      .eq('user_id', userId)
       .select()
       .single()
   },
 
-  async delete(id) {
+  /**
+   * Delete watchlist with ownership verification
+   * @param {string} id - Watchlist ID
+   * @param {string} userId - User ID for ownership check
+   */
+  async delete(id, userId) {
+    if (!userId) {
+      return { error: { message: 'User ID required for delete' } }
+    }
+
     return supabase
       .from('watchlists')
       .delete()
       .eq('id', id)
+      .eq('user_id', userId)
   },
 
-  async addItem(watchlistId, entityId, notes = null) {
+  /**
+   * Add item to watchlist with ownership verification
+   * @param {string} watchlistId - Watchlist ID
+   * @param {string} entityId - Entity to add
+   * @param {string} userId - User ID for ownership check
+   * @param {string} notes - Optional notes
+   */
+  async addItem(watchlistId, entityId, userId, notes = null) {
+    if (!userId) {
+      return { data: null, error: { message: 'User ID required' } }
+    }
+
+    // Verify ownership before adding item
+    const { data: watchlist, error: verifyError } = await supabase
+      .from('watchlists')
+      .select('id')
+      .eq('id', watchlistId)
+      .eq('user_id', userId)
+      .single()
+
+    if (verifyError || !watchlist) {
+      return { data: null, error: { message: 'Watchlist not found or access denied' } }
+    }
+
     return supabase
       .from('watchlist_items')
       .insert({ watchlist_id: watchlistId, entity_id: entityId, notes })
@@ -60,7 +115,29 @@ export const watchlists = {
       .single()
   },
 
-  async removeItem(watchlistId, entityId) {
+  /**
+   * Remove item from watchlist with ownership verification
+   * @param {string} watchlistId - Watchlist ID
+   * @param {string} entityId - Entity to remove
+   * @param {string} userId - User ID for ownership check
+   */
+  async removeItem(watchlistId, entityId, userId) {
+    if (!userId) {
+      return { error: { message: 'User ID required' } }
+    }
+
+    // Verify ownership before removing item
+    const { data: watchlist, error: verifyError } = await supabase
+      .from('watchlists')
+      .select('id')
+      .eq('id', watchlistId)
+      .eq('user_id', userId)
+      .single()
+
+    if (verifyError || !watchlist) {
+      return { error: { message: 'Watchlist not found or access denied' } }
+    }
+
     return supabase
       .from('watchlist_items')
       .delete()

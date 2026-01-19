@@ -1,36 +1,21 @@
-name: Critical Alerts Ingestion (Fast)
+name: Critical Alerts Ingestion
 
-# This workflow runs every 30 minutes to ensure rapid alerting for critical events
-# Specifically: Ransomware incidents, CISA KEV, and critical IOCs
+# Hourly ingestion for time-sensitive threat data
+# Consolidated into single job to minimize GitHub Actions minutes
 
 on:
   schedule:
-    # Every 30 minutes
-    - cron: '*/30 * * * *'
+    # Every hour at minute 15
+    - cron: '15 * * * *'
   workflow_dispatch:
-    inputs:
-      source:
-        description: 'Data source to ingest (leave empty for all)'
-        required: false
-        default: ''
-        type: choice
-        options:
-          - ''
-          - ransomware
-          - kev
-          - iocs
 
 env:
   NODE_VERSION: '20'
 
 jobs:
-  # ============================================
-  # RANSOMWARE DATA (Every 30 minutes)
-  # Critical for beating news outlets
-  # ============================================
-  ingest-ransomlook-fast:
+  # Single consolidated job - much more efficient than parallel jobs
+  critical-ingestion:
     runs-on: ubuntu-latest
-    if: github.event.inputs.source == '' || github.event.inputs.source == 'ransomware'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,136 +29,38 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Ingest RansomLook data
+      # Ransomware feeds - highest priority for alerting
+      - name: Ingest RansomLook
         run: npm run ingest:ransomlook
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
-  ingest-ransomware-live-fast:
-    runs-on: ubuntu-latest
-    needs: ingest-ransomlook-fast
-    if: github.event.inputs.source == '' || github.event.inputs.source == 'ransomware'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Ingest Ransomware.live data
+      - name: Ingest Ransomware.live
         run: npm run ingest:ransomware-live
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
-  # ============================================
-  # CISA KEV (Every 30 minutes)
-  # Critical for vulnerability alerting
-  # ============================================
-  ingest-cisa-kev-fast:
-    runs-on: ubuntu-latest
-    if: github.event.inputs.source == '' || github.event.inputs.source == 'kev'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Ingest CISA KEV
-        run: npm run ingest:kev
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-
-  # ============================================
-  # CRITICAL IOCs (Every 30 minutes)
-  # ThreatFox for fresh malware indicators
-  # ============================================
-  ingest-threatfox-fast:
-    runs-on: ubuntu-latest
-    if: github.event.inputs.source == '' || github.event.inputs.source == 'iocs'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Ingest ThreatFox IOCs
+      # Fresh IOCs
+      - name: Ingest ThreatFox
         run: npm run ingest:threatfox
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
-  # ============================================
-  # TREND CALCULATION (After ransomware)
-  # ============================================
-  calculate-trends-fast:
-    runs-on: ubuntu-latest
-    needs:
-      - ingest-ransomlook-fast
-      - ingest-ransomware-live-fast
-    if: always() && (needs.ingest-ransomlook-fast.result == 'success' || needs.ingest-ransomware-live-fast.result == 'success')
-    steps:
+      # Calculate trends after ransomware data
       - name: Calculate actor trends
         run: |
-          curl -X POST "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/rpc/apply_actor_trends" \
+          curl -s -X POST "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/rpc/apply_actor_trends" \
             -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
-            -H "Content-Type: application/json"
-          echo "Trend calculation complete"
+            -H "Content-Type: application/json" || true
 
-  # ============================================
-  # PROCESS ALERT QUEUE
-  # Send notifications for new events
-  # ============================================
-  process-alerts:
-    runs-on: ubuntu-latest
-    needs:
-      - ingest-ransomlook-fast
-      - ingest-ransomware-live-fast
-      - ingest-cisa-kev-fast
-      - ingest-threatfox-fast
-    if: always()
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Process alert queue
+      # Process alert queue
+      - name: Process alerts
         run: npm run process:alerts
+        continue-on-error: true
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
@@ -181,29 +68,9 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
-        continue-on-error: true  # Don't fail workflow if alerts fail
 
-  # ============================================
-  # SUMMARY
-  # ============================================
-  notify-completion:
-    runs-on: ubuntu-latest
-    needs:
-      - ingest-ransomlook-fast
-      - ingest-ransomware-live-fast
-      - ingest-cisa-kev-fast
-      - ingest-threatfox-fast
-      - process-alerts
-    if: always()
-    steps:
       - name: Summary
+        if: always()
         run: |
-          echo "## Critical Alerts Ingestion Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Source | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| RansomLook | ${{ needs.ingest-ransomlook-fast.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Ransomware.live | ${{ needs.ingest-ransomware-live-fast.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| CISA KEV | ${{ needs.ingest-cisa-kev-fast.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ThreatFox | ${{ needs.ingest-threatfox-fast.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Alert Processing | ${{ needs.process-alerts.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "## Critical Alerts Ingestion" >> $GITHUB_STEP_SUMMARY
+          echo "Completed at $(date -u)" >> $GITHUB_STEP_SUMMARY

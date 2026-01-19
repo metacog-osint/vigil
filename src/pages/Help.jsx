@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { sanitizeMarkdown } from '../lib/sanitize'
 
 const HELP_SECTIONS = [
   {
@@ -483,7 +484,7 @@ function HelpSection({ section, isActive }) {
       <div
         className="help-content"
         dangerouslySetInnerHTML={{
-          __html: formatMarkdown(section.content),
+          __html: sanitizeMarkdown(formatMarkdown(section.content)),
         }}
       />
     </div>

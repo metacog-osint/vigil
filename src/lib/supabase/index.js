@@ -100,3 +100,6 @@ export {
 } from './assets'
 
 // Note: Vendor risk management is in src/lib/vendors.js (not in supabase folder)
+
+// Retry utility for resilient API calls
+export { withRetry, fetchWithRetry, createRetryable } from '../retry'

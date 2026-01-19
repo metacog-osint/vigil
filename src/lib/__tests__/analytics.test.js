@@ -3,6 +3,12 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+// Mock import.meta.env before importing the module
+vi.hoisted(() => {
+  // @ts-ignore - Set env var for analytics module
+  import.meta.env.VITE_ENABLE_ANALYTICS = 'true'
+})
+
 // Mock supabase
 vi.mock('../supabase', () => ({
   supabase: {

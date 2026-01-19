@@ -52,7 +52,7 @@ describe('watchlists module', () => {
 
   describe('getById', () => {
     it('fetches watchlist by id with items', async () => {
-      await watchlists.getById('wl-123')
+      await watchlists.getById('wl-123', 'user-123')
 
       expect(supabase.from).toHaveBeenCalledWith('watchlists')
       expect(mockQuery.select).toHaveBeenCalledWith(`
@@ -60,7 +60,16 @@ describe('watchlists module', () => {
         items:watchlist_items(*)
       `)
       expect(mockQuery.eq).toHaveBeenCalledWith('id', 'wl-123')
+      expect(mockQuery.eq).toHaveBeenCalledWith('user_id', 'user-123')
       expect(mockQuery.single).toHaveBeenCalled()
+    })
+
+    it('fetches watchlist without ownership check when userId not provided', async () => {
+      await watchlists.getById('wl-123')
+
+      expect(supabase.from).toHaveBeenCalledWith('watchlists')
+      expect(mockQuery.eq).toHaveBeenCalledWith('id', 'wl-123')
+      expect(mockQuery.eq).not.toHaveBeenCalledWith('user_id', expect.any(String))
     })
   })
 
@@ -83,10 +92,10 @@ describe('watchlists module', () => {
   })
 
   describe('update', () => {
-    it('updates a watchlist with timestamp', async () => {
+    it('updates a watchlist with timestamp and ownership check', async () => {
       const updates = { name: 'Updated Name' }
 
-      await watchlists.update('wl-123', updates)
+      await watchlists.update('wl-123', updates, 'user-123')
 
       expect(supabase.from).toHaveBeenCalledWith('watchlists')
       expect(mockQuery.update).toHaveBeenCalledWith(
@@ -96,54 +105,161 @@ describe('watchlists module', () => {
         })
       )
       expect(mockQuery.eq).toHaveBeenCalledWith('id', 'wl-123')
+      expect(mockQuery.eq).toHaveBeenCalledWith('user_id', 'user-123')
       expect(mockQuery.select).toHaveBeenCalled()
       expect(mockQuery.single).toHaveBeenCalled()
+    })
+
+    it('returns error when userId not provided', async () => {
+      const updates = { name: 'Updated Name' }
+
+      const result = await watchlists.update('wl-123', updates)
+
+      expect(result.data).toBeNull()
+      expect(result.error.message).toBe('User ID required for update')
     })
   })
 
   describe('delete', () => {
-    it('deletes a watchlist', async () => {
-      await watchlists.delete('wl-123')
+    it('deletes a watchlist with ownership check', async () => {
+      await watchlists.delete('wl-123', 'user-123')
 
       expect(supabase.from).toHaveBeenCalledWith('watchlists')
       expect(mockQuery.delete).toHaveBeenCalled()
       expect(mockQuery.eq).toHaveBeenCalledWith('id', 'wl-123')
+      expect(mockQuery.eq).toHaveBeenCalledWith('user_id', 'user-123')
+    })
+
+    it('returns error when userId not provided', async () => {
+      const result = await watchlists.delete('wl-123')
+
+      expect(result.error.message).toBe('User ID required for delete')
     })
   })
 
   describe('addItem', () => {
-    it('adds an item to a watchlist', async () => {
-      await watchlists.addItem('wl-123', 'entity-456')
+    it('adds an item to a watchlist with ownership verification', async () => {
+      // First call: ownership verification returns success
+      const verifyQuery = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: { id: 'wl-123' }, error: null }),
+      }
+      // Second call: insert item
+      const insertQuery = {
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: { id: 'item-1' }, error: null }),
+      }
 
+      supabase.from
+        .mockReturnValueOnce(verifyQuery)
+        .mockReturnValueOnce(insertQuery)
+
+      await watchlists.addItem('wl-123', 'entity-456', 'user-123')
+
+      expect(supabase.from).toHaveBeenCalledWith('watchlists')
       expect(supabase.from).toHaveBeenCalledWith('watchlist_items')
-      expect(mockQuery.insert).toHaveBeenCalledWith({
+      expect(insertQuery.insert).toHaveBeenCalledWith({
         watchlist_id: 'wl-123',
         entity_id: 'entity-456',
         notes: null,
       })
-      expect(mockQuery.select).toHaveBeenCalled()
-      expect(mockQuery.single).toHaveBeenCalled()
     })
 
     it('adds an item with notes', async () => {
-      await watchlists.addItem('wl-123', 'entity-456', 'Important actor')
+      const verifyQuery = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: { id: 'wl-123' }, error: null }),
+      }
+      const insertQuery = {
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: { id: 'item-1' }, error: null }),
+      }
 
-      expect(mockQuery.insert).toHaveBeenCalledWith({
+      supabase.from
+        .mockReturnValueOnce(verifyQuery)
+        .mockReturnValueOnce(insertQuery)
+
+      await watchlists.addItem('wl-123', 'entity-456', 'user-123', 'Important actor')
+
+      expect(insertQuery.insert).toHaveBeenCalledWith({
         watchlist_id: 'wl-123',
         entity_id: 'entity-456',
         notes: 'Important actor',
       })
     })
+
+    it('returns error when userId not provided', async () => {
+      const result = await watchlists.addItem('wl-123', 'entity-456')
+
+      expect(result.data).toBeNull()
+      expect(result.error.message).toBe('User ID required')
+    })
+
+    it('returns error when watchlist not found or access denied', async () => {
+      const verifyQuery = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+      }
+
+      supabase.from.mockReturnValueOnce(verifyQuery)
+
+      const result = await watchlists.addItem('wl-123', 'entity-456', 'user-123')
+
+      expect(result.data).toBeNull()
+      expect(result.error.message).toBe('Watchlist not found or access denied')
+    })
   })
 
   describe('removeItem', () => {
-    it('removes an item from a watchlist', async () => {
-      await watchlists.removeItem('wl-123', 'entity-456')
+    it('removes an item from a watchlist with ownership verification', async () => {
+      // First call: ownership verification returns success
+      const verifyQuery = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: { id: 'wl-123' }, error: null }),
+      }
+      // Second call: delete item
+      const deleteQuery = {
+        delete: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+      }
 
+      supabase.from
+        .mockReturnValueOnce(verifyQuery)
+        .mockReturnValueOnce(deleteQuery)
+
+      await watchlists.removeItem('wl-123', 'entity-456', 'user-123')
+
+      expect(supabase.from).toHaveBeenCalledWith('watchlists')
       expect(supabase.from).toHaveBeenCalledWith('watchlist_items')
-      expect(mockQuery.delete).toHaveBeenCalled()
-      expect(mockQuery.eq).toHaveBeenCalledWith('watchlist_id', 'wl-123')
-      expect(mockQuery.eq).toHaveBeenCalledWith('entity_id', 'entity-456')
+      expect(deleteQuery.delete).toHaveBeenCalled()
+      expect(deleteQuery.eq).toHaveBeenCalledWith('watchlist_id', 'wl-123')
+      expect(deleteQuery.eq).toHaveBeenCalledWith('entity_id', 'entity-456')
+    })
+
+    it('returns error when userId not provided', async () => {
+      const result = await watchlists.removeItem('wl-123', 'entity-456')
+
+      expect(result.error.message).toBe('User ID required')
+    })
+
+    it('returns error when watchlist not found or access denied', async () => {
+      const verifyQuery = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+      }
+
+      supabase.from.mockReturnValueOnce(verifyQuery)
+
+      const result = await watchlists.removeItem('wl-123', 'entity-456', 'user-123')
+
+      expect(result.error.message).toBe('Watchlist not found or access denied')
     })
   })
 

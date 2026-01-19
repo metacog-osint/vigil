@@ -130,6 +130,64 @@
   animation: fade-in 0.15s ease-out;
 }
 
+/* Toast slide-in animations */
+@keyframes slide-in-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-out-to-right {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.animate-in {
+  animation-duration: 0.3s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+.slide-in-from-right-full {
+  animation-name: slide-in-from-right;
+}
+
+/* Micro-interaction utilities */
+.hover-lift {
+  @apply transition-transform duration-200;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+.hover-glow {
+  @apply transition-shadow duration-200;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+}
+
+.click-scale {
+  @apply transition-transform duration-100;
+}
+
+.click-scale:active {
+  transform: scale(0.97);
+}
+
 /* Tooltip animation */
 @keyframes tooltip-fade-in {
   from {
@@ -224,4 +282,249 @@
 /* Prevent body scroll when modal is open on mobile */
 .body-scroll-lock {
   @apply overflow-hidden;
+}
+
+/* ============================================
+   ACCESSIBILITY IMPROVEMENTS
+   ============================================ */
+
+/* Better focus indicators */
+.focus-visible-ring:focus-visible {
+  @apply outline-none ring-2 ring-cyan-500 ring-offset-2 ring-offset-cyber-darker;
+}
+
+/* Skip link for keyboard users */
+.skip-link {
+  @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100];
+  @apply focus:px-4 focus:py-2 focus:bg-cyber-accent focus:text-white focus:rounded-lg;
+}
+
+/* High contrast focus for all interactive elements */
+:focus-visible {
+  outline: 2px solid #22d3ee;
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-pulse,
+  .animate-spin,
+  .live-indicator {
+    animation: none !important;
+  }
+}
+
+/* Better screen reader support */
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  @apply sr-only;
+}
+
+/* Visually hidden but accessible */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================
+   MOBILE IMPROVEMENTS
+   ============================================ */
+
+/* Mobile bottom navigation */
+.mobile-nav-bottom {
+  @apply fixed bottom-0 left-0 right-0 bg-cyber-dark border-t border-gray-800;
+  @apply flex justify-around items-center h-16 px-2;
+  @apply sm:hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Safe area padding for notched devices */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Better touch scrolling */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Mobile card list */
+.mobile-card-list {
+  @apply space-y-3;
+}
+
+.mobile-card-list > * {
+  @apply touch-target;
+}
+
+/* Swipeable container */
+.swipeable {
+  @apply overflow-x-auto snap-x snap-mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.swipeable::-webkit-scrollbar {
+  display: none;
+}
+
+.swipeable > * {
+  @apply snap-start shrink-0;
+}
+
+/* Mobile-friendly buttons */
+@media (max-width: 640px) {
+  .cyber-button,
+  .cyber-button-primary {
+    @apply min-h-[44px] text-sm;
+  }
+
+  /* Full-width buttons on mobile */
+  .mobile-full-width {
+    @apply w-full;
+  }
+}
+
+/* Mobile action sheet */
+.action-sheet {
+  @apply fixed inset-x-0 bottom-0 bg-cyber-dark border-t border-gray-800;
+  @apply rounded-t-2xl p-4 pb-8;
+  @apply transform transition-transform duration-300;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 2rem);
+}
+
+.action-sheet-backdrop {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm;
+}
+
+/* Pull-to-refresh indicator */
+.pull-indicator {
+  @apply absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full;
+  @apply flex items-center justify-center w-10 h-10;
+  @apply text-gray-500;
+}
+
+/* Mobile data cards (replacing table rows) */
+.data-card {
+  @apply cyber-card p-4 space-y-2;
+}
+
+.data-card-header {
+  @apply flex items-center justify-between;
+}
+
+.data-card-title {
+  @apply font-medium text-white truncate;
+}
+
+.data-card-meta {
+  @apply text-xs text-gray-500;
+}
+
+.data-card-badges {
+  @apply flex flex-wrap gap-1.5 mt-2;
+}
+
+/* Responsive grid that stacks on mobile */
+.responsive-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+}
+
+/* Mobile-first stat cards */
+.stat-card-mobile {
+  @apply flex items-center justify-between p-3 cyber-card;
+}
+
+.stat-card-mobile .stat-value {
+  @apply text-xl font-bold text-white;
+}
+
+.stat-card-mobile .stat-label {
+  @apply text-xs text-gray-500;
+}
+
+/* Bottom sheet handle */
+.sheet-handle {
+  @apply w-10 h-1 bg-gray-700 rounded-full mx-auto mb-4;
+}
+
+/* ============================================
+   INTERACTIVE ELEMENT IMPROVEMENTS
+   ============================================ */
+
+/* Better checkbox/radio styles */
+input[type="checkbox"],
+input[type="radio"] {
+  @apply accent-cyan-500;
+}
+
+/* Custom checkbox */
+.custom-checkbox {
+  @apply w-5 h-5 rounded border-2 border-gray-600 bg-transparent;
+  @apply checked:bg-cyan-500 checked:border-cyan-500;
+  @apply focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-cyber-darker;
+  @apply transition-colors cursor-pointer;
+}
+
+/* Custom toggle switch */
+.toggle-switch {
+  @apply relative inline-flex h-6 w-11 items-center rounded-full;
+  @apply bg-gray-700 transition-colors;
+}
+
+.toggle-switch[data-checked="true"] {
+  @apply bg-cyan-500;
+}
+
+.toggle-switch-thumb {
+  @apply inline-block h-4 w-4 rounded-full bg-white transform transition-transform;
+  @apply translate-x-1;
+}
+
+.toggle-switch[data-checked="true"] .toggle-switch-thumb {
+  @apply translate-x-6;
+}
+
+/* Ripple effect for buttons */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.ripple:active::after {
+  width: 200%;
+  height: 200%;
 }

@@ -4,7 +4,16 @@
  * GET /api/v1/actors?id=<uuid> - Get single actor
  */
 
-import { validateApiKey, hasScope, logRequest, errorResponse, jsonResponse, supabase } from '../lib/auth.js'
+import { validateApiKey, hasScope, logRequest, errorResponse, jsonResponse, supabase, checkRateLimit, getRateLimitHeaders, getRotationWarningHeaders } from '../_lib/auth.js'
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_lib/cors.js'
+import {
+  validateSortField,
+  validateSortOrder,
+  validatePagination,
+  isValidUUID,
+  validateTrendStatus,
+  sanitizeSearch,
+} from '../_lib/validators.js'
 
 export const config = {
   runtime: 'edge'
@@ -12,21 +21,15 @@ export const config = {
 
 export default async function handler(request) {
   const startTime = Date.now()
+  const origin = request.headers.get('origin') || ''
 
   // Handle CORS preflight
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type'
-      }
-    })
-  }
+  const preflightResponse = handleCorsPreflightRequest(request)
+  if (preflightResponse) return preflightResponse
 
   // Only allow GET
   if (request.method !== 'GET') {
-    return errorResponse('Method not allowed', 405)
+    return errorResponse('Method not allowed', 405, getCorsHeaders(origin))
   }
 
   // Validate API key
@@ -45,6 +48,20 @@ export default async function handler(request) {
     return errorResponse('API access requires Team plan or higher', 403)
   }
 
+  // Enforce rate limits (distributed via Redis when available)
+  const rateLimit = await checkRateLimit(auth.keyId, auth.rateLimits.perMinute)
+  if (!rateLimit.allowed) {
+    return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(rateLimit.resetIn),
+        ...getRateLimitHeaders(rateLimit),
+        ...getCorsHeaders(origin)
+      }
+    })
+  }
+
   const url = new URL(request.url)
   const params = url.searchParams
 
@@ -52,6 +69,11 @@ export default async function handler(request) {
     // Single actor lookup
     const actorId = params.get('id')
     if (actorId) {
+      // Validate UUID format
+      if (!isValidUUID(actorId)) {
+        return errorResponse('Invalid actor ID format', 400, getCorsHeaders(origin))
+      }
+
       const { data, error } = await supabase
         .from('threat_actors')
         .select('*')
@@ -59,10 +81,13 @@ export default async function handler(request) {
         .single()
 
       if (error || !data) {
-        return errorResponse('Actor not found', 404)
+        return errorResponse('Actor not found', 404, getCorsHeaders(origin))
       }
 
-      const response = jsonResponse({ data })
+      const response = jsonResponse({ data }, 200, {
+        ...getCorsHeaders(origin),
+        ...getRotationWarningHeaders(auth)
+      })
       await logRequest({ ...auth, responseTime: Date.now() - startTime }, request, response)
       return response
     }
@@ -72,44 +97,47 @@ export default async function handler(request) {
       .from('threat_actors')
       .select('*', { count: 'exact' })
 
-    // Apply filters
-    const trendStatus = params.get('trend_status')
+    // Apply validated filters
+    const trendStatus = validateTrendStatus(params.get('trend_status'))
     if (trendStatus) {
-      query = query.eq('trend_status', trendStatus.toUpperCase())
+      query = query.eq('trend_status', trendStatus)
     }
 
-    const search = params.get('search')
+    const search = sanitizeSearch(params.get('search'))
     if (search) {
       query = query.or(`name.ilike.%${search}%,aliases.cs.{${search}}`)
     }
 
-    const country = params.get('country')
+    const country = sanitizeSearch(params.get('country'))
     if (country) {
       query = query.contains('attributed_countries', [country])
     }
 
-    const sector = params.get('sector')
+    const sector = sanitizeSearch(params.get('sector'))
     if (sector) {
       query = query.contains('target_sectors', [sector])
     }
 
-    // Pagination
-    const page = parseInt(params.get('page') || '1')
-    const limit = Math.min(parseInt(params.get('limit') || '50'), 100)
-    const offset = (page - 1) * limit
+    // Validated pagination
+    const { page, limit, offset } = validatePagination(
+      params.get('page'),
+      params.get('limit')
+    )
 
-    // Sorting
-    const sortBy = params.get('sort_by') || 'last_seen'
-    const sortOrder = params.get('sort_order') === 'asc' ? true : false
+    // Validated sorting
+    const sortBy = validateSortField('actors', params.get('sort_by'))
+    const sortOrder = validateSortOrder(params.get('sort_order'))
 
     query = query
-      .order(sortBy, { ascending: sortOrder })
+      .order(sortBy, { ascending: sortOrder === 'asc' })
       .range(offset, offset + limit - 1)
 
     const { data, error, count } = await query
 
     if (error) {
-      return errorResponse(error.message, 500)
+      // Don't expose internal error details
+      console.error('Database error:', error)
+      return errorResponse('Failed to fetch actors', 500, getCorsHeaders(origin))
     }
 
     const response = jsonResponse({
@@ -120,6 +148,9 @@ export default async function handler(request) {
         total: count,
         pages: Math.ceil(count / limit)
       }
+    }, 200, {
+      ...getCorsHeaders(origin),
+      ...getRotationWarningHeaders(auth)
     })
 
     await logRequest({ ...auth, responseTime: Date.now() - startTime }, request, response)
@@ -127,6 +158,6 @@ export default async function handler(request) {
 
   } catch (err) {
     console.error('API Error:', err)
-    return errorResponse('Internal server error', 500)
+    return errorResponse('Internal server error', 500, getCorsHeaders(origin))
   }
 }

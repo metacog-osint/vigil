@@ -5,7 +5,7 @@
  * Formats: splunk, elastic, sentinel, stix, csv
  */
 
-import { validateApiKey, hasScope, logRequest, errorResponse, jsonResponse, supabase } from '../lib/auth.js'
+import { validateApiKey, hasScope, logRequest, errorResponse, jsonResponse, supabase } from '../_lib/auth.js'
 
 export const config = {
   runtime: 'edge'

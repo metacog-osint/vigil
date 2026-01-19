@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { iocs } from '../lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
-import { SkeletonList } from '../components/Skeleton'
-import { EmptyIOCs } from '../components/EmptyState'
-import { ExportButton } from '../components/ExportButton'
-import { EnrichmentPanel, EnrichmentBadges } from '../components/EnrichmentPanel'
+import {
+  SkeletonList,
+  EmptyIOCs,
+  ExportButton,
+  EnrichmentPanel,
+  EnrichmentBadges,
+} from '../components'
 
 const IOC_TYPES = [
   { key: '', label: 'All Types' },

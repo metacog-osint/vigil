@@ -193,5 +193,5 @@ MIT
 
 ---
 
-*Version 0.4.1 - January 2026*
-*Built for the iCOUNTER CTI Analyst position.*
+*Version 0.4.2 - January 2026*
+*Built by The Intelligence Company*

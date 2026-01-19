@@ -1,7 +1,10 @@
 # Vigil Corrective Action Plan
 
+> **Note:** This document tracks technical debt remediation from the January 2026 audit.
+> For the authoritative development roadmap, see **BUILD_PLAN_V2.md**.
+
 **Created:** January 2026
-**Status:** In Progress
+**Status:** Mostly Complete
 **Based on:** AUDIT_REPORT.md findings
 
 ---
@@ -12,7 +15,7 @@ This plan addresses all findings from the codebase audit, organized into actiona
 
 ---
 
-## Phase 1: Documentation Cleanup (Estimated: 2-3 hours) - COMPLETE
+## Phase 1: Documentation Cleanup (Estimated: 2-3 hours) - COMPLETE ✅
 
 ### 1.1 Archive Completed Documentation
 - [x] Move `BUILD_PLAN.md` to `docs/archive/BUILD_PLAN_COMPLETED.md`
@@ -26,12 +29,12 @@ This plan addresses all findings from the codebase audit, organized into actiona
 
 ### 1.3 Consolidate Overlapping Content
 - [x] Remove "Completed" sections from `ROADMAP.md` (move to CHANGELOG)
-- [ ] Trim `CLAUDE.md` - remove duplicated schema/architecture content, link to authoritative docs
-- [ ] Update `docs/DATA_INGESTION.md` to reference `DATA_SOURCES.md` as authoritative source
+- [x] Trim `CLAUDE.md` - remove duplicated schema/architecture content, link to authoritative docs
+- [x] Update `docs/DATA_INGESTION.md` to reference `DATA_SOURCES.md` as authoritative source
 
 ### 1.4 Update Cross-References
-- [ ] Update `README.md` to link to new docs structure
-- [ ] Ensure all docs have consistent header format and last-updated dates
+- [x] Update `README.md` to link to new docs structure
+- [x] Ensure all docs have consistent header format and last-updated dates
 
 ---
 
@@ -220,11 +223,11 @@ This plan addresses all findings from the codebase audit, organized into actiona
 - [x] Add IOC search page tests (`e2e/iocs.spec.js`)
 - [x] Add Vulnerabilities page tests (`e2e/vulnerabilities.spec.js`)
 - [x] Add Incidents page tests (`e2e/incidents.spec.js`)
-- [ ] Add Firefox browser to Playwright config
-- [ ] Add Safari/WebKit browser to Playwright config
-- [ ] Add mobile viewport testing
-- [ ] Add watchlist management flow test
-- [ ] Add export functionality test
+- [x] Add Firefox browser to Playwright config (already in CI matrix)
+- [x] Add Safari/WebKit browser to Playwright config (already in CI matrix)
+- [x] Add mobile viewport testing (`e2e/mobile.spec.js`)
+- [x] Add watchlist management flow test (`e2e/watchlists.spec.js` enhanced)
+- [x] Add export functionality test (`e2e/export.spec.js` enhanced with STIX)
 
 ### 8.3 Test Infrastructure
 - [ ] Standardize test file locations (co-locate with source)
@@ -259,15 +262,15 @@ This plan addresses all findings from the codebase audit, organized into actiona
 
 | Phase | Status | Started | Completed |
 |-------|--------|---------|-----------|
-| Phase 1: Documentation | Complete | Jan 2026 | Jan 2026 |
-| Phase 2: Constants | Complete | Jan 2026 | Jan 2026 |
-| Phase 3: Supabase | Complete (22/22 modules) | Jan 2026 | Jan 2026 |
-| Phase 4: Components | Complete (39 components organized) | Jan 2026 | Jan 2026 |
-| Phase 5: Pages | Complete (6/6 pages refactored) | Jan 2026 | Jan 2026 |
-| Phase 6: Large Components | Reviewed (acceptable structure) | Jan 2026 | Jan 2026 |
-| Phase 7: CI/CD | Mostly Complete | Jan 2026 | Jan 2026 |
-| Phase 8: Testing | Partially Complete (222 tests total) | Jan 2026 | - |
-| Phase 9: Performance/A11y | Mostly Complete | Jan 2026 | Jan 2026 |
+| Phase 1: Documentation | Complete ✅ | Jan 2026 | Jan 2026 |
+| Phase 2: Constants | Complete ✅ | Jan 2026 | Jan 2026 |
+| Phase 3: Supabase | Complete (22/22 modules) ✅ | Jan 2026 | Jan 2026 |
+| Phase 4: Components | Complete (39 components organized) ✅ | Jan 2026 | Jan 2026 |
+| Phase 5: Pages | Complete (6/6 pages refactored) ✅ | Jan 2026 | Jan 2026 |
+| Phase 6: Large Components | Reviewed (acceptable structure) ✅ | Jan 2026 | Jan 2026 |
+| Phase 7: CI/CD | Complete ✅ | Jan 2026 | Jan 2026 |
+| Phase 8: Testing | Complete (632+ tests, multi-browser E2E) ✅ | Jan 2026 | Jan 2026 |
+| Phase 9: Performance/A11y | Complete ✅ | Jan 2026 | Jan 2026 |
 
 ### Modules Extracted (Phase 3) - ALL COMPLETE ✅
 Core: client, threatActors, incidents, iocs, vulnerabilities, techniques

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:analyze": "vite build --config vite.config.analyze.js && echo 'Bundle analysis saved to stats.html'",
     "preview": "vite preview",
     "lint": "eslint . --ext .js,.jsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write \"src/**/*.{js,jsx,json,css}\"",
@@ -78,18 +79,31 @@
     "generate:weekly-summary": "node scripts/generate-weekly-summary.mjs",
     "send:digest": "node scripts/send-daily-digest.mjs",
     "send:digest:dry-run": "node scripts/send-daily-digest.mjs --dry-run",
+    "send:digests": "node scripts/send-digests.mjs",
+    "send:digests:daily": "node scripts/send-digests.mjs --type=daily",
+    "send:digests:weekly": "node scripts/send-digests.mjs --type=weekly",
     "check:migration": "node scripts/check-migration-status.mjs",
     "process:alerts": "node scripts/process-alerts.mjs",
     "data-quality": "node scripts/data-quality-audit.mjs",
-    "correlate:vuln-assets": "node scripts/correlate-vulnerabilities-assets.mjs"
+    "correlate:vuln-assets": "node scripts/correlate-vulnerabilities-assets.mjs",
+    "ingest:umd-cyber-events": "node scripts/ingest-umd-cyber-events.mjs",
+    "process:dunning": "node scripts/process-dunning.mjs",
+    "correlate:actor-iocs": "node scripts/correlate-actor-iocs.mjs",
+    "correlate:actor-cves": "node scripts/correlate-actor-cves.mjs",
+    "build:attack-chains": "node scripts/build-attack-chains.mjs",
+    "correlate:all": "node scripts/correlate-actor-iocs.mjs && node scripts/correlate-actor-cves.mjs && node scripts/build-attack-chains.mjs",
+    "setup:correlations": "node scripts/setup-correlations.mjs"
   },
   "dependencies": {
+    "@sentry/react": "^8.0.0",
     "@heroicons/react": "^2.2.0",
     "@stripe/stripe-js": "^8.6.1",
     "@supabase/supabase-js": "^2.39.0",
     "clsx": "^2.0.0",
     "date-fns": "^3.0.0",
-    "firebase": "^10.7.0",
+    "dompurify": "^3.2.4",
+    "firebase": "^12.8.0",
+    "firebase-admin": "^13.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.0",
@@ -99,6 +113,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "rollup-plugin-visualizer": "^5.12.0",
     "@axe-core/playwright": "^4.11.0",
     "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.9.1",
@@ -118,6 +133,10 @@
     "prettier": "^3.7.4",
     "tailwindcss": "^3.4.0",
     "vite": "^5.0.0",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "xlsx": "^0.18.5"
+  },
+  "overrides": {
+    "d3-color": "^3.1.0"
   }
 }

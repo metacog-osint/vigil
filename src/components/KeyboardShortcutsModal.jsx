@@ -1,36 +1,5 @@
 import { useState, useEffect } from 'react'
-
-const SHORTCUT_GROUPS = [
-  {
-    name: 'Navigation',
-    shortcuts: [
-      { keys: ['g', 'd'], description: 'Go to Dashboard' },
-      { keys: ['g', 'a'], description: 'Go to Threat Actors' },
-      { keys: ['g', 'i'], description: 'Go to Incidents' },
-      { keys: ['g', 'v'], description: 'Go to Vulnerabilities' },
-      { keys: ['g', 't'], description: 'Go to Techniques' },
-      { keys: ['g', 'w'], description: 'Go to Watchlists' },
-      { keys: ['g', 's'], description: 'Go to Settings' },
-      { keys: ['g', 'r'], description: 'Go to Trends' },
-    ],
-  },
-  {
-    name: 'Search',
-    shortcuts: [
-      { keys: ['/'], description: 'Open search' },
-      { keys: ['Ctrl', 'K'], description: 'Open search (alternative)' },
-      { keys: ['Cmd', 'K'], description: 'Open search (Mac)' },
-    ],
-  },
-  {
-    name: 'Interface',
-    shortcuts: [
-      { keys: ['['], description: 'Toggle sidebar' },
-      { keys: ['?'], description: 'Show keyboard shortcuts' },
-      { keys: ['Esc'], description: 'Close modal / Cancel' },
-    ],
-  },
-]
+import { SHORTCUTS, SHORTCUT_CATEGORIES, formatKeys, MOD_KEY } from '../lib/shortcuts'
 
 /**
  * KeyboardShortcutsModal - Displays available keyboard shortcuts
@@ -50,6 +19,18 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
     }
   }, [isOpen, onClose])
 
+  // Prevent body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   return (
@@ -58,16 +39,30 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Modal */}
-      <div className="relative bg-gray-900 border border-gray-700 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden">
+      <div
+        className="relative bg-gray-900 border border-gray-700 rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="shortcuts-title"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-          <h2 className="text-lg font-semibold text-white">Keyboard Shortcuts</h2>
+          <div>
+            <h2 id="shortcuts-title" className="text-lg font-semibold text-white">
+              Keyboard Shortcuts
+            </h2>
+            <p className="text-sm text-gray-400 mt-0.5">
+              Press <KeyBadge small>?</KeyBadge> anytime to show this
+            </p>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+            aria-label="Close"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -76,41 +71,54 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
         </div>
 
         {/* Content */}
-        <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
-          {SHORTCUT_GROUPS.map((group) => (
-            <div key={group.name} className="mb-6 last:mb-0">
-              <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">
-                {group.name}
-              </h3>
-              <div className="space-y-2">
-                {group.shortcuts.map((shortcut, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between py-1.5"
-                  >
-                    <span className="text-gray-300 text-sm">{shortcut.description}</span>
-                    <div className="flex items-center gap-1">
-                      {shortcut.keys.map((key, keyIndex) => (
-                        <span key={keyIndex} className="flex items-center">
-                          <KeyBadge>{key}</KeyBadge>
-                          {keyIndex < shortcut.keys.length - 1 && (
-                            <span className="text-gray-600 mx-1 text-xs">then</span>
-                          )}
-                        </span>
-                      ))}
-                    </div>
+        <div className="px-6 py-4 overflow-y-auto max-h-[calc(80vh-10rem)]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Object.entries(SHORTCUTS).map(([categoryKey, shortcuts]) => {
+              const category = SHORTCUT_CATEGORIES[categoryKey]
+              return (
+                <div key={categoryKey}>
+                  <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">
+                    {category?.label || categoryKey}
+                  </h3>
+                  <div className="space-y-2">
+                    {shortcuts.map((shortcut, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between py-1.5"
+                      >
+                        <span className="text-gray-300 text-sm">{shortcut.description}</span>
+                        <div className="flex items-center gap-1">
+                          {formatKeys(shortcut.keys).map((key, keyIndex) => (
+                            <span key={keyIndex} className="flex items-center">
+                              <KeyBadge>{key}</KeyBadge>
+                              {keyIndex < shortcut.keys.length - 1 && shortcut.keys[0] !== MOD_KEY && (
+                                <span className="text-gray-600 mx-1 text-xs">then</span>
+                              )}
+                              {keyIndex < shortcut.keys.length - 1 && shortcut.keys[0] === MOD_KEY && (
+                                <span className="text-gray-600 mx-0.5">+</span>
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          ))}
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         {/* Footer */}
         <div className="px-6 py-3 bg-gray-800/50 border-t border-gray-700">
-          <p className="text-xs text-gray-500 text-center">
-            Press <KeyBadge small>Esc</KeyBadge> to close
-          </p>
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span>
+              Navigation: press <KeyBadge small>g</KeyBadge> then a letter
+            </span>
+            <span>
+              {MOD_KEY === '⌘' ? 'macOS' : 'Windows/Linux'}
+            </span>
+          </div>
         </div>
       </div>
     </div>

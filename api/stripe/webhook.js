@@ -161,14 +161,49 @@ export default async function handler(req, res) {
         const subscriptionId = invoice.subscription
 
         if (subscriptionId) {
+          // Update subscription status
           await supabase
             .from('user_subscriptions')
             .update({ status: 'past_due' })
             .eq('stripe_subscription_id', subscriptionId)
 
-          // Get user ID for logging
+          // Get subscription details
           const subscription = await stripe.subscriptions.retrieve(subscriptionId)
           const userId = subscription.metadata?.firebase_uid
+
+          // Get user info for email
+          const { data: userSub } = await supabase
+            .from('user_subscriptions')
+            .select('billing_email, tier')
+            .eq('stripe_subscription_id', subscriptionId)
+            .single()
+
+          // Send payment failure notification email
+          if (userSub?.billing_email && process.env.RESEND_API_KEY) {
+            try {
+              const nextRetry = invoice.next_payment_attempt
+                ? new Date(invoice.next_payment_attempt * 1000).toISOString()
+                : null
+
+              await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  from: 'Vigil <alerts@vigil.theintelligence.company>',
+                  to: userSub.billing_email,
+                  subject: 'Action Required: Payment failed for your Vigil subscription',
+                  html: `<p>We were unable to process your payment for Vigil ${userSub.tier}. Please <a href="https://vigil.theintelligence.company/settings">update your payment method</a> to avoid service interruption.</p>`,
+                  text: `We were unable to process your payment for Vigil ${userSub.tier}. Please update your payment method at https://vigil.theintelligence.company/settings to avoid service interruption.`
+                })
+              })
+            } catch (emailErr) {
+              console.error('Failed to send payment failure email:', emailErr)
+            }
+          }
+
           if (userId) {
             await logSubscriptionEvent(userId, 'payment_failed', null, null, event.id, event.type)
           }

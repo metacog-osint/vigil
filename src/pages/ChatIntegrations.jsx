@@ -7,6 +7,7 @@ import {
   COMMANDS,
   getOAuthUrl,
 } from '../lib/chat'
+import { generateOAuthState } from '../lib/oauthSecurity'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../contexts/SubscriptionContext'
 import { FeatureGate } from '../components/UpgradePrompt'
@@ -99,7 +100,12 @@ export default function ChatIntegrations() {
   }
 
   function handleConnect(platform) {
-    const state = btoa(JSON.stringify({ userId: user.uid, timestamp: Date.now() }))
+    // Generate cryptographically secure state to prevent CSRF attacks
+    const state = generateOAuthState({
+      userId: user.uid,
+      platform,
+      returnTo: '/chat-integrations',
+    })
     const redirectUri = `${window.location.origin}/api/chat/${platform}/callback`
     const url = getOAuthUrl(platform, redirectUri, state)
     window.location.href = url

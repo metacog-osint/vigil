@@ -2,9 +2,7 @@
  * Actor Detail Panel Component
  * Shows detailed information about a selected threat actor
  */
-import TrendBadge from '../../components/TrendBadge'
-import { Timeline } from '../../components/Timeline'
-import { CorrelationPanel } from '../../components/CorrelationPanel'
+import { TrendBadge, Timeline, CorrelationPanel } from '../../components'
 
 export function ActorDetailPanel({
   actor,

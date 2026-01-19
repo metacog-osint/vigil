@@ -4,13 +4,13 @@ This document provides a comprehensive overview of all threat intelligence data 
 
 ---
 
-## Current Data Sources (28 Active)
+## Current Data Sources (32 Active)
 
 ### Ransomware Intelligence
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
-| RansomLook | `https://www.ransomlook.io/api` | Ransomware incidents, victim claims | Every 6h | `ingest-ransomlook.mjs` | None |
+| RansomLook | `https://www.ransomlook.io/api` | Ransomware incidents, victim claims | Every 30min | `workers/src/feeds/ransomlook.js` | None |
 | Ransomware.live | `https://api.ransomware.live/v2` | Victim claims, historical data (2020+) | Every 6h | `ingest-ransomware-live.mjs` | None |
 | Ransomwatch | `https://raw.githubusercontent.com/joshhighet/ransomwatch/main/` | Victim posts, group metadata | Every 6h | `ingest-ransomwatch.mjs` | None |
 
@@ -18,9 +18,9 @@ This document provides a comprehensive overview of all threat intelligence data 
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
-| ThreatFox | `https://threatfox-api.abuse.ch/api/v1/` | IPs, domains, URLs, hashes | Every 6h | `ingest-threatfox.mjs` | None |
-| URLhaus | `https://urlhaus-api.abuse.ch/v1/urls/recent/` | Malicious URLs | Every 6h | `ingest-urlhaus.mjs` | None |
-| Feodo Tracker | `https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.json` | Botnet C2 IPs | Every 6h | `ingest-feodo.mjs` | None |
+| ThreatFox | `https://threatfox-api.abuse.ch/api/v1/` | IPs, domains, URLs, hashes | Every 30min | `workers/src/feeds/threatfox.js` | API Key (`ABUSECH_API_KEY`) |
+| URLhaus | `https://urlhaus-api.abuse.ch/v1/urls/recent/` | Malicious URLs | Every 30min | `workers/src/feeds/urlhaus.js` | API Key (`ABUSECH_API_KEY`) |
+| Feodo Tracker | `https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.json` | Botnet C2 IPs | Every 30min | `workers/src/feeds/feodo.js` | None |
 | Spamhaus DROP | `https://www.spamhaus.org/drop/*.txt` | IP blocklists (DROP, EDROP, DROPv6) | Daily | `ingest-spamhaus.mjs` | None |
 | AlienVault OTX | `https://otx.alienvault.com/api/v1` | Community threat pulses, IOCs | Daily | `ingest-alienvault-otx.mjs` | API Key |
 | PhishTank | `http://data.phishtank.com/data/` | Verified phishing URLs | Daily | `ingest-phishtank.mjs` | Optional |
@@ -38,6 +38,7 @@ This document provides a comprehensive overview of all threat intelligence data 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
 | MITRE ATT&CK | `https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json` | Techniques, APT groups, mitigations | Every 6h | `ingest-mitre.mjs` | None |
+| MITRE ATLAS | `https://raw.githubusercontent.com/mitre-atlas/atlas-data/main/dist/ATLAS.yaml` | AI/ML adversarial techniques | Weekly | `workers/src/feeds/mitre-atlas.js` | None |
 | Malpedia | `https://malpedia.caad.fkie.fraunhofer.de/api` | Actor profiles, malware families | Every 6h | `ingest-malpedia.mjs` | None |
 | MISP Galaxy | `https://raw.githubusercontent.com/MISP/misp-galaxy/main/clusters/` | Threat actor clusters | Every 6h | `ingest-misp-galaxy.mjs` | None |
 
@@ -45,7 +46,8 @@ This document provides a comprehensive overview of all threat intelligence data 
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
-| MalwareBazaar | `https://mb-api.abuse.ch/api/v1/` | Malware samples, hashes | Daily | `ingest-malwarebazaar.mjs` | Optional |
+| MalwareBazaar | `https://mb-api.abuse.ch/api/v1/` | Malware samples, hashes | Daily (06:00 UTC) | `workers/src/feeds/malwarebazaar.js` | API Key (`ABUSECH_API_KEY`) |
+| ANY.RUN Trends | `https://any.run/malware-trends/` | Malware family trends | Daily | `workers/src/feeds/anyrun.js` | None (scraper) |
 
 ### Breach Data
 
@@ -65,7 +67,20 @@ This document provides a comprehensive overview of all threat intelligence data 
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
-| VulnCheck KEV | `https://api.vulncheck.com/v3` | Extended KEV (173% larger than CISA) | Daily | `ingest-vulncheck.mjs` | API Key |
+| VulnCheck KEV | `https://api.vulncheck.com/v3` | Extended KEV (173% larger than CISA) | Daily | `workers/src/feeds/vulncheck.js` | API Key |
+| CISA ICS-CERT | `https://www.cisa.gov/sites/default/files/feeds/ics-cert_advisories.json` | ICS/OT advisories | Daily | `workers/src/feeds/cisa-ics.js` | None |
+
+### Ransomware Payment Tracking
+
+| Source | Endpoint | Data Type | Schedule | Script | Auth |
+|--------|----------|-----------|----------|--------|------|
+| Ransomwhere | `https://api.ransomwhe.re/export` | Ransomware BTC payments, wallet addresses | Daily | `workers/src/feeds/ransomwhere.js` | None |
+
+### MITRE ATT&CK Campaigns
+
+| Source | Endpoint | Data Type | Schedule | Script | Auth |
+|--------|----------|-----------|----------|--------|------|
+| MITRE ATT&CK | `https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json` | Named campaigns (SolarWinds, Hafnium, etc.) | Weekly | `workers/src/feeds/mitre.js` | None |
 
 ### Community Threat Intelligence
 
@@ -78,6 +93,18 @@ This document provides a comprehensive overview of all threat intelligence data 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
 | Censys | `https://search.censys.io/api/v2` | Certificate/service data, C2 detection | Daily | `ingest-censys.mjs` | API Key |
+
+### Network/Routing Intelligence
+
+| Source | Endpoint | Data Type | Schedule | Script | Auth |
+|--------|----------|-----------|----------|--------|------|
+| BGPStream | `https://bgpstream.crosswork.cisco.com/api` | BGP hijacks, route leaks, outages | Daily | `workers/src/feeds/bgpstream.js` | None |
+
+### Cyber Events Intelligence
+
+| Source | Endpoint | Data Type | Schedule | Script | Auth |
+|--------|----------|-----------|----------|--------|------|
+| UMD Cyber Events | `https://cissm.umd.edu/cyber-events-database` | Nation-state attribution, motives, industries | Monthly (manual) | `ingest-umd-cyber-events.mjs` | Registration |
 
 ### Enrichment Services
 
@@ -270,24 +297,28 @@ These items are tracked for future implementation based on user feedback and res
 
 ## Integration Architecture
 
-### Ingestion Flow
+### Ingestion Flow (Cloudflare Workers)
+
+As of January 2026, all data ingestion has migrated from GitHub Actions to Cloudflare Workers for improved reliability and reduced latency.
 
 ```
 External API/Feed
        │
        ▼
-┌─────────────────┐
-│ Ingestion Script │  (scripts/ingest-*.mjs)
-│  - Fetch data    │
-│  - Transform     │
-│  - Deduplicate   │
-└────────┬────────┘
+┌─────────────────────────┐
+│ Cloudflare Worker       │  (workers/src/feeds/*.js)
+│  - Cron-triggered       │
+│  - Edge execution       │
+│  - Fetch & transform    │
+│  - Batch processing     │
+└────────┬────────────────┘
          │
          ▼
 ┌─────────────────┐
 │    Supabase     │
 │  - Upsert data  │
-│  - Log sync     │
+│  - Trigger alerts│
+│  - Log changes  │
 └────────┬────────┘
          │
          ▼
@@ -299,21 +330,37 @@ External API/Feed
 └─────────────────┘
 ```
 
-### Scheduling Tiers
+**Worker Endpoint:** `vigil-ingest.theintelligencecompany.workers.dev`
 
-| Tier | Frequency | Sources | Rationale |
-|------|-----------|---------|-----------|
-| Tier 1 | Every 6 hours | Ransomware, KEV, MITRE, Core IOCs | Frequently updated, critical data |
-| Tier 2 | Daily (2 AM UTC) | OTX, MalwareBazaar, Enrichment | Community intel, rate-limited APIs |
-| Tier 3 | Weekly | HIBP, Low-change sources | Infrequently updated data |
+### Scheduling Tiers (Cloudflare Cron Triggers)
+
+| Tier | Cron | Feeds | Rationale |
+|------|------|-------|-----------|
+| Critical | `*/30 * * * *` | Ransomlook, CISA KEV, ThreatFox, Feodo, URLhaus | Near real-time ransomware & IOC alerts |
+| High | `0 */6 * * *` | NVD, VulnCheck, EPSS | Vulnerability intelligence refresh |
+| Daily A | `0 0 * * *` | Malpedia, MISP Galaxy, MITRE ATT&CK | Threat actor intel (low churn) |
+| Daily B | `0 6 * * *` | MalwareBazaar, Tor Exits | Malware samples, anonymization tracking |
+| Daily C | `0 12 * * *` | Pulsedive, Censys | Community intel, infrastructure scanning |
+
+### API Authentication Requirements
+
+| Source | Header | Environment Variable | Notes |
+|--------|--------|---------------------|-------|
+| ThreatFox | `Auth-Key` | `ABUSECH_API_KEY` | Required since 2025 |
+| URLhaus | `Auth-Key` | `ABUSECH_API_KEY` | Same key as ThreatFox |
+| MalwareBazaar | `Auth-Key` | `ABUSECH_API_KEY` | Same key as ThreatFox |
+| VulnCheck | `Authorization: Bearer` | `VULNCHECK_API_KEY` | Free tier available |
+| Pulsedive | `key` param | `PULSEDIVE_API_KEY` | Free tier available |
+| Censys | Basic Auth | `CENSYS_API_ID`, `CENSYS_API_SECRET` | Free tier available |
 
 ### Error Handling
 
-All ingestion scripts implement:
-- Retry logic with exponential backoff
-- Rate limit detection and throttling
-- Sync logging to `sync_log` table
-- Failure alerting via GitHub Actions
+All Cloudflare Workers implement:
+- Graceful degradation (skip feed if API key missing)
+- Batch processing with partial failure handling
+- Cloudflare's built-in 50 subrequest limit management
+- Response logging for debugging
+- Automatic retry on next cron trigger
 
 ---
 
@@ -357,6 +404,9 @@ SUPABASE_SERVICE_ROLE_KEY=
 VITE_FIREBASE_API_KEY=
 VITE_FIREBASE_AUTH_DOMAIN=
 VITE_FIREBASE_PROJECT_ID=
+
+# Abuse.ch APIs (ThreatFox, URLhaus, MalwareBazaar)
+ABUSECH_API_KEY=              # Required since 2025 - get from https://abuse.ch/api/#auth
 
 # Optional Enrichment
 VITE_GROQ_API_KEY=
@@ -502,19 +552,22 @@ Research identified several high-value sources not in the original proposal:
 - **Effort**: 12+ hours
 - **Script**: `monitor-darkweb.mjs`
 
-#### UMD Cyber Events Database (GDELT-Powered)
+#### UMD Cyber Events Database (GDELT-Powered) ✅ COMPLETE
 - **URL**: `https://cissm.umd.edu/cyber-events-database`
 - **Data Type**: Structured cyber attack events with nation-state attribution
 - **Why Critical**: 25+ fields including threat actor type (nation-state/criminal/hacktivist), target industry, motive, severity. Covers 2014-present with monthly updates.
 - **Auth**: Registration required (free)
-- **Effort**: 6-8 hours
-- **Script**: `ingest-umd-cyber-events.mjs`
-- **Integration**: New `cyber_events` table, link to existing threat actors
+- **Script**: `scripts/ingest-umd-cyber-events.mjs`
+- **Migration**: `061_cyber_events.sql`
+- **Records**: 16,104 cyber events (2014-2025)
+- **Update Frequency**: Monthly (manual download required)
+- **Note**: Uses GDELT as upstream data source since January 2025
 
-#### GDELT Project (Real-Time News)
+#### GDELT Project (Real-Time News) - PLANNED
 - **URL**: `https://api.gdeltproject.org/api/v2/doc/doc`
 - **Data Type**: Global news monitoring for cyber-related coverage
 - **Why Valuable**: Real-time monitoring of 100+ languages, 15-minute updates. Early warning for emerging threats, geopolitical correlation.
+- **Complementary to UMD**: UMD provides curated monthly data; GDELT provides real-time news alerts
 - **Auth**: None (free)
 - **Effort**: 12-16 hours
 - **Script**: `monitor-gdelt-cyber.mjs`
@@ -581,16 +634,16 @@ Research identified several high-value sources not in the original proposal:
 
 ## New Environment Variables Required
 
-| Phase | Source | Variable |
-|-------|--------|----------|
-| Phase 1 | EPSS | None required |
-| Phase 1 | GitHub GHSA | None required (or `GITHUB_TOKEN` for higher rate limits) |
-| Phase 2 | Pulsedive | `PULSEDIVE_API_KEY` (free tier) |
-| Phase 3 | CIRCL | `CIRCL_API_KEY` |
-| Phase 3 | Censys | `CENSYS_API_ID`, `CENSYS_API_SECRET` |
-| Phase 4 | ANY.RUN | `ANYRUN_API_KEY` |
-| Phase 4 | Triage | `TRIAGE_API_KEY` |
-| Phase 5 | VulnCheck | `VULNCHECK_API_KEY` |
+| Phase | Source | Variable | Status |
+|-------|--------|----------|--------|
+| Phase 1 | EPSS | None required | ✅ Active |
+| Phase 1 | GitHub GHSA | None required (or `GITHUB_TOKEN` for higher rate limits) | ✅ Active |
+| Phase 2 | Pulsedive | `PULSEDIVE_API_KEY` | ✅ Configured |
+| Phase 3 | CIRCL | `CIRCL_API_KEY` | Pending |
+| Phase 3 | Censys | `CENSYS_API_KEY` | ✅ Configured |
+| Phase 4 | ANY.RUN | `ANYRUN_API_KEY` | Pending |
+| Phase 4 | Triage | `TRIAGE_API_KEY` | Pending |
+| Phase 5 | VulnCheck | `VULNCHECK_API_KEY` | ✅ Configured |
 
 ---
 
@@ -608,6 +661,6 @@ This assessment was based on research from:
 
 ---
 
-*Last Updated: January 2026*
-*Document Version: 1.1*
-*Research Update: January 15, 2026*
+*Last Updated: January 17, 2026*
+*Document Version: 1.3*
+*Major Update: Added MITRE ATLAS, ANY.RUN scraper, BGPStream feeds*

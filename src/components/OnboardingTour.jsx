@@ -98,35 +98,46 @@ function TourTooltip({ step, onNext, onPrev, onSkip, currentIndex, totalSteps })
 
   function calculatePosition(rect, position) {
     const padding = 16
+    const tooltipWidth = 320 // w-80 = 20rem = 320px
+    const tooltipHeight = 220 // approximate height
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    const margin = 16 // margin from viewport edges
+
+    let top, left
 
     switch (position) {
       case 'bottom':
-        return {
-          top: `${rect.bottom + padding}px`,
-          left: `${rect.left + rect.width / 2}px`,
-          transform: 'translateX(-50%)',
-        }
+        top = rect.bottom + padding
+        left = rect.left + rect.width / 2 - tooltipWidth / 2
+        break
       case 'top':
-        return {
-          top: `${rect.top - padding}px`,
-          left: `${rect.left + rect.width / 2}px`,
-          transform: 'translate(-50%, -100%)',
-        }
+        top = rect.top - padding - tooltipHeight
+        left = rect.left + rect.width / 2 - tooltipWidth / 2
+        break
       case 'right':
-        return {
-          top: `${rect.top + rect.height / 2}px`,
-          left: `${rect.right + padding}px`,
-          transform: 'translateY(-50%)',
-        }
+        top = rect.top + rect.height / 2 - tooltipHeight / 2
+        left = rect.right + padding
+        break
       case 'left':
-        return {
-          top: `${rect.top + rect.height / 2}px`,
-          left: `${rect.left - padding}px`,
-          transform: 'translate(-100%, -50%)',
-        }
+        top = rect.top + rect.height / 2 - tooltipHeight / 2
+        left = rect.left - padding - tooltipWidth
+        break
       default:
         return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
     }
+
+    // Keep within viewport bounds
+    if (top < margin) top = margin
+    if (top + tooltipHeight > viewportHeight - margin) {
+      top = viewportHeight - tooltipHeight - margin
+    }
+    if (left < margin) left = margin
+    if (left + tooltipWidth > viewportWidth - margin) {
+      left = viewportWidth - tooltipWidth - margin
+    }
+
+    return { top: `${top}px`, left: `${left}px` }
   }
 
   const isFirst = currentIndex === 0

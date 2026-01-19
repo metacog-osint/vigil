@@ -38,3 +38,11 @@ supabase/.temp
 firebase-debug.log
 
 .vercel
+
+# Test outputs
+coverage/
+test-results/
+playwright-report/
+
+# Windows reserved names
+nul

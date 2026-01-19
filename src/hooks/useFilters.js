@@ -187,4 +187,115 @@ export function useDateRangeFilter(defaultDays = 30) {
   }
 }
 
+/**
+ * Tab state hook with URL sync
+ */
+export function useTab(defaultTab, paramName = 'tab') {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [tab, setTabState] = useState(searchParams.get(paramName) || defaultTab)
+
+  const setTab = useCallback((newTab) => {
+    setTabState(newTab)
+    const params = new URLSearchParams(searchParams)
+    if (newTab === defaultTab) {
+      params.delete(paramName)
+    } else {
+      params.set(paramName, newTab)
+    }
+    setSearchParams(params, { replace: true })
+  }, [defaultTab, paramName, searchParams, setSearchParams])
+
+  // Sync from URL on mount
+  useEffect(() => {
+    const urlTab = searchParams.get(paramName)
+    if (urlTab && urlTab !== tab) {
+      setTabState(urlTab)
+    }
+  }, []) // Only on mount
+
+  return [tab, setTab]
+}
+
+/**
+ * Pagination hook with URL sync
+ */
+export function usePagination(defaultPage = 1, defaultPerPage = 25) {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const page = parseInt(searchParams.get('page') || String(defaultPage), 10)
+  const perPage = parseInt(searchParams.get('perPage') || String(defaultPerPage), 10)
+
+  const setPage = useCallback((newPage) => {
+    const params = new URLSearchParams(searchParams)
+    if (newPage === defaultPage) {
+      params.delete('page')
+    } else {
+      params.set('page', String(newPage))
+    }
+    setSearchParams(params, { replace: true })
+  }, [defaultPage, searchParams, setSearchParams])
+
+  const setPerPage = useCallback((newPerPage) => {
+    const params = new URLSearchParams(searchParams)
+    params.set('perPage', String(newPerPage))
+    params.delete('page') // Reset to page 1 when changing page size
+    setSearchParams(params, { replace: true })
+  }, [searchParams, setSearchParams])
+
+  const nextPage = useCallback(() => setPage(page + 1), [page, setPage])
+  const prevPage = useCallback(() => setPage(Math.max(1, page - 1)), [page, setPage])
+
+  return {
+    page,
+    perPage,
+    setPage,
+    setPerPage,
+    nextPage,
+    prevPage,
+  }
+}
+
+/**
+ * Sort state hook with URL sync
+ */
+export function useSort(defaultSortBy = 'date', defaultSortOrder = 'desc') {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const sortBy = searchParams.get('sortBy') || defaultSortBy
+  const sortOrder = searchParams.get('sortOrder') || defaultSortOrder
+
+  const setSort = useCallback((newSortBy, newSortOrder) => {
+    const params = new URLSearchParams(searchParams)
+
+    if (newSortBy === defaultSortBy) {
+      params.delete('sortBy')
+    } else {
+      params.set('sortBy', newSortBy)
+    }
+
+    if (newSortOrder === defaultSortOrder) {
+      params.delete('sortOrder')
+    } else {
+      params.set('sortOrder', newSortOrder)
+    }
+
+    setSearchParams(params, { replace: true })
+  }, [defaultSortBy, defaultSortOrder, searchParams, setSearchParams])
+
+  const toggleSort = useCallback((field) => {
+    if (sortBy === field) {
+      setSort(field, sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSort(field, 'desc')
+    }
+  }, [sortBy, sortOrder, setSort])
+
+  return {
+    sortBy,
+    sortOrder,
+    setSort,
+    toggleSort,
+  }
+}
+
 export default useFilters

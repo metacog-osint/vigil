@@ -3,13 +3,16 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { unifiedEvents, subscribeToTable } from '../lib/supabase'
-import { EventTypeBadge, getEventTypeConfig, EVENT_TYPES } from '../components/EventTypeBadge'
-import { EventDetailPanel } from '../components/EventDetailPanel'
-import { SeverityBadge } from '../components/SeverityBadge'
-import { SmartTime } from '../components/TimeDisplay'
-import { NewBadge } from '../components/NewIndicator'
-import { Tooltip } from '../components/Tooltip'
-import { SkeletonTable } from '../components/Skeleton'
+import {
+  EventTypeBadge,
+  EventDetailPanel,
+  SeverityBadge,
+  SmartTime,
+  NewBadge,
+  Tooltip,
+  SkeletonTable,
+} from '../components'
+import { getEventTypeConfig, EVENT_TYPES } from '../components/badges/EventTypeBadge'
 import {
   AreaChart,
   Area,

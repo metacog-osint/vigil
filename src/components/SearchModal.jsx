@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { iocs, threatActors, vulnerabilities, incidents, supabase } from '../lib/supabase'
 import { parseNaturalQuery, queryToFilters } from '../lib/ai'
-import IOCQuickLookupCard from './IOCQuickLookupCard'
+import { IOCQuickLookupCard } from './widgets'
+import { useSmartDefaults, filterNavPages } from '../hooks/useSmartDefaults'
 
 const SEARCH_TYPES = {
   all: { label: 'All', icon: '🔍' },
@@ -59,8 +60,10 @@ export function SearchModal({ isOpen, onClose }) {
   const [iocLookupData, setIocLookupData] = useState(null)
   const [nlMode, setNlMode] = useState(false)
   const [nlParsedQuery, setNlParsedQuery] = useState(null)
+  const [showNavMode, setShowNavMode] = useState(false)
   const inputRef = useRef(null)
   const navigate = useNavigate()
+  const smartDefaults = useSmartDefaults()
 
   // Load recent searches from localStorage
   useEffect(() => {
@@ -81,8 +84,17 @@ export function SearchModal({ isOpen, onClose }) {
       setIocLookupData(null)
       setNlMode(false)
       setNlParsedQuery(null)
+      setShowNavMode(false)
     }
   }, [isOpen])
+
+  // Check for navigation mode (query starts with ">")
+  useEffect(() => {
+    setShowNavMode(query.startsWith('>'))
+  }, [query])
+
+  // Get filtered nav pages when in nav mode
+  const filteredNavPages = showNavMode ? filterNavPages(query.slice(1).trim()) : []
 
   // Auto-detect search type based on input
   const detectSearchType = useCallback((input) => {
@@ -397,6 +409,32 @@ export function SearchModal({ isOpen, onClose }) {
 
   // Keyboard navigation
   const handleKeyDown = (e) => {
+    // Handle navigation mode
+    if (showNavMode) {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          setSelectedIndex(prev => Math.min(prev + 1, filteredNavPages.length - 1))
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setSelectedIndex(prev => Math.max(prev - 1, 0))
+          break
+        case 'Enter':
+          e.preventDefault()
+          if (filteredNavPages[selectedIndex]) {
+            navigate(filteredNavPages[selectedIndex].path)
+            onClose()
+          }
+          break
+        case 'Escape':
+          onClose()
+          break
+      }
+      return
+    }
+
+    // Regular search mode
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault()
@@ -486,11 +524,87 @@ export function SearchModal({ isOpen, onClose }) {
 
         {/* Results */}
         <div className="max-h-[50vh] overflow-y-auto">
-          {query.length < 2 ? (
-            // Recent searches
+          {showNavMode ? (
+            // Navigation mode (query starts with ">")
             <div className="p-4">
+              <div className="text-xs text-cyan-400 mb-3 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+                Go to page
+              </div>
+              <div className="space-y-1">
+                {filteredNavPages.map((page, i) => (
+                  <button
+                    key={page.path}
+                    onClick={() => {
+                      navigate(page.path)
+                      onClose()
+                    }}
+                    className={clsx(
+                      'w-full flex items-center gap-3 px-3 py-2 rounded text-left transition-colors',
+                      i === selectedIndex
+                        ? 'bg-cyber-accent/20 text-white'
+                        : 'text-gray-300 hover:bg-gray-800'
+                    )}
+                  >
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span className="flex-1">{page.label}</span>
+                    <span className="text-xs text-gray-600">{page.path}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : query.length < 2 ? (
+            // Empty state with quick actions
+            <div className="p-4">
+              {/* Quick Actions based on user's sector */}
+              {smartDefaults.quickActions && smartDefaults.quickActions.length > 0 && (
+                <div className="mb-4">
+                  <div className="text-xs text-gray-500 mb-2 flex items-center gap-2">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Quick Actions
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {smartDefaults.quickActions.map((action) => (
+                      <button
+                        key={action.path}
+                        onClick={() => {
+                          navigate(action.path)
+                          onClose()
+                        }}
+                        className="flex flex-col items-center gap-1 p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors text-center"
+                      >
+                        <span className="text-cyber-accent text-lg">
+                          {action.icon === 'shield' && '🛡️'}
+                          {action.icon === 'document' && '📋'}
+                          {action.icon === 'bell' && '🔔'}
+                          {action.icon === 'trending' && '📈'}
+                          {action.icon === 'chart' && '📊'}
+                          {action.icon === 'alert' && '⚠️'}
+                          {action.icon === 'search' && '🔍'}
+                          {action.icon === 'grid' && '⊞'}
+                          {action.icon === 'target' && '🎯'}
+                          {action.icon === 'server' && '🖥️'}
+                          {action.icon === 'activity' && '📡'}
+                          {action.icon === 'users' && '👥'}
+                          {action.icon === 'star' && '⭐'}
+                          {action.icon === 'home' && '🏠'}
+                        </span>
+                        <span className="text-xs text-gray-300">{action.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent Searches */}
               {recentSearches.length > 0 && (
-                <>
+                <div className="mb-4">
                   <div className="text-xs text-gray-500 mb-2">Recent Searches</div>
                   <div className="space-y-1">
                     {recentSearches.map((recent, i) => (
@@ -506,12 +620,32 @@ export function SearchModal({ isOpen, onClose }) {
                       </button>
                     ))}
                   </div>
-                </>
+                </div>
               )}
-              <div className="text-xs text-gray-500 mt-4">
-                Type to search across all threat data. Auto-detects IPs, CVEs, hashes, and domains.
-                <br />
-                <span className="text-cyber-accent">Try natural language:</span> "show escalating actors" or "critical CVEs with exploits"
+
+              {/* Suggested Searches based on sector */}
+              {smartDefaults.quickSearches && smartDefaults.quickSearches.length > 0 && (
+                <div className="mb-4">
+                  <div className="text-xs text-gray-500 mb-2">Suggested for You</div>
+                  <div className="flex flex-wrap gap-2">
+                    {smartDefaults.quickSearches.map((term) => (
+                      <button
+                        key={term}
+                        onClick={() => setQuery(term)}
+                        className="px-3 py-1.5 text-xs bg-gray-800 text-gray-300 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
+                      >
+                        {term}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Help text */}
+              <div className="text-xs text-gray-600 border-t border-gray-800 pt-3 mt-3 space-y-1">
+                <div><span className="text-gray-500">Search:</span> Type anything to search actors, CVEs, IOCs</div>
+                <div><span className="text-cyan-500/70">&gt;</span> <span className="text-gray-500">Go to:</span> Type &gt; to navigate to a page</div>
+                <div><span className="text-purple-500/70">NL:</span> <span className="text-gray-500">Try:</span> "escalating actors targeting healthcare"</div>
               </div>
             </div>
           ) : nlMode && nlParsedQuery ? (

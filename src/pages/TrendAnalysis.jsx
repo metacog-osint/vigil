@@ -1,13 +1,17 @@
 // Trend Analysis Page - Temporal intelligence and comparisons
 import { useState, useEffect } from 'react'
 import { trendAnalysis, incidents } from '../lib/supabase'
-import WeekComparisonCard from '../components/WeekComparisonCard'
-import ChangeSummaryCard from '../components/ChangeSummaryCard'
-import { SectorTrendChart, ActivityTrendChart } from '../components/SectorTrendChart'
-import { ActorTrajectoryChart, ActorSelector } from '../components/ActorTrajectoryChart'
-import CalendarHeatmap from '../components/CalendarHeatmap'
-import ActorRelationshipGraph from '../components/ActorRelationshipGraph'
-import KillChainVisualization from '../components/KillChainVisualization'
+import {
+  WeekComparisonCard,
+  ChangeSummaryCard,
+  SectorTrendChart,
+  ActivityTrendChart,
+  ActorTrajectoryChart,
+  ActorSelector,
+  CalendarHeatmap,
+  ActorRelationshipGraph,
+  KillChainVisualization,
+} from '../components'
 
 const TIME_RANGES = [
   { label: '30 days', value: 30 },

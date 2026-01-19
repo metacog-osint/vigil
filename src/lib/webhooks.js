@@ -458,16 +458,101 @@ export function getEventsByCategory() {
   return grouped
 }
 
-// Utility: Validate webhook URL
+/**
+ * SSRF-safe URL validation for webhooks
+ * Blocks internal/private networks to prevent Server-Side Request Forgery
+ */
 export function validateWebhookUrl(url) {
   try {
     const parsed = new URL(url)
+
+    // Only allow HTTP(S)
     if (!['http:', 'https:'].includes(parsed.protocol)) {
       return { valid: false, error: 'URL must use HTTP or HTTPS' }
     }
-    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+
+    const hostname = parsed.hostname.toLowerCase()
+
+    // Block localhost and loopback
+    if (hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname.startsWith('127.') ||
+        hostname === '::1' ||
+        hostname === '[::1]') {
       return { valid: false, error: 'Localhost URLs are not allowed' }
     }
+
+    // Block internal hostnames
+    if (hostname === 'internal' ||
+        hostname.endsWith('.internal') ||
+        hostname.endsWith('.local') ||
+        hostname.endsWith('.localhost')) {
+      return { valid: false, error: 'Internal hostnames are not allowed' }
+    }
+
+    // Block cloud metadata endpoints (AWS, GCP, Azure)
+    if (hostname === '169.254.169.254' ||
+        hostname === 'metadata.google.internal' ||
+        hostname === 'metadata.azure.internal' ||
+        hostname.endsWith('.metadata.google.internal')) {
+      return { valid: false, error: 'Cloud metadata endpoints are not allowed' }
+    }
+
+    // Check for IP addresses
+    const ipv4Pattern = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/
+    const ipMatch = hostname.match(ipv4Pattern)
+
+    if (ipMatch) {
+      const octets = ipMatch.slice(1).map(Number)
+
+      // Block private IP ranges (RFC 1918)
+      // 10.0.0.0 - 10.255.255.255
+      if (octets[0] === 10) {
+        return { valid: false, error: 'Private IP addresses are not allowed' }
+      }
+
+      // 172.16.0.0 - 172.31.255.255
+      if (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) {
+        return { valid: false, error: 'Private IP addresses are not allowed' }
+      }
+
+      // 192.168.0.0 - 192.168.255.255
+      if (octets[0] === 192 && octets[1] === 168) {
+        return { valid: false, error: 'Private IP addresses are not allowed' }
+      }
+
+      // Block loopback (127.0.0.0/8)
+      if (octets[0] === 127) {
+        return { valid: false, error: 'Loopback addresses are not allowed' }
+      }
+
+      // Block link-local (169.254.0.0/16)
+      if (octets[0] === 169 && octets[1] === 254) {
+        return { valid: false, error: 'Link-local addresses are not allowed' }
+      }
+
+      // Block multicast (224.0.0.0 - 239.255.255.255)
+      if (octets[0] >= 224 && octets[0] <= 239) {
+        return { valid: false, error: 'Multicast addresses are not allowed' }
+      }
+
+      // Block broadcast
+      if (octets.every(o => o === 255)) {
+        return { valid: false, error: 'Broadcast addresses are not allowed' }
+      }
+    }
+
+    // Block IPv6 private/internal addresses
+    if (hostname.includes(':')) {
+      const cleanHostname = hostname.replace(/^\[|\]$/g, '')
+      if (cleanHostname.startsWith('fc') ||
+          cleanHostname.startsWith('fd') ||
+          cleanHostname.startsWith('fe80') ||
+          cleanHostname === '::1') {
+        return { valid: false, error: 'Private IPv6 addresses are not allowed' }
+      }
+    }
+
     return { valid: true }
   } catch {
     return { valid: false, error: 'Invalid URL format' }

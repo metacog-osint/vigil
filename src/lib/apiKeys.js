@@ -5,15 +5,17 @@
 
 import { supabase } from './supabase'
 
-// Generate a random API key
+// Generate a cryptographically secure API key
 function generateKey() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
   const prefix = 'vgl_' // Vigil prefix
   let key = ''
 
-  // Generate 32 random characters
+  // Generate 32 random characters using crypto.getRandomValues
+  const randomValues = new Uint32Array(32)
+  crypto.getRandomValues(randomValues)
   for (let i = 0; i < 32; i++) {
-    key += chars.charAt(Math.floor(Math.random() * chars.length))
+    key += chars.charAt(randomValues[i] % chars.length)
   }
 
   return prefix + key
@@ -237,6 +239,13 @@ export const apiKeys = {
       return null
     }
 
+    // Check if key is rotated and past grace period
+    if (data.rotated_at && data.rotation_expires_at) {
+      if (new Date(data.rotation_expires_at) < new Date()) {
+        return null
+      }
+    }
+
     // Update last used
     await supabase
       .from('api_keys')
@@ -246,7 +255,116 @@ export const apiKeys = {
       })
       .eq('id', data.id)
 
+    // Add flag if this is a rotated key
+    if (data.rotated_at) {
+      data.isRotatedKey = true
+      data.gracePeriodEnds = data.rotation_expires_at
+    }
+
     return data
+  },
+
+  /**
+   * Rotate an API key
+   * Creates a new key and marks the old one as rotated with a grace period
+   * @param {string} keyId - The key to rotate
+   * @param {string} userId - User ID
+   * @param {number} gracePeriodHours - Hours the old key remains valid (default: 24)
+   * @returns {object} - { newKey, oldKeyExpiresAt }
+   */
+  async rotate(keyId, userId, gracePeriodHours = 24) {
+    // Get the old key first
+    const oldKey = await this.getById(keyId, userId)
+    if (!oldKey) {
+      throw new Error('API key not found')
+    }
+
+    if (oldKey.rotated_at) {
+      throw new Error('This key has already been rotated')
+    }
+
+    // Generate new key
+    const newKey = generateKey()
+    const newKeyHash = await hashKey(newKey)
+    const newKeyPrefix = newKey.substring(0, 12) + '...'
+
+    const gracePeriodEnd = new Date()
+    gracePeriodEnd.setHours(gracePeriodEnd.getHours() + gracePeriodHours)
+
+    // Create new key
+    const { data: newKeyData, error: createError } = await supabase
+      .from('api_keys')
+      .insert({
+        user_id: userId,
+        name: `${oldKey.name} (rotated)`,
+        key_hash: newKeyHash,
+        key_prefix: newKeyPrefix,
+        scopes: oldKey.scopes,
+        rate_limit_per_minute: oldKey.rate_limit_per_minute,
+        rate_limit_per_day: oldKey.rate_limit_per_day,
+        replaces: keyId,
+      })
+      .select()
+      .single()
+
+    if (createError) {
+      throw createError
+    }
+
+    // Mark old key as rotated
+    const { error: updateError } = await supabase
+      .from('api_keys')
+      .update({
+        rotated_at: new Date().toISOString(),
+        rotation_expires_at: gracePeriodEnd.toISOString(),
+        replaced_by: newKeyData.id,
+      })
+      .eq('id', keyId)
+      .eq('user_id', userId)
+
+    if (updateError) {
+      // Rollback new key creation
+      await supabase.from('api_keys').delete().eq('id', newKeyData.id)
+      throw updateError
+    }
+
+    return {
+      newKey,
+      newKeyData,
+      oldKeyExpiresAt: gracePeriodEnd,
+    }
+  },
+
+  /**
+   * Get rotation status for a key
+   * @param {string} keyId - Key ID
+   * @param {string} userId - User ID
+   */
+  async getRotationStatus(keyId, userId) {
+    const { data, error } = await supabase
+      .from('api_key_rotation_status')
+      .select('*')
+      .eq('id', keyId)
+      .eq('user_id', userId)
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  /**
+   * Get all keys with their rotation relationships
+   * @param {string} userId - User ID
+   */
+  async getAllWithRotation(userId) {
+    const { data, error } = await supabase
+      .from('api_key_rotation_status')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
   },
 }
 

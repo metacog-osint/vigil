@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { orgProfile as orgProfileApi, alertRules, userPreferences } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { SECTORS_WITH_DETAILS as SECTORS } from '../lib/constants'
@@ -138,11 +139,14 @@ export default function PersonalizationWizard({ onComplete, onSkip }) {
     }
   }
 
-  return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-cyber-dark border border-cyan-500/30 rounded-xl w-full max-w-2xl shadow-2xl shadow-cyan-500/10">
+  return createPortal(
+    <div
+      className="fixed inset-0 flex items-center justify-center z-[10000] p-4"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.95)' }}
+    >
+      <div className="bg-[#0a0f1a] border border-cyan-500/30 rounded-xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl shadow-cyan-500/10">
         {/* Header */}
-        <div className="p-6 border-b border-gray-800">
+        <div className="p-6 border-b border-gray-800 flex-shrink-0">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xl font-semibold text-white">Personalize Your Feed</h2>
             <button
@@ -170,7 +174,7 @@ export default function PersonalizationWizard({ onComplete, onSkip }) {
         </div>
 
         {/* Content */}
-        <div className="p-6 min-h-[300px]">
+        <div className="p-6 min-h-[200px] flex-1 overflow-y-auto">
           {step === 1 && (
             <StepSector
               selected={selectedSector}
@@ -205,7 +209,7 @@ export default function PersonalizationWizard({ onComplete, onSkip }) {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-800 flex justify-between">
+        <div className="p-6 border-t border-gray-800 flex justify-between flex-shrink-0">
           <button
             onClick={handleBack}
             disabled={step === 1}
@@ -222,7 +226,8 @@ export default function PersonalizationWizard({ onComplete, onSkip }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
