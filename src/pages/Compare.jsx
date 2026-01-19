@@ -12,7 +12,7 @@ import {
   SectorComparison,
   RegionComparison,
 } from '../components/compare'
-import { trendAnalysis, incidents as incidentsApi, orgProfile } from '../lib/supabase'
+import { compare, orgProfile } from '../lib/supabase/index'
 
 const DEFAULT_RANGE = {
   type: 'preset',
@@ -76,66 +76,27 @@ export default function Compare() {
     async function loadData() {
       setLoading(true)
       try {
-        // Load org profile
-        const profileData = await orgProfile.get()
-        setProfile(profileData)
-
-        // Load current period stats
-        const currentEnd = new Date()
-        const currentStart = new Date()
-        currentStart.setDate(currentStart.getDate() - timeRange.currentDays)
-
-        // Load previous period stats
-        const previousEnd = new Date(currentStart)
-        const previousStart = new Date(previousEnd)
-        previousStart.setDate(previousStart.getDate() - timeRange.previousDays)
-
-        // Fetch comparison data
-        const [weekComparison, changeSummary, sectorTrends] = await Promise.all([
-          trendAnalysis.getWeekOverWeekChange(),
-          trendAnalysis.getChangeSummary(timeRange.currentDays),
-          trendAnalysis.getSectorTrends(timeRange.currentDays),
+        // Load org profile and comparison data in parallel
+        const [profileData, comparisonData] = await Promise.all([
+          orgProfile.get(),
+          compare.getComparison(timeRange),
         ])
 
-        // Set current stats
-        setCurrentStats({
-          incidents: changeSummary?.newIncidents || weekComparison?.currentWeek?.incidents || 0,
-          actors: changeSummary?.escalatingActors || 0,
-          kevs: changeSummary?.newKEVs || 0,
-          iocs: 0, // Would need separate query
-        })
+        setProfile(profileData)
 
-        // Set previous stats from comparison
-        setPreviousStats({
-          incidents: weekComparison?.previousWeek?.incidents || 0,
-          actors: Math.max(0, (changeSummary?.escalatingActors || 0) - 1), // Estimate
-          kevs: Math.max(0, (changeSummary?.newKEVs || 0) - 2), // Estimate
-          iocs: 0,
-        })
+        // Set stats from real database queries
+        setCurrentStats(comparisonData.currentStats)
+        setPreviousStats(comparisonData.previousStats)
 
-        // Generate trend data for chart
-        const trendData = await generateTrendData(
-          currentStart,
-          currentEnd,
-          previousStart,
-          previousEnd,
-          timeRange.currentDays
-        )
-        setCurrentTrend(trendData.current)
-        setPreviousTrend(trendData.previous)
+        // Set trend data from real queries
+        setCurrentTrend(comparisonData.currentTrend)
+        setPreviousTrend(comparisonData.previousTrend)
 
         // Set sector data
-        if (sectorTrends?.sectors) {
-          setSectorData(
-            sectorTrends.sectors.map(s => ({
-              name: s.name || s.sector,
-              value: s.total || s.value || 0,
-            }))
-          )
-        }
+        setSectorData(comparisonData.currentSectors || [])
 
-        // Generate region data (would need actual query in production)
-        setRegionData(generateRegionData())
+        // Set region data from real queries
+        setRegionData(comparisonData.currentRegions || [])
 
       } catch (error) {
         console.error('Error loading comparison data:', error)
@@ -146,46 +107,6 @@ export default function Compare() {
 
     loadData()
   }, [timeRange])
-
-  // Helper to generate trend data
-  async function generateTrendData(currentStart, currentEnd, previousStart, previousEnd, days) {
-    // In production, this would fetch actual daily counts
-    // For now, generate sample data
-    const current = []
-    const previous = []
-
-    for (let i = 0; i < days; i++) {
-      const currentDate = new Date(currentStart)
-      currentDate.setDate(currentDate.getDate() + i)
-
-      const previousDate = new Date(previousStart)
-      previousDate.setDate(previousDate.getDate() + i)
-
-      current.push({
-        label: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        value: Math.floor(Math.random() * 15) + 5,
-      })
-
-      previous.push({
-        label: previousDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        value: Math.floor(Math.random() * 12) + 3,
-      })
-    }
-
-    return { current, previous }
-  }
-
-  // Helper to generate region data (placeholder)
-  function generateRegionData() {
-    return [
-      { name: 'north_america', value: 45 },
-      { name: 'europe', value: 32 },
-      { name: 'asia_pacific', value: 18 },
-      { name: 'latin_america', value: 8 },
-      { name: 'middle_east', value: 5 },
-      { name: 'africa', value: 3 },
-    ]
-  }
 
   return (
     <div className="space-y-6">
@@ -256,8 +177,8 @@ export default function Compare() {
 
         <ComparisonCard
           title="IOCs Added"
-          currentValue={currentStats.iocs || Math.floor(Math.random() * 100) + 50}
-          previousValue={previousStats.iocs || Math.floor(Math.random() * 80) + 40}
+          currentValue={currentStats.iocs}
+          previousValue={previousStats.iocs}
           currentLabel="Current"
           previousLabel="Previous"
           loading={loading}

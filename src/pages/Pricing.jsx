@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { TIERS, TIER_INFO, TIER_FEATURES, FEATURE_DESCRIPTIONS, canAccess } from '../lib/features'
+import { createCheckoutSession, redirectToCheckout, getUserSubscription } from '../lib/stripe'
 
 // Feature groups for display
 const FEATURE_GROUPS = [
@@ -67,8 +68,33 @@ const FEATURE_GROUPS = [
 
 export default function Pricing() {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
   const [billingPeriod, setBillingPeriod] = useState('monthly')
   const [showAllFeatures, setShowAllFeatures] = useState(false)
+  const [subscription, setSubscription] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  // Show cancellation message if redirected from Stripe
+  const canceled = searchParams.get('canceled')
+
+  // Fetch user subscription
+  useEffect(() => {
+    async function loadSubscription() {
+      if (!user?.id) {
+        setSubscription({ tier: 'free' })
+        return
+      }
+      try {
+        const sub = await getUserSubscription(user.id)
+        setSubscription(sub)
+      } catch (err) {
+        console.error('Error loading subscription:', err)
+        setSubscription({ tier: 'free' })
+      }
+    }
+    loadSubscription()
+  }, [user])
 
   // Calculate annual pricing (20% discount)
   const getPrice = (tier) => {
@@ -90,10 +116,37 @@ export default function Pricing() {
     return `$${price}/mo`
   }
 
-  const handleSubscribe = (tier) => {
-    // TODO: Implement Stripe checkout
-    console.log('Subscribe to:', tier)
-    alert(`Stripe checkout for ${tier} tier coming soon!`)
+  const handleSubscribe = async (tier) => {
+    if (!user) {
+      // Redirect to login
+      window.location.href = `/login?redirect=/pricing&tier=${tier}`
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Create checkout session
+      const { sessionId, url } = await createCheckoutSession(
+        user.id,
+        user.email,
+        tier,
+        billingPeriod
+      )
+
+      // If we have a direct URL, use it (Stripe Checkout)
+      if (url) {
+        window.location.href = url
+      } else if (sessionId) {
+        // Otherwise use Stripe.js redirect
+        await redirectToCheckout(sessionId)
+      }
+    } catch (err) {
+      console.error('Checkout error:', err)
+      setError(err.message || 'Failed to start checkout. Please try again.')
+      setLoading(false)
+    }
   }
 
   return (
@@ -135,12 +188,24 @@ export default function Pricing() {
         </div>
       </div>
 
+      {/* Error/Cancel Messages */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-center">
+          {error}
+        </div>
+      )}
+      {canceled && (
+        <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/50 rounded-lg text-yellow-400 text-center">
+          Checkout was canceled. No charges were made.
+        </div>
+      )}
+
       {/* Pricing Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {TIERS.map((tier) => {
           const info = TIER_INFO[tier]
           const isPopular = tier === 'professional'
-          const isCurrentTier = false // TODO: Get from user subscription
+          const isCurrentTier = subscription?.tier === tier
 
           return (
             <div
@@ -189,16 +254,24 @@ export default function Pricing() {
                 >
                   {user ? 'Current Plan' : 'Get Started'}
                 </Link>
+              ) : isCurrentTier ? (
+                <button
+                  disabled
+                  className="w-full px-4 py-3 rounded-lg font-medium bg-green-600/20 text-green-400 border border-green-500/50 cursor-default"
+                >
+                  Current Plan
+                </button>
               ) : (
                 <button
                   onClick={() => handleSubscribe(tier)}
-                  className={`w-full px-4 py-3 rounded-lg font-medium transition-colors ${
+                  disabled={loading}
+                  className={`w-full px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     isPopular
                       ? 'bg-cyan-500 hover:bg-cyan-400 text-black'
                       : 'bg-gray-700 hover:bg-gray-600 text-white'
                   }`}
                 >
-                  {isCurrentTier ? 'Current Plan' : 'Subscribe'}
+                  {loading ? 'Loading...' : 'Subscribe'}
                 </button>
               )}
 

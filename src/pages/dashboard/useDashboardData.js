@@ -140,9 +140,9 @@ export default function useDashboardData() {
         // Generate AI BLUF summary (non-blocking)
         generateBLUF({
           totalActors: statsData?.totalActors || 0,
-          incidents30d: statsData?.incidents30d || statsData?.incidents24h || 0,
-          totalIncidents: statsData?.incidentsTotal || statsData?.incidents7d || 0,
-          kevCount: statsData?.kevTotal || statsData?.newKEV7d || 0,
+          incidents30d: statsData?.incidents30d || 0,
+          totalIncidents: statsData?.incidentsTotal || 0,
+          kevCount: statsData?.kevTotal || 0,
           escalatingActors: escalatingData.data || [],
           topSectors: sectorStats || [],
           recentIncidents: incidentsData.data || [],
@@ -182,7 +182,7 @@ export default function useDashboardData() {
   }, [])
 
   // Computed values - use incidents30d for proper threat calculation
-  const threatLevel = calculateThreatLevel(stats?.incidents30d || stats?.incidents24h || 0, escalatingActors?.length || 0)
+  const threatLevel = calculateThreatLevel(stats?.incidents30d || 0, escalatingActors?.length || 0)
 
   return {
     // Core data

@@ -88,9 +88,9 @@ export default function AboveFoldSection({
         />
         <StatCard
           label="Incidents (30d)"
-          value={stats?.incidents24h || 0}
-          trend={stats?.incidents24h > 5 ? 'up' : 'neutral'}
-          trendLabel={stats?.incidents24h > 5 ? 'elevated' : undefined}
+          value={stats?.incidents30d || 0}
+          trend={stats?.incidents30d > 5 ? 'up' : 'neutral'}
+          trendLabel={stats?.incidents30d > 5 ? 'elevated' : undefined}
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -99,7 +99,7 @@ export default function AboveFoldSection({
         />
         <StatCard
           label="Total Incidents"
-          value={stats?.incidents7d || 0}
+          value={stats?.incidentsTotal || 0}
           trend="neutral"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,7 +109,7 @@ export default function AboveFoldSection({
         />
         <StatCard
           label="Total KEVs"
-          value={stats?.newKEV7d || 0}
+          value={stats?.kevTotal || 0}
           trend="neutral"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,7 +119,7 @@ export default function AboveFoldSection({
         />
         <StatCard
           label="Total IOCs"
-          value={stats?.newIOCs24h || 0}
+          value={stats?.iocTotal || 0}
           trend="neutral"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

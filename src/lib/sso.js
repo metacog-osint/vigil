@@ -173,34 +173,113 @@ export const ssoConfig = {
   },
 
   /**
-   * Test SSO configuration (validates certificate, URLs)
+   * Test SSO configuration (validates certificate, URLs, domains)
    */
   async test(tenantId) {
-    // This would typically call a server endpoint to validate
-    // For now, just check if config exists and has required fields
     const config = await this.get(tenantId)
 
     const errors = []
+    const warnings = []
 
     if (!config) {
       return { valid: false, errors: ['No SSO configuration found'] }
     }
 
-    if (!config.saml_sso_url && !config.oidc_discovery_url) {
-      errors.push('Either SAML SSO URL or OIDC Discovery URL is required')
+    // Validate SAML or OIDC is configured
+    const hasSaml = config.saml_sso_url || config.saml_entity_id
+    const hasOidc = config.oidc_discovery_url || config.oidc_client_id
+
+    if (!hasSaml && !hasOidc) {
+      errors.push('Either SAML or OIDC configuration is required')
     }
 
-    if (config.provider !== 'generic_saml' && !config.saml_certificate && !config.oidc_client_id) {
-      errors.push('Certificate or OIDC client ID is required')
+    // Validate SAML URLs if SAML is used
+    if (hasSaml) {
+      // Entity ID validation (must be a valid URL)
+      if (config.saml_entity_id) {
+        const entityIdValidation = validateUrl(config.saml_entity_id, 'SAML Entity ID')
+        if (!entityIdValidation.valid) {
+          errors.push(entityIdValidation.error)
+        }
+      } else {
+        errors.push('SAML Entity ID is required')
+      }
+
+      // SSO URL validation (must be HTTPS)
+      if (config.saml_sso_url) {
+        const ssoUrlValidation = validateUrl(config.saml_sso_url, 'SAML SSO URL', { requireHttps: true })
+        if (!ssoUrlValidation.valid) {
+          errors.push(ssoUrlValidation.error)
+        }
+      } else {
+        errors.push('SAML SSO URL is required')
+      }
+
+      // SLO URL validation (optional but must be valid if provided)
+      if (config.saml_slo_url) {
+        const sloUrlValidation = validateUrl(config.saml_slo_url, 'SAML SLO URL', { requireHttps: true })
+        if (!sloUrlValidation.valid) {
+          warnings.push(sloUrlValidation.error)
+        }
+      }
+
+      // Certificate validation
+      if (config.saml_certificate) {
+        const certValidation = validateCertificate(config.saml_certificate)
+        if (!certValidation.valid) {
+          errors.push(`SAML Certificate: ${certValidation.error}`)
+        }
+      } else if (config.provider !== 'generic_saml') {
+        errors.push('SAML Certificate is required')
+      }
+    }
+
+    // Validate OIDC config if OIDC is used
+    if (hasOidc) {
+      // Discovery URL validation
+      if (config.oidc_discovery_url) {
+        const discoveryValidation = validateUrl(config.oidc_discovery_url, 'OIDC Discovery URL', { requireHttps: true })
+        if (!discoveryValidation.valid) {
+          errors.push(discoveryValidation.error)
+        }
+        // Check it ends with well-known path
+        if (!config.oidc_discovery_url.includes('.well-known')) {
+          warnings.push('OIDC Discovery URL should typically end with /.well-known/openid-configuration')
+        }
+      } else {
+        errors.push('OIDC Discovery URL is required')
+      }
+
+      // Client ID validation
+      if (!config.oidc_client_id) {
+        errors.push('OIDC Client ID is required')
+      }
+    }
+
+    // Validate allowed domains
+    if (config.allowed_domains?.length > 0) {
+      for (const domain of config.allowed_domains) {
+        const domainValidation = validateDomain(domain)
+        if (!domainValidation.valid) {
+          errors.push(`Invalid domain "${domain}": ${domainValidation.error}`)
+        }
+      }
+    } else {
+      warnings.push('No allowed domains configured - any email domain can authenticate')
     }
 
     return {
       valid: errors.length === 0,
       errors,
+      warnings,
       config: {
         provider: config.provider,
+        providerName: config.provider_name,
         isEnabled: config.is_enabled,
         isEnforced: config.is_enforced,
+        hasSaml,
+        hasOidc,
+        allowedDomains: config.allowed_domains || [],
       },
     }
   },
@@ -365,22 +444,107 @@ export function parseSamlMetadata(metadataXml) {
   }
 }
 
+// Utility: Validate URL format
+export function validateUrl(url, fieldName, options = {}) {
+  const { requireHttps = false } = options
+
+  if (!url || typeof url !== 'string') {
+    return { valid: false, error: `${fieldName} is required` }
+  }
+
+  const trimmed = url.trim()
+  if (!trimmed) {
+    return { valid: false, error: `${fieldName} cannot be empty` }
+  }
+
+  try {
+    const parsed = new URL(trimmed)
+
+    // Check protocol
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return { valid: false, error: `${fieldName} must use HTTP or HTTPS protocol` }
+    }
+
+    // Check HTTPS requirement
+    if (requireHttps && parsed.protocol !== 'https:') {
+      return { valid: false, error: `${fieldName} must use HTTPS for security` }
+    }
+
+    // Check for localhost in production (warning - could be valid for testing)
+    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+      return { valid: true, warning: `${fieldName} uses localhost - ensure this is intentional` }
+    }
+
+    return { valid: true }
+  } catch {
+    return { valid: false, error: `${fieldName} is not a valid URL format` }
+  }
+}
+
+// Utility: Validate domain format (for allowed domains)
+export function validateDomain(domain) {
+  if (!domain || typeof domain !== 'string') {
+    return { valid: false, error: 'Domain is required' }
+  }
+
+  const trimmed = domain.trim().toLowerCase()
+  if (!trimmed) {
+    return { valid: false, error: 'Domain cannot be empty' }
+  }
+
+  // Domain format regex: allows subdomains, must have at least one dot
+  // Examples: example.com, sub.example.com, my-company.co.uk
+  const domainRegex = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/
+
+  if (!domainRegex.test(trimmed)) {
+    // Check common issues
+    if (trimmed.includes('@')) {
+      return { valid: false, error: 'Domain should not include @ symbol (use "example.com" not "@example.com")' }
+    }
+    if (trimmed.includes('://')) {
+      return { valid: false, error: 'Domain should not include protocol (use "example.com" not "https://example.com")' }
+    }
+    if (trimmed.includes('/')) {
+      return { valid: false, error: 'Domain should not include path (use "example.com" not "example.com/path")' }
+    }
+    if (!trimmed.includes('.')) {
+      return { valid: false, error: 'Domain must include at least one dot (e.g., "example.com")' }
+    }
+    return { valid: false, error: 'Invalid domain format' }
+  }
+
+  return { valid: true }
+}
+
 // Utility: Validate X.509 certificate format
 export function validateCertificate(cert) {
   if (!cert) return { valid: false, error: 'Certificate is required' }
 
-  // Clean up certificate
+  // Clean up certificate (remove headers/footers and whitespace)
   const cleaned = cert
     .replace(/-----BEGIN CERTIFICATE-----/g, '')
     .replace(/-----END CERTIFICATE-----/g, '')
     .replace(/\s/g, '')
 
+  if (!cleaned) {
+    return { valid: false, error: 'Certificate content is empty' }
+  }
+
+  // Check minimum length (a real cert would be at least ~500 chars base64)
+  if (cleaned.length < 100) {
+    return { valid: false, error: 'Certificate appears to be truncated or incomplete' }
+  }
+
   // Check if it's valid base64
   try {
-    atob(cleaned)
+    const decoded = atob(cleaned)
+    // Check for DER/ASN.1 signature (certificates start with SEQUENCE tag)
+    if (decoded.charCodeAt(0) !== 0x30) {
+      return { valid: false, error: 'Certificate does not appear to be valid X.509 format' }
+    }
     return { valid: true }
   } catch {
-    return { valid: false, error: 'Invalid certificate format' }
+    return { valid: false, error: 'Certificate is not valid base64 encoded' }
   }
 }
 

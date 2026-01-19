@@ -380,10 +380,65 @@ function estimateDaysToExploit(score) {
   return '30+'
 }
 
+/**
+ * Calculate risk score trend based on underlying data changes
+ * Compares current 7-day period vs previous 7-day period
+ * @param {Object} profile - Organization profile
+ * @returns {string} 'increasing' | 'stable' | 'decreasing'
+ */
 async function calculateScoreTrend(profile) {
-  // Would compare to historical scores
-  // For now, return neutral
-  return 'stable'
+  if (!profile?.sector) return 'stable'
+
+  const now = new Date()
+  const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000)
+  const fourteenDaysAgo = new Date(now - 14 * 24 * 60 * 60 * 1000)
+
+  try {
+    // Get incidents targeting user's sector in both periods
+    const [currentIncidents, previousIncidents] = await Promise.all([
+      supabase
+        .from('incidents')
+        .select('id', { count: 'exact', head: true })
+        .eq('sector', profile.sector)
+        .gte('created_at', sevenDaysAgo.toISOString())
+        .lte('created_at', now.toISOString()),
+      supabase
+        .from('incidents')
+        .select('id', { count: 'exact', head: true })
+        .eq('sector', profile.sector)
+        .gte('created_at', fourteenDaysAgo.toISOString())
+        .lt('created_at', sevenDaysAgo.toISOString()),
+    ])
+
+    const currentCount = currentIncidents.count || 0
+    const previousCount = previousIncidents.count || 0
+
+    // If no data in either period, can't determine trend
+    if (previousCount === 0 && currentCount === 0) {
+      return 'stable'
+    }
+
+    // Calculate percentage change
+    let changePercent
+    if (previousCount === 0) {
+      // If no previous activity but current activity, that's an increase
+      changePercent = currentCount > 0 ? 100 : 0
+    } else {
+      changePercent = ((currentCount - previousCount) / previousCount) * 100
+    }
+
+    // Return trend based on 10% threshold
+    if (changePercent > 10) {
+      return 'increasing'
+    } else if (changePercent < -10) {
+      return 'decreasing'
+    }
+
+    return 'stable'
+  } catch (error) {
+    console.error('Error calculating score trend:', error)
+    return 'stable'
+  }
 }
 
 export default {

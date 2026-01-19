@@ -3,8 +3,13 @@
 > Comprehensive development plan consolidating all roadmaps and technical debt items.
 >
 > **Created:** January 15, 2026
+> **Updated:** January 18, 2026
 > **Status:** Active Development
-> **Version:** 2.20
+> **Version:** 2.21
+>
+> **Note:** As of v2.21, source documents have been archived to `docs/archive/`:
+> CORRECTIVE_ACTION_PLAN.md, SAAS_ROADMAP.md, ALERTING_SYSTEM.md, etc.
+> This document is now the single source of truth for all planning.
 
 ---
 
@@ -24,23 +29,31 @@
 
 ## Executive Summary
 
-This document consolidates all planned work from:
+This document is the **single source of truth** for all Vigil development planning.
+
+Previously consolidated from (now archived in `docs/archive/`):
 - `CORRECTIVE_ACTION_PLAN.md` - Technical debt and code quality
-- `ROADMAP.md` - Product roadmap phases 7-9
-- `NEXT_PHASE_PLAN.md` - Completed phase 7 work
-- `DATA_SOURCES.md` - Data integration roadmap
 - `SAAS_ROADMAP.md` - SaaS monetization features
+- `ALERTING_SYSTEM.md` - Real-time alerting architecture
+- `TESTING_EXPANSION_PLAN.md` - Test coverage goals
+- `PERFORMANCE_OPTIMIZATION_PLAN.md` - Bundle optimization
+
+Active reference documents in `docs/`:
+- `DATA_SOURCES.md` - Data integration roadmap (root)
+- `FEATURES.md` - Feature documentation
+- `DEPENDENCY_AUDIT.md` - Security tracking
+- `THREAT_COVERAGE_GAPS.md` - Strategic planning
 
 ### Key Stats
-- **Current Version:** 1.1.0
-- **Unit Tests:** 632 passing
+- **Current Version:** 1.3.2
+- **Unit Tests:** 909 passing
 - **Test Coverage:** 50.7% statements, 43% branches
-- **E2E Tests:** 19-20 passing (now in CI)
-- **Active Data Sources:** 32 (added MITRE ATLAS, ANY.RUN, BGPStream, UMD)
+- **E2E Tests:** 20+ passing (in CI)
+- **Active Data Sources:** 32
 - **Component Organization:** 40 components in 6 subdirectories
-- **Supabase Modules:** 25 domain-specific modules
+- **Supabase Modules:** 26 domain-specific modules
 - **Frontend Modules:** 30+ feature modules
-- **Migrations:** 061 total (latest: cyber_events)
+- **Migrations:** 068 total
 
 ---
 

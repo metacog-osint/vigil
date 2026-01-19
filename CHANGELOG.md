@@ -4,6 +4,63 @@ All notable changes to Vigil are documented in this file.
 
 ---
 
+## [1.3.2] - January 18, 2026
+
+### Documentation Consolidation
+
+Cleaned up project documentation structure, reducing 34 markdown files to 12 active docs.
+
+**Archived to `docs/archive/`:**
+- `ALERTING_SYSTEM.md` - Superseded by BUILD_PLAN_V2
+- `AUDIT_REPORT.md` - Historical baseline
+- `COST_ANALYSIS.md` - Reference material
+- `DATA_QUALITY_REPORT.md` - Time-stamped snapshot
+- `FEATURE_FIX_PLAN.md` - All 6 issues resolved
+- `PERFORMANCE_OPTIMIZATION_PLAN.md` - Merged into BUILD_PLAN_V2
+- `SAAS_ROADMAP.md` - Superseded by BUILD_PLAN_V2
+- `TESTING_EXPANSION_PLAN.md` - Merged into BUILD_PLAN_V2
+- `docs/SPRINT2_SETUP.md` - Historical
+- `docs/SECURITY_AUDIT.md` - Findings addressed
+
+**Moved to `docs/`:**
+- `DEPENDENCY_AUDIT.md` - Security reference
+- `FEATURES.md` - Feature documentation
+- `THREAT_COVERAGE_GAPS.md` - Strategic planning
+- `DATABASE.md` - Schema reference
+
+**Root directory now contains only:**
+- `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md` - Standard project files
+- `CLAUDE.md` - AI assistant context
+- `ROADMAP.md`, `BUILD_PLAN_V2.md` - Planning documents
+- `DATA_SOURCES.md` - Data feed documentation
+
+### Feature Fixes
+
+Six modules with data/logic issues identified and resolved:
+
+1. **Compare Page** - Replaced `Math.random()` with real database queries
+   - New: `src/lib/supabase/compare.js` - Incident trends, region/sector breakdowns
+   - Fixed: `src/pages/Compare.jsx` - Uses real data from Supabase
+
+2. **Webhook Test** - Now actually sends HTTP requests
+   - New: `api/webhooks/test.js` - Edge function for webhook testing
+   - Fixed: `src/lib/webhooks.js` - Calls API endpoint instead of returning mock data
+
+3. **Stripe Checkout** - Implemented payment flow
+   - Fixed: `src/pages/Pricing.jsx` - Proper Stripe redirect, shows current tier
+
+4. **Score Trend Calculation** - Uses historical data
+   - Fixed: `src/lib/predictions.js` - Compares 7-day periods for trend direction
+
+5. **Variable Naming** - Fixed misleading dashboard variable names
+   - Fixed: `src/lib/supabase/dashboard.js` - Deprecated `incidents24h` (was 30d data)
+   - Fixed: `src/pages/dashboard/AboveFoldSection.jsx` - Uses correct property names
+
+6. **SSO Validation** - Added proper configuration checks
+   - Fixed: `src/lib/sso.js` - URL validation, certificate base64, domain format
+
+---
+
 ## [0.4.2] - January 18, 2026
 
 ### Bug Fixes
