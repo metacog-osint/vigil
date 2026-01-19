@@ -1,18 +1,32 @@
 # Data Correlation Opportunities
 
 > Analysis of cross-data-stream correlation possibilities for enhanced threat intelligence.
+> **Last Updated:** January 19, 2026
+
+## Implementation Status
+
+| Opportunity | Status | Script/Module |
+|-------------|--------|---------------|
+| #1 Actor-IOC Attribution | **IMPLEMENTED** | `correlate-actor-iocs.mjs`, `correlations.js` |
+| #2 Actor-Vulnerability | **IMPLEMENTED** | `correlate-actor-cves.mjs`, `correlations.js` |
+| #3 Industry Targeting | **IMPLEMENTED** | Materialized views, `correlations.js` |
+| #4 Attack Chains | **IMPLEMENTED** | `build-attack-chains.mjs` |
+| #5 Temporal Patterns | **PARTIAL** | `weekly_activity_trends` view exists |
+| #6 Geographic Mapping | **IMPLEMENTED** | `country_threat_profile` view |
 
 ## Current Data Inventory
 
-| Data Stream | Records | Key Fields | Update Frequency |
-|------------|---------|------------|------------------|
-| IOCs | 108,045 | type, value, source, tags | Hourly |
-| Incidents | 43,994 | actor, victim, sector, country | Hourly |
-| Cyber Events | 16,104 | actor, actor_type, motive, industry | Monthly |
-| Threat Actors | 4,327 | name, aliases, origin_country, ttps | Daily |
-| Vulnerabilities | 3,245 | cve_id, cvss, epss, kev_status | 6-hourly |
-| Techniques | 873 | mitre_id, name, tactics, platforms | Weekly |
-| Malware Families | 50 | name, type, actors | Daily |
+| Data Stream | Key Fields | Update Frequency |
+|------------|------------|------------------|
+| IOCs | type, value, source, tags | Hourly |
+| Incidents | actor, victim, sector, country | Hourly |
+| Cyber Events | actor, actor_type, motive, industry | Monthly |
+| Threat Actors | name, aliases, origin_country, ttps | Daily |
+| Vulnerabilities | cve_id, cvss, epss, kev_status | 6-hourly |
+| Techniques | mitre_id, name, tactics, platforms | Weekly |
+| Malware Families | name, type, actors | Daily |
+
+*Note: Record counts change frequently. Query database for current counts.*
 
 ---
 
@@ -325,56 +339,61 @@ To enable these correlations, we need:
 
 ---
 
-## Implementation Plan
+## Implementation Status
 
-### Phase 1: Foundation (Migration 062)
-Create all correlation tables and materialized views in a single migration.
+### Phase 1: Foundation ✅ COMPLETE
+Correlation tables and materialized views created.
 
-**Tables:**
+**Tables (Implemented):**
 - `actor_iocs` - Actor to IOC attribution
 - `actor_vulnerabilities` - Actor to CVE exploitation mapping
 - `attack_chains` - Full attack chain documentation
 
-**Materialized Views:**
+**Materialized Views (Implemented):**
 - `industry_threat_landscape` - Industry targeting aggregation
 - `country_threat_profile` - Geographic threat mapping
 - `weekly_activity_trends` - Temporal pattern analysis
 - `actor_activity_summary` - Cross-source actor activity
 
-**Functions:**
-- `refresh_correlation_views()` - Refresh all materialized views
-- `resolve_actor_name()` - Normalize actor names via aliases
-- `get_industry_threats()` - Get threats for a specific industry
-- `get_actor_iocs()` - Get IOCs attributed to an actor
+### Phase 2: Data Population Scripts ✅ COMPLETE
 
-### Phase 2: Data Population Scripts
-- `scripts/correlate-actor-iocs.mjs` - Mine existing data for actor-IOC links
-- `scripts/correlate-actor-cves.mjs` - Extract CVEs from cyber_events descriptions
-- `scripts/build-attack-chains.mjs` - Construct attack chains from correlated data
+| Script | Status |
+|--------|--------|
+| `scripts/correlate-actor-iocs.mjs` | ✅ Implemented |
+| `scripts/correlate-actor-cves.mjs` | ✅ Implemented |
+| `scripts/build-attack-chains.mjs` | ✅ Implemented |
+| `scripts/correlate-vulnerabilities-assets.mjs` | ✅ Implemented |
 
-### Phase 3: API Endpoints (Supabase Module)
+Run correlations: `npm run correlate:all`
+
+### Phase 3: API Endpoints ✅ COMPLETE
 - `src/lib/supabase/correlations.js` - Query functions for correlations
-- Functions: `getIndustryThreats()`, `getActorIOCs()`, `getActorCVEs()`, etc.
+- Functions: `getIndustryThreats()`, `getActorIOCs()`, `getActorCVEs()`, `getActorCorrelations()`, etc.
 
-### Phase 4: UI Components
-- Industry Threat Dashboard
-- Actor Dossier (aggregated view)
-- Attack Chain Visualizer
-- Geographic Threat Map
+### Phase 4: UI Components 🚧 IN PROGRESS
+See `docs/CORRELATION_OPPORTUNITIES.md` plan file for remaining UI work:
+- [ ] CVE → Actors Panel (Phase 1.1)
+- [ ] Technique → Actors Panel (Phase 1.2)
+- [ ] Industry Threat Dashboard Tab (Phase 1.3)
+- [ ] Country Threat Dashboard Tab (Phase 1.4)
+- [ ] Attack Chain Page (Phase 2.2)
+- [ ] Pattern Detection Dashboard (Phase 2.4)
 
 ---
 
-## Files to Create
+## Files Created
 
-| File | Purpose |
-|------|---------|
-| `supabase/migrations/062_correlations.sql` | All correlation tables and views |
-| `scripts/correlate-actor-iocs.mjs` | Populate actor-IOC links |
-| `scripts/correlate-actor-cves.mjs` | Extract CVE-actor relationships |
-| `scripts/build-attack-chains.mjs` | Build attack chain records |
-| `src/lib/supabase/correlations.js` | Query functions |
+| File | Purpose | Status |
+|------|---------|--------|
+| `supabase/migrations/062_correlations.sql` | Correlation tables and views | ✅ |
+| `scripts/correlate-actor-iocs.mjs` | Populate actor-IOC links | ✅ |
+| `scripts/correlate-actor-cves.mjs` | Extract CVE-actor relationships | ✅ |
+| `scripts/build-attack-chains.mjs` | Build attack chain records | ✅ |
+| `src/lib/supabase/correlations.js` | Query functions | ✅ |
 
 ---
 
 *Document created: January 17, 2026*
-*Implementation started: January 17, 2026*
+*Last updated: January 19, 2026*
+*Backend implementation: Complete*
+*UI implementation: In Progress*
