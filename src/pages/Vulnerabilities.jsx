@@ -5,6 +5,7 @@ import { SkeletonTable } from '../components/Skeleton'
 import { EmptyVulnerabilities } from '../components/EmptyState'
 import { SeverityBadge, SeverityBar, EPSSBadge } from '../components/SeverityBadge'
 import { NewBadge } from '../components/NewIndicator'
+import { VulnerabilityActorsPanel } from '../components/panels'
 
 export default function Vulnerabilities() {
   const [vulnList, setVulnList] = useState([])
@@ -315,6 +316,9 @@ export default function Vulnerabilities() {
                   )}
                 </div>
               )}
+
+              {/* Threat Actors exploiting this CVE */}
+              <VulnerabilityActorsPanel cveId={selectedVuln.cve_id} />
 
               <div className="pt-4 border-t border-gray-800 space-y-2">
                 <a

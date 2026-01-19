@@ -4,6 +4,7 @@ import { techniques as techniquesApi, supabase } from '../lib/supabase'
 import { SkeletonTable } from '../components/Skeleton'
 import { EmptyState } from '../components/EmptyState'
 import { AttackMatrixHeatmap } from '../components/AttackMatrixHeatmap'
+import { TechniqueActorsPanel } from '../components/panels'
 
 const TACTICS = [
   'Reconnaissance',
@@ -414,6 +415,12 @@ export default function Techniques() {
                   </div>
                 </div>
               )}
+
+              {/* Threat Actors using this technique */}
+              <TechniqueActorsPanel
+                techniqueId={selectedTechnique.id}
+                techniqueName={selectedTechnique.name}
+              />
 
               <div className="pt-4 border-t border-gray-800">
                 <a
