@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { signOut, signInWithGoogle } from '../lib/firebase'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase/client'
 import NotificationBell from './NotificationBell'
 import WhatsNewBadge from './common/WhatsNewBadge'
 import FocusModeToggle from './common/FocusModeToggle'
@@ -8,23 +8,27 @@ import QuickIOCInput from './common/QuickIOCInput'
 
 export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const _navigate = useNavigate()
+  const navigate = useNavigate()
 
   const handleSignOut = async () => {
     try {
-      await signOut()
+      // Clear any cached data
+      localStorage.removeItem('vigil_auth_user')
+      localStorage.removeItem('vigil_push_subscription')
+      sessionStorage.removeItem('vigil_auth_token')
+      sessionStorage.removeItem('vigil_session_id')
+      sessionStorage.removeItem('vigil_last_activity')
+
+      await supabase.auth.signOut()
       setShowUserMenu(false)
+      navigate('/')
     } catch (error) {
       console.error('Sign out error:', error)
     }
   }
 
-  const handleSignIn = async () => {
-    try {
-      await signInWithGoogle()
-    } catch (error) {
-      console.error('Sign in error:', error)
-    }
+  const handleSignIn = () => {
+    navigate('/auth')
   }
 
   return (
@@ -37,14 +41,27 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
           aria-label="Open navigation menu"
           aria-expanded="false"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           </svg>
         </button>
 
         {/* Live indicator */}
         <div className="flex items-center gap-2 text-sm">
-          <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 live-indicator' : 'bg-yellow-500'}`}></span>
+          <span
+            className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 live-indicator' : 'bg-yellow-500'}`}
+          ></span>
           <span className="text-gray-400">{isOnline ? 'Live' : 'Offline'}</span>
         </div>
 
@@ -62,8 +79,19 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
           className="md:hidden p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white"
           aria-label="Open search (Ctrl+K)"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
         </button>
 
@@ -79,11 +107,25 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
           className="hidden md:flex items-center gap-2 px-3 py-2 text-sm text-gray-300 bg-gray-800/70 border border-gray-700 rounded-lg hover:border-cyan-500/50 hover:bg-gray-800 hover:text-white transition-all group"
           aria-label="Open search (Ctrl+K)"
         >
-          <svg className="w-4 h-4 text-gray-500 group-hover:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg
+            className="w-4 h-4 text-gray-500 group-hover:text-cyan-400 transition-colors"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
           <span className="text-gray-500 group-hover:text-gray-300">Search</span>
-          <kbd className="inline-flex items-center px-1.5 py-0.5 text-xs text-gray-500 bg-gray-900/50 border border-gray-700 rounded group-hover:border-cyan-500/30 group-hover:text-cyan-400 transition-colors" aria-hidden="true">
+          <kbd
+            className="inline-flex items-center px-1.5 py-0.5 text-xs text-gray-500 bg-gray-900/50 border border-gray-700 rounded group-hover:border-cyan-500/30 group-hover:text-cyan-400 transition-colors"
+            aria-hidden="true"
+          >
             {navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}K
           </kbd>
         </button>
@@ -95,7 +137,7 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
         <WhatsNewBadge />
 
         {/* Notifications */}
-        <NotificationBell userId={user?.uid || 'anonymous'} />
+        <NotificationBell userId={user?.id || 'anonymous'} />
 
         {/* User menu */}
         <div className="relative">
@@ -136,10 +178,7 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
               )}
             </>
           ) : (
-            <button
-              onClick={handleSignIn}
-              className="cyber-button-primary text-sm"
-            >
+            <button onClick={handleSignIn} className="cyber-button-primary text-sm">
               Sign in
             </button>
           )}
