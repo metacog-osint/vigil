@@ -8,9 +8,6 @@ import {
   MagnifyingGlassMinusIcon,
   MagnifyingGlassPlusIcon,
   ArrowPathIcon,
-  FunnelIcon,
-  EyeIcon,
-  EyeSlashIcon,
 } from '@heroicons/react/24/outline'
 
 // Node type configurations
@@ -66,7 +63,7 @@ function forceDirectedLayout(nodes, edges, iterations = 100) {
   const height = 400
 
   // Initialize positions randomly
-  nodes.forEach((node, i) => {
+  nodes.forEach((node, _i) => {
     if (node.x === undefined) {
       node.x = Math.random() * width
       node.y = Math.random() * height
@@ -281,7 +278,7 @@ export default function IOCCorrelationGraph({
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [visibleTypes, setVisibleTypes] = useState(Object.keys(NODE_TYPES))
   const [selectedNode, setSelectedNode] = useState(null)
-  const [hoveredNode, setHoveredNode] = useState(null)
+  const [hoveredNode, _setHoveredNode] = useState(null)
   const [layoutData, setLayoutData] = useState({ nodes: [], edges: [] })
 
   // Apply layout when data changes

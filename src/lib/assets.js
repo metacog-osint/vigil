@@ -483,7 +483,7 @@ export function validateAssetValue(type, value) {
     case 'domain':
     case 'email_domain':
       // Basic domain validation
-      return /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/.test(v)
+      return /^[a-z0-9]+([-.]{1}[a-z0-9]+)*\.[a-z]{2,}$/.test(v)
 
     case 'ip':
       // IPv4 validation
@@ -517,7 +517,7 @@ export function parseAssetsFromText(text, defaultType = 'domain') {
       type = 'ip'
     } else if (/^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/\d+$/.test(value)) {
       type = 'ip_range'
-    } else if (/^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/.test(value)) {
+    } else if (/^[a-z0-9]+([-.]{1}[a-z0-9]+)*\.[a-z]{2,}$/.test(value)) {
       type = 'domain'
     }
 

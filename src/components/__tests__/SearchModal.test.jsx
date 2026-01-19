@@ -113,7 +113,7 @@ describe('SearchModal', () => {
     it('should have ESC key indicator', () => {
       renderWithRouter(<SearchModal isOpen={true} onClose={() => {}} />)
       // Check for ESC key indicator (may be hidden on small screens)
-      const escElement = screen.queryByText('ESC') || screen.queryByText('esc')
+      const _escElement = screen.queryByText('ESC') || screen.queryByText('esc')
       // ESC indicator exists somewhere in the UI
       expect(document.body.textContent).toContain('esc')
     })

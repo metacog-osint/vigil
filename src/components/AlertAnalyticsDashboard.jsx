@@ -5,7 +5,7 @@
  * Helps teams optimize alert rules and reduce alert noise.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { Skeleton } from './common'
 
@@ -302,7 +302,7 @@ function AlertVolumeTrend({ data }) {
 // MAIN COMPONENT
 // ============================================
 
-export default function AlertAnalyticsDashboard({ teamId }) {
+export default function AlertAnalyticsDashboard({ teamId: _teamId }) {
   const [timeRange, setTimeRange] = useState(30)
   const [loading, setLoading] = useState(true)
   const [metrics, setMetrics] = useState(null)

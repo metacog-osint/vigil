@@ -6,10 +6,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   MagnifyingGlassIcon,
-  FunnelIcon,
-  ArrowPathIcon,
-  ArrowsPointingOutIcon,
-  ArrowsPointingInIcon,
 } from '@heroicons/react/24/outline'
 
 // Entity type configurations
@@ -370,7 +366,7 @@ export default function EntityRelationshipGraph({
   const [activeTypes, setActiveTypes] = useState(Object.keys(ENTITY_CONFIGS))
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedEntity, setSelectedEntity] = useState(null)
-  const [hoveredEntity, setHoveredEntity] = useState(null)
+  const [hoveredEntity, _setHoveredEntity] = useState(null)
   const [layoutNodes, setLayoutNodes] = useState([])
 
   const width = 800 // SVG width
