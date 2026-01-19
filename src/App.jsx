@@ -4,6 +4,10 @@ import { useState, useEffect, lazy, Suspense } from 'react'
 // Core pages - loaded immediately
 import Dashboard from './pages/Dashboard'
 
+// Public pages (for unauthenticated users)
+const Landing = lazy(() => import('./pages/Landing'))
+const Auth = lazy(() => import('./pages/Auth'))
+
 // Lazy loaded pages - code split for smaller initial bundle
 const Activity = lazy(() => import('./pages/Activity'))
 const ThreatActors = lazy(() => import('./pages/ThreatActors'))
@@ -30,7 +34,11 @@ const Vendors = lazy(() => import('./pages/Vendors'))
 const Benchmarks = lazy(() => import('./pages/Benchmarks'))
 const ChatIntegrations = lazy(() => import('./pages/ChatIntegrations'))
 const Compare = lazy(() => import('./pages/Compare'))
+const Patterns = lazy(() => import('./pages/Patterns'))
+const AttackChains = lazy(() => import('./pages/AttackChains'))
+const GeographicAnalysis = lazy(() => import('./pages/GeographicAnalysis'))
 const OpsDashboard = lazy(() => import('./pages/admin/OpsDashboard'))
+const ApiPlayground = lazy(() => import('./components/upgrade/ApiPlayground'))
 
 // Components
 import Sidebar from './components/Sidebar'
@@ -64,13 +72,45 @@ function PageLoader() {
   )
 }
 
-function App() {
+// Full-page loader for auth checking
+function AuthLoader() {
+  return (
+    <div className="min-h-screen bg-cyber-darker flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin w-10 h-10 border-2 border-cyber-accent border-t-transparent rounded-full mx-auto mb-4"></div>
+        <div className="text-cyber-accent animate-pulse">Loading Vigil...</div>
+      </div>
+    </div>
+  )
+}
+
+// Public routes wrapper (no sidebar/header)
+function PublicLayout() {
+  return (
+    <ErrorBoundary name="PublicLayout" title="Application Error">
+      <Suspense fallback={<AuthLoader />}>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/login" element={<Navigate to="/auth" replace />} />
+          <Route path="/register" element={<Navigate to="/auth?mode=register" replace />} />
+          <Route path="/pricing" element={<Pricing />} />
+          {/* Redirect any other route to landing */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
+  )
+}
+
+// Protected app with sidebar/header
+function ProtectedApp() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [showPersonalization, setShowPersonalization] = useState(false)
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
   const isOnline = useOnlineStatus()
   const location = useLocation()
 
@@ -102,17 +142,7 @@ function App() {
     setSidebarOpen(false)
   }, [location.pathname])
 
-  // Show loading state while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-cyber-darker flex items-center justify-center">
-        <div className="text-cyber-accent animate-pulse">Loading...</div>
-      </div>
-    )
-  }
-
   return (
-    <ErrorBoundary name="AppRoot" title="Application Error">
     <TenantProvider>
     <SubscriptionProvider>
     <ToastProvider>
@@ -165,6 +195,7 @@ function App() {
                 <Route path="/threat-hunts" element={<ThreatHunts />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/api-docs" element={<ApiDocs />} />
+                <Route path="/api-playground" element={<ApiPlayground />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/investigations" element={<Investigations />} />
                 <Route path="/assets" element={<Assets />} />
@@ -178,6 +209,13 @@ function App() {
                 <Route path="/help" element={<Help />} />
                 <Route path="/settings" element={<SettingsLayout />} />
                 <Route path="/ops" element={<OpsDashboard />} />
+                <Route path="/patterns" element={<Patterns />} />
+                <Route path="/attack-chains" element={<AttackChains />} />
+                <Route path="/geographic-analysis" element={<GeographicAnalysis />} />
+                {/* Redirect auth pages to dashboard if already logged in */}
+                <Route path="/auth" element={<Navigate to="/" replace />} />
+                <Route path="/login" element={<Navigate to="/" replace />} />
+                <Route path="/register" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
           </ErrorBoundary>
@@ -221,6 +259,26 @@ function App() {
     </ToastProvider>
     </SubscriptionProvider>
     </TenantProvider>
+  )
+}
+
+function App() {
+  const { user, loading: authLoading } = useAuth()
+
+  // Show loading state while checking auth
+  if (authLoading) {
+    return <AuthLoader />
+  }
+
+  // Auth gate: show public layout if not authenticated
+  if (!user) {
+    return <PublicLayout />
+  }
+
+  // Show protected app for authenticated users
+  return (
+    <ErrorBoundary name="AppRoot" title="Application Error">
+      <ProtectedApp />
     </ErrorBoundary>
   )
 }

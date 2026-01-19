@@ -445,20 +445,27 @@ function StepDigest({ frequency, setFrequency }) {
   )
 }
 
+// Constants for delay thresholds
+const PERSONALIZATION_DELAY_MS = 60000 // 60 seconds
+const PERSONALIZATION_PAGE_VIEWS = 3 // or 3 page views
+
 /**
  * Hook to check if personalization wizard should be shown
+ * Delays showing wizard until user has explored the site a bit
  */
 export function usePersonalizationWizard() {
   const [shouldShow, setShouldShow] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [needsPersonalization, setNeedsPersonalization] = useState(false)
 
+  // Check if user needs personalization (hasn't completed it)
   useEffect(() => {
-    async function check() {
+    async function checkPersonalizationNeeded() {
       try {
         // Check localStorage first
         const completed = localStorage.getItem('vigil_personalization_completed')
         if (completed === 'true') {
-          setShouldShow(false)
+          setNeedsPersonalization(false)
           setLoading(false)
           return
         }
@@ -467,20 +474,54 @@ export function usePersonalizationWizard() {
         const profile = await orgProfileApi.get()
         const hasProfile = profile && profile.sector
 
-        setShouldShow(!hasProfile)
+        setNeedsPersonalization(!hasProfile)
       } catch (error) {
         console.error('Error checking personalization status:', error)
-        setShouldShow(false)
+        setNeedsPersonalization(false)
       } finally {
         setLoading(false)
       }
     }
-    check()
+    checkPersonalizationNeeded()
   }, [])
+
+  // Handle delay logic - show after time or page views
+  useEffect(() => {
+    if (!needsPersonalization || loading) return
+
+    // Check if we've already triggered the delay
+    const delayTriggered = sessionStorage.getItem('vigil_personalization_delay_triggered')
+    if (delayTriggered === 'true') {
+      setShouldShow(true)
+      return
+    }
+
+    // Track page views in session storage
+    const currentViews = parseInt(sessionStorage.getItem('vigil_page_views') || '0', 10) + 1
+    sessionStorage.setItem('vigil_page_views', String(currentViews))
+
+    // Check if we've hit the page view threshold
+    if (currentViews >= PERSONALIZATION_PAGE_VIEWS) {
+      sessionStorage.setItem('vigil_personalization_delay_triggered', 'true')
+      setShouldShow(true)
+      return
+    }
+
+    // Set up timer for time-based delay
+    const timer = setTimeout(() => {
+      sessionStorage.setItem('vigil_personalization_delay_triggered', 'true')
+      setShouldShow(true)
+    }, PERSONALIZATION_DELAY_MS)
+
+    return () => clearTimeout(timer)
+  }, [needsPersonalization, loading])
 
   const dismiss = () => {
     localStorage.setItem('vigil_personalization_completed', 'true')
+    sessionStorage.removeItem('vigil_personalization_delay_triggered')
+    sessionStorage.removeItem('vigil_page_views')
     setShouldShow(false)
+    setNeedsPersonalization(false)
   }
 
   return { shouldShow, loading, dismiss }

@@ -360,6 +360,197 @@ export const correlations = {
    */
   async refreshViews() {
     return supabase.rpc('refresh_correlation_views')
+  },
+
+  // ========================================
+  // PHASE 3: NEW CORRELATION QUERIES
+  // ========================================
+
+  /**
+   * Get related incidents based on correlation scoring
+   */
+  async getRelatedIncidents(incidentId, minScore = 30, limit = 10) {
+    return supabase.rpc('get_related_incidents', {
+      p_incident_id: incidentId,
+      p_min_score: minScore,
+      p_limit: limit,
+    })
+  },
+
+  /**
+   * Get malware family lineage (ancestors and descendants)
+   */
+  async getMalwareLineage(familyName) {
+    return supabase.rpc('get_malware_lineage', {
+      p_family: familyName,
+    })
+  },
+
+  /**
+   * Get malware family variants
+   */
+  async getMalwareVariants(familyName) {
+    return supabase
+      .from('malware_family_relationships')
+      .select('*')
+      .or(`parent_family.ilike.%${familyName}%,child_family.ilike.%${familyName}%`)
+      .order('confidence', { ascending: false })
+  },
+
+  /**
+   * Get IOC cluster for a given IOC value
+   */
+  async getIOCCluster(iocValue) {
+    return supabase.rpc('get_ioc_cluster', {
+      p_ioc_value: iocValue,
+    })
+  },
+
+  /**
+   * Get all campaigns with optional filters
+   */
+  async getCampaigns({ actor, sector, status, limit = 50 } = {}) {
+    let query = supabase
+      .from('campaigns')
+      .select('*')
+      .order('updated_at', { ascending: false })
+
+    if (actor) {
+      query = query.ilike('actor_name', `%${actor}%`)
+    }
+
+    if (sector) {
+      query = query.contains('target_sectors', [sector])
+    }
+
+    if (status) {
+      query = query.eq('status', status)
+    }
+
+    return query.limit(limit)
+  },
+
+  /**
+   * Get incidents associated with a campaign
+   */
+  async getCampaignIncidents(campaignId) {
+    return supabase
+      .from('campaign_incidents')
+      .select(`
+        *,
+        incident:incidents(*)
+      `)
+      .eq('campaign_id', campaignId)
+      .order('added_at', { ascending: false })
+  },
+
+  /**
+   * Get detected patterns with optional filters
+   */
+  async getDetectedPatterns({ type, status, minConfidence, limit = 50 } = {}) {
+    let query = supabase
+      .from('detected_patterns')
+      .select('*')
+      .order('last_detected', { ascending: false })
+
+    if (type) {
+      query = query.eq('pattern_type', type)
+    }
+
+    if (status) {
+      query = query.eq('status', status)
+    }
+
+    if (minConfidence) {
+      query = query.gte('confidence', minConfidence)
+    }
+
+    return query.limit(limit)
+  },
+
+  // ========================================
+  // PHASE 4: ADVANCED CORRELATION QUERIES
+  // ========================================
+
+  /**
+   * Get similar actors using pre-computed similarity view
+   */
+  async getSimilarActorsPrecomputed(actorId, minScore = 25, limit = 10) {
+    return supabase.rpc('get_similar_actors_precomputed', {
+      p_actor_id: actorId,
+      p_min_score: minScore,
+      p_limit: limit,
+    })
+  },
+
+  /**
+   * Get technique co-occurrence data
+   */
+  async getTechniqueCooccurrence(techniqueId, limit = 10) {
+    return supabase.rpc('get_technique_cooccurrence', {
+      p_technique_id: techniqueId,
+      p_limit: limit,
+    })
+  },
+
+  /**
+   * Get sector-technique correlations
+   */
+  async getSectorTechniqueCorrelation(sector, limit = 20) {
+    return supabase
+      .from('sector_technique_correlation')
+      .select('*')
+      .eq('sector', sector)
+      .order('actor_count', { ascending: false })
+      .limit(limit)
+  },
+
+  /**
+   * Get geographic targeting matrix
+   */
+  async getGeographicTargetingMatrix({ country, sector, actorType } = {}) {
+    let query = supabase
+      .from('geographic_targeting_matrix')
+      .select('*')
+
+    if (country) {
+      query = query.eq('target_country', country)
+    }
+
+    if (sector) {
+      query = query.eq('target_sector', sector)
+    }
+
+    if (actorType) {
+      query = query.eq('actor_type', actorType)
+    }
+
+    return query.limit(100)
+  },
+
+  /**
+   * Get IOC confidence with multi-source correlation
+   */
+  async getIOCConfidence(iocId) {
+    return supabase
+      .from('ioc_confidence')
+      .select('*')
+      .eq('id', iocId)
+      .single()
+  },
+
+  /**
+   * Get reactivated actors (were dormant, now active)
+   */
+  async getReactivatedActors() {
+    return supabase.rpc('detect_reactivated_actors')
+  },
+
+  /**
+   * Refresh advanced correlation views
+   */
+  async refreshAdvancedViews() {
+    return supabase.rpc('refresh_advanced_correlation_views')
   }
 }
 

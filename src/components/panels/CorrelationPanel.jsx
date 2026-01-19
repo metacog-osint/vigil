@@ -1,7 +1,8 @@
 // Correlation Panel - Shows TTPs, CVEs, and IOCs for an actor
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { correlations } from '../../lib/supabase'
 
 function LoadingState() {
@@ -155,6 +156,196 @@ function MalwareItem({ sample }) {
   )
 }
 
+// IOC Analytics Component - pie chart, confidence breakdown, source grouping
+const IOC_TYPE_COLORS = {
+  ip: '#3B82F6',      // blue
+  domain: '#A855F7',  // purple
+  hash: '#22C55E',    // green
+  url: '#F97316',     // orange
+  md5: '#10B981',     // emerald
+  sha1: '#14B8A6',    // teal
+  sha256: '#059669',  // green
+  email: '#EC4899',   // pink
+  other: '#6B7280',   // gray
+}
+
+const CONFIDENCE_COLORS = {
+  high: 'bg-green-500/20 text-green-400 border-green-500/30',
+  medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  low: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+}
+
+function IOCAnalytics({ iocs, actorName, onExport }) {
+  // Calculate IOC type distribution
+  const typeDistribution = useMemo(() => {
+    const counts = {}
+    iocs.forEach(ioc => {
+      const type = (ioc.type || 'other').toLowerCase()
+      counts[type] = (counts[type] || 0) + 1
+    })
+    return Object.entries(counts)
+      .map(([name, value]) => ({ name: name.toUpperCase(), value, color: IOC_TYPE_COLORS[name] || IOC_TYPE_COLORS.other }))
+      .sort((a, b) => b.value - a.value)
+  }, [iocs])
+
+  // Calculate confidence breakdown
+  const confidenceBreakdown = useMemo(() => {
+    const counts = { high: 0, medium: 0, low: 0 }
+    iocs.forEach(ioc => {
+      const conf = ioc.confidence
+      if (conf >= 80) counts.high++
+      else if (conf >= 50) counts.medium++
+      else counts.low++
+    })
+    return counts
+  }, [iocs])
+
+  // Group by source
+  const sourceGroups = useMemo(() => {
+    const groups = {}
+    iocs.forEach(ioc => {
+      const source = ioc.source || ioc.feed_name || 'Unknown'
+      if (!groups[source]) groups[source] = []
+      groups[source].push(ioc)
+    })
+    return Object.entries(groups)
+      .map(([name, items]) => ({ name, count: items.length }))
+      .sort((a, b) => b.count - a.count)
+  }, [iocs])
+
+  const totalIOCs = iocs.length
+
+  return (
+    <div className="space-y-4">
+      {/* Type Distribution Pie Chart */}
+      <div className="flex items-start gap-4">
+        <div className="w-24 h-24 flex-shrink-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={typeDistribution}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={20}
+                outerRadius={40}
+                paddingAngle={2}
+              >
+                {typeDistribution.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                labelStyle={{ color: '#9ca3af' }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex-1">
+          <div className="text-xs text-gray-400 mb-2">Type Distribution</div>
+          <div className="flex flex-wrap gap-1">
+            {typeDistribution.slice(0, 5).map(({ name, value, color }) => (
+              <span
+                key={name}
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs"
+                style={{ backgroundColor: `${color}20`, color }}
+              >
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                {name}: {value}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Confidence Breakdown */}
+      <div>
+        <div className="text-xs text-gray-400 mb-2">Confidence Breakdown</div>
+        <div className="flex gap-2">
+          {Object.entries(confidenceBreakdown).map(([level, count]) => (
+            <div
+              key={level}
+              className={clsx('flex-1 text-center py-2 rounded border', CONFIDENCE_COLORS[level])}
+            >
+              <div className="text-lg font-bold">{count}</div>
+              <div className="text-xs capitalize">{level}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Source Groups */}
+      {sourceGroups.length > 0 && (
+        <div>
+          <div className="text-xs text-gray-400 mb-2">Sources</div>
+          <div className="flex flex-wrap gap-1">
+            {sourceGroups.slice(0, 6).map(({ name, count }) => (
+              <span
+                key={name}
+                className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded border border-gray-700"
+              >
+                {name}: {count}
+              </span>
+            ))}
+            {sourceGroups.length > 6 && (
+              <span className="px-2 py-1 text-gray-500 text-xs">
+                +{sourceGroups.length - 6} more
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Export Button */}
+      <button
+        onClick={onExport}
+        className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-cyber-accent/20 text-cyber-accent rounded hover:bg-cyber-accent/30 transition-colors text-sm"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        Export {totalIOCs} IOCs
+      </button>
+    </div>
+  )
+}
+
+// Export IOCs to CSV/JSON
+function handleExportIOCs(iocs, actorName) {
+  if (!iocs || iocs.length === 0) return
+
+  const timestamp = new Date().toISOString().split('T')[0]
+  const filename = `${actorName?.replace(/\s+/g, '_') || 'actor'}_iocs_${timestamp}`
+
+  // Prepare CSV content
+  const headers = ['Type', 'Value', 'Confidence', 'Source', 'Malware Family', 'First Seen', 'Last Seen']
+  const rows = iocs.map(ioc => [
+    ioc.type || '',
+    ioc.value || '',
+    ioc.confidence || '',
+    ioc.source || ioc.feed_name || '',
+    ioc.malware_family || '',
+    ioc.first_seen || '',
+    ioc.last_seen || ''
+  ])
+
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+  ].join('\n')
+
+  // Download CSV
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = `${filename}.csv`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
 export function CorrelationPanel({ actorId, actorName }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -288,7 +479,7 @@ export function CorrelationPanel({ actorId, actorName }) {
         </CorrelationSection>
       )}
 
-      {/* IOCs */}
+      {/* IOCs - Enhanced with Analytics */}
       {iocs.length > 0 && (
         <CorrelationSection
           title="Indicators of Compromise"
@@ -296,15 +487,28 @@ export function CorrelationPanel({ actorId, actorName }) {
           count={iocs.length}
           defaultOpen={false}
         >
-          <div className="space-y-2">
-            {iocs.slice(0, 10).map((ioc, i) => (
-              <IOCItem key={ioc.id || i} ioc={ioc} />
-            ))}
-            {iocs.length > 10 && (
-              <div className="text-xs text-gray-500 text-center py-2">
-                +{iocs.length - 10} more IOCs
+          <div className="space-y-4">
+            {/* IOC Analytics */}
+            <IOCAnalytics
+              iocs={iocs}
+              actorName={actorName}
+              onExport={() => handleExportIOCs(iocs, actorName)}
+            />
+
+            {/* IOC List */}
+            <div className="border-t border-gray-700 pt-3">
+              <div className="text-xs text-gray-400 mb-2">Recent IOCs</div>
+              <div className="space-y-2">
+                {iocs.slice(0, 10).map((ioc, i) => (
+                  <IOCItem key={ioc.id || i} ioc={ioc} />
+                ))}
+                {iocs.length > 10 && (
+                  <div className="text-xs text-gray-500 text-center py-2">
+                    +{iocs.length - 10} more IOCs
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </CorrelationSection>
       )}

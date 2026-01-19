@@ -3,6 +3,7 @@ import { clsx } from 'clsx'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useSmartDefaults } from '../hooks/useSmartDefaults'
+import { isSystemAdmin } from '../lib/adminAuth'
 
 // Icons as reusable components
 const icons = {
@@ -44,6 +45,22 @@ const icons = {
   hunt: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  ),
+  patterns: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+    </svg>
+  ),
+  attackChains: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+    </svg>
+  ),
+  globe: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   ),
   trends: (
@@ -97,6 +114,11 @@ const icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
     </svg>
   ),
+  ops: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+  ),
   pin: (
     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -131,6 +153,7 @@ const navigationGroups = [
       { name: 'IOC Search', href: '/iocs', icon: icons.search },
       { name: 'ATT&CK Matrix', href: '/techniques', icon: icons.techniques },
       { name: 'Threat Hunts', href: '/threat-hunts', icon: icons.hunt },
+      { name: 'Patterns', href: '/patterns', icon: icons.patterns },
     ],
   },
   {
@@ -140,6 +163,8 @@ const navigationGroups = [
     items: [
       { name: 'Trends', href: '/trends', icon: icons.trends },
       { name: 'Compare', href: '/compare', icon: icons.compare },
+      { name: 'Attack Chains', href: '/attack-chains', icon: icons.attackChains },
+      { name: 'Geographic', href: '/geographic-analysis', icon: icons.globe },
       { name: 'Reports', href: '/reports', icon: icons.reports },
       { name: 'Investigations', href: '/investigations', icon: icons.investigations },
     ],
@@ -164,6 +189,17 @@ const navigationGroups = [
     ],
   },
 ]
+
+// Admin-only navigation group
+const adminNavigationGroup = {
+  id: 'admin',
+  name: 'Admin',
+  defaultExpanded: true,
+  adminOnly: true,
+  items: [
+    { name: 'Operations', href: '/ops', icon: icons.ops },
+  ],
+}
 
 // Default pinned items for new users
 const DEFAULT_PINNED = ['/', '/actors', '/alerts']
@@ -320,6 +356,12 @@ function PinnedSection({ pinnedItems, isCollapsed, onClose, onTogglePin }) {
 export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
   const { user } = useAuth()
   const smartDefaults = useSmartDefaults()
+  const isAdmin = isSystemAdmin(user)
+
+  // Build navigation groups including admin group if user is admin
+  const allNavigationGroups = isAdmin
+    ? [...navigationGroups, adminNavigationGroup]
+    : navigationGroups
 
   // Track if user has made any customizations
   const [hasCustomizedPins, setHasCustomizedPins] = useState(() => {
@@ -460,7 +502,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
           />
 
           {/* Navigation groups */}
-          {navigationGroups.map((group) => (
+          {allNavigationGroups.map((group) => (
             <NavGroup
               key={group.id}
               group={group}
