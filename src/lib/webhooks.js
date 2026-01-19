@@ -268,27 +268,49 @@ export const webhooks = {
 
   /**
    * Test webhook by sending a test event
+   * Actually sends an HTTP POST to the webhook URL via server endpoint
    */
   async test(webhookId) {
     const webhook = await this.getById(webhookId)
     if (!webhook) throw new Error('Webhook not found')
 
-    const testPayload = {
-      event: 'test',
-      webhook_id: webhookId,
-      timestamp: new Date().toISOString(),
-      data: {
-        message: 'This is a test webhook delivery from Vigil',
-      },
+    // Determine webhook type for appropriate payload format
+    let webhookType = 'generic'
+    const url = webhook.url?.toLowerCase() || ''
+    if (url.includes('hooks.slack.com') || url.includes('slack')) {
+      webhookType = 'slack'
+    } else if (url.includes('discord.com/api/webhooks') || url.includes('discord')) {
+      webhookType = 'discord'
+    } else if (url.includes('webhook.office.com') || url.includes('teams')) {
+      webhookType = 'teams'
     }
 
-    // In a real implementation, this would call a server endpoint
-    // For now, we'll just return the payload that would be sent
-    return {
-      url: webhook.url,
-      payload: testPayload,
-      headers: buildHeaders(webhook, testPayload),
+    // Get session for authentication
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      throw new Error('Authentication required to test webhooks')
     }
+
+    // Call the server endpoint to actually send the webhook
+    const response = await fetch('/api/webhooks/test', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: webhook.url,
+        type: webhookType,
+        headers: webhook.auth_header ? { [webhook.auth_header]: webhook.auth_value_encrypted } : {},
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+      throw new Error(error.error || `Test failed: ${response.status}`)
+    }
+
+    return response.json()
   },
 }
 
