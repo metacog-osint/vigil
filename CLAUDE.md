@@ -1,6 +1,6 @@
 # CLAUDE.md - AI Assistant Context
 
-> **Last Updated:** January 19, 2026 | **Version:** 1.4.1
+> **Last Updated:** January 19, 2026 | **Version:** 1.4.2
 
 This file provides context for AI assistants working on this codebase. For detailed documentation, see:
 - **Data Sources:** `DATA_SOURCES.md` - All threat intel feeds and rollout plan
@@ -527,7 +527,34 @@ RESEND_API_KEY=re_...       # Email delivery
 
 ---
 
-## Security & Code Quality (v0.4.1)
+## Security & Code Quality (v0.4.2)
+
+### Pre-commit Hooks (Husky + lint-staged)
+
+Automated code quality checks run before every commit:
+
+```bash
+# Husky runs lint-staged on pre-commit
+# Configuration in package.json:
+"lint-staged": {
+  "src/**/*.{js,jsx}": ["eslint --fix --max-warnings 0"],
+  "src/**/*.{js,jsx,json,css}": ["prettier --write"]
+}
+```
+
+**What happens on commit:**
+1. ESLint runs on staged JS/JSX files with auto-fix
+2. Prettier formats staged files
+3. Commit is blocked if any lint errors remain (warnings allowed)
+
+**Bypass hooks (emergency only):**
+```bash
+git commit --no-verify -m "message"
+```
+
+**Files:**
+- `.husky/pre-commit` - Hook script
+- `package.json` - lint-staged configuration
 
 ### Logger Utility
 
