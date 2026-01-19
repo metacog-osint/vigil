@@ -1,20 +1,18 @@
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { useState, useEffect, lazy, Suspense } from 'react'
 
 // Core pages - loaded immediately
 import Dashboard from './pages/Dashboard'
 
 // Lazy loaded pages - code split for smaller initial bundle
-const Events = lazy(() => import('./pages/Events'))
+const Activity = lazy(() => import('./pages/Activity'))
 const ThreatActors = lazy(() => import('./pages/ThreatActors'))
-const Incidents = lazy(() => import('./pages/Incidents'))
 const Vulnerabilities = lazy(() => import('./pages/Vulnerabilities'))
 const Advisories = lazy(() => import('./pages/Advisories'))
-const IOCSearch = lazy(() => import('./pages/IOCSearch'))
-const BulkSearch = lazy(() => import('./pages/BulkSearch'))
+const IOCs = lazy(() => import('./pages/IOCs'))
 const Techniques = lazy(() => import('./pages/Techniques'))
 const Watchlists = lazy(() => import('./pages/Watchlists'))
-const Settings = lazy(() => import('./pages/Settings'))
+const SettingsLayout = lazy(() => import('./pages/SettingsLayout'))
 const Alerts = lazy(() => import('./pages/Alerts'))
 const AdvancedSearch = lazy(() => import('./pages/AdvancedSearch'))
 const TrendAnalysis = lazy(() => import('./pages/TrendAnalysis'))
@@ -24,7 +22,6 @@ const ApiDocs = lazy(() => import('./pages/ApiDocs'))
 const Reports = lazy(() => import('./pages/Reports'))
 const Investigations = lazy(() => import('./pages/Investigations'))
 const Assets = lazy(() => import('./pages/Assets'))
-const CustomIOCs = lazy(() => import('./pages/CustomIOCs'))
 const AuditLogs = lazy(() => import('./pages/AuditLogs'))
 const Status = lazy(() => import('./pages/Status'))
 const Webhooks = lazy(() => import('./pages/Webhooks'))
@@ -32,6 +29,7 @@ const Help = lazy(() => import('./pages/Help'))
 const Vendors = lazy(() => import('./pages/Vendors'))
 const Benchmarks = lazy(() => import('./pages/Benchmarks'))
 const ChatIntegrations = lazy(() => import('./pages/ChatIntegrations'))
+const Compare = lazy(() => import('./pages/Compare'))
 const OpsDashboard = lazy(() => import('./pages/admin/OpsDashboard'))
 
 // Components
@@ -51,6 +49,8 @@ import { usePageTracking } from './hooks/useAnalytics'
 // Contexts
 import { SubscriptionProvider } from './contexts/SubscriptionContext'
 import { TenantProvider } from './contexts/TenantContext'
+import { ToastProvider } from './contexts/ToastContext'
+import { FocusModeProvider } from './hooks/useFocusMode'
 
 // Loading fallback for lazy routes
 function PageLoader() {
@@ -76,7 +76,7 @@ function App() {
 
   // Track page views
   usePageTracking()
-  const { shouldShow: shouldShowPersonalization, dismiss: dismissPersonalization } = usePersonalizationWizard()
+  const { shouldShow: shouldShowPersonalization, loading: personalizationLoading, dismiss: dismissPersonalization } = usePersonalizationWizard()
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -112,8 +112,11 @@ function App() {
   }
 
   return (
+    <ErrorBoundary name="AppRoot" title="Application Error">
     <TenantProvider>
     <SubscriptionProvider>
+    <ToastProvider>
+    <FocusModeProvider>
     <div className="min-h-screen bg-cyber-darker flex">
       {/* Skip to main content link for accessibility */}
       <a
@@ -141,18 +144,19 @@ function App() {
         />
 
         <main id="main-content" role="main" className="flex-1 p-4 lg:p-6 overflow-auto" tabIndex={-1}>
-          <ErrorBoundary>
+          <ErrorBoundary name="PageContent" title="Page Error">
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
-                <Route path="/events" element={<Events />} />
+                <Route path="/events" element={<Activity />} />
                 <Route path="/actors" element={<ThreatActors />} />
-                <Route path="/ransomware" element={<Incidents />} />
-                <Route path="/incidents" element={<Incidents />} />
+                <Route path="/ransomware" element={<Navigate to="/events?view=ransomware" replace />} />
+                <Route path="/incidents" element={<Navigate to="/events?view=ransomware" replace />} />
                 <Route path="/vulnerabilities" element={<Vulnerabilities />} />
                 <Route path="/advisories" element={<Advisories />} />
-                <Route path="/iocs" element={<IOCSearch />} />
-                <Route path="/bulk-search" element={<BulkSearch />} />
+                <Route path="/iocs" element={<IOCs />} />
+                <Route path="/bulk-search" element={<Navigate to="/iocs?tab=bulk" replace />} />
+                <Route path="/custom-iocs" element={<Navigate to="/iocs?tab=custom" replace />} />
                 <Route path="/advanced-search" element={<AdvancedSearch />} />
                 <Route path="/techniques" element={<Techniques />} />
                 <Route path="/watchlists" element={<Watchlists />} />
@@ -164,15 +168,15 @@ function App() {
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/investigations" element={<Investigations />} />
                 <Route path="/assets" element={<Assets />} />
-                <Route path="/custom-iocs" element={<CustomIOCs />} />
                 <Route path="/audit-logs" element={<AuditLogs />} />
                 <Route path="/status" element={<Status />} />
                 <Route path="/webhooks" element={<Webhooks />} />
                 <Route path="/vendors" element={<Vendors />} />
                 <Route path="/benchmarks" element={<Benchmarks />} />
                 <Route path="/chat" element={<ChatIntegrations />} />
+                <Route path="/compare" element={<Compare />} />
                 <Route path="/help" element={<Help />} />
-                <Route path="/settings" element={<Settings />} />
+                <Route path="/settings" element={<SettingsLayout />} />
                 <Route path="/ops" element={<OpsDashboard />} />
               </Routes>
             </Suspense>
@@ -194,10 +198,7 @@ function App() {
       {/* Keyboard Shortcuts Help Modal */}
       <KeyboardShortcutsModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
 
-      {/* Onboarding Tour */}
-      <OnboardingTour />
-
-      {/* Personalization Wizard - shows for first-time users after onboarding */}
+      {/* Personalization Wizard - shows for first-time users, takes priority over tour */}
       {(shouldShowPersonalization || showPersonalization) && (
         <PersonalizationWizard
           onComplete={() => {
@@ -210,9 +211,17 @@ function App() {
           }}
         />
       )}
+
+      {/* Onboarding Tour - only shows after personalization check completes and wizard is not needed */}
+      {!personalizationLoading && !shouldShowPersonalization && !showPersonalization && (
+        <OnboardingTour />
+      )}
     </div>
+    </FocusModeProvider>
+    </ToastProvider>
     </SubscriptionProvider>
     </TenantProvider>
+    </ErrorBoundary>
   )
 }
 

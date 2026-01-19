@@ -29,6 +29,11 @@ export const dashboard = {
 
     return {
       totalActors: actorCount.count || 0,
+      incidents30d: incidentCount30d.count || 0,
+      incidentsTotal: incidentCountTotal.count || 0,
+      kevTotal: kevCount.count || 0,
+      iocTotal: iocCount.count || 0,
+      // Legacy aliases (for backwards compatibility)
       incidents24h: incidentCount30d.count || 0,
       incidents7d: incidentCountTotal.count || 0,
       newKEV7d: kevCount.count || 0,

@@ -60,23 +60,37 @@ const COUNTRY_NAMES = {
   VN: 'Vietnam',
 }
 
-// ISO 3166-1 alpha-2 to alpha-3 conversion
-const ISO2_TO_ISO3 = {
-  US: 'USA', GB: 'GBR', UK: 'GBR', DE: 'DEU', FR: 'FRA', CA: 'CAN',
-  AU: 'AUS', JP: 'JPN', CN: 'CHN', RU: 'RUS', BR: 'BRA', IN: 'IND',
-  IT: 'ITA', ES: 'ESP', NL: 'NLD', BE: 'BEL', CH: 'CHE', AT: 'AUT',
-  SE: 'SWE', NO: 'NOR', DK: 'DNK', FI: 'FIN', PL: 'POL', CZ: 'CZE',
-  MX: 'MEX', AR: 'ARG', CL: 'CHL', CO: 'COL', ZA: 'ZAF', AE: 'ARE',
-  SA: 'SAU', IL: 'ISR', SG: 'SGP', KR: 'KOR', TW: 'TWN', HK: 'HKG',
-  NZ: 'NZL', IE: 'IRL', PT: 'PRT', GR: 'GRC', TR: 'TUR', TH: 'THA',
-  MY: 'MYS', ID: 'IDN', PH: 'PHL', VN: 'VNM', EG: 'EGY', NG: 'NGA',
-  KE: 'KEN', MA: 'MAR', PK: 'PAK', BD: 'BGD', UA: 'UKR', RO: 'ROU',
-  HU: 'HUN', SK: 'SVK', BG: 'BGR', HR: 'HRV', SI: 'SVN', RS: 'SRB',
-  LT: 'LTU', LV: 'LVA', EE: 'EST', CY: 'CYP', MT: 'MLT', LU: 'LUX',
-  PE: 'PER', VE: 'VEN', EC: 'ECU', UY: 'URY', PY: 'PRY', BO: 'BOL',
-  CR: 'CRI', PA: 'PAN', GT: 'GTM', SV: 'SLV', HN: 'HND', NI: 'NIC',
-  DO: 'DOM', PR: 'PRI', JM: 'JAM', TT: 'TTO', CU: 'CUB',
+// ISO 3166-1 alpha-3 to alpha-2 conversion (comprehensive)
+const ISO3_TO_ISO2 = {
+  USA: 'US', GBR: 'GB', DEU: 'DE', FRA: 'FR', CAN: 'CA', AUS: 'AU',
+  JPN: 'JP', CHN: 'CN', RUS: 'RU', BRA: 'BR', IND: 'IN', ITA: 'IT',
+  ESP: 'ES', NLD: 'NL', BEL: 'BE', CHE: 'CH', AUT: 'AT', SWE: 'SE',
+  NOR: 'NO', DNK: 'DK', FIN: 'FI', POL: 'PL', CZE: 'CZ', MEX: 'MX',
+  ARG: 'AR', CHL: 'CL', COL: 'CO', ZAF: 'ZA', ARE: 'AE', SAU: 'SA',
+  ISR: 'IL', SGP: 'SG', KOR: 'KR', TWN: 'TW', HKG: 'HK', NZL: 'NZ',
+  IRL: 'IE', PRT: 'PT', GRC: 'GR', TUR: 'TR', THA: 'TH', MYS: 'MY',
+  IDN: 'ID', PHL: 'PH', VNM: 'VN', EGY: 'EG', NGA: 'NG', KEN: 'KE',
+  MAR: 'MA', PAK: 'PK', BGD: 'BD', UKR: 'UA', ROU: 'RO', HUN: 'HU',
+  SVK: 'SK', BGR: 'BG', HRV: 'HR', SVN: 'SI', SRB: 'RS', LTU: 'LT',
+  LVA: 'LV', EST: 'EE', CYP: 'CY', MLT: 'MT', LUX: 'LU', PER: 'PE',
+  VEN: 'VE', ECU: 'EC', URY: 'UY', PRY: 'PY', BOL: 'BO', CRI: 'CR',
+  PAN: 'PA', GTM: 'GT', SLV: 'SV', HND: 'HN', NIC: 'NI', DOM: 'DO',
+  PRI: 'PR', JAM: 'JM', TTO: 'TT', CUB: 'CU', IRN: 'IR', IRQ: 'IQ',
+  AFG: 'AF', SYR: 'SY', LBN: 'LB', JOR: 'JO', KWT: 'KW', QAT: 'QA',
+  BHR: 'BH', OMN: 'OM', YEM: 'YE', LBY: 'LY', TUN: 'TN', DZA: 'DZ',
+  SDN: 'SD', ETH: 'ET', TZA: 'TZ', UGA: 'UG', GHA: 'GH', CMR: 'CM',
+  CIV: 'CI', SEN: 'SN', ZWE: 'ZW', ZMB: 'ZM', MWI: 'MW', MOZ: 'MZ',
+  AGO: 'AO', NAM: 'NA', BWA: 'BW', NPL: 'NP', LKA: 'LK', MMR: 'MM',
+  KHM: 'KH', LAO: 'LA', MNG: 'MN', PRK: 'KP', BLR: 'BY', MDA: 'MD',
+  GEO: 'GE', ARM: 'AM', AZE: 'AZ', KAZ: 'KZ', UZB: 'UZ', TKM: 'TM',
+  KGZ: 'KG', TJK: 'TJ', ALB: 'AL', MKD: 'MK', MNE: 'ME', BIH: 'BA',
+  ISL: 'IS', MCO: 'MC', AND: 'AD', LIE: 'LI', SMR: 'SM', VAT: 'VA',
 }
+
+// Create reverse mapping for compatibility
+const ISO2_TO_ISO3 = Object.fromEntries(
+  Object.entries(ISO3_TO_ISO2).map(([iso3, iso2]) => [iso2, iso3])
+)
 
 export default function ThreatAttributionMap({
   days = 30,
@@ -168,11 +182,12 @@ export default function ThreatAttributionMap({
   // Calculate color intensity based on count
   const getColor = (countryCode) => {
     const data = viewMode === 'attackers' ? actorOrigins : countryData
+    // Convert ISO-3 to ISO-2 using direct lookup
     const iso2 = countryCode?.length === 3
-      ? Object.entries(ISO2_TO_ISO3).find(([k, v]) => v === countryCode)?.[0]
-      : countryCode
+      ? ISO3_TO_ISO2[countryCode]
+      : countryCode?.toUpperCase()
 
-    const countryInfo = data[iso2] || data[countryCode]
+    const countryInfo = data[iso2] || data[countryCode?.toUpperCase()]
     if (!countryInfo) return '#1f2937' // Default dark gray
 
     const count = countryInfo.count || 0
@@ -204,11 +219,12 @@ export default function ThreatAttributionMap({
   // Get tooltip content
   const getTooltipContent = (countryCode, countryName) => {
     const data = viewMode === 'attackers' ? actorOrigins : countryData
+    // Convert ISO-3 to ISO-2 using direct lookup
     const iso2 = countryCode?.length === 3
-      ? Object.entries(ISO2_TO_ISO3).find(([k, v]) => v === countryCode)?.[0]
-      : countryCode
+      ? ISO3_TO_ISO2[countryCode]
+      : countryCode?.toUpperCase()
 
-    const countryInfo = data[iso2] || data[countryCode]
+    const countryInfo = data[iso2] || data[countryCode?.toUpperCase()]
 
     if (!countryInfo || countryInfo.count === 0) {
       return { name: countryName, count: 0 }
@@ -258,11 +274,12 @@ export default function ThreatAttributionMap({
     const countryCode = geo.properties?.ISO_A3 || geo.id
     const countryName = getCountryName(geo)
     const data = viewMode === 'attackers' ? actorOrigins : countryData
+    // Convert ISO-3 to ISO-2 using direct lookup
     const iso2 = countryCode?.length === 3
-      ? Object.entries(ISO2_TO_ISO3).find(([k, v]) => v === countryCode)?.[0]
-      : countryCode
+      ? ISO3_TO_ISO2[countryCode]
+      : countryCode?.toUpperCase()
 
-    const countryInfo = data[iso2] || data[countryCode]
+    const countryInfo = data[iso2] || data[countryCode?.toUpperCase()]
 
     if (onCountryClick && countryInfo?.count > 0) {
       onCountryClick({

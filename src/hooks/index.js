@@ -5,6 +5,9 @@ export { useAuth } from './useAuth'
 export { useOnlineStatus } from './useOnlineStatus'
 export { useKeyboardShortcuts } from './useKeyboardShortcuts'
 export { default as useAnalytics } from './useAnalytics'
+export { useLastVisit } from './useLastVisit'
+export { useFocusMode, FocusModeProvider } from './useFocusMode.jsx'
+export { useDashboardLayout } from './useDashboardLayout'
 
 // Filter State Management
 export {
