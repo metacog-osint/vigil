@@ -1,6 +1,7 @@
 # Vigil Architecture
 
 > System design and technical decisions for the Vigil CTI platform.
+> **Last Updated:** January 19, 2026
 
 ---
 
@@ -12,27 +13,31 @@
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐       │
-│  │   External   │    │   GitHub     │    │   Vercel     │       │
-│  │ Data Sources │───▶│   Actions    │    │   Hosting    │       │
-│  │  (22 feeds)  │    │  (Ingestion) │    │  (Frontend)  │       │
+│  │   External   │    │   GitHub     │    │  Cloudflare  │       │
+│  │ Data Sources │───▶│   Actions    │───▶│   Workers    │       │
+│  │  (32 feeds)  │    │  (6hr cycle) │    │ (30min cycle)│       │
 │  └──────────────┘    └──────┬───────┘    └──────┬───────┘       │
 │                             │                    │               │
 │                             ▼                    ▼               │
 │                      ┌──────────────────────────────┐           │
 │                      │         SUPABASE             │           │
-│                      │  ┌────────┐  ┌────────────┐  │           │
-│                      │  │ PostgreSQL │  │ Edge Functions │  │           │
-│                      │  │ (Data)  │  │   (API)    │  │           │
-│                      │  └────────┘  └────────────┘  │           │
+│                      │  ┌──────────────────────────┐│           │
+│                      │  │      PostgreSQL          ││           │
+│                      │  │  (Threat Data + Auth)    ││           │
+│                      │  └──────────────────────────┘│           │
+│                      │  ┌──────────────────────────┐│           │
+│                      │  │     Supabase Auth        ││           │
+│                      │  │  (Email, OAuth, JWT)     ││           │
+│                      │  └──────────────────────────┘│           │
 │                      └──────────────────────────────┘           │
 │                                    │                             │
 │                                    ▼                             │
 │                      ┌──────────────────────────────┐           │
-│                      │         FIREBASE             │           │
-│                      │  ┌────────┐  ┌────────────┐  │           │
-│                      │  │  Auth  │  │  Firestore │  │           │
-│                      │  │ (SSO)  │  │  (Prefs)   │  │           │
-│                      │  └────────┘  └────────────┘  │           │
+│                      │          VERCEL              │           │
+│                      │  ┌──────────────────────────┐│           │
+│                      │  │    React Frontend        ││           │
+│                      │  │    API Functions         ││           │
+│                      │  └──────────────────────────┘│           │
 │                      └──────────────────────────────┘           │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
@@ -40,18 +45,19 @@
 
 ---
 
-## Hybrid Database Strategy
+## Database Architecture
 
-### Why Supabase + Firebase?
+### Supabase as Primary Backend
 
-We use a hybrid approach for specific reasons:
+Vigil uses **Supabase exclusively** for all data and authentication:
 
-| Database | Use Case | Rationale |
-|----------|----------|-----------|
-| **Supabase (PostgreSQL)** | Threat data | Complex queries, JOINs, full-text search |
-| **Firebase (Firestore)** | User preferences | Document model fits, mature auth |
+| Component | Purpose | Notes |
+|-----------|---------|-------|
+| **PostgreSQL** | Threat data storage | Complex queries, JOINs, full-text search |
+| **Supabase Auth** | User authentication | Email/password, Google OAuth, JWT |
+| **Row Level Security** | Data isolation | User-specific data protection |
 
-### Supabase for Threat Data
+### Why PostgreSQL for Threat Data?
 
 PostgreSQL enables complex queries that would be difficult in NoSQL:
 
@@ -71,12 +77,6 @@ JOIN watchlist_items wi ON wi.entity_id = ta.id
 WHERE wi.user_id = $1;
 ```
 
-### Firebase for User Features
-
-- Auth is mature and handles Google SSO well
-- Firestore fits document model for user preferences
-- Real-time listeners for notifications
-
 ---
 
 ## Data Flow
@@ -86,37 +86,40 @@ WHERE wi.user_id = $1;
 ```
 External API/Feed
        │
-       ▼
-┌─────────────────┐
-│ Ingestion Script │  (scripts/ingest-*.mjs)
-│  - Fetch data    │
-│  - Transform     │
-│  - Deduplicate   │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│    Supabase     │
-│  - Upsert data  │
-│  - Log to sync_log │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Post-Processing │
-│  - Correlations  │
-│  - Trend calc    │
-│  - Enrichment    │
-└─────────────────┘
+       ├───────────────────┬───────────────────┐
+       ▼                   ▼                   ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│ GitHub Actions  │ │Cloudflare Workers│ │ Manual Scripts  │
+│  (6hr cycle)    │ │  (30min cycle)   │ │  (on-demand)    │
+│  Tier 1 feeds   │ │  Critical feeds  │ │  Full refresh   │
+└────────┬────────┘ └────────┬────────┘ └────────┬────────┘
+         │                   │                   │
+         └───────────────────┼───────────────────┘
+                             ▼
+                   ┌─────────────────┐
+                   │    Supabase     │
+                   │  - Upsert data  │
+                   │  - Log to sync_log │
+                   │  - Trigger alerts │
+                   └────────┬────────┘
+                            │
+                            ▼
+                   ┌─────────────────┐
+                   │  Post-Processing │
+                   │  - Correlations  │
+                   │  - Trend calc    │
+                   │  - Enrichment    │
+                   └─────────────────┘
 ```
 
 ### Scheduling Tiers
 
-| Tier | Frequency | Sources | Rationale |
-|------|-----------|---------|-----------|
-| Tier 1 | Every 6 hours | Ransomware, KEV, MITRE, Core IOCs | Frequently updated, critical |
-| Tier 2 | Daily (2 AM UTC) | OTX, MalwareBazaar, Enrichment | Rate-limited APIs |
-| Tier 3 | Weekly | HIBP | Infrequently updated |
+| Tier | Frequency | Method | Sources | Rationale |
+|------|-----------|--------|---------|-----------|
+| Critical | 30 min | Cloudflare Workers | Ransomware, KEV | Time-sensitive alerts |
+| Tier 1 | 6 hours | GitHub Actions | MITRE, Core IOCs, Malware | Frequently updated |
+| Tier 2 | Daily | GitHub Actions | OTX, MalwareBazaar, EPSS | Rate-limited APIs |
+| Tier 3 | Weekly | Manual | HIBP, Large datasets | Infrequently updated |
 
 ---
 
@@ -169,14 +172,6 @@ vulnerabilities
 ├── kev_date_added (DATE, nullable)
 ├── kev_due_date (DATE, nullable)
 └── ransomware_use (BOOLEAN)
-
-techniques
-├── id (TEXT, PK) -- T1234.001
-├── name (TEXT)
-├── tactic (TEXT)
-├── platforms (TEXT[])
-├── detection (TEXT)
-└── mitigations (TEXT[])
 ```
 
 ### Junction Tables
@@ -187,30 +182,38 @@ actor_vulnerabilities (threat_actor_id, vulnerability_id)
 incident_iocs (incident_id, ioc_id)
 ```
 
-### User Tables
+### User Tables (All in Supabase)
 
 ```
-user_preferences (Firebase)
-├── user_id (TEXT, PK)
-├── excluded_sectors (TEXT[])
-├── severity_threshold (TEXT)
-├── digest_frequency (TEXT)
-└── notification_settings (OBJECT)
+user_profiles
+├── id (UUID, PK, FK to auth.users)
+├── display_name (TEXT)
+├── subscription_tier (TEXT)
+└── created_at (TIMESTAMPTZ)
 
-watchlists (Supabase)
-├── id (UUID, PK)
-├── user_id (TEXT)
-├── name (TEXT)
-├── entity_type (TEXT)
-└── entity_ids (UUID[])
-
-org_profiles (Supabase)
-├── user_id (TEXT, PK)
+org_profiles
+├── user_id (UUID, PK, FK to auth.users)
 ├── sector (TEXT)
 ├── region (TEXT)
 ├── tech_vendors (TEXT[])
 └── tech_stack (TEXT[])
+
+watchlists
+├── id (UUID, PK)
+├── user_id (UUID, FK)
+├── name (TEXT)
+├── entity_type (TEXT)
+└── entity_ids (UUID[])
 ```
+
+### Optional Tables
+
+Some tables require specific migrations and feature flags:
+
+| Table | Feature Flag | Migration |
+|-------|--------------|-----------|
+| `analytics_events` | `VITE_ENABLE_ANALYTICS=true` | 067_analytics_and_techniques.sql |
+| `mitre_techniques` | `VITE_ENABLE_MITRE=true` | 067_analytics_and_techniques.sql |
 
 ---
 
@@ -233,24 +236,24 @@ org_profiles (Supabase)
 ```
 src/
 ├── components/      # Reusable UI components
-│   ├── common/      # Header, Sidebar, etc.
-│   ├── charts/      # Visualization components
-│   ├── panels/      # Detail panels
-│   └── badges/      # Status badges
+│   ├── common/      # StatCard, EmptyState, Skeleton
+│   ├── panels/      # CorrelationPanel, EnrichmentPanel
+│   ├── widgets/     # Dashboard widgets
+│   ├── actions/     # ExportIOCsButton, CreateAlertButton
+│   └── index.js     # Barrel exports
 ├── pages/           # Route components
 ├── hooks/           # Custom React hooks
 ├── contexts/        # React context providers
 ├── lib/             # Business logic
-│   ├── supabase/    # Database queries
-│   ├── constants/   # Shared constants
-│   └── utils.js     # Utility functions
+│   ├── supabase/    # Database queries (single client!)
+│   └── *.js         # Utility modules
 └── main.jsx         # App entry point
 ```
 
 ### Data Fetching Pattern
 
 ```javascript
-// Custom hook pattern
+// Custom hook pattern (see docs/STATE_MANAGEMENT.md)
 function useActors(filters) {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
@@ -279,6 +282,22 @@ function useActors(filters) {
 
 ## API Architecture
 
+### Vercel Serverless Functions
+
+API endpoints are deployed as Vercel serverless functions:
+
+```
+api/
+├── _lib/              # Shared utilities (NOT deployed as functions)
+│   ├── supabase-auth.js
+│   ├── cors.js
+│   └── validators.js
+├── send-email.js      # POST /api/send-email
+├── generate-summary.js # POST /api/generate-summary
+└── v1/
+    └── *.js           # REST API endpoints
+```
+
 ### REST API Endpoints
 
 ```
@@ -289,61 +308,63 @@ GET  /api/v1/vulnerabilities  # List vulnerabilities
 GET  /api/v1/iocs             # List IOCs
 POST /api/v1/iocs/lookup      # Bulk IOC lookup
 GET  /api/v1/events           # Unified timeline
-GET  /api/v1/techniques       # ATT&CK techniques
 POST /api/v1/search           # Advanced search
 ```
 
 ### Authentication
 
-- API keys for programmatic access
-- JWT tokens for user sessions
-- Rate limiting per tier
+- **Supabase JWT** for user sessions
+- **API keys** for programmatic access (future)
+- **Rate limiting** per user/tier
 
 ---
 
 ## Security Considerations
 
 ### Data Security
-- All API keys stored in environment variables
+- All API keys stored in environment variables (never in client code)
 - Supabase Row Level Security (RLS) policies
 - Input sanitization on all queries
+- Pre-commit hooks enforce code quality
 
 ### Authentication
-- Firebase Auth for user management
-- Google SSO support
-- Session management
+- Supabase Auth for user management
+- Google OAuth support
+- JWT token verification on all API routes
 
 ### Infrastructure
 - HTTPS everywhere
-- CORS configured for allowed origins
+- CORS configured for allowed origins only
 - Rate limiting on all endpoints
+- Security headers configured in vercel.json
 
 ---
 
 ## Monitoring & Observability
 
 ### Error Tracking
-- Sentry for error capture
+- Sentry for error capture (production only)
 - Source maps for stack traces
 
 ### Performance
 - Core Web Vitals monitoring
-- Database query analytics
+- Database query analytics via Supabase
 - API response time tracking
 
 ### Data Quality
-- Sync log for ingestion status
+- `sync_log` table for ingestion status
 - Deduplication tracking
-- Data freshness alerts
+- Data freshness monitoring
 
 ---
 
 ## Deployment
 
-### Production
+### Production Stack
 - **Frontend:** Vercel (auto-deploy on main)
 - **Database:** Supabase Cloud
-- **Auth:** Firebase
+- **Auth:** Supabase Auth
+- **Workers:** Cloudflare Workers (critical ingestion)
 - **Domain:** vigil.theintelligence.company
 
 ### CI/CD Pipeline
@@ -352,13 +373,13 @@ Push to main
     │
     ▼
 GitHub Actions
-├── Lint check
-├── Unit tests
-├── Build
-└── Deploy to Vercel
+├── Lint check (husky pre-commit also runs locally)
+├── Unit tests (Vitest)
+├── E2E tests (Playwright - chromium, firefox, webkit)
+├── Build verification
+└── Auto-deploy to Vercel
 ```
 
 ---
 
-*Last Updated: January 2026*
-*See also: DATABASE.md for detailed schema, DATA_SOURCES.md for ingestion details*
+*See also: `docs/DATABASE.md` for detailed schema, `DATA_SOURCES.md` for feed catalog, `docs/DEPLOYMENT.md` for hosting details*
