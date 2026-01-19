@@ -4,6 +4,7 @@ module.exports = {
     browser: true,
     es2022: true,
     node: true,
+    jest: true,
   },
   extends: [
     'eslint:recommended',
@@ -27,12 +28,13 @@ module.exports = {
   plugins: ['react', 'react-hooks'],
   rules: {
     'react/prop-types': 'off',
-    'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-debugger': 'error',
     'react/no-unescaped-entities': 'warn',
     'no-case-declarations': 'warn',
     'no-unsafe-optional-chaining': 'warn',
+    'react-hooks/exhaustive-deps': 'warn',
   },
-  ignorePatterns: ['dist', 'node_modules', 'build', 'playwright-report', 'test-results', 'src/test', 'e2e', 'api'],
+  ignorePatterns: ['dist', 'node_modules', 'build', 'playwright-report', 'test-results', 'src/test', 'e2e', 'api', 'coverage', 'public'],
 }

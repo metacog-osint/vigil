@@ -13,7 +13,6 @@ import {
   PencilIcon,
   ChatBubbleLeftRightIcon,
   UserCircleIcon,
-  TagIcon,
   FolderIcon,
   LinkIcon,
   ExclamationTriangleIcon,

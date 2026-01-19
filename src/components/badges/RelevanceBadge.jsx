@@ -99,7 +99,7 @@ export function RelevanceIndicator({ score }) {
 }
 
 // For use in cards/panels
-export function RelevancePanel({ score, reasons = [], entityType = 'threat' }) {
+export function RelevancePanel({ score, reasons = [], entityType: _entityType = 'threat' }) {
   if (score === null || score === undefined) {
     return (
       <div className="bg-gray-800/30 rounded p-3 text-center">

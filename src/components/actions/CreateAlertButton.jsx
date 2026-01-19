@@ -43,7 +43,7 @@ export function CreateAlertButton({
     navigate(`/alerts?${params.toString()}`)
   }
 
-  const handleQuickCreate = () => {
+  const _handleQuickCreate = () => {
     setShowConfirm(true)
   }
 

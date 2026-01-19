@@ -1,6 +1,6 @@
 // Incident Flow - Sankey-style visualization of attack chains
 import { useMemo } from 'react'
-import { Sankey, Tooltip, ResponsiveContainer, Layer, Rectangle } from 'recharts'
+import { Sankey, Tooltip, ResponsiveContainer, Rectangle } from 'recharts'
 import { clsx } from 'clsx'
 
 const NODE_COLORS = {
@@ -11,7 +11,7 @@ const NODE_COLORS = {
 }
 
 // Custom node for Sankey diagram
-function CustomNode({ x, y, width, height, index, payload }) {
+function CustomNode({ x, y, width, height, index: _index, payload }) {
   const color = NODE_COLORS[payload.category] || '#6b7280'
 
   return (

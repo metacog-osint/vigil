@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { analyticsQueries } from '../lib/analytics'
-import { format, subDays } from 'date-fns'
+import { format } from 'date-fns'
 import {
   LineChart,
   Line,

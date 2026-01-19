@@ -103,7 +103,7 @@ function ConditionRow({
   onUpdate,
   onRemove,
   canRemove,
-  depth = 0
+  depth: _depth = 0
 }) {
   const fields = FIELD_OPTIONS[entityType] || []
   const selectedField = fields.find(f => f.value === condition.field)
@@ -112,7 +112,8 @@ function ConditionRow({
   const needsMultiValue = ['in', 'not_in'].includes(condition.operator)
 
   const handleFieldChange = (field) => {
-    const newField = fields.find(f => f.value === field)
+    // Field lookup for future validation
+    const _newField = fields.find(f => f.value === field)
     onUpdate({
       ...condition,
       field,

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { savedSearches, recentSearches, getFilterSummary, COLOR_OPTIONS, ICON_OPTIONS } from '../lib/savedSearches'
+import { savedSearches, recentSearches, getFilterSummary, COLOR_OPTIONS } from '../lib/savedSearches'
 
 /**
  * SavedSearches Panel - Shows saved and recent searches for a page

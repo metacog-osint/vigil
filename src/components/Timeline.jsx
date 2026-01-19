@@ -19,7 +19,7 @@ function formatEventDate(date) {
   return format(d, 'MMM d, yyyy HH:mm')
 }
 
-function TimelineItem({ event, isFirst, isLast, onClick }) {
+function TimelineItem({ event, isFirst: _isFirst, isLast, onClick }) {
   const typeConfig = EVENT_TYPES[event.type] || { color: 'bg-gray-500', icon: '?' }
 
   return (
@@ -147,7 +147,7 @@ export function TimelineMini({
 export function ActorTimeline({
   actorName,
   incidents = [],
-  techniques = [],
+  techniques: _techniques = [],
   iocs = [],
   className = '',
 }) {

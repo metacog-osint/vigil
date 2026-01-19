@@ -7,6 +7,7 @@
  */
 
 import { supabase, subscribeToTable } from './supabase/client'
+import { logger } from './logger'
 
 // Re-export the centralized client and subscription helper
 export { supabase, subscribeToTable }
