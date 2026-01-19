@@ -974,6 +974,38 @@ if (response.ok) {
 }
 ```
 
+### Component Organization: Barrel Exports
+
+Components are organized in subdirectories with barrel exports (index.js files). When git shows "deleted" component files, verify the actual location:
+
+```
+src/components/
+├── index.js              # Main barrel - re-exports from subdirectories
+├── common/
+│   ├── index.js          # Exports: StatCard, EmptyState, Skeleton, etc.
+│   └── StatCard.jsx      ✅ Actual file location
+├── panels/
+│   ├── index.js          # Exports: CorrelationPanel, EnrichmentPanel, etc.
+│   └── CorrelationPanel.jsx  ✅ Actual file location
+├── widgets/
+│   ├── index.js          # Exports: ChangeSummaryCard, ThreatHuntCard, etc.
+│   └── ChangeSummaryCard.jsx  ✅ Actual file location
+└── actions/
+    ├── index.js          # Exports: ExportIOCsButton, CreateAlertButton, etc.
+    └── ExportIOCsButton.jsx
+```
+
+**Common confusion:** Git may show deletions like `D src/components/CorrelationPanel.jsx` (root level). This is correct - the file was moved to `src/components/panels/CorrelationPanel.jsx`. The barrel exports handle the re-mapping.
+
+```javascript
+// ✅ CORRECT: Import from main barrel or subdirectory barrel
+import { CorrelationPanel } from '../components'
+import { CorrelationPanel } from '../components/panels'
+
+// ❌ WRONG: Import from root (old location, no longer exists)
+import CorrelationPanel from '../components/CorrelationPanel'
+```
+
 ---
 
 ## UX Improvements System (v1.3.0)
