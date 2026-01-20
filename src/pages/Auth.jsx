@@ -9,6 +9,96 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase/client'
 
+// Password strength checker
+function checkPasswordStrength(password) {
+  const checks = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
+  }
+
+  const passed = Object.values(checks).filter(Boolean).length
+  let strength = 'weak'
+  let color = 'bg-red-500'
+
+  if (passed >= 4) {
+    strength = 'strong'
+    color = 'bg-green-500'
+  } else if (passed >= 3) {
+    strength = 'medium'
+    color = 'bg-yellow-500'
+  }
+
+  return { checks, passed, strength, color }
+}
+
+function PasswordStrengthIndicator({ password }) {
+  if (!password) return null
+
+  const { checks, passed, strength, color } = checkPasswordStrength(password)
+
+  const requirements = [
+    { key: 'length', label: 'At least 8 characters', met: checks.length },
+    { key: 'uppercase', label: 'One uppercase letter', met: checks.uppercase },
+    { key: 'lowercase', label: 'One lowercase letter', met: checks.lowercase },
+    { key: 'number', label: 'One number', met: checks.number },
+    { key: 'special', label: 'One special character (!@#$...)', met: checks.special },
+  ]
+
+  return (
+    <div className="mt-2 space-y-2">
+      {/* Strength bar */}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+          <div
+            className={`h-full ${color} transition-all duration-300`}
+            style={{ width: `${(passed / 5) * 100}%` }}
+          />
+        </div>
+        <span
+          className={`text-xs font-medium ${
+            strength === 'strong'
+              ? 'text-green-400'
+              : strength === 'medium'
+                ? 'text-yellow-400'
+                : 'text-red-400'
+          }`}
+        >
+          {strength.charAt(0).toUpperCase() + strength.slice(1)}
+        </span>
+      </div>
+
+      {/* Requirements list */}
+      <div className="grid grid-cols-2 gap-1">
+        {requirements.map((req) => (
+          <div key={req.key} className="flex items-center gap-1.5 text-xs">
+            {req.met ? (
+              <svg className="w-3.5 h-3.5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+            <span className={req.met ? 'text-gray-300' : 'text-gray-500'}>{req.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const OAUTH_PROVIDERS = [
   {
     id: 'google',
@@ -149,8 +239,9 @@ export default function Auth() {
       return
     }
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters')
+    const { passed } = checkPasswordStrength(password)
+    if (passed < 3) {
+      setError('Please create a stronger password (at least 3 requirements)')
       setLoading(false)
       return
     }
@@ -323,6 +414,7 @@ export default function Auth() {
                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyber-accent focus:ring-1 focus:ring-cyber-accent"
                 placeholder="••••••••"
               />
+              {mode === 'register' && <PasswordStrengthIndicator password={password} />}
             </div>
           )}
 
