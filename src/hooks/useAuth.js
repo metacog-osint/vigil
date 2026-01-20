@@ -65,21 +65,24 @@ export function useAuth() {
     }
   }, [])
 
-  // Load user profile from org_profiles table
+  // Load user profile from user_preferences table
   const loadProfile = async (userId) => {
     try {
       const { data, error } = await supabase
-        .from('org_profiles')
-        .select('*')
+        .from('user_preferences')
+        .select('preferences')
         .eq('user_id', userId)
         .single()
 
       if (error && error.code !== 'PGRST116') {
         // PGRST116 = no rows returned (new user, no profile yet)
-        console.error('Error loading profile:', error.message)
+        // Also ignore 404 table not found errors
+        if (!error.message?.includes('does not exist')) {
+          console.error('Error loading profile:', error.message)
+        }
       }
 
-      setProfile(data || null)
+      setProfile(data?.preferences?.org_profile || null)
     } catch (error) {
       console.error('Profile loading error:', error)
       setProfile(null)
