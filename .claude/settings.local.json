@@ -132,7 +132,9 @@
       "WebFetch(domain:threatintelligenceplatform.com)",
       "Bash(git restore:*)",
       "Bash(npx husky init)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(ping:*)",
+      "Bash(start /b npm run dev)"
     ]
   }
 }

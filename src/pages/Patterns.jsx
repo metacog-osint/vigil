@@ -7,13 +7,17 @@
  * - Temporal clusters (activity bursts)
  * - Geographic targeting patterns
  * - Actor-sector patterns
+ *
+ * Supports demo mode with mock data
  */
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { analyzePatterns, PATTERN_TYPES } from '../lib/patternDetection'
-import { incidents as incidentsApi, supabase } from '../lib/supabase'
+import { incidents as incidentsApi } from '../lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
 import { SkeletonCard } from '../components'
+import { useDemo } from '../contexts/DemoContext'
+import useDemoData from '../hooks/useDemoData'
 
 // Pattern type configurations
 const PATTERN_CONFIG = {
@@ -365,13 +369,32 @@ function PatternStats({ patterns }) {
 }
 
 export default function Patterns() {
+  const { isDemoMode } = useDemo()
+  const demoData = useDemoData()
+
   const [patterns, setPatterns] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedType, setSelectedType] = useState('all')
   const [timeRange, setTimeRange] = useState(30)
 
+  // Demo mode: Load mock patterns
   useEffect(() => {
+    if (!isDemoMode) return
+
+    setLoading(true)
+    setError(null)
+
+    // Use mock patterns from demo data
+    const mockPatterns = demoData.patterns || []
+    setPatterns(mockPatterns)
+    setLoading(false)
+  }, [isDemoMode, demoData.patterns])
+
+  // Real mode: Load patterns from API
+  useEffect(() => {
+    if (isDemoMode) return
+
     async function loadPatterns() {
       setLoading(true)
       setError(null)
@@ -401,7 +424,7 @@ export default function Patterns() {
     }
 
     loadPatterns()
-  }, [timeRange])
+  }, [isDemoMode, timeRange])
 
   // Filter patterns by type
   const filteredPatterns = selectedType === 'all'

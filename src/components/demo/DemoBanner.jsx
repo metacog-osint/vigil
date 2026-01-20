@@ -5,13 +5,19 @@
  * Includes CTA to sign up for a real account.
  */
 
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useDemo } from '../../contexts/DemoContext'
 
 export default function DemoBanner() {
-  const { isDemoMode, exitDemoMode } = useDemo()
+  const { isDemoMode, exitDemoMode, clearDemoMode } = useDemo()
+  const navigate = useNavigate()
 
   if (!isDemoMode) return null
+
+  const handleExitDemo = () => {
+    clearDemoMode()
+    navigate('/landing')
+  }
 
   return (
     <div className="bg-gradient-to-r from-cyber-accent/20 via-cyber-accent/10 to-cyber-accent/20 border-b border-cyber-accent/30">
@@ -47,9 +53,12 @@ export default function DemoBanner() {
           >
             Create Free Account
           </button>
-          <Link to="/" className="text-sm text-gray-400 hover:text-white transition-colors">
+          <button
+            onClick={handleExitDemo}
+            className="text-sm text-gray-400 hover:text-white transition-colors"
+          >
             Exit Demo
-          </Link>
+          </button>
         </div>
       </div>
     </div>
