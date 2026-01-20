@@ -99,38 +99,84 @@ CREATE INDEX IF NOT EXISTS idx_ioc_clusters_values ON ioc_clusters USING GIN(ioc
 CREATE INDEX IF NOT EXISTS idx_ioc_clusters_actors ON ioc_clusters USING GIN(actors);
 
 -- ============================================================================
--- SECTION 4: CAMPAIGNS TABLE
+-- SECTION 4: CAMPAIGNS TABLE ENHANCEMENTS
+-- Note: campaigns table already exists from migration 056
+-- Adding additional columns for correlation tracking
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS campaigns (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  description TEXT,
-  actor_id UUID REFERENCES threat_actors(id),
-  actor_name TEXT,
-  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'concluded', 'suspected', 'dormant')),
-  start_date DATE,
-  end_date DATE,
-  target_sectors TEXT[] DEFAULT '{}',
-  target_countries TEXT[] DEFAULT '{}',
-  techniques TEXT[] DEFAULT '{}',
-  malware_families TEXT[] DEFAULT '{}',
-  vulnerabilities TEXT[] DEFAULT '{}',
-  incident_count INTEGER DEFAULT 0,
-  confidence TEXT DEFAULT 'medium' CHECK (confidence IN ('high', 'medium', 'low')),
-  source TEXT CHECK (source IN ('auto_detected', 'analyst_confirmed', 'external_report', 'intelligence_feed')),
-  external_id TEXT,
-  external_url TEXT,
-  tags TEXT[] DEFAULT '{}',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Add missing columns to campaigns table if they don't exist
+DO $$
+BEGIN
+  -- actor_id for direct actor reference
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'actor_id') THEN
+    ALTER TABLE campaigns ADD COLUMN actor_id UUID REFERENCES threat_actors(id);
+  END IF;
 
-CREATE INDEX IF NOT EXISTS idx_campaigns_actor ON campaigns(actor_id);
-CREATE INDEX IF NOT EXISTS idx_campaigns_actor_name ON campaigns(actor_name);
-CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
-CREATE INDEX IF NOT EXISTS idx_campaigns_sectors ON campaigns USING GIN(target_sectors);
-CREATE INDEX IF NOT EXISTS idx_campaigns_dates ON campaigns(start_date, end_date);
+  -- actor_name for denormalized lookup
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'actor_name') THEN
+    ALTER TABLE campaigns ADD COLUMN actor_name TEXT;
+  END IF;
+
+  -- status for tracking campaign lifecycle
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'status') THEN
+    ALTER TABLE campaigns ADD COLUMN status TEXT DEFAULT 'active' CHECK (status IN ('active', 'concluded', 'suspected', 'dormant'));
+  END IF;
+
+  -- start_date and end_date
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'start_date') THEN
+    ALTER TABLE campaigns ADD COLUMN start_date DATE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'end_date') THEN
+    ALTER TABLE campaigns ADD COLUMN end_date DATE;
+  END IF;
+
+  -- techniques array
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'techniques') THEN
+    ALTER TABLE campaigns ADD COLUMN techniques TEXT[] DEFAULT '{}';
+  END IF;
+
+  -- malware_families array
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'malware_families') THEN
+    ALTER TABLE campaigns ADD COLUMN malware_families TEXT[] DEFAULT '{}';
+  END IF;
+
+  -- vulnerabilities array
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'vulnerabilities') THEN
+    ALTER TABLE campaigns ADD COLUMN vulnerabilities TEXT[] DEFAULT '{}';
+  END IF;
+
+  -- incident_count for quick stats
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'incident_count') THEN
+    ALTER TABLE campaigns ADD COLUMN incident_count INTEGER DEFAULT 0;
+  END IF;
+
+  -- confidence level
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'confidence') THEN
+    ALTER TABLE campaigns ADD COLUMN confidence TEXT DEFAULT 'medium' CHECK (confidence IN ('high', 'medium', 'low'));
+  END IF;
+
+  -- tags array
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'tags') THEN
+    ALTER TABLE campaigns ADD COLUMN tags TEXT[] DEFAULT '{}';
+  END IF;
+END $$;
+
+-- Create indexes on new columns (only if column exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'actor_id') THEN
+    CREATE INDEX IF NOT EXISTS idx_campaigns_actor ON campaigns(actor_id);
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'actor_name') THEN
+    CREATE INDEX IF NOT EXISTS idx_campaigns_actor_name ON campaigns(actor_name);
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'status') THEN
+    CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'campaigns' AND column_name = 'start_date') THEN
+    CREATE INDEX IF NOT EXISTS idx_campaigns_dates ON campaigns(start_date, end_date);
+  END IF;
+END $$;
 
 -- Campaign-to-incident mapping
 CREATE TABLE IF NOT EXISTS campaign_incidents (
