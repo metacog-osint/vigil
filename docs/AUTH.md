@@ -1,6 +1,6 @@
 # Authentication & Authorization
 
-> **Version:** 1.5.0 | **Last Updated:** January 19, 2026
+> **Version:** 1.6.0 | **Last Updated:** January 19, 2026
 
 ## Overview
 
@@ -10,6 +10,10 @@ Vigil uses **Supabase Auth** exclusively for all authentication. This includes:
 - Magic link (passwordless) authentication
 - Password reset flows
 - Email verification
+- **Terms of Service acceptance tracking**
+- **Session timeout management (30 min idle, 8 hr absolute)**
+
+> **See also:** `docs/TERMS_AND_SESSIONS.md` for detailed terms and session documentation.
 
 ## useAuth Hook
 
@@ -242,3 +246,38 @@ On sign out:
 **Session not persisting:**
 - Check browser localStorage for `sb-*` keys
 - Ensure `persistSession: true` in client config
+
+## Session Timeouts
+
+Vigil implements automatic session timeouts for security:
+
+| Timeout | Duration | Behavior |
+|---------|----------|----------|
+| Idle | 30 minutes | Resets on user activity |
+| Absolute | 8 hours | Forces re-auth regardless of activity |
+| Warning | 5 min before idle | Shows "Stay Signed In" modal |
+
+**Hook:** `src/hooks/useSessionManager.js`
+
+```javascript
+const { showWarning, extendSession, dismissWarning } = useSessionManager()
+```
+
+**Cross-tab sync:** Logout in one tab logs out all tabs via localStorage events.
+
+> **Full documentation:** See `docs/TERMS_AND_SESSIONS.md`
+
+## Terms Acceptance
+
+New users must accept Terms of Service and Privacy Policy during registration:
+- Required checkbox before account creation
+- Acceptance recorded with timestamp
+- When terms are updated, users must re-accept at next login
+
+**Hook:** `src/hooks/useTermsAcceptance.js`
+
+```javascript
+const { needsAcceptance, acceptTerms, termsVersion } = useTermsAcceptance()
+```
+
+> **Full documentation:** See `docs/TERMS_AND_SESSIONS.md`

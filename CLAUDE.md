@@ -12,6 +12,7 @@ Essential context for AI assistants. **For detailed docs, see the `docs/` folder
 | `docs/DATABASE.md` | Table definitions and relationships |
 | `docs/API.md` | REST API reference |
 | `docs/AUTH.md` | Authentication & authorization (Supabase) |
+| `docs/TERMS_AND_SESSIONS.md` | Terms acceptance & session timeouts |
 | `docs/DATA_INGESTION.md` | Scripts, scheduling, troubleshooting |
 | `docs/FEATURES.md` | Feature documentation |
 | `docs/UX_IMPROVEMENTS.md` | UX system (Focus Mode, Digests, etc.) |
