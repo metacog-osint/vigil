@@ -818,28 +818,19 @@ export function useDemoData() {
     }
   }, [isDemoMode])
 
-  // Memoized data objects for direct access
-  const actors = useMemo(() => MOCK_ACTORS, [])
-  const incidents = useMemo(() => MOCK_INCIDENTS, [])
-  const vulnerabilities = useMemo(() => MOCK_VULNERABILITIES, [])
-  const iocs = useMemo(() => MOCK_IOCS, [])
-  const patterns = useMemo(() => MOCK_PATTERNS, [])
-  const attackChains = useMemo(() => MOCK_ATTACK_CHAINS, [])
-  const industryThreats = useMemo(() => MOCK_INDUSTRY_THREATS, [])
-  const countryThreats = useMemo(() => MOCK_COUNTRY_THREATS, [])
-
-  return {
+  // Memoized return value to prevent infinite re-renders
+  return useMemo(() => ({
     isDemoMode,
 
-    // Direct data access
-    actors,
-    incidents,
-    vulnerabilities,
-    iocs,
-    patterns,
-    attackChains,
-    industryThreats,
-    countryThreats,
+    // Direct data access (static arrays)
+    actors: MOCK_ACTORS,
+    incidents: MOCK_INCIDENTS,
+    vulnerabilities: MOCK_VULNERABILITIES,
+    iocs: MOCK_IOCS,
+    patterns: MOCK_PATTERNS,
+    attackChains: MOCK_ATTACK_CHAINS,
+    industryThreats: MOCK_INDUSTRY_THREATS,
+    countryThreats: MOCK_COUNTRY_THREATS,
 
     // Dashboard
     getDashboardOverview,
@@ -882,7 +873,31 @@ export function useDemoData() {
     // AI & Comparisons
     getAISummary,
     getWeekComparison,
-  }
+  }), [
+    isDemoMode,
+    getDashboardOverview,
+    getActors,
+    getActorById,
+    getEscalatingActors,
+    getTopActors,
+    getTrendSummary,
+    getIncidents,
+    getRecentIncidents,
+    getDailyCounts,
+    getSectorBreakdown,
+    getVulnerabilities,
+    getVulnById,
+    getIOCs,
+    searchIOC,
+    getPatterns,
+    getAttackChains,
+    getActorCorrelations,
+    getVulnActors,
+    getIndustryThreats,
+    getCountryThreats,
+    getAISummary,
+    getWeekComparison,
+  ])
 }
 
 export default useDemoData

@@ -86,135 +86,107 @@ export default function useDashboardData() {
     geography: false,
   })
 
-  // Demo mode: Return mock data immediately
+  // Demo mode: Load mock data immediately (only when entering demo mode)
   useEffect(() => {
-    if (isDemoMode) {
-      // Load demo data
-      const loadDemoData = async () => {
-        try {
-          const [
-            overview,
-            escalating,
-            topActorsData,
-            incidentsData,
-            vulnsData,
-            _patternsData,
-            aiData,
-            weekData,
-            industryData,
-            countryData,
-          ] = await Promise.all([
-            demoData.getDashboardOverview(),
-            demoData.getEscalatingActors(5),
-            demoData.getTopActors(30, 5),
-            demoData.getRecentIncidents({ limit: 10 }),
-            demoData.getVulnerabilities({ limit: 10, kevOnly: true }),
-            demoData.getPatterns(),
-            demoData.getAISummary(),
-            demoData.getWeekComparison(),
-            demoData.getIndustryThreats(),
-            demoData.getCountryThreats(),
-          ])
+    if (!isDemoMode) return
 
-          setStats(overview?.data || {
-            totalActors: 247,
-            incidents30d: 523,
-            incidentsTotal: 52847,
-            kevTotal: 1124,
-            iocTotal: 1247893,
-          })
-          setEscalatingActors(escalating?.data || demoData.actors.filter(a => a.trend_status === 'ESCALATING'))
-          setTopActors(topActorsData?.data || demoData.actors.slice(0, 5))
-          setRecentIncidents(incidentsData?.data || demoData.incidents)
-          setRecentKEVs(vulnsData?.data || demoData.vulnerabilities)
-          setAiSummary(aiData?.summary || 'LockBit 3.0 and BlackCat continue to dominate ransomware activity with healthcare seeing a 35% increase in targeting.')
+    // Set demo data directly using the static arrays from demoData
+    setStats({
+      totalActors: 247,
+      incidents30d: 523,
+      incidentsTotal: 52847,
+      kevTotal: 1124,
+      iocTotal: 1247893,
+    })
+    setEscalatingActors(demoData.actors.filter(a => a.trend_status === 'ESCALATING'))
+    setTopActors(demoData.actors.slice(0, 5))
+    setRecentIncidents(demoData.incidents)
+    setRecentKEVs(demoData.vulnerabilities)
+    setAiSummary('LockBit 3.0 and BlackCat continue to dominate ransomware activity with healthcare seeing a 35% increase in targeting. The mass exploitation of ConnectWise ScreenConnect (CVE-2024-1709) has enabled multiple ransomware groups to compromise new victims.')
 
-          // Sector breakdown for charts
-          setSectorData([
-            { name: 'Healthcare', value: 156 },
-            { name: 'Manufacturing', value: 98 },
-            { name: 'Finance', value: 87 },
-            { name: 'Government', value: 65 },
-            { name: 'Education', value: 72 },
-            { name: 'Technology', value: 54 },
-          ])
+    // Sector breakdown for charts
+    setSectorData([
+      { name: 'Healthcare', value: 156 },
+      { name: 'Manufacturing', value: 98 },
+      { name: 'Finance', value: 87 },
+      { name: 'Government', value: 65 },
+      { name: 'Education', value: 72 },
+      { name: 'Technology', value: 54 },
+    ])
 
-          // Vulns by severity
-          setVulnsBySeverity([
-            { name: 'Critical', value: 45, color: '#ef4444' },
-            { name: 'High', value: 123, color: '#f97316' },
-            { name: 'Medium', value: 234, color: '#eab308' },
-            { name: 'Low', value: 89, color: '#22c55e' },
-          ])
+    // Vulns by severity
+    setVulnsBySeverity([
+      { name: 'Critical', value: 45, color: '#ef4444' },
+      { name: 'High', value: 123, color: '#f97316' },
+      { name: 'Medium', value: 234, color: '#eab308' },
+      { name: 'Low', value: 89, color: '#22c55e' },
+    ])
 
-          // Generate demo calendar data
-          const demoCalendar = []
-          for (let i = 90; i >= 0; i--) {
-            const date = new Date()
-            date.setDate(date.getDate() - i)
-            demoCalendar.push({
-              date: date.toISOString().split('T')[0],
-              count: Math.floor(Math.random() * 20) + 5,
-            })
-          }
-          setCalendarData(demoCalendar)
-
-          // Week comparison
-          setWeekComparison(weekData || {
-            currentWeek: { incidents: 127, iocs: 34521, actors_active: 45 },
-            previousWeek: { incidents: 98, iocs: 28934, actors_active: 38 },
-            incidentChange: 29.6,
-          })
-
-          // Change summary
-          setChangeSummary({
-            newIncidents: 127,
-            newActors: 3,
-            newKEVs: 8,
-            escalatingActors: 4,
-          })
-
-          // Industry and country threats
-          setIndustryThreats(industryData?.data || demoData.industryThreats)
-          setCountryThreats(countryData?.data || demoData.countryThreats)
-
-          // Sector details for widgets
-          setSectorDetails([
-            { name: 'Healthcare', count: 156, trend: 35, topActors: [{ name: 'LockBit 3.0', count: 45 }] },
-            { name: 'Manufacturing', count: 98, trend: 12, topActors: [{ name: 'LockBit 3.0', count: 28 }] },
-            { name: 'Finance', count: 87, trend: -5, topActors: [{ name: 'BlackCat', count: 22 }] },
-          ])
-
-          // Active exploits
-          setActiveExploits(demoData.vulnerabilities.slice(0, 5))
-
-          // Targeted services
-          setTargetedServices([
-            { name: 'Remote Desktop', count: 45, severity: 'critical' },
-            { name: 'VPN Appliances', count: 38, severity: 'critical' },
-            { name: 'File Transfer', count: 32, severity: 'high' },
-            { name: 'Email Servers', count: 28, severity: 'high' },
-          ])
-
-          // Last sync (demo)
-          setLastSync({
-            source: 'demo',
-            completed_at: new Date().toISOString(),
-            status: 'success',
-          })
-
-          setLoading(false)
-          setWidgetsLoading(false)
-          setCorrelationsLoading(false)
-        } catch (err) {
-          console.error('Demo data load error:', err)
-          setLoading(false)
-        }
-      }
-
-      loadDemoData()
+    // Generate demo calendar data (deterministic based on date)
+    const demoCalendar = []
+    const now = new Date()
+    for (let i = 90; i >= 0; i--) {
+      const date = new Date(now)
+      date.setDate(date.getDate() - i)
+      // Use deterministic pseudo-random based on date
+      const seed = date.getDate() + date.getMonth() * 31
+      const count = 5 + (seed % 20)
+      demoCalendar.push({
+        date: date.toISOString().split('T')[0],
+        count,
+      })
     }
-  }, [isDemoMode, demoData])
+    setCalendarData(demoCalendar)
+
+    // Week comparison
+    setWeekComparison({
+      currentWeek: { incidents: 127, iocs: 34521, actors_active: 45 },
+      previousWeek: { incidents: 98, iocs: 28934, actors_active: 38 },
+      incidentChange: 29.6,
+    })
+
+    // Change summary
+    setChangeSummary({
+      newIncidents: 127,
+      newActors: 3,
+      newKEVs: 8,
+      escalatingActors: 4,
+    })
+
+    // Industry and country threats
+    setIndustryThreats(demoData.industryThreats)
+    setCountryThreats(demoData.countryThreats)
+
+    // Sector details for widgets
+    setSectorDetails([
+      { name: 'Healthcare', count: 156, trend: 35, topActors: [{ name: 'LockBit 3.0', count: 45 }] },
+      { name: 'Manufacturing', count: 98, trend: 12, topActors: [{ name: 'LockBit 3.0', count: 28 }] },
+      { name: 'Finance', count: 87, trend: -5, topActors: [{ name: 'BlackCat', count: 22 }] },
+    ])
+
+    // Active exploits
+    setActiveExploits(demoData.vulnerabilities.slice(0, 5))
+
+    // Targeted services
+    setTargetedServices([
+      { name: 'Remote Desktop', count: 45, severity: 'critical' },
+      { name: 'VPN Appliances', count: 38, severity: 'critical' },
+      { name: 'File Transfer', count: 32, severity: 'high' },
+      { name: 'Email Servers', count: 28, severity: 'high' },
+    ])
+
+    // Last sync (demo)
+    setLastSync({
+      source: 'demo',
+      completed_at: new Date().toISOString(),
+      status: 'success',
+    })
+
+    setLoading(false)
+    setWidgetsLoading(false)
+    setCorrelationsLoading(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemoMode])
 
   // Load personalization data (org profile + relevance scores)
   const loadPersonalizationData = useCallback(async () => {
