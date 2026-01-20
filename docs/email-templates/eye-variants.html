@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vigil Eye Icon Variants</title>
+  <style>
+    body {
+      background-color: #0a0a0f;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 40px;
+      color: white;
+    }
+    .variant {
+      margin-bottom: 60px;
+      padding: 40px;
+      background: #111118;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      max-width: 520px;
+    }
+    .variant h2 {
+      color: #00d4ff;
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+    .variant p {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="color: #00d4ff; margin-bottom: 40px;">Vigil Eye Icon Variants</h1>
+
+  <!-- VARIANT 0: Concentric Rings Eye (Gemini-inspired) -->
+  <div class="variant">
+    <h2>0. Concentric Rings Eye (NEW)</h2>
+    <p>Inspired by Gemini's bottom-left - radar/scanning aesthetic</p>
+    <div style="text-align: center;">
+      <div style="display: inline-block; width: 72px; height: 72px; position: relative;">
+        <!-- Outer eye shape -->
+        <div style="position: absolute; top: 16px; left: 0; width: 72px; height: 40px; border: 2px solid #00d4ff; border-radius: 50%; box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);"></div>
+        <!-- Concentric ring 1 (outermost) -->
+        <div style="position: absolute; top: 8px; left: 8px; width: 56px; height: 56px; border: 2px solid #00d4ff; border-radius: 50%; opacity: 0.4;"></div>
+        <!-- Concentric ring 2 -->
+        <div style="position: absolute; top: 14px; left: 14px; width: 44px; height: 44px; border: 2px solid #00ff88; border-radius: 50%; opacity: 0.6;"></div>
+        <!-- Concentric ring 3 -->
+        <div style="position: absolute; top: 20px; left: 20px; width: 32px; height: 32px; border: 2px solid #00d4ff; border-radius: 50%; opacity: 0.8;"></div>
+        <!-- Concentric ring 4 (inner) -->
+        <div style="position: absolute; top: 26px; left: 26px; width: 20px; height: 20px; border: 2px solid #00ff88; border-radius: 50%;"></div>
+        <!-- Pupil -->
+        <div style="position: absolute; top: 31px; left: 31px; width: 10px; height: 10px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 8px #00ff88;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VARIANT 0b: Concentric with pointed eye shape -->
+  <div class="variant">
+    <h2>0b. Pointed Concentric Eye</h2>
+    <p>Same rings but with pointed eye corners like the Gemini design</p>
+    <div style="text-align: center;">
+      <div style="display: inline-block; width: 80px; height: 72px; position: relative;">
+        <!-- Pointed eye outline using borders -->
+        <div style="position: absolute; top: 28px; left: 0; width: 12px; height: 12px; border-left: 2px solid #00d4ff; border-bottom: 2px solid #00d4ff; transform: rotate(45deg);"></div>
+        <div style="position: absolute; top: 28px; right: 0; width: 12px; height: 12px; border-right: 2px solid #00d4ff; border-top: 2px solid #00d4ff; transform: rotate(45deg);"></div>
+        <!-- Center circle container -->
+        <div style="position: absolute; top: 8px; left: 12px; width: 56px; height: 56px;">
+          <!-- Concentric ring 1 -->
+          <div style="position: absolute; top: 0; left: 0; width: 56px; height: 56px; border: 2px solid #00d4ff; border-radius: 50%; opacity: 0.5;"></div>
+          <!-- Concentric ring 2 -->
+          <div style="position: absolute; top: 8px; left: 8px; width: 40px; height: 40px; border: 2px solid #00ff88; border-radius: 50%; opacity: 0.7;"></div>
+          <!-- Concentric ring 3 -->
+          <div style="position: absolute; top: 16px; left: 16px; width: 24px; height: 24px; border: 2px solid #00d4ff; border-radius: 50%;"></div>
+          <!-- Pupil -->
+          <div style="position: absolute; top: 22px; left: 22px; width: 12px; height: 12px; background: linear-gradient(135deg, #00ff88, #00d4ff); border-radius: 50%; box-shadow: 0 0 10px #00ff88;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VARIANT 1: Current Design -->
+  <div class="variant">
+    <h2>1. Current Design (Cyber Eye)</h2>
+    <p>The design we just implemented - clean eye with glow</p>
+    <div style="text-align: center;">
+      <div style="display: inline-block; width: 72px; height: 72px; background-color: #0a0f1a; border: 2px solid #00d4ff; border-radius: 50%; position: relative; box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">
+        <div style="position: absolute; top: 22px; left: 11px; width: 48px; height: 26px; border: 2px solid #00d4ff; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 24px; left: 24px; width: 22px; height: 22px; border: 2px solid #00ff88; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 29px; left: 29px; width: 12px; height: 12px; background: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%); border-radius: 50%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VARIANT 2: Scanner Eye with Scan Lines -->
+  <div class="variant">
+    <h2>2. Scanner Eye</h2>
+    <p>Horizontal scan lines like a surveillance feed - matches your favicon style</p>
+    <div style="text-align: center;">
+      <div style="display: inline-block; width: 72px; height: 72px; background-color: #0a0f1a; border: 2px solid #00d4ff; border-radius: 50%; position: relative; box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); overflow: hidden;">
+        <!-- Scan lines -->
+        <div style="position: absolute; top: 18px; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent 0%, #00d4ff 20%, #00d4ff 80%, transparent 100%); opacity: 0.4;"></div>
+        <div style="position: absolute; top: 35px; left: 0; width: 100%; height: 1px; background: #00d4ff; opacity: 0.3;"></div>
+        <div style="position: absolute; top: 52px; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent 0%, #00d4ff 20%, #00d4ff 80%, transparent 100%); opacity: 0.4;"></div>
+        <!-- Eye -->
+        <div style="position: absolute; top: 22px; left: 11px; width: 48px; height: 26px; border: 2px solid #00d4ff; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 27px; left: 27px; width: 16px; height: 16px; background: #00ff88; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 31px; left: 31px; width: 8px; height: 8px; background: #0a0f1a; border-radius: 50%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VARIANT 3: Target Reticle Eye -->
+  <div class="variant">
+    <h2>3. Target Reticle Eye</h2>
+    <p>Crosshairs overlay - threat detection / targeting theme</p>
+    <div style="text-align: center;">
+      <div style="display: inline-block; width: 72px; height: 72px; background-color: #0a0f1a; border: 2px solid #00d4ff; border-radius: 50%; position: relative; box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">
+        <!-- Crosshairs -->
+        <div style="position: absolute; top: 34px; left: 4px; width: 16px; height: 2px; background: #00ff88;"></div>
+        <div style="position: absolute; top: 34px; right: 4px; width: 16px; height: 2px; background: #00ff88;"></div>
+        <div style="position: absolute; top: 4px; left: 34px; width: 2px; height: 16px; background: #00ff88;"></div>
+        <div style="position: absolute; bottom: 4px; left: 34px; width: 2px; height: 16px; background: #00ff88;"></div>
+        <!-- Eye/Target center -->
+        <div style="position: absolute; top: 24px; left: 24px; width: 22px; height: 22px; border: 2px solid #00d4ff; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 30px; left: 30px; width: 10px; height: 10px; background: #ff4444; border-radius: 50%; box-shadow: 0 0 8px #ff4444;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VARIANT 4: Minimalist Eye -->
+  <div class="variant">
+    <h2>4. Minimalist Eye</h2>
+    <p>Ultra-clean, modern - just the essential eye shape</p>
+    <div style="text-align: center;">
+      <div style="display: inline-block; width: 72px; height: 72px; background-color: transparent; position: relative;">
+        <!-- Simple eye outline -->
+        <div style="position: absolute; top: 20px; left: 6px; width: 58px; height: 30px; border: 3px solid #00d4ff; border-radius: 50%;"></div>
+        <!-- Pupil -->
+        <div style="position: absolute; top: 26px; left: 26px; width: 18px; height: 18px; background: #00d4ff; border-radius: 50%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VARIANT 5: Biometric Scanner -->
+  <div class="variant">
+    <h2>5. Biometric Scanner</h2>
+    <p>Iris recognition interface - tech/security feel</p>
+    <div style="text-align: center;">
+      <div style="display: inline-block; width: 72px; height: 72px; background-color: #0a0f1a; border: 2px solid #00d4ff; border-radius: 50%; position: relative; box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">
+        <!-- Outer ring segments -->
+        <div style="position: absolute; top: 6px; left: 6px; width: 56px; height: 56px; border: 1px solid #00d4ff; border-radius: 50%; opacity: 0.3;"></div>
+        <div style="position: absolute; top: 12px; left: 12px; width: 44px; height: 44px; border: 1px solid #00ff88; border-radius: 50%; opacity: 0.5;"></div>
+        <!-- Iris pattern (concentric) -->
+        <div style="position: absolute; top: 18px; left: 18px; width: 32px; height: 32px; border: 2px solid #00d4ff; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 24px; left: 24px; width: 20px; height: 20px; border: 2px solid #00ff88; border-radius: 50%;"></div>
+        <!-- Pupil -->
+        <div style="position: absolute; top: 30px; left: 30px; width: 10px; height: 10px; background: #00ff88; border-radius: 50%;"></div>
+        <!-- Corner brackets -->
+        <div style="position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-left: 2px solid #00ff88; border-top: 2px solid #00ff88;"></div>
+        <div style="position: absolute; top: 2px; right: 2px; width: 12px; height: 12px; border-right: 2px solid #00ff88; border-top: 2px solid #00ff88;"></div>
+        <div style="position: absolute; bottom: 2px; left: 2px; width: 12px; height: 12px; border-left: 2px solid #00ff88; border-bottom: 2px solid #00ff88;"></div>
+        <div style="position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; border-right: 2px solid #00ff88; border-bottom: 2px solid #00ff88;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VARIANT 6: Radar Eye -->
+  <div class="variant">
+    <h2>6. Radar Eye</h2>
+    <p>Radar/sonar sweep - active monitoring theme</p>
+    <div style="text-align: center;">
+      <div style="display: inline-block; width: 72px; height: 72px; background-color: #0a0f1a; border: 2px solid #00d4ff; border-radius: 50%; position: relative; box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); overflow: hidden;">
+        <!-- Radar rings -->
+        <div style="position: absolute; top: 16px; left: 16px; width: 36px; height: 36px; border: 1px solid #00d4ff; border-radius: 50%; opacity: 0.3;"></div>
+        <div style="position: absolute; top: 22px; left: 22px; width: 24px; height: 24px; border: 1px solid #00d4ff; border-radius: 50%; opacity: 0.5;"></div>
+        <!-- Radar sweep (wedge) -->
+        <div style="position: absolute; top: 0; left: 33px; width: 36px; height: 36px; background: linear-gradient(90deg, rgba(0, 255, 136, 0.4) 0%, transparent 100%); transform-origin: left center;"></div>
+        <!-- Center dot -->
+        <div style="position: absolute; top: 30px; left: 30px; width: 10px; height: 10px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 10px #00ff88;"></div>
+        <!-- Grid lines -->
+        <div style="position: absolute; top: 34px; left: 0; width: 100%; height: 1px; background: #00d4ff; opacity: 0.2;"></div>
+        <div style="position: absolute; top: 0; left: 34px; width: 1px; height: 100%; background: #00d4ff; opacity: 0.2;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VARIANT 7: Hexagon Tech Eye -->
+  <div class="variant">
+    <h2>7. Hexagon Tech Eye</h2>
+    <p>Hexagonal frame - tech/futuristic feel</p>
+    <div style="text-align: center;">
+      <div style="display: inline-block; width: 80px; height: 72px; position: relative;">
+        <!-- Hexagon border (using clip-path alternative with borders) -->
+        <div style="position: absolute; top: 0; left: 10px; width: 60px; height: 72px; background: #0a0f1a; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); border: 2px solid #00d4ff;">
+          <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; clip-path: polygon(50% 2px, calc(100% - 2px) 26%, calc(100% - 2px) 74%, 50% calc(100% - 2px), 2px 74%, 2px 26%); background: #0a0f1a;"></div>
+        </div>
+        <!-- Eye inside -->
+        <div style="position: absolute; top: 22px; left: 20px; width: 40px; height: 26px; border: 2px solid #00d4ff; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 27px; left: 32px; width: 16px; height: 16px; background: linear-gradient(135deg, #00ff88, #00d4ff); border-radius: 50%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VARIANT 8: All-Seeing Eye (Cyber) -->
+  <div class="variant">
+    <h2>8. All-Seeing Eye (Cyber)</h2>
+    <p>Triangular frame with eye - omniscient surveillance theme</p>
+    <div style="text-align: center;">
+      <div style="display: inline-block; width: 80px; height: 72px; position: relative;">
+        <!-- Triangle -->
+        <div style="position: absolute; top: 4px; left: 10px; width: 0; height: 0; border-left: 30px solid transparent; border-right: 30px solid transparent; border-bottom: 52px solid transparent; border-bottom-color: #0a0f1a;"></div>
+        <div style="position: absolute; top: 6px; left: 12px; width: 56px; height: 50px; border: 2px solid #00d4ff; background: transparent; clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>
+        <!-- Eye -->
+        <div style="position: absolute; top: 28px; left: 22px; width: 36px; height: 20px; border: 2px solid #00d4ff; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 32px; left: 34px; width: 12px; height: 12px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 8px #00ff88;"></div>
+        <!-- Rays -->
+        <div style="position: absolute; top: 58px; left: 16px; width: 48px; height: 2px; background: linear-gradient(90deg, transparent, #00d4ff 20%, #00d4ff 80%, transparent);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VARIANT 9: Digital/Pixelated Eye -->
+  <div class="variant">
+    <h2>9. Digital Eye</h2>
+    <p>Subtle digital/data feel with dots</p>
+    <div style="text-align: center;">
+      <div style="display: inline-block; width: 72px; height: 72px; background-color: #0a0f1a; border: 2px solid #00d4ff; border-radius: 50%; position: relative; box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);">
+        <!-- Data dots -->
+        <div style="position: absolute; top: 8px; left: 20px; width: 4px; height: 4px; background: #00d4ff; border-radius: 50%; opacity: 0.5;"></div>
+        <div style="position: absolute; top: 8px; left: 48px; width: 4px; height: 4px; background: #00d4ff; border-radius: 50%; opacity: 0.5;"></div>
+        <div style="position: absolute; top: 56px; left: 20px; width: 4px; height: 4px; background: #00d4ff; border-radius: 50%; opacity: 0.5;"></div>
+        <div style="position: absolute; top: 56px; left: 48px; width: 4px; height: 4px; background: #00d4ff; border-radius: 50%; opacity: 0.5;"></div>
+        <!-- Binary decoration -->
+        <div style="position: absolute; top: 14px; left: 8px; font-size: 6px; color: #00d4ff; opacity: 0.3; font-family: monospace;">01</div>
+        <div style="position: absolute; top: 14px; right: 8px; font-size: 6px; color: #00d4ff; opacity: 0.3; font-family: monospace;">10</div>
+        <!-- Eye -->
+        <div style="position: absolute; top: 22px; left: 11px; width: 48px; height: 26px; border: 2px solid #00d4ff; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 27px; left: 27px; width: 16px; height: 16px; border: 2px solid #00ff88; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 31px; left: 31px; width: 8px; height: 8px; background: #00ff88; border-radius: 50%;"></div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
