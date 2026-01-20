@@ -144,7 +144,10 @@
       "Bash(npm run format:*)",
       "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" secret list --repo metacog-osint/vigil)",
       "Bash(where:*)",
-      "Bash(npx sharp-cli:*)"
+      "Bash(npx sharp-cli:*)",
+      "Bash(vercel env rm:*)",
+      "Bash(vercel env add:*)",
+      "Bash(printf:*)"
     ]
   }
 }
