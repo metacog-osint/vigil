@@ -14,7 +14,9 @@ import { logger } from './logger'
 export async function sendEmail({ to, subject, html, text }) {
   try {
     // Get Supabase session token for authentication
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     if (!session) {
       logger.warn('sendEmail: No authenticated user')
       return { success: false, error: 'Not authenticated' }
@@ -25,10 +27,10 @@ export async function sendEmail({ to, subject, html, text }) {
     const response = await fetch('/api/send-email', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ to, subject, html, text })
+      body: JSON.stringify({ to, subject, html, text }),
     })
 
     const data = await response.json()
@@ -138,7 +140,11 @@ Vigil - Cyber Threat Intelligence
 Manage alerts: https://vigil.theintelligence.company/settings
   `
 
-  return { html, text, subject: `Ransomware Alert: ${victim_name} claimed by ${threat_actor || 'unknown actor'}` }
+  return {
+    html,
+    text,
+    subject: `Ransomware Alert: ${victim_name} claimed by ${threat_actor || 'unknown actor'}`,
+  }
 }
 
 /**
@@ -254,13 +260,14 @@ Manage alerts: https://vigil.theintelligence.company/settings
 export function generateCISAAlertEmail(data) {
   const { alert_id, title, severity, published_date, url } = data
 
-  const severityColor = {
-    critical: '#dc2626',
-    high: '#f97316',
-    medium: '#eab308',
-    low: '#22c55e',
-    info: '#3b82f6'
-  }[severity?.toLowerCase()] || '#6b7280'
+  const severityColor =
+    {
+      critical: '#dc2626',
+      high: '#f97316',
+      medium: '#eab308',
+      low: '#22c55e',
+      info: '#3b82f6',
+    }[severity?.toLowerCase()] || '#6b7280'
 
   const html = `
 <!DOCTYPE html>
@@ -365,7 +372,7 @@ function formatDate(dateStr) {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
   } catch {
     return dateStr
@@ -426,12 +433,16 @@ export function generatePaymentFailureEmail(data) {
           <span class="detail-label">Amount</span>
           <span class="detail-value">${currency || '$'}${amount || '29'}</span>
         </div>
-        ${retry_date ? `
+        ${
+          retry_date
+            ? `
         <div class="detail-row">
           <span class="detail-label">Next Retry</span>
           <span class="detail-value">${formatDate(retry_date)}</span>
         </div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
 
       <div class="warning">
@@ -480,10 +491,12 @@ Vigil - Cyber Threat Intelligence
  * Generate HTML for dunning email (payment reminder)
  */
 export function generateDunningEmail(data) {
-  const { user_name, tier, days_overdue, grace_period_end, update_payment_url, attempt_number } = data
+  const { user_name, tier, days_overdue, grace_period_end, update_payment_url, attempt_number } =
+    data
 
   const urgencyLevel = days_overdue > 7 ? 'critical' : days_overdue > 3 ? 'high' : 'medium'
-  const urgencyColor = urgencyLevel === 'critical' ? '#dc2626' : urgencyLevel === 'high' ? '#f97316' : '#f59e0b'
+  const urgencyColor =
+    urgencyLevel === 'critical' ? '#dc2626' : urgencyLevel === 'high' ? '#f97316' : '#f59e0b'
 
   const html = `
 <!DOCTYPE html>
@@ -523,20 +536,26 @@ export function generateDunningEmail(data) {
         ${attempt_number ? `We've attempted to charge your card ${attempt_number} time${attempt_number > 1 ? 's' : ''} without success.` : ''}
       </p>
 
-      ${grace_period_end ? `
+      ${
+        grace_period_end
+          ? `
       <div class="countdown">
         <div class="countdown-number">${Math.max(0, Math.ceil((new Date(grace_period_end) - new Date()) / (1000 * 60 * 60 * 24)))}</div>
         <div class="countdown-label">days until service suspension</div>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <div class="warning">
         <p class="warning-text">
-          ${urgencyLevel === 'critical'
-            ? '<strong>FINAL NOTICE:</strong> Your access will be suspended if payment is not received within 24 hours.'
-            : urgencyLevel === 'high'
-            ? '<strong>Important:</strong> Please update your payment method immediately to avoid losing access.'
-            : '<strong>Reminder:</strong> Please update your payment method to continue enjoying Vigil.'}
+          ${
+            urgencyLevel === 'critical'
+              ? '<strong>FINAL NOTICE:</strong> Your access will be suspended if payment is not received within 24 hours.'
+              : urgencyLevel === 'high'
+                ? '<strong>Important:</strong> Please update your payment method immediately to avoid losing access.'
+                : '<strong>Reminder:</strong> Please update your payment method to continue enjoying Vigil.'
+          }
         </p>
       </div>
 
@@ -563,9 +582,11 @@ ${attempt_number ? `We've attempted to charge your card ${attempt_number} time${
 
 ${grace_period_end ? `Days until service suspension: ${Math.max(0, Math.ceil((new Date(grace_period_end) - new Date()) / (1000 * 60 * 60 * 24)))}` : ''}
 
-${urgencyLevel === 'critical'
-  ? 'FINAL NOTICE: Your access will be suspended if payment is not received within 24 hours.'
-  : 'Please update your payment method to continue enjoying Vigil.'}
+${
+  urgencyLevel === 'critical'
+    ? 'FINAL NOTICE: Your access will be suspended if payment is not received within 24 hours.'
+    : 'Please update your payment method to continue enjoying Vigil.'
+}
 
 Update Payment Method: ${update_payment_url || 'https://vigil.theintelligence.company/settings'}
 
@@ -573,11 +594,12 @@ Update Payment Method: ${update_payment_url || 'https://vigil.theintelligence.co
 Vigil - Cyber Threat Intelligence
   `
 
-  const subject = urgencyLevel === 'critical'
-    ? `FINAL NOTICE: Your Vigil subscription will be suspended`
-    : urgencyLevel === 'high'
-    ? `Urgent: Your Vigil payment is overdue`
-    : `Reminder: Update your Vigil payment method`
+  const subject =
+    urgencyLevel === 'critical'
+      ? `FINAL NOTICE: Your Vigil subscription will be suspended`
+      : urgencyLevel === 'high'
+        ? `Urgent: Your Vigil payment is overdue`
+        : `Reminder: Update your Vigil payment method`
 
   return { html, text, subject }
 }
@@ -633,12 +655,16 @@ export function generateSubscriptionCanceledEmail(data) {
           <span class="detail-label">Current Plan</span>
           <span class="detail-value">Free</span>
         </div>
-        ${end_date ? `
+        ${
+          end_date
+            ? `
         <div class="detail-row">
           <span class="detail-label">Canceled On</span>
           <span class="detail-value">${formatDate(end_date)}</span>
         </div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
 
       <p class="message">
@@ -688,5 +714,5 @@ export default {
   generateCISAAlertEmail,
   generatePaymentFailureEmail,
   generateDunningEmail,
-  generateSubscriptionCanceledEmail
+  generateSubscriptionCanceledEmail,
 }

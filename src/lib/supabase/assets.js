@@ -25,13 +25,7 @@ export const CRITICALITY_LEVELS = ['critical', 'high', 'medium', 'low']
 /**
  * Asset categories
  */
-export const ASSET_CATEGORIES = [
-  'infrastructure',
-  'brand',
-  'personnel',
-  'vendor',
-  'other',
-]
+export const ASSET_CATEGORIES = ['infrastructure', 'brand', 'personnel', 'vendor', 'other']
 
 /**
  * Match types
@@ -46,13 +40,7 @@ export const MATCH_TYPES = {
 /**
  * Match statuses
  */
-export const MATCH_STATUSES = [
-  'new',
-  'acknowledged',
-  'investigating',
-  'resolved',
-  'false_positive',
-]
+export const MATCH_STATUSES = ['new', 'acknowledged', 'investigating', 'resolved', 'false_positive']
 
 export const assets = {
   /**
@@ -105,18 +93,22 @@ export const assets = {
    * Create a new asset
    */
   async create(userId, asset) {
-    return supabase.from('assets').insert({
-      user_id: userId,
-      asset_type: asset.assetType,
-      value: asset.value,
-      name: asset.name || null,
-      description: asset.description || null,
-      tags: asset.tags || [],
-      criticality: asset.criticality || 'medium',
-      category: asset.category || null,
-      is_monitored: asset.isMonitored !== false,
-      notify_on_match: asset.notifyOnMatch !== false,
-    }).select().single()
+    return supabase
+      .from('assets')
+      .insert({
+        user_id: userId,
+        asset_type: asset.assetType,
+        value: asset.value,
+        name: asset.name || null,
+        description: asset.description || null,
+        tags: asset.tags || [],
+        criticality: asset.criticality || 'medium',
+        category: asset.category || null,
+        is_monitored: asset.isMonitored !== false,
+        notify_on_match: asset.notifyOnMatch !== false,
+      })
+      .select()
+      .single()
   },
 
   /**
@@ -133,12 +125,7 @@ export const assets = {
     if (updates.isMonitored !== undefined) updateData.is_monitored = updates.isMonitored
     if (updates.notifyOnMatch !== undefined) updateData.notify_on_match = updates.notifyOnMatch
 
-    return supabase
-      .from('assets')
-      .update(updateData)
-      .eq('id', assetId)
-      .select()
-      .single()
+    return supabase.from('assets').update(updateData).eq('id', assetId).select().single()
   },
 
   /**
@@ -210,11 +197,7 @@ export const assetMatches = {
   async getAll(userId, options = {}) {
     const { status, severity, assetId, matchType, limit = 100 } = options
 
-    let query = supabase
-      .from('v_recent_matches')
-      .select('*')
-      .eq('user_id', userId)
-      .limit(limit)
+    let query = supabase.from('v_recent_matches').select('*').eq('user_id', userId).limit(limit)
 
     if (status) {
       query = query.eq('status', status)
@@ -260,39 +243,35 @@ export const assetMatches = {
       updateData.resolution_notes = notes
     }
 
-    return supabase
-      .from('asset_matches')
-      .update(updateData)
-      .eq('id', matchId)
-      .select()
-      .single()
+    return supabase.from('asset_matches').update(updateData).eq('id', matchId).select().single()
   },
 
   /**
    * Bulk acknowledge matches
    */
   async bulkAcknowledge(matchIds) {
-    return supabase
-      .from('asset_matches')
-      .update({ status: 'acknowledged' })
-      .in('id', matchIds)
+    return supabase.from('asset_matches').update({ status: 'acknowledged' }).in('id', matchIds)
   },
 
   /**
    * Create a new match (for testing or manual entry)
    */
   async create(match) {
-    return supabase.from('asset_matches').insert({
-      asset_id: match.assetId,
-      user_id: match.userId,
-      match_type: match.matchType,
-      source_table: match.sourceTable,
-      source_id: match.sourceId || null,
-      matched_value: match.matchedValue,
-      context: match.context || {},
-      severity: match.severity || 'medium',
-      status: 'new',
-    }).select().single()
+    return supabase
+      .from('asset_matches')
+      .insert({
+        asset_id: match.assetId,
+        user_id: match.userId,
+        match_type: match.matchType,
+        source_table: match.sourceTable,
+        source_id: match.sourceId || null,
+        matched_value: match.matchedValue,
+        context: match.context || {},
+        severity: match.severity || 'medium',
+        status: 'new',
+      })
+      .select()
+      .single()
   },
 
   /**
@@ -338,12 +317,14 @@ export const assetGroups = {
   async getAll(userId) {
     return supabase
       .from('asset_groups')
-      .select(`
+      .select(
+        `
         *,
         asset_group_members (
           asset_id
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('name')
   },
@@ -352,24 +333,23 @@ export const assetGroups = {
    * Create a new asset group
    */
   async create(userId, group) {
-    return supabase.from('asset_groups').insert({
-      user_id: userId,
-      name: group.name,
-      description: group.description || null,
-      color: group.color || null,
-    }).select().single()
+    return supabase
+      .from('asset_groups')
+      .insert({
+        user_id: userId,
+        name: group.name,
+        description: group.description || null,
+        color: group.color || null,
+      })
+      .select()
+      .single()
   },
 
   /**
    * Update an asset group
    */
   async update(groupId, updates) {
-    return supabase
-      .from('asset_groups')
-      .update(updates)
-      .eq('id', groupId)
-      .select()
-      .single()
+    return supabase.from('asset_groups').update(updates).eq('id', groupId).select().single()
   },
 
   /**
@@ -442,8 +422,12 @@ export async function checkAssetsAgainstIOCs(userId) {
           asset,
           ioc,
           matchType: 'ioc',
-          severity: asset.criticality === 'critical' ? 'critical' :
-                   asset.criticality === 'high' ? 'high' : 'medium',
+          severity:
+            asset.criticality === 'critical'
+              ? 'critical'
+              : asset.criticality === 'high'
+                ? 'high'
+                : 'medium',
         })
       }
     }

@@ -48,7 +48,8 @@ export default function BrandingConfigSection() {
         faviconUrl: data.favicon_url || data.faviconUrl || '',
         primaryColor: data.primary_color || data.primaryColor || DEFAULT_BRANDING.primaryColor,
         primaryDark: data.primary_dark || data.primaryDark || DEFAULT_BRANDING.primaryDark,
-        backgroundColor: data.background_color || data.backgroundColor || DEFAULT_BRANDING.backgroundColor,
+        backgroundColor:
+          data.background_color || data.backgroundColor || DEFAULT_BRANDING.backgroundColor,
         surfaceColor: data.surface_color || data.surfaceColor || DEFAULT_BRANDING.surfaceColor,
         fontFamily: data.font_family || data.fontFamily || DEFAULT_BRANDING.fontFamily,
         copyrightText: data.copyright_text || data.copyrightText || '',
@@ -83,7 +84,7 @@ export default function BrandingConfigSection() {
   }
 
   function applyPreset(preset) {
-    setBranding(prev => ({
+    setBranding((prev) => ({
       ...prev,
       primaryColor: preset.primary,
       primaryDark: preset.dark,
@@ -91,7 +92,7 @@ export default function BrandingConfigSection() {
   }
 
   function handleChange(field, value) {
-    setBranding(prev => ({ ...prev, [field]: value }))
+    setBranding((prev) => ({ ...prev, [field]: value }))
   }
 
   // Not enterprise
@@ -109,9 +110,7 @@ export default function BrandingConfigSection() {
   if (!currentTenant) {
     return (
       <div className="bg-gray-800/50 rounded-lg p-6 text-center">
-        <p className="text-gray-400">
-          White-label branding is configured per organization.
-        </p>
+        <p className="text-gray-400">White-label branding is configured per organization.</p>
         <p className="text-gray-500 text-sm mt-2">
           Contact support to set up your organization tenant.
         </p>
@@ -123,9 +122,7 @@ export default function BrandingConfigSection() {
   if (!isAdmin) {
     return (
       <div className="bg-gray-800/50 rounded-lg p-6 text-center">
-        <p className="text-gray-400">
-          Only organization admins can modify branding settings.
-        </p>
+        <p className="text-gray-400">Only organization admins can modify branding settings.</p>
       </div>
     )
   }
@@ -225,7 +222,7 @@ export default function BrandingConfigSection() {
         <div>
           <label className="block text-sm text-gray-400 mb-2">Color Preset</label>
           <div className="flex gap-2 flex-wrap">
-            {COLOR_PRESETS.map(preset => (
+            {COLOR_PRESETS.map((preset) => (
               <button
                 key={preset.name}
                 onClick={() => applyPreset(preset)}
@@ -300,10 +297,7 @@ export default function BrandingConfigSection() {
             >
               Secondary Button
             </button>
-            <span
-              className="text-sm font-medium"
-              style={{ color: branding.primaryColor }}
-            >
+            <span className="text-sm font-medium" style={{ color: branding.primaryColor }}>
               Accent Text
             </span>
           </div>
@@ -384,11 +378,7 @@ export default function BrandingConfigSection() {
 
       {/* Save */}
       <div className="flex justify-end pt-4 border-t border-gray-800">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="cyber-button-primary"
-        >
+        <button onClick={handleSave} disabled={saving} className="cyber-button-primary">
           {saving ? 'Saving...' : 'Save Branding'}
         </button>
       </div>

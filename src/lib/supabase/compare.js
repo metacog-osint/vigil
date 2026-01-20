@@ -33,7 +33,7 @@ export const compare = {
     }
 
     // Count incidents per day
-    data?.forEach(incident => {
+    data?.forEach((incident) => {
       if (incident.discovered_at) {
         const dateKey = incident.discovered_at.split('T')[0]
         if (countsByDate[dateKey] !== undefined) {
@@ -71,35 +71,99 @@ export const compare = {
     // Map countries to regions
     const regionMap = {
       // North America
-      'US': 'north_america', 'CA': 'north_america', 'MX': 'north_america',
-      'United States': 'north_america', 'Canada': 'north_america', 'Mexico': 'north_america',
+      US: 'north_america',
+      CA: 'north_america',
+      MX: 'north_america',
+      'United States': 'north_america',
+      Canada: 'north_america',
+      Mexico: 'north_america',
       // Europe
-      'GB': 'europe', 'DE': 'europe', 'FR': 'europe', 'IT': 'europe', 'ES': 'europe',
-      'NL': 'europe', 'BE': 'europe', 'CH': 'europe', 'AT': 'europe', 'PL': 'europe',
-      'SE': 'europe', 'NO': 'europe', 'DK': 'europe', 'FI': 'europe', 'IE': 'europe',
-      'PT': 'europe', 'CZ': 'europe', 'RO': 'europe', 'HU': 'europe', 'GR': 'europe',
-      'United Kingdom': 'europe', 'Germany': 'europe', 'France': 'europe', 'Italy': 'europe',
-      'Spain': 'europe', 'Netherlands': 'europe', 'Switzerland': 'europe', 'Poland': 'europe',
+      GB: 'europe',
+      DE: 'europe',
+      FR: 'europe',
+      IT: 'europe',
+      ES: 'europe',
+      NL: 'europe',
+      BE: 'europe',
+      CH: 'europe',
+      AT: 'europe',
+      PL: 'europe',
+      SE: 'europe',
+      NO: 'europe',
+      DK: 'europe',
+      FI: 'europe',
+      IE: 'europe',
+      PT: 'europe',
+      CZ: 'europe',
+      RO: 'europe',
+      HU: 'europe',
+      GR: 'europe',
+      'United Kingdom': 'europe',
+      Germany: 'europe',
+      France: 'europe',
+      Italy: 'europe',
+      Spain: 'europe',
+      Netherlands: 'europe',
+      Switzerland: 'europe',
+      Poland: 'europe',
       // Asia Pacific
-      'CN': 'asia_pacific', 'JP': 'asia_pacific', 'KR': 'asia_pacific', 'IN': 'asia_pacific',
-      'AU': 'asia_pacific', 'NZ': 'asia_pacific', 'SG': 'asia_pacific', 'HK': 'asia_pacific',
-      'TW': 'asia_pacific', 'TH': 'asia_pacific', 'MY': 'asia_pacific', 'ID': 'asia_pacific',
-      'PH': 'asia_pacific', 'VN': 'asia_pacific',
-      'China': 'asia_pacific', 'Japan': 'asia_pacific', 'South Korea': 'asia_pacific',
-      'India': 'asia_pacific', 'Australia': 'asia_pacific', 'Singapore': 'asia_pacific',
+      CN: 'asia_pacific',
+      JP: 'asia_pacific',
+      KR: 'asia_pacific',
+      IN: 'asia_pacific',
+      AU: 'asia_pacific',
+      NZ: 'asia_pacific',
+      SG: 'asia_pacific',
+      HK: 'asia_pacific',
+      TW: 'asia_pacific',
+      TH: 'asia_pacific',
+      MY: 'asia_pacific',
+      ID: 'asia_pacific',
+      PH: 'asia_pacific',
+      VN: 'asia_pacific',
+      China: 'asia_pacific',
+      Japan: 'asia_pacific',
+      'South Korea': 'asia_pacific',
+      India: 'asia_pacific',
+      Australia: 'asia_pacific',
+      Singapore: 'asia_pacific',
       // Latin America
-      'BR': 'latin_america', 'AR': 'latin_america', 'CL': 'latin_america', 'CO': 'latin_america',
-      'PE': 'latin_america', 'VE': 'latin_america', 'EC': 'latin_america',
-      'Brazil': 'latin_america', 'Argentina': 'latin_america', 'Chile': 'latin_america',
-      'Colombia': 'latin_america', 'Peru': 'latin_america',
+      BR: 'latin_america',
+      AR: 'latin_america',
+      CL: 'latin_america',
+      CO: 'latin_america',
+      PE: 'latin_america',
+      VE: 'latin_america',
+      EC: 'latin_america',
+      Brazil: 'latin_america',
+      Argentina: 'latin_america',
+      Chile: 'latin_america',
+      Colombia: 'latin_america',
+      Peru: 'latin_america',
       // Middle East
-      'AE': 'middle_east', 'SA': 'middle_east', 'IL': 'middle_east', 'TR': 'middle_east',
-      'IR': 'middle_east', 'IQ': 'middle_east', 'QA': 'middle_east', 'KW': 'middle_east',
-      'UAE': 'middle_east', 'Saudi Arabia': 'middle_east', 'Israel': 'middle_east',
-      'Turkey': 'middle_east', 'Iran': 'middle_east',
+      AE: 'middle_east',
+      SA: 'middle_east',
+      IL: 'middle_east',
+      TR: 'middle_east',
+      IR: 'middle_east',
+      IQ: 'middle_east',
+      QA: 'middle_east',
+      KW: 'middle_east',
+      UAE: 'middle_east',
+      'Saudi Arabia': 'middle_east',
+      Israel: 'middle_east',
+      Turkey: 'middle_east',
+      Iran: 'middle_east',
       // Africa
-      'ZA': 'africa', 'EG': 'africa', 'NG': 'africa', 'KE': 'africa', 'MA': 'africa',
-      'South Africa': 'africa', 'Egypt': 'africa', 'Nigeria': 'africa', 'Kenya': 'africa',
+      ZA: 'africa',
+      EG: 'africa',
+      NG: 'africa',
+      KE: 'africa',
+      MA: 'africa',
+      'South Africa': 'africa',
+      Egypt: 'africa',
+      Nigeria: 'africa',
+      Kenya: 'africa',
     }
 
     // Count by region
@@ -113,7 +177,7 @@ export const compare = {
       unknown: 0,
     }
 
-    data?.forEach(incident => {
+    data?.forEach((incident) => {
       const country = incident.country
       const region = regionMap[country] || 'unknown'
       regionCounts[region]++
@@ -146,7 +210,7 @@ export const compare = {
 
     // Count by sector
     const sectorCounts = {}
-    data?.forEach(incident => {
+    data?.forEach((incident) => {
       const sector = incident.sector || 'unknown'
       sectorCounts[sector] = (sectorCounts[sector] || 0) + 1
     })
@@ -189,7 +253,7 @@ export const compare = {
     ])
 
     // Count unique actors
-    const uniqueActors = new Set(actorCount.data?.map(i => i.threat_actor_id) || [])
+    const uniqueActors = new Set(actorCount.data?.map((i) => i.threat_actor_id) || [])
 
     return {
       incidents: incidentCount.count || 0,

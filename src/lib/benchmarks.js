@@ -86,7 +86,7 @@ export const benchmarks = {
 
     // Group by latest period
     const latestPeriod = data?.[0]?.period_start
-    return (data || []).filter(d => d.period_start === latestPeriod)
+    return (data || []).filter((d) => d.period_start === latestPeriod)
   },
 
   /**
@@ -138,7 +138,7 @@ export const benchmarks = {
     // Group by sector, taking latest for each
     const result = {}
     for (const sector of sectors) {
-      result[sector] = (data || []).find(d => d.sector === sector)
+      result[sector] = (data || []).find((d) => d.sector === sector)
     }
     return result
   },
@@ -171,8 +171,8 @@ export const benchmarks = {
     const totalIncidents = sectorBenchmarks.reduce((sum, s) => sum + s.incident_count, 0)
     const avgIncidentsPerSector = Math.round(totalIncidents / sectorBenchmarks.length) || 0
     const mostTargeted = sectorBenchmarks[0] || null
-    const fastestGrowing = [...sectorBenchmarks]
-      .sort((a, b) => (b.wow_change || 0) - (a.wow_change || 0))[0] || null
+    const fastestGrowing =
+      [...sectorBenchmarks].sort((a, b) => (b.wow_change || 0) - (a.wow_change || 0))[0] || null
 
     return {
       snapshot,
@@ -181,16 +181,21 @@ export const benchmarks = {
         totalIncidents,
         avgIncidentsPerSector,
         activeSectors: sectorBenchmarks.length,
-        mostTargeted: mostTargeted ? {
-          sector: mostTargeted.sector,
-          label: SECTOR_CONFIG[mostTargeted.sector]?.label || mostTargeted.sector,
-          count: mostTargeted.incident_count,
-        } : null,
-        fastestGrowing: fastestGrowing && fastestGrowing.wow_change > 0 ? {
-          sector: fastestGrowing.sector,
-          label: SECTOR_CONFIG[fastestGrowing.sector]?.label || fastestGrowing.sector,
-          change: fastestGrowing.wow_change,
-        } : null,
+        mostTargeted: mostTargeted
+          ? {
+              sector: mostTargeted.sector,
+              label: SECTOR_CONFIG[mostTargeted.sector]?.label || mostTargeted.sector,
+              count: mostTargeted.incident_count,
+            }
+          : null,
+        fastestGrowing:
+          fastestGrowing && fastestGrowing.wow_change > 0
+            ? {
+                sector: fastestGrowing.sector,
+                label: SECTOR_CONFIG[fastestGrowing.sector]?.label || fastestGrowing.sector,
+                change: fastestGrowing.wow_change,
+              }
+            : null,
       },
     }
   },
@@ -202,7 +207,7 @@ export const benchmarks = {
     const rankings = await this.getSectorRankings(periodType)
     const totalSectors = rankings.length
 
-    const userRanking = rankings.find(r => r.sector === userSector)
+    const userRanking = rankings.find((r) => r.sector === userSector)
     if (!userRanking) return null
 
     const avgIncidents = rankings.reduce((sum, r) => sum + r.incident_count, 0) / totalSectors
@@ -242,13 +247,16 @@ export const benchmarkPreferences = {
   async update(userId, updates) {
     const { data, error } = await supabase
       .from('benchmark_preferences')
-      .upsert({
-        user_id: userId,
-        ...updates,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id',
-      })
+      .upsert(
+        {
+          user_id: userId,
+          ...updates,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'user_id',
+        }
+      )
       .select()
       .single()
 

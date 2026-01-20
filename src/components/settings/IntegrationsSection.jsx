@@ -4,7 +4,12 @@
  */
 
 import { useState, useEffect } from 'react'
-import { integrations, INTEGRATION_TYPES, NOTIFICATION_EVENTS, webhooks } from '../../lib/integrations'
+import {
+  integrations,
+  INTEGRATION_TYPES,
+  NOTIFICATION_EVENTS,
+  webhooks,
+} from '../../lib/integrations'
 import { useSubscription } from '../../contexts/SubscriptionContext'
 
 // Integration icons
@@ -12,47 +17,52 @@ const IntegrationIcon = ({ type, className = 'w-8 h-8' }) => {
   const icons = {
     slack: (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+        <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z" />
       </svg>
     ),
     teams: (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20.625 8.073c.574 0 1.125.224 1.53.623.407.4.636.94.636 1.505v5.607c0 .566-.229 1.106-.636 1.505a2.179 2.179 0 0 1-1.53.623h-2.166v3.126c0 .377-.15.74-.418 1.007a1.431 1.431 0 0 1-1.01.416H11.51a1.42 1.42 0 0 1-1.008-.416 1.42 1.42 0 0 1-.417-1.007v-3.126H5.375a2.179 2.179 0 0 1-1.53-.623 2.125 2.125 0 0 1-.636-1.505V10.2c0-.566.229-1.106.636-1.505a2.179 2.179 0 0 1 1.53-.623h6.71V4.947c0-.377.15-.74.418-1.007a1.431 1.431 0 0 1 1.01-.416h5.498c.38 0 .743.15 1.01.416.269.268.419.63.419 1.007v3.126h.185zM9.99 13.63H7.542v3.936H9.99v-3.936zm6.468 0h-2.446v3.936h2.446v-3.936z"/>
+        <path d="M20.625 8.073c.574 0 1.125.224 1.53.623.407.4.636.94.636 1.505v5.607c0 .566-.229 1.106-.636 1.505a2.179 2.179 0 0 1-1.53.623h-2.166v3.126c0 .377-.15.74-.418 1.007a1.431 1.431 0 0 1-1.01.416H11.51a1.42 1.42 0 0 1-1.008-.416 1.42 1.42 0 0 1-.417-1.007v-3.126H5.375a2.179 2.179 0 0 1-1.53-.623 2.125 2.125 0 0 1-.636-1.505V10.2c0-.566.229-1.106.636-1.505a2.179 2.179 0 0 1 1.53-.623h6.71V4.947c0-.377.15-.74.418-1.007a1.431 1.431 0 0 1 1.01-.416h5.498c.38 0 .743.15 1.01.416.269.268.419.63.419 1.007v3.126h.185zM9.99 13.63H7.542v3.936H9.99v-3.936zm6.468 0h-2.446v3.936h2.446v-3.936z" />
       </svg>
     ),
     jira: (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.005-1.005zm5.723-5.756H5.736a5.215 5.215 0 0 0 5.215 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.758a1.001 1.001 0 0 0-1.001-1.001zM23.013 0H11.455a5.215 5.215 0 0 0 5.215 5.215h2.129v2.057A5.215 5.215 0 0 0 24 12.483V1.005A1.001 1.001 0 0 0 23.013 0z"/>
+        <path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.005-1.005zm5.723-5.756H5.736a5.215 5.215 0 0 0 5.215 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.758a1.001 1.001 0 0 0-1.001-1.001zM23.013 0H11.455a5.215 5.215 0 0 0 5.215 5.215h2.129v2.057A5.215 5.215 0 0 0 24 12.483V1.005A1.001 1.001 0 0 0 23.013 0z" />
       </svg>
     ),
     webhook: (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+        />
       </svg>
     ),
     splunk: (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 16.091l-2.187-1.268-.014-.008-3.693-2.132 3.693-2.132.014-.008 2.187-1.268v1.536l-1.65.954 1.65.954v1.536l-1.65.954 1.65.954v1.536l-1.65.954v-1.536zm-11.788 0v-1.536l1.65-.954-1.65-.954V11.11l1.65-.954-1.65-.954V7.665l1.65-.954v1.536l1.65.954-1.65.954v1.536l1.65.954-1.65.954v1.536l-1.65.954v-1.536l-1.65-.954z"/>
+        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 16.091l-2.187-1.268-.014-.008-3.693-2.132 3.693-2.132.014-.008 2.187-1.268v1.536l-1.65.954 1.65.954v1.536l-1.65.954 1.65.954v1.536l-1.65.954v-1.536zm-11.788 0v-1.536l1.65-.954-1.65-.954V11.11l1.65-.954-1.65-.954V7.665l1.65-.954v1.536l1.65.954-1.65.954v1.536l1.65.954-1.65.954v1.536l-1.65.954v-1.536l-1.65-.954z" />
       </svg>
     ),
     elastic: (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M13.444 11.833H24c-.015-3.953-2.273-7.384-5.685-9.168l-5.81 6.675.939 2.493zm.939-2.493l5.81-6.675c-1.603-.873-3.45-1.37-5.413-1.37-2.667 0-5.113.926-7.053 2.466L12.5 9.34l1.883 0zM12.5 9.34L7.727 3.761C4.3 6.121 2.056 9.87 2.01 14.167h8.49l2-4.827zm2 4.827H2.01c.047 4.296 2.291 8.045 5.717 10.406L12.5 18.593l2-4.426zm-2 4.426l-4.773 5.578c1.94 1.54 4.386 2.466 7.053 2.466 1.963 0 3.81-.497 5.413-1.37l-5.81-6.674-1.883 0zm1.883 0l5.81 6.674c3.412-1.784 5.67-5.215 5.685-9.167H13.444l.939 2.493z"/>
+        <path d="M13.444 11.833H24c-.015-3.953-2.273-7.384-5.685-9.168l-5.81 6.675.939 2.493zm.939-2.493l5.81-6.675c-1.603-.873-3.45-1.37-5.413-1.37-2.667 0-5.113.926-7.053 2.466L12.5 9.34l1.883 0zM12.5 9.34L7.727 3.761C4.3 6.121 2.056 9.87 2.01 14.167h8.49l2-4.827zm2 4.827H2.01c.047 4.296 2.291 8.045 5.717 10.406L12.5 18.593l2-4.426zm-2 4.426l-4.773 5.578c1.94 1.54 4.386 2.466 7.053 2.466 1.963 0 3.81-.497 5.413-1.37l-5.81-6.674-1.883 0zm1.883 0l5.81 6.674c3.412-1.784 5.67-5.215 5.685-9.167H13.444l.939 2.493z" />
       </svg>
     ),
     sentinel: (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 0L1.608 6v12L12 24l10.392-6V6L12 0zm0 2.885l7.785 4.5v9l-7.785 4.5-7.785-4.5v-9l7.785-4.5z"/>
+        <path d="M12 0L1.608 6v12L12 24l10.392-6V6L12 0zm0 2.885l7.785 4.5v9l-7.785 4.5-7.785-4.5v-9l7.785-4.5z" />
       </svg>
     ),
     pagerduty: (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M16.965 1.18C15.085.164 13.769 0 10.683 0H3.73v14.55h6.926c2.743 0 4.8-.164 6.61-1.37 1.975-1.303 3.004-3.47 3.004-6.202 0-2.743-.839-4.622-3.305-5.798zM11.79 9.14c-.707.354-1.552.354-2.942.354H8.14V4.17h.708c1.398 0 2.235 0 2.942.354.854.448 1.413 1.412 1.413 2.313 0 .9-.559 1.855-1.413 2.303zM3.73 24h4.41v-6.705H3.73V24z"/>
+        <path d="M16.965 1.18C15.085.164 13.769 0 10.683 0H3.73v14.55h6.926c2.743 0 4.8-.164 6.61-1.37 1.975-1.303 3.004-3.47 3.004-6.202 0-2.743-.839-4.622-3.305-5.798zM11.79 9.14c-.707.354-1.552.354-2.942.354H8.14V4.17h.708c1.398 0 2.235 0 2.942.354.854.448 1.413 1.412 1.413 2.313 0 .9-.559 1.855-1.413 2.303zM3.73 24h4.41v-6.705H3.73V24z" />
       </svg>
     ),
     servicenow: (
       <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 18.96c-3.84 0-6.96-3.12-6.96-6.96S8.16 5.04 12 5.04s6.96 3.12 6.96 6.96-3.12 6.96-6.96 6.96z"/>
+        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 18.96c-3.84 0-6.96-3.12-6.96-6.96S8.16 5.04 12 5.04s6.96 3.12 6.96 6.96-3.12 6.96-6.96 6.96z" />
       </svg>
     ),
   }
@@ -63,13 +73,15 @@ const IntegrationIcon = ({ type, className = 'w-8 h-8' }) => {
 // Integration configuration modal
 function IntegrationConfigModal({ integration, config, onSave, onClose, onTest }) {
   const [formData, setFormData] = useState(config || {})
-  const [notifyOn, setNotifyOn] = useState(integration?.notify_on || {
-    critical_incidents: true,
-    high_incidents: true,
-    watchlist_updates: true,
-    new_kevs: true,
-    actor_escalations: true,
-  })
+  const [notifyOn, setNotifyOn] = useState(
+    integration?.notify_on || {
+      critical_incidents: true,
+      high_incidents: true,
+      watchlist_updates: true,
+      new_kevs: true,
+      actor_escalations: true,
+    }
+  )
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -95,7 +107,10 @@ function IntegrationConfigModal({ integration, config, onSave, onClose, onTest }
       <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-gray-800 rounded-lg">
-            <IntegrationIcon type={integration.integration_type} className="w-6 h-6 text-cyan-400" />
+            <IntegrationIcon
+              type={integration.integration_type}
+              className="w-6 h-6 text-cyan-400"
+            />
           </div>
           <div>
             <h3 className="text-lg font-medium text-white">{integrationType.name}</h3>
@@ -108,10 +123,17 @@ function IntegrationConfigModal({ integration, config, onSave, onClose, onTest }
           {integrationType.requiredFields.map((field) => (
             <div key={field}>
               <label className="block text-sm text-gray-400 mb-1">
-                {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} *
+                {field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} *
               </label>
               <input
-                type={field.includes('token') || field.includes('password') || field.includes('secret') || field.includes('key') ? 'password' : 'text'}
+                type={
+                  field.includes('token') ||
+                  field.includes('password') ||
+                  field.includes('secret') ||
+                  field.includes('key')
+                    ? 'password'
+                    : 'text'
+                }
                 value={formData[field] || ''}
                 onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
@@ -123,7 +145,7 @@ function IntegrationConfigModal({ integration, config, onSave, onClose, onTest }
           {integrationType.optionalFields?.map((field) => (
             <div key={field}>
               <label className="block text-sm text-gray-400 mb-1">
-                {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                {field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
               </label>
               <input
                 type="text"
@@ -137,7 +159,9 @@ function IntegrationConfigModal({ integration, config, onSave, onClose, onTest }
 
           {/* Test result */}
           {testResult && (
-            <div className={`p-3 rounded-lg ${testResult.success ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
+            <div
+              className={`p-3 rounded-lg ${testResult.success ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}
+            >
               <span className={testResult.success ? 'text-green-400' : 'text-red-400'}>
                 {testResult.message}
               </span>
@@ -205,12 +229,14 @@ function IntegrationConfigModal({ integration, config, onSave, onClose, onTest }
 
 // Webhook configuration modal
 function WebhookModal({ webhook, onSave, onClose }) {
-  const [formData, setFormData] = useState(webhook || {
-    name: '',
-    url: '',
-    secret: '',
-    events: ['incident.new', 'kev.new'],
-  })
+  const [formData, setFormData] = useState(
+    webhook || {
+      name: '',
+      url: '',
+      secret: '',
+      events: ['incident.new', 'kev.new'],
+    }
+  )
   const [saving, setSaving] = useState(false)
 
   const eventOptions = [
@@ -280,7 +306,7 @@ function WebhookModal({ webhook, onSave, onClose }) {
                     onChange={(e) => {
                       const events = e.target.checked
                         ? [...(formData.events || []), event.value]
-                        : formData.events?.filter(ev => ev !== event.value)
+                        : formData.events?.filter((ev) => ev !== event.value)
                       setFormData({ ...formData, events })
                     }}
                     className="rounded border-gray-600 bg-gray-800 text-cyan-500"
@@ -360,7 +386,7 @@ export default function IntegrationsSection({ userId }) {
     if (!confirm('Are you sure you want to remove this integration?')) return
     try {
       await integrations.delete(userId, integrationType)
-      setUserIntegrations(userIntegrations.filter(i => i.integration_type !== integrationType))
+      setUserIntegrations(userIntegrations.filter((i) => i.integration_type !== integrationType))
     } catch (err) {
       setError(err.message)
     }
@@ -369,9 +395,11 @@ export default function IntegrationsSection({ userId }) {
   const handleToggleIntegration = async (integrationType, enabled) => {
     try {
       await integrations.toggle(userId, integrationType, enabled)
-      setUserIntegrations(userIntegrations.map(i =>
-        i.integration_type === integrationType ? { ...i, is_enabled: enabled } : i
-      ))
+      setUserIntegrations(
+        userIntegrations.map((i) =>
+          i.integration_type === integrationType ? { ...i, is_enabled: enabled } : i
+        )
+      )
     } catch (err) {
       setError(err.message)
     }
@@ -395,7 +423,7 @@ export default function IntegrationsSection({ userId }) {
     if (!confirm('Are you sure you want to delete this webhook?')) return
     try {
       await webhooks.delete(webhookId, userId)
-      setUserWebhooks(userWebhooks.filter(w => w.id !== webhookId))
+      setUserWebhooks(userWebhooks.filter((w) => w.id !== webhookId))
     } catch (err) {
       setError(err.message)
     }
@@ -405,8 +433,18 @@ export default function IntegrationsSection({ userId }) {
   if (!hasIntegrationAccess) {
     return (
       <div className="bg-gray-800/50 rounded-lg p-6 text-center">
-        <svg className="w-12 h-12 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        <svg
+          className="w-12 h-12 text-gray-600 mx-auto mb-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+          />
         </svg>
         <h4 className="text-white font-medium mb-2">Integrations Available on Enterprise Plan</h4>
         <p className="text-gray-400 text-sm mb-4">
@@ -431,9 +469,10 @@ export default function IntegrationsSection({ userId }) {
   }
 
   // Available integrations (not yet configured)
-  const configuredTypes = userIntegrations.map(i => i.integration_type)
-  const availableIntegrations = Object.entries(INTEGRATION_TYPES)
-    .filter(([type]) => !configuredTypes.includes(type))
+  const configuredTypes = userIntegrations.map((i) => i.integration_type)
+  const availableIntegrations = Object.entries(INTEGRATION_TYPES).filter(
+    ([type]) => !configuredTypes.includes(type)
+  )
 
   return (
     <div className="space-y-6">
@@ -457,42 +496,78 @@ export default function IntegrationsSection({ userId }) {
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-gray-700 rounded-lg">
-                      <IntegrationIcon type={integration.integration_type} className="w-5 h-5 text-cyan-400" />
+                      <IntegrationIcon
+                        type={integration.integration_type}
+                        className="w-5 h-5 text-cyan-400"
+                      />
                     </div>
                     <div>
                       <div className="text-white font-medium">{typeInfo?.name}</div>
                       <div className="text-sm text-gray-400">
                         {integration.is_connected ? 'Connected' : 'Not connected'}
-                        {integration.last_sync_at && ` · Last sync: ${new Date(integration.last_sync_at).toLocaleDateString()}`}
+                        {integration.last_sync_at &&
+                          ` · Last sync: ${new Date(integration.last_sync_at).toLocaleDateString()}`}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleToggleIntegration(integration.integration_type, !integration.is_enabled)}
+                      onClick={() =>
+                        handleToggleIntegration(
+                          integration.integration_type,
+                          !integration.is_enabled
+                        )
+                      }
                       className={`w-10 h-6 rounded-full transition-colors ${
                         integration.is_enabled ? 'bg-cyan-600' : 'bg-gray-600'
                       }`}
                     >
-                      <span className={`block w-4 h-4 bg-white rounded-full transform transition-transform mx-1 ${
-                        integration.is_enabled ? 'translate-x-4' : ''
-                      }`} />
+                      <span
+                        className={`block w-4 h-4 bg-white rounded-full transform transition-transform mx-1 ${
+                          integration.is_enabled ? 'translate-x-4' : ''
+                        }`}
+                      />
                     </button>
                     <button
                       onClick={() => setActiveModal({ type: 'integration', data: integration })}
                       className="p-2 text-gray-400 hover:text-white"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
                     </button>
                     <button
                       onClick={() => handleDeleteIntegration(integration.integration_type)}
                       className="p-2 text-gray-400 hover:text-red-400"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -510,7 +585,12 @@ export default function IntegrationsSection({ userId }) {
           {availableIntegrations.map(([type, info]) => (
             <button
               key={type}
-              onClick={() => setActiveModal({ type: 'integration', data: { integration_type: type, config: {} } })}
+              onClick={() =>
+                setActiveModal({
+                  type: 'integration',
+                  data: { integration_type: type, config: {} },
+                })
+              }
               className="flex items-center gap-3 p-4 bg-gray-800/30 hover:bg-gray-800/50 border border-gray-700 rounded-lg transition-colors text-left"
             >
               <IntegrationIcon type={type} className="w-6 h-6 text-gray-400" />
@@ -554,7 +634,12 @@ export default function IntegrationsSection({ userId }) {
                     className="p-1 text-gray-400 hover:text-white"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                      />
                     </svg>
                   </button>
                   <button
@@ -562,7 +647,12 @@ export default function IntegrationsSection({ userId }) {
                     className="p-1 text-gray-400 hover:text-red-400"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -577,7 +667,9 @@ export default function IntegrationsSection({ userId }) {
         <IntegrationConfigModal
           integration={activeModal.data}
           config={activeModal.data.config}
-          onSave={(config, notifyOn) => handleSaveIntegration(activeModal.data.integration_type, config, notifyOn)}
+          onSave={(config, notifyOn) =>
+            handleSaveIntegration(activeModal.data.integration_type, config, notifyOn)
+          }
           onClose={() => setActiveModal(null)}
           onTest={integrations.test}
         />

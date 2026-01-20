@@ -76,7 +76,7 @@ export function FocusModeProvider({ children }) {
       console.warn('Cannot enable focus mode without organization profile')
       return
     }
-    setEnabled(prev => !prev)
+    setEnabled((prev) => !prev)
   }, [profile])
 
   const enable = useCallback(() => {
@@ -115,11 +115,7 @@ export function FocusModeProvider({ children }) {
     hasProfile: !!profile?.sector,
   }
 
-  return (
-    <FocusModeContext.Provider value={value}>
-      {children}
-    </FocusModeContext.Provider>
-  )
+  return <FocusModeContext.Provider value={value}>{children}</FocusModeContext.Provider>
 }
 
 /**

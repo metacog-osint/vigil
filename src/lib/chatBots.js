@@ -65,8 +65,7 @@ export async function handleSearchCommand(query, context = {}) {
     actors: actors.data || [],
     iocs: iocs.data || [],
     vulnerabilities: vulns.data || [],
-    totalResults:
-      (actors.data?.length || 0) + (iocs.data?.length || 0) + (vulns.data?.length || 0),
+    totalResults: (actors.data?.length || 0) + (iocs.data?.length || 0) + (vulns.data?.length || 0),
   }
 
   return {
@@ -458,9 +457,7 @@ function formatSlackSearchBlocks(results) {
         type: 'mrkdwn',
         text:
           '*Threat Actors:*\n' +
-          results.actors
-            .map((a) => `• ${a.name} (${a.trend_status || 'Unknown'})`)
-            .join('\n'),
+          results.actors.map((a) => `• ${a.name} (${a.trend_status || 'Unknown'})`).join('\n'),
       },
     })
   }
@@ -470,8 +467,7 @@ function formatSlackSearchBlocks(results) {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text:
-          '*IOCs:*\n' + results.iocs.map((i) => `• \`${i.value}\` (${i.type})`).join('\n'),
+        text: '*IOCs:*\n' + results.iocs.map((i) => `• \`${i.value}\` (${i.type})`).join('\n'),
       },
     })
   }

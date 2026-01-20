@@ -4,12 +4,7 @@ import { clsx } from 'clsx'
 function ChangeIndicator({ value, size = 'md' }) {
   if (value === 0 || value === null || value === undefined) {
     return (
-      <span className={clsx(
-        'text-gray-400',
-        size === 'lg' ? 'text-2xl' : 'text-sm'
-      )}>
-        → 0%
-      </span>
+      <span className={clsx('text-gray-400', size === 'lg' ? 'text-2xl' : 'text-sm')}>→ 0%</span>
     )
   }
 
@@ -17,11 +12,13 @@ function ChangeIndicator({ value, size = 'md' }) {
   const absValue = Math.abs(value)
 
   return (
-    <span className={clsx(
-      'font-semibold',
-      isPositive ? 'text-red-400' : 'text-green-400',
-      size === 'lg' ? 'text-2xl' : 'text-sm'
-    )}>
+    <span
+      className={clsx(
+        'font-semibold',
+        isPositive ? 'text-red-400' : 'text-green-400',
+        size === 'lg' ? 'text-2xl' : 'text-sm'
+      )}
+    >
       {isPositive ? '↑' : '↓'} {absValue}%
     </span>
   )
@@ -40,9 +37,7 @@ export function WeekComparisonCard({ data, loading }) {
 
   if (!data) {
     return (
-      <div className="cyber-card p-6 text-gray-400 text-center">
-        No comparison data available
-      </div>
+      <div className="cyber-card p-6 text-gray-400 text-center">No comparison data available</div>
     )
   }
 
@@ -54,9 +49,7 @@ export function WeekComparisonCard({ data, loading }) {
 
       <div className="flex items-baseline justify-between mb-4">
         <div>
-          <div className="text-3xl font-bold text-white">
-            {currentWeek?.incidents_total || 0}
-          </div>
+          <div className="text-3xl font-bold text-white">{currentWeek?.incidents_total || 0}</div>
           <div className="text-xs text-gray-500">incidents this week</div>
         </div>
         <ChangeIndicator value={incidentChange} size="lg" />
@@ -78,14 +71,15 @@ export function WeekComparisonCard({ data, loading }) {
       </div>
 
       {incidentChange !== 0 && (
-        <div className={clsx(
-          'mt-4 p-3 rounded text-sm',
-          incidentChange > 0 ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'
-        )}>
+        <div
+          className={clsx(
+            'mt-4 p-3 rounded text-sm',
+            incidentChange > 0 ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'
+          )}
+        >
           {incidentChange > 0
             ? `Activity increased ${incidentChange}% from last week`
-            : `Activity decreased ${Math.abs(incidentChange)}% from last week`
-          }
+            : `Activity decreased ${Math.abs(incidentChange)}% from last week`}
         </div>
       )}
     </div>

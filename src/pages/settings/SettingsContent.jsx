@@ -21,7 +21,14 @@ import { useAuth } from '../../hooks/useAuth'
 import { RestartTourButton } from '../../components/OnboardingTour'
 import { PersonalizeButton } from '../../components/PersonalizationWizard'
 import { TIME_RANGES, ITEMS_PER_PAGE } from './SettingsConstants'
-import { SettingSection, Toggle, SavedSearchesList, TagsList, CreateTagModal, SyncLogList } from './SettingsComponents.jsx'
+import {
+  SettingSection,
+  Toggle,
+  SavedSearchesList,
+  TagsList,
+  CreateTagModal,
+  SyncLogList,
+} from './SettingsComponents.jsx'
 import SubscriptionSection from './SubscriptionSection.jsx'
 import { useSettingsData, useSettingsActions } from './useSettingsData'
 
@@ -50,23 +57,18 @@ export default function SettingsContent() {
     loadData,
   } = useSettingsData(user)
 
-  const {
-    updatePreference,
-    saveOrgProfile,
-    deleteSavedSearch,
-    createTag,
-    deleteTag,
-  } = useSettingsActions({
-    preferences,
-    setPreferences,
-    savedSearches,
-    setSavedSearches,
-    tags,
-    setTags,
-    setOrgProfile,
-    setError,
-    setIsSaving,
-  })
+  const { updatePreference, saveOrgProfile, deleteSavedSearch, createTag, deleteTag } =
+    useSettingsActions({
+      preferences,
+      setPreferences,
+      savedSearches,
+      setSavedSearches,
+      tags,
+      setTags,
+      setOrgProfile,
+      setError,
+      setIsSaving,
+    })
 
   const handleSaveOrgProfile = async (profile) => {
     const success = await saveOrgProfile(profile)
@@ -98,15 +100,8 @@ export default function SettingsContent() {
 
       <div className="space-y-6">
         {/* Subscription */}
-        <SettingSection
-          title="Subscription"
-          description="Manage your Vigil subscription plan"
-        >
-          <SubscriptionSection
-            subscription={subscription}
-            userId={user?.uid}
-            onError={setError}
-          />
+        <SettingSection title="Subscription" description="Manage your Vigil subscription plan">
+          <SubscriptionSection subscription={subscription} userId={user?.uid} onError={setError} />
         </SettingSection>
 
         {/* API Keys */}
@@ -177,10 +172,7 @@ export default function SettingsContent() {
         </SettingSection>
 
         {/* Display Preferences */}
-        <SettingSection
-          title="Display Preferences"
-          description="Customize how data is displayed"
-        >
+        <SettingSection title="Display Preferences" description="Customize how data is displayed">
           <div className="space-y-4">
             <div>
               <label className="block text-sm text-gray-400 mb-2">Default Time Range</label>
@@ -246,18 +238,12 @@ export default function SettingsContent() {
         </SettingSection>
 
         {/* Saved Searches */}
-        <SettingSection
-          title="Saved Searches"
-          description="Manage your saved search queries"
-        >
+        <SettingSection title="Saved Searches" description="Manage your saved search queries">
           <SavedSearchesList searches={savedSearches} onDelete={deleteSavedSearch} />
         </SettingSection>
 
         {/* Tags */}
-        <SettingSection
-          title="Tags"
-          description="Create and manage tags for organizing entities"
-        >
+        <SettingSection title="Tags" description="Create and manage tags for organizing entities">
           <div className="space-y-4">
             <TagsList tags={tags} onDelete={deleteTag} />
             <button
@@ -278,10 +264,7 @@ export default function SettingsContent() {
         </SettingSection>
 
         {/* Data & Privacy */}
-        <SettingSection
-          title="Data & Privacy"
-          description="Manage your local data"
-        >
+        <SettingSection title="Data & Privacy" description="Manage your local data">
           <div className="space-y-4">
             <button
               onClick={() => {
@@ -313,14 +296,13 @@ export default function SettingsContent() {
               <span className="text-gray-500">Version:</span> 0.3.0
             </p>
             <p>
-              <span className="text-gray-500">Automated sources:</span> 13 feeds updating every 6 hours
+              <span className="text-gray-500">Automated sources:</span> 13 feeds updating every 6
+              hours
             </p>
             <div className="pt-2">
               <RestartTourButton />
             </div>
-            <p className="text-xs text-gray-600 mt-4">
-              Vigil - Cyber Threat Intelligence Platform
-            </p>
+            <p className="text-xs text-gray-600 mt-4">Vigil - Cyber Threat Intelligence Platform</p>
           </div>
         </SettingSection>
       </div>

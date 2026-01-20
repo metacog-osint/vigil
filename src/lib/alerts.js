@@ -55,14 +55,13 @@ export async function subscribeToPush(userId) {
   // Subscribe to push
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
   })
 
   // Save subscription to database
   const subscriptionData = subscription.toJSON()
-  const { error } = await supabase
-    .from('push_subscriptions')
-    .upsert({
+  const { error } = await supabase.from('push_subscriptions').upsert(
+    {
       user_id: userId,
       endpoint: subscriptionData.endpoint,
       p256dh: subscriptionData.keys.p256dh,
@@ -70,10 +69,12 @@ export async function subscribeToPush(userId) {
       user_agent: navigator.userAgent,
       device_name: getDeviceName(),
       is_active: true,
-      last_used_at: new Date().toISOString()
-    }, {
-      onConflict: 'user_id,endpoint'
-    })
+      last_used_at: new Date().toISOString(),
+    },
+    {
+      onConflict: 'user_id,endpoint',
+    }
+  )
 
   if (error) throw error
 
@@ -149,7 +150,9 @@ export async function removePushSubscription(subscriptionId) {
 export async function getWebhooks(userId) {
   const { data, error } = await supabase
     .from('alert_webhooks')
-    .select('id, user_id, name, webhook_type, webhook_url, is_active, event_types, severity_min, settings, last_sent_at, send_count, error_count, last_error, created_at, updated_at, secret, hmac_header')
+    .select(
+      'id, user_id, name, webhook_type, webhook_url, is_active, event_types, severity_min, settings, last_sent_at, send_count, error_count, last_error, created_at, updated_at, secret, hmac_header'
+    )
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
@@ -170,7 +173,7 @@ export async function createWebhook(userId, webhook) {
       webhook_url: webhook.url,
       event_types: webhook.eventTypes || ['ransomware', 'kev', 'cisa_alert'],
       severity_min: webhook.severityMin || 'medium',
-      is_active: true
+      is_active: true,
     })
     .select()
     .single()
@@ -187,7 +190,7 @@ export async function updateWebhook(webhookId, updates) {
     .from('alert_webhooks')
     .update({
       ...updates,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq('id', webhookId)
     .select()
@@ -201,10 +204,7 @@ export async function updateWebhook(webhookId, updates) {
  * Delete a webhook
  */
 export async function deleteWebhook(webhookId) {
-  const { error } = await supabase
-    .from('alert_webhooks')
-    .delete()
-    .eq('id', webhookId)
+  const { error } = await supabase.from('alert_webhooks').delete().eq('id', webhookId)
 
   if (error) throw error
 }
@@ -215,7 +215,7 @@ export async function deleteWebhook(webhookId) {
 export async function testWebhook(webhookId) {
   // This would call an edge function to send a test message
   const { data, error } = await supabase.functions.invoke('test-webhook', {
-    body: { webhookId }
+    body: { webhookId },
   })
 
   if (error) throw error
@@ -233,7 +233,7 @@ export async function regenerateWebhookSecret(webhookId) {
     .from('alert_webhooks')
     .update({
       secret: newSecret,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq('id', webhookId)
     .select('secret')
@@ -267,7 +267,8 @@ function generateSecret(length = 64) {
 export async function getAlertPreferences(userId) {
   const { data, error } = await supabase
     .from('user_preferences')
-    .select(`
+    .select(
+      `
       push_enabled,
       push_ransomware,
       push_kev,
@@ -283,30 +284,33 @@ export async function getAlertPreferences(userId) {
       quiet_hours_end,
       timezone,
       severity_threshold
-    `)
+    `
+    )
     .eq('user_id', userId)
     .single()
 
   if (error && error.code !== 'PGRST116') throw error
 
   // Return defaults if no preferences exist
-  return data || {
-    push_enabled: true,
-    push_ransomware: true,
-    push_kev: true,
-    push_cisa_alerts: true,
-    push_watchlist: true,
-    push_vendor_cve: true,
-    email_alerts: true,
-    email_instant_alerts: false,
-    digest_frequency: 'daily',
-    digest_time: '08:00',
-    quiet_hours_enabled: false,
-    quiet_hours_start: '22:00',
-    quiet_hours_end: '07:00',
-    timezone: 'UTC',
-    severity_threshold: 'low'
-  }
+  return (
+    data || {
+      push_enabled: true,
+      push_ransomware: true,
+      push_kev: true,
+      push_cisa_alerts: true,
+      push_watchlist: true,
+      push_vendor_cve: true,
+      email_alerts: true,
+      email_instant_alerts: false,
+      digest_frequency: 'daily',
+      digest_time: '08:00',
+      quiet_hours_enabled: false,
+      quiet_hours_start: '22:00',
+      quiet_hours_end: '07:00',
+      timezone: 'UTC',
+      severity_threshold: 'low',
+    }
+  )
 }
 
 /**
@@ -315,13 +319,16 @@ export async function getAlertPreferences(userId) {
 export async function updateAlertPreferences(userId, preferences) {
   const { data, error } = await supabase
     .from('user_preferences')
-    .upsert({
-      user_id: userId,
-      ...preferences,
-      updated_at: new Date().toISOString()
-    }, {
-      onConflict: 'user_id'
-    })
+    .upsert(
+      {
+        user_id: userId,
+        ...preferences,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: 'user_id',
+      }
+    )
     .select()
     .single()
 
@@ -407,8 +414,9 @@ export async function getNotifications(userId, options = {}) {
  * Mark notification as read
  */
 export async function markNotificationRead(notificationId) {
-  const { error } = await supabase
-    .rpc('mark_notification_read', { notification_id: notificationId })
+  const { error } = await supabase.rpc('mark_notification_read', {
+    notification_id: notificationId,
+  })
 
   if (error) throw error
 }
@@ -417,8 +425,7 @@ export async function markNotificationRead(notificationId) {
  * Mark all notifications as read
  */
 export async function markAllNotificationsRead(userId) {
-  const { data, error } = await supabase
-    .rpc('mark_all_notifications_read', { p_user_id: userId })
+  const { data, error } = await supabase.rpc('mark_all_notifications_read', { p_user_id: userId })
 
   if (error) throw error
   return data
@@ -450,7 +457,7 @@ export function subscribeToNotifications(userId, callback) {
         event: 'INSERT',
         schema: 'public',
         table: 'notifications',
-        filter: `user_id=eq.${userId}`
+        filter: `user_id=eq.${userId}`,
       },
       (payload) => {
         callback(payload.new)
@@ -471,10 +478,8 @@ export function subscribeToNotifications(userId, callback) {
  * Convert VAPID key to Uint8Array
  */
 function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4)
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/')
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
 
   const rawData = window.atob(base64)
   const outputArray = new Uint8Array(rawData.length)
@@ -507,7 +512,7 @@ export function formatWebhookType(type) {
     slack: 'Slack',
     discord: 'Discord',
     teams: 'Microsoft Teams',
-    generic: 'Custom Webhook'
+    generic: 'Custom Webhook',
   }
   return types[type] || type
 }
@@ -520,7 +525,7 @@ export function getWebhookIcon(type) {
     slack: '#E01E5A',
     discord: '#5865F2',
     teams: '#6264A7',
-    generic: '#6B7280'
+    generic: '#6B7280',
   }
   return icons[type] || '#6B7280'
 }
@@ -591,5 +596,5 @@ export default {
   // Utilities
   formatWebhookType,
   getWebhookIcon,
-  validateWebhookUrl
+  validateWebhookUrl,
 }

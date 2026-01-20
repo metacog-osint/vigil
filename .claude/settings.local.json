@@ -134,7 +134,15 @@
       "Bash(npx husky init)",
       "Bash(npm run dev:*)",
       "Bash(ping:*)",
-      "Bash(start /b npm run dev)"
+      "Bash(start /b npm run dev)",
+      "Bash(winget install:*)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" auth login --web)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" run list --repo metacog-osint/vigil --limit 15)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" run view 21161113567 --repo metacog-osint/vigil --log-failed)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" run view 21160891587 --repo metacog-osint/vigil --log-failed)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" run view 21161642472 --repo metacog-osint/vigil --log-failed)",
+      "Bash(npm run format:*)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" secret list --repo metacog-osint/vigil)"
     ]
   }
 }

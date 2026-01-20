@@ -74,30 +74,39 @@ export default function Assets() {
   }
 
   return (
-    <FeatureGate feature="attack_surface" fallbackMessage="Attack Surface Monitoring is a Professional feature.">
+    <FeatureGate
+      feature="attack_surface"
+      fallbackMessage="Attack Surface Monitoring is a Professional feature."
+    >
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white">Attack Surface</h1>
-            <p className="text-gray-400 text-sm mt-1">Monitor your assets against threat intelligence</p>
+            <p className="text-gray-400 text-sm mt-1">
+              Monitor your assets against threat intelligence
+            </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowBulkModal(true)}
-              className="cyber-button text-sm"
-            >
+            <button onClick={() => setShowBulkModal(true)} className="cyber-button text-sm">
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                />
               </svg>
               Import
             </button>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="cyber-button-primary text-sm"
-            >
+            <button onClick={() => setShowAddModal(true)} className="cyber-button-primary text-sm">
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
               Add Asset
             </button>
@@ -174,7 +183,9 @@ export default function Assets() {
               >
                 <option value="">All Types</option>
                 {Object.entries(ASSET_TYPES).map(([key, { label }]) => (
-                  <option key={key} value={key}>{label}</option>
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
                 ))}
               </select>
 
@@ -185,7 +196,9 @@ export default function Assets() {
               >
                 <option value="">All Criticality</option>
                 {CRITICALITY_OPTIONS.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </>
@@ -199,7 +212,9 @@ export default function Assets() {
             >
               <option value="">All Status</option>
               {MATCH_STATUSES.map(({ value, label }) => (
-                <option key={value} value={value}>{label}</option>
+                <option key={value} value={value}>
+                  {label}
+                </option>
               ))}
             </select>
           )}
@@ -226,10 +241,7 @@ export default function Assets() {
             onAddAsset={() => setShowAddModal(true)}
           />
         ) : (
-          <MatchTableView
-            matches={filteredMatches}
-            onSelectMatch={setSelectedMatch}
-          />
+          <MatchTableView matches={filteredMatches} onSelectMatch={setSelectedMatch} />
         )}
 
         {/* Modals */}

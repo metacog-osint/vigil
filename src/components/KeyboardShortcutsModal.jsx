@@ -65,7 +65,12 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
             aria-label="Close"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -82,21 +87,20 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
                   </h3>
                   <div className="space-y-2">
                     {shortcuts.map((shortcut, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between py-1.5"
-                      >
+                      <div key={index} className="flex items-center justify-between py-1.5">
                         <span className="text-gray-300 text-sm">{shortcut.description}</span>
                         <div className="flex items-center gap-1">
                           {formatKeys(shortcut.keys).map((key, keyIndex) => (
                             <span key={keyIndex} className="flex items-center">
                               <KeyBadge>{key}</KeyBadge>
-                              {keyIndex < shortcut.keys.length - 1 && shortcut.keys[0] !== MOD_KEY && (
-                                <span className="text-gray-600 mx-1 text-xs">then</span>
-                              )}
-                              {keyIndex < shortcut.keys.length - 1 && shortcut.keys[0] === MOD_KEY && (
-                                <span className="text-gray-600 mx-0.5">+</span>
-                              )}
+                              {keyIndex < shortcut.keys.length - 1 &&
+                                shortcut.keys[0] !== MOD_KEY && (
+                                  <span className="text-gray-600 mx-1 text-xs">then</span>
+                                )}
+                              {keyIndex < shortcut.keys.length - 1 &&
+                                shortcut.keys[0] === MOD_KEY && (
+                                  <span className="text-gray-600 mx-0.5">+</span>
+                                )}
                             </span>
                           ))}
                         </div>
@@ -115,9 +119,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }) {
             <span>
               Navigation: press <KeyBadge small>g</KeyBadge> then a letter
             </span>
-            <span>
-              {MOD_KEY === '⌘' ? 'macOS' : 'Windows/Linux'}
-            </span>
+            <span>{MOD_KEY === '⌘' ? 'macOS' : 'Windows/Linux'}</span>
           </div>
         </div>
       </div>

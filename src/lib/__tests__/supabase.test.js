@@ -40,7 +40,11 @@ const mockQuery = {
 }
 
 // Mock import.meta.env
-vi.stubGlobal('import', { meta: { env: { VITE_SUPABASE_URL: 'http://test.supabase.co', VITE_SUPABASE_ANON_KEY: 'test-key' } } })
+vi.stubGlobal('import', {
+  meta: {
+    env: { VITE_SUPABASE_URL: 'http://test.supabase.co', VITE_SUPABASE_ANON_KEY: 'test-key' },
+  },
+})
 
 import {
   supabase,

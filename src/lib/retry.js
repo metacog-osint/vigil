@@ -17,7 +17,14 @@ const DEFAULT_CONFIG = {
   backoffMultiplier: 2,
   jitterFactor: 0.1,
   retryableStatuses: [408, 429, 500, 502, 503, 504],
-  retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'ENETUNREACH', 'Failed to fetch', 'Network request failed'],
+  retryableErrors: [
+    'ECONNRESET',
+    'ETIMEDOUT',
+    'ENOTFOUND',
+    'ENETUNREACH',
+    'Failed to fetch',
+    'Network request failed',
+  ],
 }
 
 /**
@@ -99,7 +106,10 @@ export async function withRetry(fn, options = {}) {
       if (result?.error) {
         if (isRetryableError(result.error, config) && attempt < config.maxRetries) {
           const delay = calculateDelay(attempt, config)
-          console.warn(`[Retry] Attempt ${attempt + 1} failed, retrying in ${delay}ms:`, result.error.message)
+          console.warn(
+            `[Retry] Attempt ${attempt + 1} failed, retrying in ${delay}ms:`,
+            result.error.message
+          )
           await sleep(delay)
           lastError = result.error
           continue
@@ -115,7 +125,10 @@ export async function withRetry(fn, options = {}) {
 
       if (isRetryableError(error, config) && attempt < config.maxRetries) {
         const delay = calculateDelay(attempt, config)
-        console.warn(`[Retry] Attempt ${attempt + 1} failed, retrying in ${delay}ms:`, error.message)
+        console.warn(
+          `[Retry] Attempt ${attempt + 1} failed, retrying in ${delay}ms:`,
+          error.message
+        )
         await sleep(delay)
         continue
       }
@@ -176,7 +189,24 @@ export function createRetryableSupabase(supabase, options = {}) {
  */
 function createRetryableQuery(query, config) {
   const methods = ['select', 'insert', 'update', 'delete', 'upsert']
-  const filters = ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'like', 'ilike', 'in', 'contains', 'or', 'and', 'not', 'is', 'filter', 'match']
+  const filters = [
+    'eq',
+    'neq',
+    'gt',
+    'gte',
+    'lt',
+    'lte',
+    'like',
+    'ilike',
+    'in',
+    'contains',
+    'or',
+    'and',
+    'not',
+    'is',
+    'filter',
+    'match',
+  ]
   const modifiers = ['order', 'limit', 'range', 'single', 'maybeSingle', 'csv']
 
   const wrapped = {}

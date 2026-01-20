@@ -45,9 +45,8 @@ function FactorChip({ factor }) {
     temporal: '⏰',
   }
 
-  const icon = Object.entries(icons).find(([key]) =>
-    factor.toLowerCase().includes(key)
-  )?.[1] || '📌'
+  const icon =
+    Object.entries(icons).find(([key]) => factor.toLowerCase().includes(key))?.[1] || '📌'
 
   return (
     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded bg-gray-700/50 text-gray-400">
@@ -91,9 +90,7 @@ function IncidentItem({ incident, similarity }) {
       )}
 
       <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
-        {incident.sector && (
-          <span>{incident.sector}</span>
-        )}
+        {incident.sector && <span>{incident.sector}</span>}
         {incident.discovered_date && (
           <span>
             {formatDistanceToNow(new Date(incident.discovered_date), { addSuffix: true })}
@@ -135,7 +132,12 @@ export default function SimilarIncidentsPanel({ incidentId, currentIncident }) {
       <div className="mt-4">
         <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+            />
           </svg>
           Similar Incidents
         </h4>
@@ -158,14 +160,17 @@ export default function SimilarIncidentsPanel({ incidentId, currentIncident }) {
       <div className="mt-4">
         <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+            />
           </svg>
           Similar Incidents
         </h4>
         <div className="p-4 bg-gray-800/50 rounded border border-gray-700/50 text-center">
-          <p className="text-sm text-gray-500">
-            No similar incidents found
-          </p>
+          <p className="text-sm text-gray-500">No similar incidents found</p>
         </div>
       </div>
     )
@@ -173,14 +178,20 @@ export default function SimilarIncidentsPanel({ incidentId, currentIncident }) {
 
   // Calculate average similarity
   const avgSimilarity = Math.round(
-    similarIncidents.reduce((sum, i) => sum + (i.similarity?.score || 0), 0) / similarIncidents.length
+    similarIncidents.reduce((sum, i) => sum + (i.similarity?.score || 0), 0) /
+      similarIncidents.length
   )
 
   return (
     <div className="mt-4">
       <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+          />
         </svg>
         Similar Incidents
         <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-blue-900/50 text-blue-400 border border-blue-700/50">
@@ -190,7 +201,12 @@ export default function SimilarIncidentsPanel({ incidentId, currentIncident }) {
 
       <div className="mb-3 p-2 bg-gray-800/30 rounded text-xs text-gray-500 flex items-center gap-2">
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         Average similarity: {avgSimilarity}%
       </div>

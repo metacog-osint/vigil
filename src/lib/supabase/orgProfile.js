@@ -16,7 +16,7 @@ export const orgProfile = {
     const { data: current } = await userPreferences.get(userId)
     const preferences = {
       ...(current?.preferences || {}),
-      org_profile: profile
+      org_profile: profile,
     }
     return userPreferences.update(userId, preferences)
   },
@@ -24,7 +24,7 @@ export const orgProfile = {
   async hasProfile(userId = 'anonymous') {
     const profile = await this.get(userId)
     return profile && (profile.sector || profile.tech_stack?.length > 0)
-  }
+  },
 }
 
 export default orgProfile

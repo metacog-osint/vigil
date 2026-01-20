@@ -21,10 +21,12 @@ export default function CountryAttackPanel({ country, days = 30, onActorClick, o
       // Get incidents for this country
       const { data: incidentData } = await supabase
         .from('incidents')
-        .select(`
+        .select(
+          `
           id, victim_name, victim_sector, discovered_date, status,
           threat_actor:threat_actors(id, name, trend_status, actor_type)
-        `)
+        `
+        )
         .ilike('victim_country', country.code)
         .gte('discovered_date', cutoffDate.toISOString())
         .order('discovered_date', { ascending: false })
@@ -35,7 +37,7 @@ export default function CountryAttackPanel({ country, days = 30, onActorClick, o
 
         // Aggregate actors
         const actorMap = {}
-        incidentData.forEach(inc => {
+        incidentData.forEach((inc) => {
           if (inc.threat_actor?.id) {
             if (!actorMap[inc.threat_actor.id]) {
               actorMap[inc.threat_actor.id] = {
@@ -50,7 +52,7 @@ export default function CountryAttackPanel({ country, days = 30, onActorClick, o
 
         // Aggregate sectors
         const sectorMap = {}
-        incidentData.forEach(inc => {
+        incidentData.forEach((inc) => {
           if (inc.victim_sector) {
             sectorMap[inc.victim_sector] = (sectorMap[inc.victim_sector] || 0) + 1
           }
@@ -102,12 +104,14 @@ export default function CountryAttackPanel({ country, days = 30, onActorClick, o
             </p>
           </div>
           {onClose && (
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-white p-1"
-            >
+            <button onClick={onClose} className="text-gray-400 hover:text-white p-1">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -128,7 +132,7 @@ export default function CountryAttackPanel({ country, days = 30, onActorClick, o
                 <span className="text-xs text-gray-500">({actors.length})</span>
               </h4>
               <div className="space-y-2">
-                {actors.slice(0, 5).map(actor => (
+                {actors.slice(0, 5).map((actor) => (
                   <div
                     key={actor.id}
                     className="bg-gray-800 rounded p-3 hover:bg-gray-750 cursor-pointer transition-colors"
@@ -158,15 +162,10 @@ export default function CountryAttackPanel({ country, days = 30, onActorClick, o
           {/* Targeted Sectors */}
           {sectors.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-gray-300 mb-2">
-                Targeted Industries
-              </h4>
+              <h4 className="text-sm font-medium text-gray-300 mb-2">Targeted Industries</h4>
               <div className="grid grid-cols-2 gap-2">
-                {sectors.slice(0, 6).map(sector => (
-                  <div
-                    key={sector.name}
-                    className="bg-gray-800 rounded p-2 text-center"
-                  >
+                {sectors.slice(0, 6).map((sector) => (
+                  <div key={sector.name} className="bg-gray-800 rounded p-2 text-center">
                     <div className="text-white text-sm capitalize">{sector.name}</div>
                     <div className="text-cyan-400 text-xs">{sector.count} incidents</div>
                   </div>
@@ -178,11 +177,9 @@ export default function CountryAttackPanel({ country, days = 30, onActorClick, o
           {/* Recent Incidents */}
           {incidents.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-gray-300 mb-2">
-                Recent Incidents
-              </h4>
+              <h4 className="text-sm font-medium text-gray-300 mb-2">Recent Incidents</h4>
               <div className="space-y-1">
-                {incidents.slice(0, 5).map(inc => (
+                {incidents.slice(0, 5).map((inc) => (
                   <div
                     key={inc.id}
                     className="flex items-center justify-between py-1.5 px-2 bg-gray-800 rounded text-sm"
@@ -190,9 +187,7 @@ export default function CountryAttackPanel({ country, days = 30, onActorClick, o
                     <div className="flex items-center gap-2 truncate">
                       <span className="text-gray-300 truncate">{inc.victim_name}</span>
                       {inc.threat_actor?.name && (
-                        <span className="text-red-400 text-xs">
-                          {inc.threat_actor.name}
-                        </span>
+                        <span className="text-red-400 text-xs">{inc.threat_actor.name}</span>
                       )}
                     </div>
                     <span className="text-gray-500 text-xs whitespace-nowrap ml-2">
@@ -207,15 +202,10 @@ export default function CountryAttackPanel({ country, days = 30, onActorClick, o
           {/* Active KEVs */}
           {vulnerabilities.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-gray-300 mb-2">
-                Recent KEVs to Prioritize
-              </h4>
+              <h4 className="text-sm font-medium text-gray-300 mb-2">Recent KEVs to Prioritize</h4>
               <div className="space-y-2">
-                {vulnerabilities.map(vuln => (
-                  <div
-                    key={vuln.cve_id}
-                    className="bg-gray-800 rounded p-2"
-                  >
+                {vulnerabilities.map((vuln) => (
+                  <div key={vuln.cve_id} className="bg-gray-800 rounded p-2">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-cyan-400 font-mono text-sm">{vuln.cve_id}</span>
                       <SeverityBadge severity={getSeverityFromCvss(vuln.cvss_score)} />
@@ -236,9 +226,7 @@ export default function CountryAttackPanel({ country, days = 30, onActorClick, o
 
           {/* Defensive Recommendations */}
           <div className="border-t border-gray-700 pt-4">
-            <h4 className="text-sm font-medium text-orange-400 mb-2">
-              Defensive Recommendations
-            </h4>
+            <h4 className="text-sm font-medium text-orange-400 mb-2">Defensive Recommendations</h4>
             <ul className="text-xs text-gray-400 space-y-1">
               {actors.length > 0 && (
                 <li className="flex items-start gap-2">

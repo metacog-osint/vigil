@@ -34,9 +34,12 @@ export async function getActorEscalationRisk(actorId) {
   const previousWeek = actor.incidents_prev_7d || 0
 
   // Calculate increase percentage
-  const increase = previousWeek > 0
-    ? ((currentWeek - previousWeek) / previousWeek) * 100
-    : currentWeek > 0 ? 100 : 0
+  const increase =
+    previousWeek > 0
+      ? ((currentWeek - previousWeek) / previousWeek) * 100
+      : currentWeek > 0
+        ? 100
+        : 0
 
   // Determine risk level
   let risk = RISK_LEVELS.LOW
@@ -54,7 +57,7 @@ export async function getActorEscalationRisk(actorId) {
   }
 
   // Calculate confidence based on data volume
-  const confidence = Math.min(100, 50 + (currentWeek * 5) + (previousWeek * 3))
+  const confidence = Math.min(100, 50 + currentWeek * 5 + previousWeek * 3)
 
   return {
     actorId,
@@ -227,8 +230,12 @@ export async function getOrgRiskScore(profile) {
   // 1. Sector risk (0-35 points)
   const sectorPrediction = await getSectorTargetingPrediction(profile.sector)
   if (sectorPrediction) {
-    const sectorScore = sectorPrediction.risk === RISK_LEVELS.HIGH ? 35 :
-                        sectorPrediction.risk === RISK_LEVELS.MEDIUM ? 20 : 10
+    const sectorScore =
+      sectorPrediction.risk === RISK_LEVELS.HIGH
+        ? 35
+        : sectorPrediction.risk === RISK_LEVELS.MEDIUM
+          ? 20
+          : 10
     score += sectorScore
     factors.push({
       factor: 'Sector targeting',
@@ -369,7 +376,7 @@ export async function getPredictiveAlerts(profile) {
 function getNextPeakMonth(peakMonths, currentMonth) {
   if (!peakMonths) return null
   const sorted = [...peakMonths].sort((a, b) => a - b)
-  const next = sorted.find(m => m > currentMonth) || sorted[0]
+  const next = sorted.find((m) => m > currentMonth) || sorted[0]
   return next
 }
 

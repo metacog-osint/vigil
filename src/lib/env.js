@@ -66,7 +66,10 @@ export function validateEnv() {
     }
 
     // In production, log and throw a generic error
-    console.error('[ENV] Missing required environment variables:', missing.map(v => v.name))
+    console.error(
+      '[ENV] Missing required environment variables:',
+      missing.map((v) => v.name)
+    )
     throw new Error('Application configuration error. Please contact support.')
   }
 
@@ -82,7 +85,7 @@ export function validateEnv() {
   if (warnings.length > 0 && import.meta.env.DEV) {
     console.warn(
       '[ENV] Optional environment variables not configured:',
-      warnings.map(v => `${v.name} (${v.description})`).join(', ')
+      warnings.map((v) => `${v.name} (${v.description})`).join(', ')
     )
   }
 

@@ -1,10 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import {
-  ComposableMap,
-  Geographies,
-  Geography,
-  ZoomableGroup,
-} from 'react-simple-maps'
+import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
 import { supabase } from '../lib/supabase'
 
 const geoUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
@@ -62,29 +57,144 @@ const COUNTRY_NAMES = {
 
 // ISO 3166-1 alpha-3 to alpha-2 conversion (comprehensive)
 const ISO3_TO_ISO2 = {
-  USA: 'US', GBR: 'GB', DEU: 'DE', FRA: 'FR', CAN: 'CA', AUS: 'AU',
-  JPN: 'JP', CHN: 'CN', RUS: 'RU', BRA: 'BR', IND: 'IN', ITA: 'IT',
-  ESP: 'ES', NLD: 'NL', BEL: 'BE', CHE: 'CH', AUT: 'AT', SWE: 'SE',
-  NOR: 'NO', DNK: 'DK', FIN: 'FI', POL: 'PL', CZE: 'CZ', MEX: 'MX',
-  ARG: 'AR', CHL: 'CL', COL: 'CO', ZAF: 'ZA', ARE: 'AE', SAU: 'SA',
-  ISR: 'IL', SGP: 'SG', KOR: 'KR', TWN: 'TW', HKG: 'HK', NZL: 'NZ',
-  IRL: 'IE', PRT: 'PT', GRC: 'GR', TUR: 'TR', THA: 'TH', MYS: 'MY',
-  IDN: 'ID', PHL: 'PH', VNM: 'VN', EGY: 'EG', NGA: 'NG', KEN: 'KE',
-  MAR: 'MA', PAK: 'PK', BGD: 'BD', UKR: 'UA', ROU: 'RO', HUN: 'HU',
-  SVK: 'SK', BGR: 'BG', HRV: 'HR', SVN: 'SI', SRB: 'RS', LTU: 'LT',
-  LVA: 'LV', EST: 'EE', CYP: 'CY', MLT: 'MT', LUX: 'LU', PER: 'PE',
-  VEN: 'VE', ECU: 'EC', URY: 'UY', PRY: 'PY', BOL: 'BO', CRI: 'CR',
-  PAN: 'PA', GTM: 'GT', SLV: 'SV', HND: 'HN', NIC: 'NI', DOM: 'DO',
-  PRI: 'PR', JAM: 'JM', TTO: 'TT', CUB: 'CU', IRN: 'IR', IRQ: 'IQ',
-  AFG: 'AF', SYR: 'SY', LBN: 'LB', JOR: 'JO', KWT: 'KW', QAT: 'QA',
-  BHR: 'BH', OMN: 'OM', YEM: 'YE', LBY: 'LY', TUN: 'TN', DZA: 'DZ',
-  SDN: 'SD', ETH: 'ET', TZA: 'TZ', UGA: 'UG', GHA: 'GH', CMR: 'CM',
-  CIV: 'CI', SEN: 'SN', ZWE: 'ZW', ZMB: 'ZM', MWI: 'MW', MOZ: 'MZ',
-  AGO: 'AO', NAM: 'NA', BWA: 'BW', NPL: 'NP', LKA: 'LK', MMR: 'MM',
-  KHM: 'KH', LAO: 'LA', MNG: 'MN', PRK: 'KP', BLR: 'BY', MDA: 'MD',
-  GEO: 'GE', ARM: 'AM', AZE: 'AZ', KAZ: 'KZ', UZB: 'UZ', TKM: 'TM',
-  KGZ: 'KG', TJK: 'TJ', ALB: 'AL', MKD: 'MK', MNE: 'ME', BIH: 'BA',
-  ISL: 'IS', MCO: 'MC', AND: 'AD', LIE: 'LI', SMR: 'SM', VAT: 'VA',
+  USA: 'US',
+  GBR: 'GB',
+  DEU: 'DE',
+  FRA: 'FR',
+  CAN: 'CA',
+  AUS: 'AU',
+  JPN: 'JP',
+  CHN: 'CN',
+  RUS: 'RU',
+  BRA: 'BR',
+  IND: 'IN',
+  ITA: 'IT',
+  ESP: 'ES',
+  NLD: 'NL',
+  BEL: 'BE',
+  CHE: 'CH',
+  AUT: 'AT',
+  SWE: 'SE',
+  NOR: 'NO',
+  DNK: 'DK',
+  FIN: 'FI',
+  POL: 'PL',
+  CZE: 'CZ',
+  MEX: 'MX',
+  ARG: 'AR',
+  CHL: 'CL',
+  COL: 'CO',
+  ZAF: 'ZA',
+  ARE: 'AE',
+  SAU: 'SA',
+  ISR: 'IL',
+  SGP: 'SG',
+  KOR: 'KR',
+  TWN: 'TW',
+  HKG: 'HK',
+  NZL: 'NZ',
+  IRL: 'IE',
+  PRT: 'PT',
+  GRC: 'GR',
+  TUR: 'TR',
+  THA: 'TH',
+  MYS: 'MY',
+  IDN: 'ID',
+  PHL: 'PH',
+  VNM: 'VN',
+  EGY: 'EG',
+  NGA: 'NG',
+  KEN: 'KE',
+  MAR: 'MA',
+  PAK: 'PK',
+  BGD: 'BD',
+  UKR: 'UA',
+  ROU: 'RO',
+  HUN: 'HU',
+  SVK: 'SK',
+  BGR: 'BG',
+  HRV: 'HR',
+  SVN: 'SI',
+  SRB: 'RS',
+  LTU: 'LT',
+  LVA: 'LV',
+  EST: 'EE',
+  CYP: 'CY',
+  MLT: 'MT',
+  LUX: 'LU',
+  PER: 'PE',
+  VEN: 'VE',
+  ECU: 'EC',
+  URY: 'UY',
+  PRY: 'PY',
+  BOL: 'BO',
+  CRI: 'CR',
+  PAN: 'PA',
+  GTM: 'GT',
+  SLV: 'SV',
+  HND: 'HN',
+  NIC: 'NI',
+  DOM: 'DO',
+  PRI: 'PR',
+  JAM: 'JM',
+  TTO: 'TT',
+  CUB: 'CU',
+  IRN: 'IR',
+  IRQ: 'IQ',
+  AFG: 'AF',
+  SYR: 'SY',
+  LBN: 'LB',
+  JOR: 'JO',
+  KWT: 'KW',
+  QAT: 'QA',
+  BHR: 'BH',
+  OMN: 'OM',
+  YEM: 'YE',
+  LBY: 'LY',
+  TUN: 'TN',
+  DZA: 'DZ',
+  SDN: 'SD',
+  ETH: 'ET',
+  TZA: 'TZ',
+  UGA: 'UG',
+  GHA: 'GH',
+  CMR: 'CM',
+  CIV: 'CI',
+  SEN: 'SN',
+  ZWE: 'ZW',
+  ZMB: 'ZM',
+  MWI: 'MW',
+  MOZ: 'MZ',
+  AGO: 'AO',
+  NAM: 'NA',
+  BWA: 'BW',
+  NPL: 'NP',
+  LKA: 'LK',
+  MMR: 'MM',
+  KHM: 'KH',
+  LAO: 'LA',
+  MNG: 'MN',
+  PRK: 'KP',
+  BLR: 'BY',
+  MDA: 'MD',
+  GEO: 'GE',
+  ARM: 'AM',
+  AZE: 'AZ',
+  KAZ: 'KZ',
+  UZB: 'UZ',
+  TKM: 'TM',
+  KGZ: 'KG',
+  TJK: 'TJ',
+  ALB: 'AL',
+  MKD: 'MK',
+  MNE: 'ME',
+  BIH: 'BA',
+  ISL: 'IS',
+  MCO: 'MC',
+  AND: 'AD',
+  LIE: 'LI',
+  SMR: 'SM',
+  VAT: 'VA',
 }
 
 // Create reverse mapping for compatibility (reserved for future use)
@@ -115,14 +225,16 @@ export default function ThreatAttributionMap({
       // Get incidents by victim country
       const { data: incidents } = await supabase
         .from('incidents')
-        .select('victim_country, victim_sector, actor_id, threat_actor:threat_actors(name, actor_type)')
+        .select(
+          'victim_country, victim_sector, actor_id, threat_actor:threat_actors(name, actor_type)'
+        )
         .gte('discovered_date', cutoffDate.toISOString())
         .not('victim_country', 'is', null)
 
       if (incidents) {
         // Aggregate by country
         const byCountry = {}
-        incidents.forEach(inc => {
+        incidents.forEach((inc) => {
           const country = inc.victim_country?.toUpperCase()
           if (!country) return
 
@@ -158,7 +270,7 @@ export default function ThreatAttributionMap({
 
       if (actors) {
         const origins = {}
-        actors.forEach(actor => {
+        actors.forEach((actor) => {
           // Check metadata for origin country
           const origin = actor.metadata?.origin_country || actor.metadata?.country
           if (origin) {
@@ -183,15 +295,13 @@ export default function ThreatAttributionMap({
   const getColor = (countryCode) => {
     const data = viewMode === 'attackers' ? actorOrigins : countryData
     // Convert ISO-3 to ISO-2 using direct lookup
-    const iso2 = countryCode?.length === 3
-      ? ISO3_TO_ISO2[countryCode]
-      : countryCode?.toUpperCase()
+    const iso2 = countryCode?.length === 3 ? ISO3_TO_ISO2[countryCode] : countryCode?.toUpperCase()
 
     const countryInfo = data[iso2] || data[countryCode?.toUpperCase()]
     if (!countryInfo) return '#1f2937' // Default dark gray
 
     const count = countryInfo.count || 0
-    const maxCount = Math.max(...Object.values(data).map(d => d.count || 0), 1)
+    const maxCount = Math.max(...Object.values(data).map((d) => d.count || 0), 1)
     const intensity = Math.min(count / maxCount, 1)
 
     if (viewMode === 'attackers') {
@@ -220,9 +330,7 @@ export default function ThreatAttributionMap({
   const getTooltipContent = (countryCode, countryName) => {
     const data = viewMode === 'attackers' ? actorOrigins : countryData
     // Convert ISO-3 to ISO-2 using direct lookup
-    const iso2 = countryCode?.length === 3
-      ? ISO3_TO_ISO2[countryCode]
-      : countryCode?.toUpperCase()
+    const iso2 = countryCode?.length === 3 ? ISO3_TO_ISO2[countryCode] : countryCode?.toUpperCase()
 
     const countryInfo = data[iso2] || data[countryCode?.toUpperCase()]
 
@@ -275,9 +383,7 @@ export default function ThreatAttributionMap({
     const countryName = getCountryName(geo)
     const data = viewMode === 'attackers' ? actorOrigins : countryData
     // Convert ISO-3 to ISO-2 using direct lookup
-    const iso2 = countryCode?.length === 3
-      ? ISO3_TO_ISO2[countryCode]
-      : countryCode?.toUpperCase()
+    const iso2 = countryCode?.length === 3 ? ISO3_TO_ISO2[countryCode] : countryCode?.toUpperCase()
 
     const countryInfo = data[iso2] || data[countryCode?.toUpperCase()]
 
@@ -295,8 +401,7 @@ export default function ThreatAttributionMap({
     const data = viewMode === 'attackers' ? actorOrigins : countryData
     const totalCountries = Object.keys(data).length
     const totalIncidents = Object.values(data).reduce((sum, d) => sum + (d.count || 0), 0)
-    const topCountry = Object.entries(data)
-      .sort((a, b) => (b[1].count || 0) - (a[1].count || 0))[0]
+    const topCountry = Object.entries(data).sort((a, b) => (b[1].count || 0) - (a[1].count || 0))[0]
 
     return { totalCountries, totalIncidents, topCountry }
   }, [countryData, actorOrigins, viewMode])
@@ -307,23 +412,26 @@ export default function ThreatAttributionMap({
       <div className="flex items-center justify-between mb-2 text-xs text-gray-400">
         <div className="flex gap-4">
           <span>{stats.totalCountries} countries</span>
-          <span>{stats.totalIncidents} {viewMode === 'attackers' ? 'actors' : 'incidents'}</span>
+          <span>
+            {stats.totalIncidents} {viewMode === 'attackers' ? 'actors' : 'incidents'}
+          </span>
           {stats.topCountry && (
             <span>
-              Top: {COUNTRY_NAMES[stats.topCountry[0]] || stats.topCountry[0]} ({stats.topCountry[1].count})
+              Top: {COUNTRY_NAMES[stats.topCountry[0]] || stats.topCountry[0]} (
+              {stats.topCountry[1].count})
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-gray-500">Zoom:</span>
           <button
-            onClick={() => setPosition(p => ({ ...p, zoom: Math.min(p.zoom * 1.5, 8) }))}
+            onClick={() => setPosition((p) => ({ ...p, zoom: Math.min(p.zoom * 1.5, 8) }))}
             className="px-2 py-0.5 bg-gray-800 rounded hover:bg-gray-700"
           >
             +
           </button>
           <button
-            onClick={() => setPosition(p => ({ ...p, zoom: Math.max(p.zoom / 1.5, 1) }))}
+            onClick={() => setPosition((p) => ({ ...p, zoom: Math.max(p.zoom / 1.5, 1) }))}
             className="px-2 py-0.5 bg-gray-800 rounded hover:bg-gray-700"
           >
             -
@@ -434,7 +542,7 @@ export default function ThreatAttributionMap({
               {tooltip.actors && tooltip.actors.length > 0 && (
                 <div>
                   <div className="text-xs text-gray-500 mb-1">Active Actors:</div>
-                  {tooltip.actors.map(name => (
+                  {tooltip.actors.map((name) => (
                     <div key={name} className="text-xs text-red-400">
                       {name}
                     </div>
@@ -490,10 +598,7 @@ export function ThreatMapMini({ days = 30, onViewFull }) {
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-white">Global Threat Map</h3>
         {onViewFull && (
-          <button
-            onClick={onViewFull}
-            className="text-xs text-cyan-400 hover:text-cyan-300"
-          >
+          <button onClick={onViewFull} className="text-xs text-cyan-400 hover:text-cyan-300">
             Expand
           </button>
         )}

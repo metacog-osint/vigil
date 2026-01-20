@@ -21,40 +21,24 @@ export const savedSearches = {
   },
 
   async create(search) {
-    return supabase
-      .from('saved_searches')
-      .insert(search)
-      .select()
-      .single()
+    return supabase.from('saved_searches').insert(search).select().single()
   },
 
   async update(id, updates) {
-    return supabase
-      .from('saved_searches')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
+    return supabase.from('saved_searches').update(updates).eq('id', id).select().single()
   },
 
   async delete(id) {
-    return supabase
-      .from('saved_searches')
-      .delete()
-      .eq('id', id)
+    return supabase.from('saved_searches').delete().eq('id', id)
   },
 
   async incrementUseCount(id) {
-    return supabase
-      .rpc('increment_search_use_count', { search_id: id })
+    return supabase.rpc('increment_search_use_count', { search_id: id })
   },
 
   // Alert management
   async enableAlert(id, options = {}) {
-    const {
-      frequency = 'daily',
-      channels = ['email'],
-    } = options
+    const { frequency = 'daily', channels = ['email'] } = options
 
     return supabase
       .from('saved_searches')

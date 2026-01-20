@@ -4,9 +4,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import {
-  MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 
 // Entity type configurations
 const ENTITY_CONFIGS = {
@@ -78,13 +76,13 @@ function circularLayout(nodes, centerX, centerY, radius) {
 function hierarchicalLayout(nodes, relationships, width, height) {
   // Group nodes by type
   const groups = {}
-  nodes.forEach(node => {
+  nodes.forEach((node) => {
     if (!groups[node.type]) groups[node.type] = []
     groups[node.type].push(node)
   })
 
   const typeOrder = ['actor', 'incident', 'ioc', 'vulnerability', 'malware', 'technique']
-  const presentTypes = typeOrder.filter(t => groups[t]?.length > 0)
+  const presentTypes = typeOrder.filter((t) => groups[t]?.length > 0)
 
   const rowHeight = height / (presentTypes.length + 1)
 
@@ -108,7 +106,7 @@ function EntityNode({ node, isSelected, isHighlighted, isExpanded, onClick, onEx
 
   return (
     <g
-      transform={`translate(${node.x - size/2},${node.y - size/2})`}
+      transform={`translate(${node.x - size / 2},${node.y - size / 2})`}
       className="cursor-pointer"
       onClick={() => onClick?.(node)}
     >
@@ -192,7 +190,7 @@ function RelationshipEdge({ relationship, sourceNode, targetNode, isHighlighted 
   // Slight curve for better visibility
   const dx = targetNode.x - sourceNode.x
   const dy = targetNode.y - sourceNode.y
-  const curveOffset = Math.min(30, Math.sqrt(dx*dx + dy*dy) / 10)
+  const curveOffset = Math.min(30, Math.sqrt(dx * dx + dy * dy) / 10)
 
   const path = `M ${sourceNode.x} ${sourceNode.y} Q ${midX + curveOffset} ${midY - curveOffset} ${targetNode.x} ${targetNode.y}`
 
@@ -205,8 +203,7 @@ function RelationshipEdge({ relationship, sourceNode, targetNode, isHighlighted 
         stroke="#6B7280"
         strokeWidth={relationship.weight || 1}
         strokeDasharray={
-          relConfig.style === 'dashed' ? '8,4' :
-          relConfig.style === 'dotted' ? '2,2' : undefined
+          relConfig.style === 'dashed' ? '8,4' : relConfig.style === 'dotted' ? '2,2' : undefined
         }
         markerEnd="url(#arrowhead)"
       />
@@ -301,7 +298,9 @@ function EntityDetailsPanel({ entity, onClose, onNavigate }) {
             <div className={`text-xs ${config.textColor}`}>{config.label}</div>
           </div>
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
+        <button onClick={onClose} className="text-gray-400 hover:text-white">
+          ✕
+        </button>
       </div>
 
       {entity.metadata && (
@@ -329,7 +328,9 @@ function EntityDetailsPanel({ entity, onClose, onNavigate }) {
 
       {entity.relationships?.length > 0 && (
         <div>
-          <div className="text-xs text-gray-500 mb-1">Relationships ({entity.relationships.length})</div>
+          <div className="text-xs text-gray-500 mb-1">
+            Relationships ({entity.relationships.length})
+          </div>
           <div className="flex flex-wrap gap-1">
             {entity.relationships.slice(0, 5).map((rel, i) => (
               <button
@@ -373,10 +374,10 @@ export default function EntityRelationshipGraph({
 
   // Filter entities
   const filteredEntities = useMemo(() => {
-    return entities.filter(e => {
+    return entities.filter((e) => {
       const matchesType = activeTypes.includes(e.type)
-      const matchesSearch = !searchTerm ||
-        (e.label || e.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesSearch =
+        !searchTerm || (e.label || e.name || '').toLowerCase().includes(searchTerm.toLowerCase())
       return matchesType && matchesSearch
     })
   }, [entities, activeTypes, searchTerm])
@@ -400,12 +401,7 @@ export default function EntityRelationshipGraph({
         break
       case 'hierarchical':
       default:
-        positioned = hierarchicalLayout(
-          [...filteredEntities],
-          relationships,
-          width,
-          height
-        )
+        positioned = hierarchicalLayout([...filteredEntities], relationships, width, height)
         break
     }
 
@@ -414,30 +410,29 @@ export default function EntityRelationshipGraph({
 
   // Node map for relationship rendering
   const nodeMap = useMemo(() => {
-    return new Map(layoutNodes.map(n => [n.id, n]))
+    return new Map(layoutNodes.map((n) => [n.id, n]))
   }, [layoutNodes])
 
   // Filter relationships to visible entities
   const visibleRelationships = useMemo(() => {
-    const entityIds = new Set(layoutNodes.map(n => n.id))
-    return relationships.filter(r =>
-      entityIds.has(r.sourceId) && entityIds.has(r.targetId)
-    )
+    const entityIds = new Set(layoutNodes.map((n) => n.id))
+    return relationships.filter((r) => entityIds.has(r.sourceId) && entityIds.has(r.targetId))
   }, [relationships, layoutNodes])
 
   // Handle entity click
-  const handleEntityClick = useCallback((entity) => {
-    setSelectedEntity(entity)
-    onEntityClick?.(entity)
-    onEntitySelect?.(entity.id)
-  }, [onEntityClick, onEntitySelect])
+  const handleEntityClick = useCallback(
+    (entity) => {
+      setSelectedEntity(entity)
+      onEntityClick?.(entity)
+      onEntitySelect?.(entity.id)
+    },
+    [onEntityClick, onEntitySelect]
+  )
 
   // Toggle type filter
   const handleTypeFilter = useCallback((type) => {
-    setActiveTypes(prev =>
-      prev.includes(type)
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
+    setActiveTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     )
   }, [])
 
@@ -447,7 +442,7 @@ export default function EntityRelationshipGraph({
     if (!focusId) return new Set()
 
     const connected = new Set([focusId])
-    visibleRelationships.forEach(r => {
+    visibleRelationships.forEach((r) => {
       if (r.sourceId === focusId) connected.add(r.targetId)
       if (r.targetId === focusId) connected.add(r.sourceId)
     })
@@ -460,11 +455,7 @@ export default function EntityRelationshipGraph({
     <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ height }}>
       {/* Controls */}
       {showControls && (
-        <GraphControls
-          onSearch={setSearchTerm}
-          onLayoutChange={setLayout}
-          layout={layout}
-        />
+        <GraphControls onSearch={setSearchTerm} onLayoutChange={setLayout} layout={layout} />
       )}
 
       {/* SVG Canvas */}
@@ -490,7 +481,9 @@ export default function EntityRelationshipGraph({
             relationship={rel}
             sourceNode={nodeMap.get(rel.sourceId)}
             targetNode={nodeMap.get(rel.targetId)}
-            isHighlighted={!shouldHighlight || (connectedIds.has(rel.sourceId) && connectedIds.has(rel.targetId))}
+            isHighlighted={
+              !shouldHighlight || (connectedIds.has(rel.sourceId) && connectedIds.has(rel.targetId))
+            }
           />
         ))}
 
@@ -507,12 +500,7 @@ export default function EntityRelationshipGraph({
       </svg>
 
       {/* Legend */}
-      {showLegend && (
-        <GraphLegend
-          onTypeFilter={handleTypeFilter}
-          activeTypes={activeTypes}
-        />
-      )}
+      {showLegend && <GraphLegend onTypeFilter={handleTypeFilter} activeTypes={activeTypes} />}
 
       {/* Details Panel */}
       {selectedEntity && (
@@ -541,9 +529,4 @@ export default function EntityRelationshipGraph({
   )
 }
 
-export {
-  ENTITY_CONFIGS,
-  RELATIONSHIP_TYPES,
-  circularLayout,
-  hierarchicalLayout,
-}
+export { ENTITY_CONFIGS, RELATIONSHIP_TYPES, circularLayout, hierarchicalLayout }

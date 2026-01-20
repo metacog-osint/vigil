@@ -234,8 +234,10 @@ function ChartEditor({ content, onChange }) {
           onChange={(e) => onChange({ ...content, chartType: e.target.value })}
           className="cyber-input w-32"
         >
-          {CHART_TYPES.map(t => (
-            <option key={t.value} value={t.value}>{t.label}</option>
+          {CHART_TYPES.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
           ))}
         </select>
         <select
@@ -245,7 +247,9 @@ function ChartEditor({ content, onChange }) {
         >
           <option value="">Select data source...</option>
           {Object.entries(DATA_SOURCES).map(([key, label]) => (
-            <option key={key} value={key}>{label}</option>
+            <option key={key} value={key}>
+              {label}
+            </option>
           ))}
         </select>
       </div>
@@ -267,16 +271,20 @@ function TableEditor({ content, onChange }) {
     <div className="space-y-3">
       <select
         value={content.dataSource || ''}
-        onChange={(e) => onChange({
-          ...content,
-          dataSource: e.target.value,
-          columns: [],
-        })}
+        onChange={(e) =>
+          onChange({
+            ...content,
+            dataSource: e.target.value,
+            columns: [],
+          })
+        }
         className="cyber-input w-full"
       >
         <option value="">Select data source...</option>
         {Object.entries(DATA_SOURCES).map(([key, label]) => (
-          <option key={key} value={key}>{label}</option>
+          <option key={key} value={key}>
+            {label}
+          </option>
         ))}
       </select>
 
@@ -285,7 +293,7 @@ function TableEditor({ content, onChange }) {
           <div className="space-y-1">
             <label className="text-xs text-gray-400">Columns:</label>
             <div className="flex flex-wrap gap-2">
-              {columns.map(col => (
+              {columns.map((col) => (
                 <label key={col.value} className="flex items-center gap-1 text-sm">
                   <input
                     type="checkbox"
@@ -293,7 +301,7 @@ function TableEditor({ content, onChange }) {
                     onChange={(e) => {
                       const newCols = e.target.checked
                         ? [...(content.columns || []), col.value]
-                        : content.columns?.filter(c => c !== col.value)
+                        : content.columns?.filter((c) => c !== col.value)
                       onChange({ ...content, columns: newCols })
                     }}
                     className="rounded bg-gray-700 border-gray-600"
@@ -362,19 +370,54 @@ function ReportSection({ section, index, onUpdate, onRemove, onMove, totalSectio
   const renderEditor = () => {
     switch (section.type) {
       case 'title':
-        return <TitleEditor content={section.content} onChange={(c) => onUpdate({ ...section, content: c })} />
+        return (
+          <TitleEditor
+            content={section.content}
+            onChange={(c) => onUpdate({ ...section, content: c })}
+          />
+        )
       case 'summary':
-        return <SummaryEditor content={section.content} onChange={(c) => onUpdate({ ...section, content: c })} />
+        return (
+          <SummaryEditor
+            content={section.content}
+            onChange={(c) => onUpdate({ ...section, content: c })}
+          />
+        )
       case 'metric_cards':
-        return <MetricCardsEditor content={section.content} onChange={(c) => onUpdate({ ...section, content: c })} />
+        return (
+          <MetricCardsEditor
+            content={section.content}
+            onChange={(c) => onUpdate({ ...section, content: c })}
+          />
+        )
       case 'chart':
-        return <ChartEditor content={section.content} onChange={(c) => onUpdate({ ...section, content: c })} />
+        return (
+          <ChartEditor
+            content={section.content}
+            onChange={(c) => onUpdate({ ...section, content: c })}
+          />
+        )
       case 'table':
-        return <TableEditor content={section.content} onChange={(c) => onUpdate({ ...section, content: c })} />
+        return (
+          <TableEditor
+            content={section.content}
+            onChange={(c) => onUpdate({ ...section, content: c })}
+          />
+        )
       case 'text':
-        return <TextEditor content={section.content} onChange={(c) => onUpdate({ ...section, content: c })} />
+        return (
+          <TextEditor
+            content={section.content}
+            onChange={(c) => onUpdate({ ...section, content: c })}
+          />
+        )
       case 'image':
-        return <ImageEditor content={section.content} onChange={(c) => onUpdate({ ...section, content: c })} />
+        return (
+          <ImageEditor
+            content={section.content}
+            onChange={(c) => onUpdate({ ...section, content: c })}
+          />
+        )
       case 'divider':
         return <div className="border-t border-gray-600 my-2" />
       default:
@@ -418,11 +461,7 @@ function ReportSection({ section, index, onUpdate, onRemove, onMove, totalSectio
         </div>
       </div>
 
-      {isExpanded && (
-        <div className="p-3 bg-gray-900/50">
-          {renderEditor()}
-        </div>
-      )}
+      {isExpanded && <div className="p-3 bg-gray-900/50">{renderEditor()}</div>}
     </div>
   )
 }
@@ -435,20 +474,25 @@ export default function ReportBuilder({
   onPreview,
   onExport,
 }) {
-  const [sections, setSections] = useState(initialSections || [
-    {
-      id: crypto.randomUUID(),
-      type: 'title',
-      content: SECTION_TYPES.title.defaultContent,
-    },
-  ])
+  const [sections, setSections] = useState(
+    initialSections || [
+      {
+        id: crypto.randomUUID(),
+        type: 'title',
+        content: SECTION_TYPES.title.defaultContent,
+      },
+    ]
+  )
   const [reportName, setReportName] = useState('Untitled Report')
   const [schedule, setSchedule] = useState({ enabled: false, frequency: 'weekly', day: 1, hour: 9 })
 
-  const handleSectionsChange = useCallback((newSections) => {
-    setSections(newSections)
-    onChange?.(newSections)
-  }, [onChange])
+  const handleSectionsChange = useCallback(
+    (newSections) => {
+      setSections(newSections)
+      onChange?.(newSections)
+    },
+    [onChange]
+  )
 
   const addSection = (type) => {
     const newSection = {
@@ -523,13 +567,19 @@ export default function ReportBuilder({
           />
           <div className="flex gap-2">
             {onPreview && (
-              <button onClick={() => onPreview(sections)} className="cyber-button flex items-center gap-1">
+              <button
+                onClick={() => onPreview(sections)}
+                className="cyber-button flex items-center gap-1"
+              >
                 <EyeIcon className="w-4 h-4" />
                 Preview
               </button>
             )}
             {onExport && (
-              <button onClick={() => onExport(sections)} className="cyber-button flex items-center gap-1">
+              <button
+                onClick={() => onExport(sections)}
+                className="cyber-button flex items-center gap-1"
+              >
                 <DocumentArrowDownIcon className="w-4 h-4" />
                 Export
               </button>
@@ -616,7 +666,9 @@ export default function ReportBuilder({
                     className="cyber-input text-sm w-20"
                   >
                     {Array.from({ length: 24 }, (_, i) => (
-                      <option key={i} value={i}>{String(i).padStart(2, '0')}:00</option>
+                      <option key={i} value={i}>
+                        {String(i).padStart(2, '0')}:00
+                      </option>
                     ))}
                   </select>
                 </div>

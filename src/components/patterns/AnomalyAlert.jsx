@@ -68,9 +68,7 @@ function getSeverity(zScore, anomalyType) {
 }
 
 function SeverityIndicator({ severity }) {
-  return (
-    <div className={`w-2 h-2 rounded-full ${SEVERITY_COLORS[severity]}`} />
-  )
+  return <div className={`w-2 h-2 rounded-full ${SEVERITY_COLORS[severity]}`} />
 }
 
 export function AnomalyAlert({ anomaly, onDismiss, onAcknowledge }) {
@@ -90,9 +88,10 @@ export function AnomalyAlert({ anomaly, onDismiss, onAcknowledge }) {
   } = anomaly
 
   const anomalyConfig = ANOMALY_TYPES[type] || ANOMALY_TYPES[direction] || ANOMALY_TYPES.spike
-  const severity = type === 'reactivated_actor'
-    ? getSeverity(dormantDays, 'reactivation')
-    : getSeverity(zScore || confidence * 4, type)
+  const severity =
+    type === 'reactivated_actor'
+      ? getSeverity(dormantDays, 'reactivation')
+      : getSeverity(zScore || confidence * 4, type)
 
   return (
     <div
@@ -108,15 +107,11 @@ export function AnomalyAlert({ anomaly, onDismiss, onAcknowledge }) {
           <span className="text-xl">{anomalyConfig.icon}</span>
           <div>
             <div className="flex items-center gap-2">
-              <h4 className={`font-medium ${anomalyConfig.textColor}`}>
-                {anomalyConfig.label}
-              </h4>
+              <h4 className={`font-medium ${anomalyConfig.textColor}`}>{anomalyConfig.label}</h4>
               <SeverityIndicator severity={severity} />
             </div>
             {date && (
-              <div className="text-xs text-gray-500">
-                {new Date(date).toLocaleDateString()}
-              </div>
+              <div className="text-xs text-gray-500">{new Date(date).toLocaleDateString()}</div>
             )}
           </div>
         </div>
@@ -130,7 +125,12 @@ export function AnomalyAlert({ anomaly, onDismiss, onAcknowledge }) {
               title="Acknowledge"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </button>
           )}
@@ -141,7 +141,12 @@ export function AnomalyAlert({ anomaly, onDismiss, onAcknowledge }) {
               title="Dismiss"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -149,9 +154,7 @@ export function AnomalyAlert({ anomaly, onDismiss, onAcknowledge }) {
       </div>
 
       {/* Description */}
-      {description && (
-        <p className="text-sm text-gray-300 mb-3">{description}</p>
-      )}
+      {description && <p className="text-sm text-gray-300 mb-3">{description}</p>}
 
       {/* Stats for activity anomalies */}
       {actualCount !== undefined && expectedCount !== undefined && (
@@ -168,7 +171,8 @@ export function AnomalyAlert({ anomaly, onDismiss, onAcknowledge }) {
           {zScore && (
             <div className="text-center ml-auto">
               <div className={`text-lg font-bold ${anomalyConfig.textColor}`}>
-                {zScore > 0 ? '+' : ''}{zScore}σ
+                {zScore > 0 ? '+' : ''}
+                {zScore}σ
               </div>
               <div className="text-xs text-gray-500">Z-Score</div>
             </div>
@@ -207,9 +211,7 @@ export function AnomalyAlert({ anomaly, onDismiss, onAcknowledge }) {
               </Link>
             ))}
             {actors.length > 5 && (
-              <span className="px-2 py-0.5 text-gray-500 text-xs">
-                +{actors.length - 5} more
-              </span>
+              <span className="px-2 py-0.5 text-gray-500 text-xs">+{actors.length - 5} more</span>
             )}
           </div>
         </div>
@@ -221,10 +223,7 @@ export function AnomalyAlert({ anomaly, onDismiss, onAcknowledge }) {
           <div className="text-xs text-gray-500 mb-1">Affected Sectors</div>
           <div className="flex flex-wrap gap-1">
             {sectors.slice(0, 5).map((sector, i) => (
-              <span
-                key={i}
-                className="px-2 py-0.5 bg-blue-900/30 text-blue-400 text-xs rounded"
-              >
+              <span key={i} className="px-2 py-0.5 bg-blue-900/30 text-blue-400 text-xs rounded">
                 {sector}
               </span>
             ))}
@@ -271,9 +270,7 @@ export function AnomalyAlertInline({ anomaly, onClick }) {
           {description || anomalyConfig.label}
         </div>
       </div>
-      <span className="text-xs text-gray-500">
-        {Math.round(confidence * 100)}%
-      </span>
+      <span className="text-xs text-gray-500">{Math.round(confidence * 100)}%</span>
     </div>
   )
 }
@@ -281,11 +278,7 @@ export function AnomalyAlertInline({ anomaly, onClick }) {
 // List of multiple alerts
 export function AnomalyAlertList({ anomalies, maxItems = 5, onViewAll }) {
   if (!anomalies || anomalies.length === 0) {
-    return (
-      <div className="text-sm text-gray-500 text-center py-4">
-        No anomalies detected
-      </div>
-    )
+    return <div className="text-sm text-gray-500 text-center py-4">No anomalies detected</div>
   }
 
   return (

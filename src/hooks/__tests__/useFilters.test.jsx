@@ -118,10 +118,9 @@ describe('useFilters', () => {
   describe('callback support', () => {
     it('should call onFilterChange when filter changes', () => {
       const onFilterChange = vi.fn()
-      const { result } = renderHook(
-        () => useFilters({ status: '' }, { onFilterChange }),
-        { wrapper: RouterWrapper }
-      )
+      const { result } = renderHook(() => useFilters({ status: '' }, { onFilterChange }), {
+        wrapper: RouterWrapper,
+      })
 
       act(() => {
         result.current.setFilter('status', 'active')

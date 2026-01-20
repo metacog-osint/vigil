@@ -61,13 +61,15 @@ export default function SecuritySettings({ user }) {
   }
 
   async function handleUnenrollMfa(factorUid) {
-    if (!confirm('Are you sure you want to disable 2FA? This will make your account less secure.')) {
+    if (
+      !confirm('Are you sure you want to disable 2FA? This will make your account less secure.')
+    ) {
       return
     }
 
     try {
       const multiFactorUser = multiFactor(user)
-      const factor = mfaEnrolled.find(f => f.uid === factorUid)
+      const factor = mfaEnrolled.find((f) => f.uid === factorUid)
       if (factor) {
         await multiFactorUser.unenroll(factor)
         await checkMfaStatus()
@@ -98,36 +100,75 @@ export default function SecuritySettings({ user }) {
         ) : mfaEnabled ? (
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-              <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              <svg
+                className="w-5 h-5 text-green-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
               </svg>
               <div>
                 <div className="text-green-400 font-medium">2FA is enabled</div>
-                <div className="text-gray-400 text-sm">Your account is protected with an additional layer of security.</div>
+                <div className="text-gray-400 text-sm">
+                  Your account is protected with an additional layer of security.
+                </div>
               </div>
             </div>
 
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-400">Enrolled Methods</h4>
               {mfaEnrolled.map((factor) => (
-                <div key={factor.uid} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+                <div
+                  key={factor.uid}
+                  className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     {factor.factorId === 'totp' ? (
-                      <svg className="w-5 h-5 text-cyber-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      <svg
+                        className="w-5 h-5 text-cyber-accent"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
                       </svg>
                     ) : (
-                      <svg className="w-5 h-5 text-cyber-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      <svg
+                        className="w-5 h-5 text-cyber-accent"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                        />
                       </svg>
                     )}
                     <div>
                       <div className="text-white text-sm">
-                        {factor.displayName || (factor.factorId === 'totp' ? 'Authenticator App' : 'Phone')}
+                        {factor.displayName ||
+                          (factor.factorId === 'totp' ? 'Authenticator App' : 'Phone')}
                       </div>
                       <div className="text-gray-500 text-xs">
-                        {factor.factorId === 'phone' ? 'SMS Verification' :
-                         factor.factorId === 'totp' ? 'Time-based One-Time Password' : factor.factorId}
+                        {factor.factorId === 'phone'
+                          ? 'SMS Verification'
+                          : factor.factorId === 'totp'
+                            ? 'Time-based One-Time Password'
+                            : factor.factorId}
                       </div>
                     </div>
                   </div>
@@ -144,19 +185,28 @@ export default function SecuritySettings({ user }) {
         ) : (
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-              <svg className="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <svg
+                className="w-5 h-5 text-yellow-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               </svg>
               <div>
                 <div className="text-yellow-400 font-medium">2FA is not enabled</div>
-                <div className="text-gray-400 text-sm">Add an extra layer of security to your account.</div>
+                <div className="text-gray-400 text-sm">
+                  Add an extra layer of security to your account.
+                </div>
               </div>
             </div>
 
-            <button
-              onClick={() => setShowEnrollModal(true)}
-              className="cyber-button-primary"
-            >
+            <button onClick={() => setShowEnrollModal(true)} className="cyber-button-primary">
               Enable Two-Factor Authentication
             </button>
           </div>
@@ -180,31 +230,46 @@ export default function SecuritySettings({ user }) {
 
         <div className="space-y-2">
           {sessions.map((session) => (
-            <div key={session.id} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+            <div
+              key={session.id}
+              className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
+            >
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg
+                  className="w-5 h-5 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   {session.device === 'Mobile' ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
                   ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
                   )}
                 </svg>
                 <div>
                   <div className="text-white text-sm">
                     {session.browser} on {session.device}
-                    {session.current && (
-                      <span className="ml-2 badge-info text-xs">Current</span>
-                    )}
+                    {session.current && <span className="ml-2 badge-info text-xs">Current</span>}
                   </div>
                   <div className="text-gray-500 text-xs">
-                    Last active {formatDistanceToNow(new Date(session.lastActive), { addSuffix: true })}
+                    Last active{' '}
+                    {formatDistanceToNow(new Date(session.lastActive), { addSuffix: true })}
                   </div>
                 </div>
               </div>
               {!session.current && (
-                <button className="text-red-400 hover:text-red-300 text-sm">
-                  Revoke
-                </button>
+                <button className="text-red-400 hover:text-red-300 text-sm">Revoke</button>
               )}
             </div>
           ))}
@@ -214,9 +279,7 @@ export default function SecuritySettings({ user }) {
           <p className="text-gray-500 text-sm mb-3">
             If you notice any suspicious activity, you can sign out of all other sessions.
           </p>
-          <button className="cyber-button text-sm">
-            Sign Out All Other Sessions
-          </button>
+          <button className="cyber-button text-sm">Sign Out All Other Sessions</button>
         </div>
       </div>
 
@@ -224,7 +287,8 @@ export default function SecuritySettings({ user }) {
       <div className="cyber-card">
         <h3 className="text-lg font-semibold text-white mb-4">Login History</h3>
         <p className="text-gray-400 text-sm">
-          Your recent login activity will appear here. This feature tracks login attempts to help you identify unauthorized access.
+          Your recent login activity will appear here. This feature tracks login attempts to help
+          you identify unauthorized access.
         </p>
         <div className="mt-4 p-4 bg-gray-800/30 rounded-lg text-center">
           <p className="text-gray-500 text-sm">No login history available yet.</p>
@@ -389,12 +453,24 @@ function MfaEnrollModal({ user, onClose, onSuccess }) {
                 className="w-full p-4 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 hover:border-cyber-accent rounded-lg text-left transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-cyber-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  <svg
+                    className="w-6 h-6 text-cyber-accent"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
                   </svg>
                   <div>
                     <div className="text-white font-medium">Authenticator App</div>
-                    <div className="text-gray-400 text-sm">Use Google Authenticator, Authy, or similar apps</div>
+                    <div className="text-gray-400 text-sm">
+                      Use Google Authenticator, Authy, or similar apps
+                    </div>
                   </div>
                 </div>
                 <div className="mt-2 text-xs text-green-400">Recommended - Most secure</div>
@@ -406,12 +482,24 @@ function MfaEnrollModal({ user, onClose, onSuccess }) {
                 className="w-full p-4 bg-gray-800/50 hover:bg-gray-800 border border-gray-700 hover:border-gray-500 rounded-lg text-left transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  <svg
+                    className="w-6 h-6 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
                   </svg>
                   <div>
                     <div className="text-white font-medium">SMS Text Message</div>
-                    <div className="text-gray-400 text-sm">Receive codes via text message to your phone</div>
+                    <div className="text-gray-400 text-sm">
+                      Receive codes via text message to your phone
+                    </div>
                   </div>
                 </div>
               </button>
@@ -470,11 +558,7 @@ function MfaEnrollModal({ user, onClose, onSuccess }) {
                 Continue
               </button>
 
-              <button
-                type="button"
-                onClick={resetToSelect}
-                className="cyber-button w-full"
-              >
+              <button type="button" onClick={resetToSelect} className="cyber-button w-full">
                 Back
               </button>
             </div>
@@ -532,7 +616,9 @@ function MfaEnrollModal({ user, onClose, onSuccess }) {
         {/* Phone Number Entry */}
         {step === 'phone' && (
           <form onSubmit={handleSendCode} className="space-y-4">
-            <h3 className="text-lg font-semibold text-white mb-4">Enable 2FA - Enter Phone Number</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Enable 2FA - Enter Phone Number
+            </h3>
 
             <div>
               <label className="block text-sm text-gray-400 mb-1">Phone Number</label>
@@ -544,9 +630,7 @@ function MfaEnrollModal({ user, onClose, onSuccess }) {
                 placeholder="+1 234 567 8900"
                 required
               />
-              <p className="text-gray-500 text-xs mt-1">
-                Include country code (e.g., +1 for US)
-              </p>
+              <p className="text-gray-500 text-xs mt-1">Include country code (e.g., +1 for US)</p>
             </div>
 
             {error && <p className="text-red-400 text-sm">{error}</p>}

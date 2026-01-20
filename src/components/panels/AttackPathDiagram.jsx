@@ -148,16 +148,18 @@ export function AttackPathDiagram({ actorId, actorName, className = '' }) {
           <div className="flex flex-col items-center">
             <div className="text-xs text-gray-500 mb-2">IOCs</div>
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {Object.entries(iocsByType).slice(0, 3).map(([type, items]) => (
-                <NodeBox
-                  key={type}
-                  type="ioc"
-                  label={`${items.length} ${type}`}
-                  sublabel={items[0]?.value?.slice(0, 20)}
-                  isSelected={selectedNode?.type === 'ioc' && selectedNode?.iocType === type}
-                  onClick={() => setSelectedNode({ type: 'ioc', iocType: type, items })}
-                />
-              ))}
+              {Object.entries(iocsByType)
+                .slice(0, 3)
+                .map(([type, items]) => (
+                  <NodeBox
+                    key={type}
+                    type="ioc"
+                    label={`${items.length} ${type}`}
+                    sublabel={items[0]?.value?.slice(0, 20)}
+                    isSelected={selectedNode?.type === 'ioc' && selectedNode?.iocType === type}
+                    onClick={() => setSelectedNode({ type: 'ioc', iocType: type, items })}
+                  />
+                ))}
               {Object.keys(iocsByType).length === 0 && (
                 <div className="text-xs text-gray-600 text-center py-2">None linked</div>
               )}
@@ -166,7 +168,10 @@ export function AttackPathDiagram({ actorId, actorName, className = '' }) {
         </div>
 
         {/* Flow Arrows */}
-        <div className="absolute top-1/2 left-0 right-0 flex justify-around items-center -translate-y-1/2 pointer-events-none" style={{ zIndex: 5 }}>
+        <div
+          className="absolute top-1/2 left-0 right-0 flex justify-around items-center -translate-y-1/2 pointer-events-none"
+          style={{ zIndex: 5 }}
+        >
           <FlowArrow />
           <FlowArrow />
           <FlowArrow />
@@ -183,7 +188,12 @@ export function AttackPathDiagram({ actorId, actorName, className = '' }) {
               className="text-gray-500 hover:text-white"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -231,9 +241,7 @@ function NodeBox({ type, label, sublabel, isSelected, onClick }) {
       }`}
     >
       <div className="truncate">{label}</div>
-      {sublabel && (
-        <div className="text-[10px] text-gray-500 truncate mt-0.5">{sublabel}</div>
-      )}
+      {sublabel && <div className="text-[10px] text-gray-500 truncate mt-0.5">{sublabel}</div>}
     </button>
   )
 }
@@ -244,7 +252,11 @@ function FlowArrow() {
     <div className="flex items-center text-gray-600">
       <div className="w-8 h-0.5 bg-gray-600"></div>
       <svg className="w-3 h-3 -ml-1" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+          clipRule="evenodd"
+        />
       </svg>
     </div>
   )
@@ -259,7 +271,9 @@ function NodeDetails({ node }) {
     case 'technique':
       return (
         <div className="space-y-1">
-          <div className="text-white font-medium">{node.id}: {node.name}</div>
+          <div className="text-white font-medium">
+            {node.id}: {node.name}
+          </div>
           {node.tactics && (
             <div className="text-gray-400 text-xs">Tactics: {node.tactics.join(', ')}</div>
           )}
@@ -280,10 +294,14 @@ function NodeDetails({ node }) {
     case 'ioc':
       return (
         <div className="space-y-1">
-          <div className="text-white font-medium">{node.items?.length} {node.iocType} IOCs</div>
+          <div className="text-white font-medium">
+            {node.items?.length} {node.iocType} IOCs
+          </div>
           <div className="text-xs text-gray-400 space-y-0.5 max-h-32 overflow-y-auto">
             {node.items?.slice(0, 5).map((ioc, i) => (
-              <div key={i} className="font-mono truncate">{ioc.value}</div>
+              <div key={i} className="font-mono truncate">
+                {ioc.value}
+              </div>
             ))}
             {node.items?.length > 5 && (
               <div className="text-gray-500">+{node.items.length - 5} more</div>

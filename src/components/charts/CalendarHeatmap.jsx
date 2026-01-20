@@ -72,7 +72,7 @@ export default function CalendarHeatmap({
 
       if (incidents) {
         const countByDate = {}
-        incidents.forEach(inc => {
+        incidents.forEach((inc) => {
           const dateStr = inc.discovered_date?.split('T')[0]
           if (dateStr) {
             countByDate[dateStr] = (countByDate[dateStr] || 0) + 1
@@ -105,7 +105,7 @@ export default function CalendarHeatmap({
       currentWeek.push(null)
     }
 
-    dateArray.forEach(date => {
+    dateArray.forEach((date) => {
       currentWeek.push(date)
       if (currentWeek.length === 7) {
         result.push(currentWeek)
@@ -127,7 +127,7 @@ export default function CalendarHeatmap({
     let lastMonth = -1
 
     weeks.forEach((week, weekIndex) => {
-      const firstValidDay = week.find(d => d !== null)
+      const firstValidDay = week.find((d) => d !== null)
       if (firstValidDay) {
         const month = firstValidDay.getMonth()
         if (month !== lastMonth) {
@@ -144,7 +144,7 @@ export default function CalendarHeatmap({
   const stats = useMemo(() => {
     const counts = Object.values(data)
     const total = counts.reduce((a, b) => a + b, 0)
-    const activeDays = counts.filter(c => c > 0).length
+    const activeDays = counts.filter((c) => c > 0).length
     const avgPerDay = total / Math.max(dateArray.length, 1)
     const peakDay = Object.entries(data).sort((a, b) => b[1] - a[1])[0]
 
@@ -223,12 +223,7 @@ export default function CalendarHeatmap({
                 <div key={weekIndex} className="flex flex-col gap-0.5">
                   {week.map((date, dayIndex) => {
                     if (!date) {
-                      return (
-                        <div
-                          key={dayIndex}
-                          style={{ width: cellSize, height: cellSize }}
-                        />
-                      )
+                      return <div key={dayIndex} style={{ width: cellSize, height: cellSize }} />
                     }
 
                     const dateStr = formatDate(date)
@@ -276,7 +271,12 @@ export default function CalendarHeatmap({
       {/* Peak day highlight */}
       {stats.peakDay && (
         <div className="text-xs text-gray-500">
-          Peak: {stats.peakDay[1]} incidents on {new Date(stats.peakDay[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          Peak: {stats.peakDay[1]} incidents on{' '}
+          {new Date(stats.peakDay[0]).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })}
         </div>
       )}
 
@@ -311,10 +311,7 @@ export function CalendarHeatmapMini({ days = 90, onViewFull }) {
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-white">Activity Calendar</h3>
         {onViewFull && (
-          <button
-            onClick={onViewFull}
-            className="text-xs text-cyan-400 hover:text-cyan-300"
-          >
+          <button onClick={onViewFull} className="text-xs text-cyan-400 hover:text-cyan-300">
             View Full Year
           </button>
         )}

@@ -13,42 +13,42 @@ export const unifiedEvents = {
       color: 'red',
       bgClass: 'bg-red-500/20',
       textClass: 'text-red-400',
-      borderClass: 'border-red-500/50'
+      borderClass: 'border-red-500/50',
     },
     alert: {
       label: 'Alert',
       color: 'yellow',
       bgClass: 'bg-yellow-500/20',
       textClass: 'text-yellow-400',
-      borderClass: 'border-yellow-500/50'
+      borderClass: 'border-yellow-500/50',
     },
     vulnerability: {
       label: 'KEV',
       color: 'orange',
       bgClass: 'bg-orange-500/20',
       textClass: 'text-orange-400',
-      borderClass: 'border-orange-500/50'
+      borderClass: 'border-orange-500/50',
     },
     ioc: {
       label: 'IOC',
       color: 'blue',
       bgClass: 'bg-blue-500/20',
       textClass: 'text-blue-400',
-      borderClass: 'border-blue-500/50'
+      borderClass: 'border-blue-500/50',
     },
     malware: {
       label: 'Malware',
       color: 'cyan',
       bgClass: 'bg-cyan-500/20',
       textClass: 'text-cyan-400',
-      borderClass: 'border-cyan-500/50'
+      borderClass: 'border-cyan-500/50',
     },
     breach: {
       label: 'Breach',
       color: 'purple',
       bgClass: 'bg-purple-500/20',
       textClass: 'text-purple-400',
-      borderClass: 'border-purple-500/50'
+      borderClass: 'border-purple-500/50',
     },
   },
 
@@ -59,7 +59,7 @@ export const unifiedEvents = {
       confirmed: 'high',
       claimed: 'medium',
       paid: 'medium',
-      removed: 'low'
+      removed: 'low',
     }
 
     return {
@@ -76,7 +76,7 @@ export const unifiedEvents = {
       country: incident.victim_country,
       status: incident.status,
       source_url: incident.source_url,
-      raw: incident
+      raw: incident,
     }
   },
 
@@ -96,7 +96,7 @@ export const unifiedEvents = {
       country: null,
       status: null,
       source_url: alert.url,
-      raw: alert
+      raw: alert,
     }
   },
 
@@ -123,7 +123,7 @@ export const unifiedEvents = {
       status: vuln.kev_date ? 'KEV' : null,
       source_url: `https://nvd.nist.gov/vuln/detail/${vuln.cve_id}`,
       cvss_score: vuln.cvss_score,
-      raw: vuln
+      raw: vuln,
     }
   },
 
@@ -132,7 +132,7 @@ export const unifiedEvents = {
     const severityMap = {
       high: 'high',
       medium: 'medium',
-      low: 'low'
+      low: 'low',
     }
 
     return {
@@ -149,7 +149,7 @@ export const unifiedEvents = {
       country: null,
       status: ioc.type,
       source_url: null,
-      raw: ioc
+      raw: ioc,
     }
   },
 
@@ -169,7 +169,7 @@ export const unifiedEvents = {
       country: null,
       status: sample.signature,
       source_url: `https://bazaar.abuse.ch/sample/${sample.sha256}`,
-      raw: sample
+      raw: sample,
     }
   },
 
@@ -196,23 +196,20 @@ export const unifiedEvents = {
       status: breach.is_verified ? 'Verified' : 'Unverified',
       source_url: null,
       pwn_count: breach.pwn_count,
-      raw: breach
+      raw: breach,
     }
   },
 
   // Get unified timeline with all event types
   async getTimeline(options = {}) {
-    const {
-      days = 30,
-      types = [],
-      severity = '',
-      search = '',
-      limit = 100,
-      offset = 0
-    } = options
+    const { days = 30, types = [], severity = '', search = '', limit = 100, offset = 0 } = options
 
-    const cutoffDate = days > 0 ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null
-    const activeTypes = types.length > 0 ? types : ['ransomware', 'alert', 'vulnerability', 'ioc', 'malware', 'breach']
+    const cutoffDate =
+      days > 0 ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null
+    const activeTypes =
+      types.length > 0
+        ? types
+        : ['ransomware', 'alert', 'vulnerability', 'ioc', 'malware', 'breach']
 
     const queries = []
 
@@ -225,7 +222,7 @@ export const unifiedEvents = {
         .limit(limit)
       if (cutoffDate) q = q.gte('discovered_date', cutoffDate.split('T')[0])
       if (search) q = q.or(`victim_name.ilike.%${search}%,victim_sector.ilike.%${search}%`)
-      queries.push(q.then(r => ({ type: 'ransomware', data: r.data || [], error: r.error })))
+      queries.push(q.then((r) => ({ type: 'ransomware', data: r.data || [], error: r.error })))
     }
 
     // Alerts
@@ -237,7 +234,7 @@ export const unifiedEvents = {
         .limit(limit)
       if (cutoffDate) q = q.gte('published_date', cutoffDate)
       if (search) q = q.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
-      queries.push(q.then(r => ({ type: 'alert', data: r.data || [], error: r.error })))
+      queries.push(q.then((r) => ({ type: 'alert', data: r.data || [], error: r.error })))
     }
 
     // Vulnerabilities (KEV only for timeline relevance)
@@ -250,7 +247,7 @@ export const unifiedEvents = {
         .limit(limit)
       if (cutoffDate) q = q.gte('kev_date', cutoffDate.split('T')[0])
       if (search) q = q.or(`cve_id.ilike.%${search}%,description.ilike.%${search}%`)
-      queries.push(q.then(r => ({ type: 'vulnerability', data: r.data || [], error: r.error })))
+      queries.push(q.then((r) => ({ type: 'vulnerability', data: r.data || [], error: r.error })))
     }
 
     // IOCs
@@ -262,7 +259,7 @@ export const unifiedEvents = {
         .limit(limit)
       if (cutoffDate) q = q.gte('created_at', cutoffDate)
       if (search) q = q.ilike('value', `%${search}%`)
-      queries.push(q.then(r => ({ type: 'ioc', data: r.data || [], error: r.error })))
+      queries.push(q.then((r) => ({ type: 'ioc', data: r.data || [], error: r.error })))
     }
 
     // Malware samples
@@ -274,7 +271,7 @@ export const unifiedEvents = {
         .limit(limit)
       if (cutoffDate) q = q.gte('first_seen', cutoffDate)
       if (search) q = q.or(`signature.ilike.%${search}%,sha256.ilike.%${search}%`)
-      queries.push(q.then(r => ({ type: 'malware', data: r.data || [], error: r.error })))
+      queries.push(q.then((r) => ({ type: 'malware', data: r.data || [], error: r.error })))
     }
 
     // Breaches
@@ -286,7 +283,7 @@ export const unifiedEvents = {
         .limit(limit)
       if (cutoffDate) q = q.gte('breach_date', cutoffDate.split('T')[0])
       if (search) q = q.or(`name.ilike.%${search}%,domain.ilike.%${search}%`)
-      queries.push(q.then(r => ({ type: 'breach', data: r.data || [], error: r.error })))
+      queries.push(q.then((r) => ({ type: 'breach', data: r.data || [], error: r.error })))
     }
 
     // Execute all queries in parallel
@@ -306,17 +303,17 @@ export const unifiedEvents = {
         vulnerability: this.normalizeVulnerability,
         ioc: this.normalizeIOC,
         malware: this.normalizeMalware,
-        breach: this.normalizeBreach
+        breach: this.normalizeBreach,
       }[result.type]
 
       if (normalizer) {
-        allEvents = allEvents.concat(result.data.map(item => normalizer.call(this, item)))
+        allEvents = allEvents.concat(result.data.map((item) => normalizer.call(this, item)))
       }
     }
 
     // Filter by severity if specified
     if (severity) {
-      allEvents = allEvents.filter(e => e.severity === severity)
+      allEvents = allEvents.filter((e) => e.severity === severity)
     }
 
     // Sort by timestamp descending
@@ -332,13 +329,14 @@ export const unifiedEvents = {
     return {
       data: paginated,
       total: allEvents.length,
-      error: null
+      error: null,
     }
   },
 
   // Get statistics for all event types
   async getStats(days = 30) {
-    const cutoffDate = days > 0 ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null
+    const cutoffDate =
+      days > 0 ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null
 
     const queries = [
       // Incidents count
@@ -388,8 +386,13 @@ export const unifiedEvents = {
       ioc: iocs.count || 0,
       malware: malware.count || 0,
       breach: breaches.count || 0,
-      total: (incidents.count || 0) + (alerts.count || 0) + (vulns.count || 0) +
-             (iocs.count || 0) + (malware.count || 0) + (breaches.count || 0)
+      total:
+        (incidents.count || 0) +
+        (alerts.count || 0) +
+        (vulns.count || 0) +
+        (iocs.count || 0) +
+        (malware.count || 0) +
+        (breaches.count || 0),
     }
   },
 
@@ -400,8 +403,15 @@ export const unifiedEvents = {
 
     const [incidentsData, alertsData, vulnsData] = await Promise.all([
       supabase.from('incidents').select('discovered_date').gte('discovered_date', cutoff),
-      supabase.from('alerts').select('published_date').gte('published_date', cutoffDate.toISOString()),
-      supabase.from('vulnerabilities').select('kev_date').not('kev_date', 'is', null).gte('kev_date', cutoff),
+      supabase
+        .from('alerts')
+        .select('published_date')
+        .gte('published_date', cutoffDate.toISOString()),
+      supabase
+        .from('vulnerabilities')
+        .select('kev_date')
+        .not('kev_date', 'is', null)
+        .gte('kev_date', cutoff),
     ])
 
     // Build daily counts
@@ -442,7 +452,7 @@ export const unifiedEvents = {
     }
 
     return Object.values(dailyCounts).sort((a, b) => a.date.localeCompare(b.date))
-  }
+  },
 }
 
 export default unifiedEvents

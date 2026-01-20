@@ -17,11 +17,9 @@ export function exportToCSV(data, filename, columns = null) {
   // Build CSV content
   const rows = [
     // Header row
-    cols.map(c => escapeCSV(c.replace(/_/g, ' ').toUpperCase())).join(','),
+    cols.map((c) => escapeCSV(c.replace(/_/g, ' ').toUpperCase())).join(','),
     // Data rows
-    ...data.map(row =>
-      cols.map(col => escapeCSV(formatCSVValue(row[col]))).join(',')
-    )
+    ...data.map((row) => cols.map((col) => escapeCSV(formatCSVValue(row[col]))).join(',')),
   ]
 
   const csv = rows.join('\n')
@@ -64,10 +62,7 @@ export function exportToJSON(data, filename, pretty = true) {
 // ============================================================
 
 export function exportToSTIX(entities, entityType, options = {}) {
-  const {
-    includeMetadata = true,
-    bundleName = 'Vigil Export',
-  } = options
+  const { includeMetadata = true, bundleName = 'Vigil Export' } = options
 
   const stixObjects = []
 
@@ -143,9 +138,13 @@ function iocToSTIX(ioc) {
     indicator_types: getIndicatorTypes(ioc),
     confidence: ioc.confidence || 50,
     labels: ioc.tags || [],
-    external_references: ioc.source ? [{
-      source_name: ioc.source,
-    }] : [],
+    external_references: ioc.source
+      ? [
+          {
+            source_name: ioc.source,
+          },
+        ]
+      : [],
   }
 }
 
@@ -266,7 +265,15 @@ function downloadFile(content, filename, mimeType) {
 
 export const exportConfigs = {
   actors: {
-    columns: ['name', 'aliases', 'actor_type', 'target_sectors', 'first_seen', 'last_seen', 'trend_status'],
+    columns: [
+      'name',
+      'aliases',
+      'actor_type',
+      'target_sectors',
+      'first_seen',
+      'last_seen',
+      'trend_status',
+    ],
     filename: 'vigil-threat-actors',
   },
   incidents: {
@@ -305,10 +312,14 @@ export function getExportOptions(entityType, data) {
       icon: 'json',
       action: () => exportToJSON(data, config.filename || `vigil-${entityType}`),
     },
-    ...(entityType === 'iocs' || entityType === 'actors' ? [{
-      label: 'Export as STIX 2.1',
-      icon: 'stix',
-      action: () => exportToSTIX(data, entityType.slice(0, -1)), // Remove 's' for singular
-    }] : []),
+    ...(entityType === 'iocs' || entityType === 'actors'
+      ? [
+          {
+            label: 'Export as STIX 2.1',
+            icon: 'stix',
+            action: () => exportToSTIX(data, entityType.slice(0, -1)), // Remove 's' for singular
+          },
+        ]
+      : []),
   ]
 }

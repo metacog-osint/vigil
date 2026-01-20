@@ -48,11 +48,7 @@ export const vulnerabilities = {
   },
 
   async getByCVE(cveId) {
-    return supabase
-      .from('vulnerabilities')
-      .select('*')
-      .eq('cve_id', cveId)
-      .single()
+    return supabase.from('vulnerabilities').select('*').eq('cve_id', cveId).single()
   },
 
   async getCritical(minCvss = 9.0) {
@@ -91,9 +87,7 @@ export const vulnerabilities = {
   },
 
   async getBySeverity() {
-    const { data, error } = await supabase
-      .from('vulnerabilities')
-      .select('cvss_score')
+    const { data, error } = await supabase.from('vulnerabilities').select('cvss_score')
 
     if (error || !data || data.length === 0) {
       return [
@@ -152,11 +146,16 @@ export const vulnerabilities = {
 
     const { data: correlations } = await supabase
       .from('actor_vulnerabilities')
-      .select(`
+      .select(
+        `
         cve_id,
         actor:threat_actors(id, name, actor_type)
-      `)
-      .in('cve_id', kevs.map(k => k.cve_id))
+      `
+      )
+      .in(
+        'cve_id',
+        kevs.map((k) => k.cve_id)
+      )
 
     const actorMap = {}
     for (const corr of correlations || []) {
@@ -168,12 +167,17 @@ export const vulnerabilities = {
       }
     }
 
-    const enriched = kevs.map(kev => ({
+    const enriched = kevs.map((kev) => ({
       ...kev,
       actors: actorMap[kev.cve_id] || [],
-      severity: kev.cvss_score >= 9 ? 'critical' :
-                kev.cvss_score >= 7 ? 'high' :
-                kev.cvss_score >= 4 ? 'medium' : 'low'
+      severity:
+        kev.cvss_score >= 9
+          ? 'critical'
+          : kev.cvss_score >= 7
+            ? 'high'
+            : kev.cvss_score >= 4
+              ? 'medium'
+              : 'low',
     }))
 
     enriched.sort((a, b) => {

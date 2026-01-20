@@ -9,13 +9,7 @@ import { useNavigate } from 'react-router-dom'
 
 export function FocusModeToggle({ className = '' }) {
   const navigate = useNavigate()
-  const {
-    enabled,
-    filterDescription,
-    toggle,
-    hasProfile,
-    isLoading,
-  } = useFocusMode()
+  const { enabled, filterDescription, toggle, hasProfile, isLoading } = useFocusMode()
 
   // If no profile, show setup prompt
   const handleClick = () => {
@@ -27,9 +21,7 @@ export function FocusModeToggle({ className = '' }) {
   }
 
   if (isLoading) {
-    return (
-      <div className="w-24 h-8 bg-gray-800 rounded-lg animate-pulse" />
-    )
+    return <div className="w-24 h-8 bg-gray-800 rounded-lg animate-pulse" />
   }
 
   return (
@@ -37,9 +29,10 @@ export function FocusModeToggle({ className = '' }) {
       onClick={handleClick}
       className={`
         flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all
-        ${enabled
-          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 hover:bg-cyan-500/30'
-          : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800 border border-transparent'
+        ${
+          enabled
+            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 hover:bg-cyan-500/30'
+            : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800 border border-transparent'
         }
         ${className}
       `}
@@ -47,8 +40,8 @@ export function FocusModeToggle({ className = '' }) {
         !hasProfile
           ? 'Set up organization profile to enable Focus Mode'
           : enabled
-          ? `Focus Mode: ${filterDescription}`
-          : 'Enable Focus Mode to filter by your organization'
+            ? `Focus Mode: ${filterDescription}`
+            : 'Enable Focus Mode to filter by your organization'
       }
       aria-pressed={enabled}
     >
@@ -88,9 +81,7 @@ export function FocusModeToggle({ className = '' }) {
       </span>
 
       {/* Status indicator */}
-      {enabled && (
-        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-      )}
+      {enabled && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />}
     </button>
   )
 }

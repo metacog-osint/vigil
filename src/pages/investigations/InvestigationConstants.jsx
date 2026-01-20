@@ -28,7 +28,7 @@ export const TLP_COLORS = {
 }
 
 export function StatusBadge({ status, small = false }) {
-  const statusInfo = STATUSES.find(s => s.value === status)
+  const statusInfo = STATUSES.find((s) => s.value === status)
   const colors = {
     blue: 'bg-blue-500/20 text-blue-400',
     yellow: 'bg-yellow-500/20 text-yellow-400',
@@ -37,7 +37,9 @@ export function StatusBadge({ status, small = false }) {
   }
 
   return (
-    <span className={`${small ? 'text-xs px-1.5 py-0.5' : 'text-sm px-2 py-1'} rounded ${colors[statusInfo?.color] || colors.gray}`}>
+    <span
+      className={`${small ? 'text-xs px-1.5 py-0.5' : 'text-sm px-2 py-1'} rounded ${colors[statusInfo?.color] || colors.gray}`}
+    >
       {statusInfo?.label || status}
     </span>
   )

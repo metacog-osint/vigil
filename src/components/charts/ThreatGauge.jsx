@@ -44,7 +44,10 @@ export function ThreatGauge({
   className = '',
 }) {
   const level = useMemo(() => {
-    return THREAT_LEVELS.find(l => score >= l.min && score < l.max) || THREAT_LEVELS[THREAT_LEVELS.length - 1]
+    return (
+      THREAT_LEVELS.find((l) => score >= l.min && score < l.max) ||
+      THREAT_LEVELS[THREAT_LEVELS.length - 1]
+    )
   }, [score])
 
   const trendIcon = {
@@ -66,7 +69,9 @@ export function ThreatGauge({
         <h3 className="text-sm font-medium text-gray-400">Threat Level</h3>
         <div className={clsx('flex items-center gap-1', trendColor[trend])}>
           <span className="text-lg">{trendIcon[trend]}</span>
-          <span className="text-xs">{trend === 'up' ? 'Rising' : trend === 'down' ? 'Declining' : 'Stable'}</span>
+          <span className="text-xs">
+            {trend === 'up' ? 'Rising' : trend === 'down' ? 'Declining' : 'Stable'}
+          </span>
         </div>
       </div>
 
@@ -79,9 +84,7 @@ export function ThreatGauge({
         </div>
 
         {/* Level label */}
-        <div className={clsx('text-center text-sm font-medium', level.color)}>
-          {level.label}
-        </div>
+        <div className={clsx('text-center text-sm font-medium', level.color)}>{level.label}</div>
 
         {/* Gauge bar */}
         <div className="mt-4 h-2 bg-gray-800 rounded-full overflow-hidden">
@@ -122,16 +125,15 @@ export function ThreatGauge({
 }
 
 export function ThreatGaugeMini({ score = 0, className = '' }) {
-  const level = THREAT_LEVELS.find(l => score >= l.min && score < l.max) || THREAT_LEVELS[THREAT_LEVELS.length - 1]
+  const level =
+    THREAT_LEVELS.find((l) => score >= l.min && score < l.max) ||
+    THREAT_LEVELS[THREAT_LEVELS.length - 1]
 
   return (
     <div className={clsx('flex items-center gap-2', className)}>
       <div className={clsx('text-xl font-bold', level.color)}>{score}</div>
       <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-        <div
-          className={clsx('h-full rounded-full', level.bg)}
-          style={{ width: `${score}%` }}
-        />
+        <div className={clsx('h-full rounded-full', level.bg)} style={{ width: `${score}%` }} />
       </div>
       <div className={clsx('text-xs font-medium', level.color)}>{level.label}</div>
     </div>

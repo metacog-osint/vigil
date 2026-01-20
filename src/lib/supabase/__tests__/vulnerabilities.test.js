@@ -39,14 +39,19 @@ describe('vulnerabilities module', () => {
 
       expect(supabase.from).toHaveBeenCalledWith('vulnerabilities')
       expect(mockQuery.select).toHaveBeenCalledWith('*', { count: 'exact' })
-      expect(mockQuery.order).toHaveBeenCalledWith('cvss_score', { ascending: false, nullsFirst: false })
+      expect(mockQuery.order).toHaveBeenCalledWith('cvss_score', {
+        ascending: false,
+        nullsFirst: false,
+      })
       expect(mockQuery.range).toHaveBeenCalledWith(0, 99)
     })
 
     it('applies search filter', async () => {
       await vulnerabilities.getAll({ search: 'CVE-2024' })
 
-      expect(mockQuery.or).toHaveBeenCalledWith('cve_id.ilike.%CVE-2024%,description.ilike.%CVE-2024%')
+      expect(mockQuery.or).toHaveBeenCalledWith(
+        'cve_id.ilike.%CVE-2024%,description.ilike.%CVE-2024%'
+      )
     })
 
     it('applies minimum CVSS filter', async () => {
@@ -144,7 +149,9 @@ describe('vulnerabilities module', () => {
       await vulnerabilities.search('buffer overflow')
 
       expect(supabase.from).toHaveBeenCalledWith('vulnerabilities')
-      expect(mockQuery.or).toHaveBeenCalledWith('cve_id.ilike.%buffer overflow%,description.ilike.%buffer overflow%')
+      expect(mockQuery.or).toHaveBeenCalledWith(
+        'cve_id.ilike.%buffer overflow%,description.ilike.%buffer overflow%'
+      )
       expect(mockQuery.order).toHaveBeenCalledWith('cvss_score', { ascending: false })
       expect(mockQuery.limit).toHaveBeenCalledWith(10)
     })
@@ -292,16 +299,16 @@ describe('vulnerabilities module', () => {
   describe('getRecentForServices', () => {
     it('fetches recent vulnerabilities for service matching', async () => {
       mockQuery.limit.mockResolvedValue({
-        data: [
-          { cve_id: 'CVE-2024-001', affected_products: ['Apache'], cvss_score: 9.0 },
-        ],
+        data: [{ cve_id: 'CVE-2024-001', affected_products: ['Apache'], cvss_score: 9.0 }],
         error: null,
       })
 
       const result = await vulnerabilities.getRecentForServices(30)
 
       expect(supabase.from).toHaveBeenCalledWith('vulnerabilities')
-      expect(mockQuery.select).toHaveBeenCalledWith('cve_id, affected_products, affected_vendors, description, cvss_score')
+      expect(mockQuery.select).toHaveBeenCalledWith(
+        'cve_id, affected_products, affected_vendors, description, cvss_score'
+      )
       expect(mockQuery.limit).toHaveBeenCalledWith(500)
       expect(result).toHaveLength(1)
     })

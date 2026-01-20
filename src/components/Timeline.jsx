@@ -48,9 +48,7 @@ function TimelineItem({ event, isFirst: _isFirst, isLast, onClick }) {
               {event.title}
             </button>
             {event.description && (
-              <p className="text-sm text-gray-400 mt-1 line-clamp-2">
-                {event.description}
-              </p>
+              <p className="text-sm text-gray-400 mt-1 line-clamp-2">{event.description}</p>
             )}
             {event.tags?.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
@@ -71,23 +69,14 @@ function TimelineItem({ event, isFirst: _isFirst, isLast, onClick }) {
   )
 }
 
-export function Timeline({
-  events = [],
-  onEventClick,
-  className = '',
-  maxItems = 50,
-}) {
+export function Timeline({ events = [], onEventClick, className = '', maxItems = 50 }) {
   const sortedEvents = useMemo(() => {
-    return [...events]
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, maxItems)
+    return [...events].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, maxItems)
   }, [events, maxItems])
 
   if (sortedEvents.length === 0) {
     return (
-      <div className={clsx('text-center text-gray-500 py-8', className)}>
-        No events to display
-      </div>
+      <div className={clsx('text-center text-gray-500 py-8', className)}>No events to display</div>
     )
   }
 
@@ -107,16 +96,9 @@ export function Timeline({
 }
 
 // Compact timeline for dashboards
-export function TimelineMini({
-  events = [],
-  onEventClick,
-  className = '',
-  maxItems = 5,
-}) {
+export function TimelineMini({ events = [], onEventClick, className = '', maxItems = 5 }) {
   const recentEvents = useMemo(() => {
-    return [...events]
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, maxItems)
+    return [...events].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, maxItems)
   }, [events, maxItems])
 
   return (
@@ -185,9 +167,12 @@ export function ActorTimeline({
           id: `ioc-${date}`,
           type: 'ioc',
           title: `${dailyIocs.length} new IOC${dailyIocs.length > 1 ? 's' : ''} detected`,
-          description: dailyIocs.slice(0, 3).map(i => i.type).join(', '),
+          description: dailyIocs
+            .slice(0, 3)
+            .map((i) => i.type)
+            .join(', '),
           date: date,
-          tags: [...new Set(dailyIocs.flatMap(i => i.tags || []))].slice(0, 4),
+          tags: [...new Set(dailyIocs.flatMap((i) => i.tags || []))].slice(0, 4),
           data: dailyIocs,
         })
       }
@@ -209,9 +194,7 @@ export function ActorTimeline({
       {events.length > 0 ? (
         <Timeline events={events} maxItems={20} />
       ) : (
-        <div className="text-center text-gray-500 py-8">
-          No activity recorded for this actor
-        </div>
+        <div className="text-center text-gray-500 py-8">No activity recorded for this actor</div>
       )}
     </div>
   )

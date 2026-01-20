@@ -28,11 +28,7 @@ function getConfidenceLevel(confidence) {
 
 function StatusBadge({ status }) {
   const colorClass = STATUS_COLORS[status] || STATUS_COLORS.suspected
-  return (
-    <span className={`px-2 py-0.5 text-xs rounded border ${colorClass}`}>
-      {status}
-    </span>
-  )
+  return <span className={`px-2 py-0.5 text-xs rounded border ${colorClass}`}>{status}</span>
 }
 
 function ConfidenceBadge({ confidence }) {
@@ -59,9 +55,10 @@ export function CampaignCard({ campaign, onSelect, isSelected }) {
     description,
   } = campaign
 
-  const duration = startTime && endTime
-    ? Math.ceil((new Date(endTime) - new Date(startTime)) / (1000 * 60 * 60 * 24))
-    : null
+  const duration =
+    startTime && endTime
+      ? Math.ceil((new Date(endTime) - new Date(startTime)) / (1000 * 60 * 60 * 24))
+      : null
 
   return (
     <div
@@ -80,9 +77,7 @@ export function CampaignCard({ campaign, onSelect, isSelected }) {
               {actorName ? `${actorName} Campaign` : 'Detected Campaign'}
             </h3>
           </div>
-          {description && (
-            <p className="text-sm text-gray-400 mt-1 line-clamp-2">{description}</p>
-          )}
+          {description && <p className="text-sm text-gray-400 mt-1 line-clamp-2">{description}</p>}
         </div>
         <div className="flex items-center gap-2">
           <StatusBadge status={status} />
@@ -117,9 +112,7 @@ export function CampaignCard({ campaign, onSelect, isSelected }) {
               </span>
             ))}
             {sectors.length > 4 && (
-              <span className="px-2 py-0.5 text-gray-500 text-xs">
-                +{sectors.length - 4} more
-              </span>
+              <span className="px-2 py-0.5 text-gray-500 text-xs">+{sectors.length - 4} more</span>
             )}
           </div>
         </div>
@@ -134,7 +127,7 @@ export function CampaignCard({ campaign, onSelect, isSelected }) {
               <Link
                 key={i}
                 to={`/techniques?search=${encodeURIComponent(tech)}`}
-                onClick={e => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
                 className="px-2 py-0.5 bg-orange-900/30 text-orange-400 text-xs rounded font-mono hover:bg-orange-900/50"
               >
                 {tech}
@@ -152,14 +145,8 @@ export function CampaignCard({ campaign, onSelect, isSelected }) {
       {/* Timeline */}
       {startTime && (
         <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-800">
-          <span>
-            Started: {new Date(startTime).toLocaleDateString()}
-          </span>
-          {endTime && (
-            <span>
-              Last seen: {new Date(endTime).toLocaleDateString()}
-            </span>
-          )}
+          <span>Started: {new Date(startTime).toLocaleDateString()}</span>
+          {endTime && <span>Last seen: {new Date(endTime).toLocaleDateString()}</span>}
         </div>
       )}
 
@@ -167,7 +154,7 @@ export function CampaignCard({ campaign, onSelect, isSelected }) {
       {actorId && (
         <Link
           to={`/actors?search=${encodeURIComponent(actorName || actorId)}`}
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
           className="block text-center mt-3 py-2 bg-red-900/20 text-red-400 rounded text-sm hover:bg-red-900/30"
         >
           View Actor Profile →

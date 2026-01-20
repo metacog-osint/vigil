@@ -17,14 +17,14 @@ export const PLAYBOOK_CATEGORIES = {
   NETWORK: 'network_intrusion',
   DATA_EXFIL: 'data_exfiltration',
   INSIDER: 'insider_threat',
-  VULNERABILITY: 'vulnerability_response'
+  VULNERABILITY: 'vulnerability_response',
 }
 
 export const SEVERITY_LEVELS = {
   CRITICAL: { value: 1, label: 'Critical', color: '#dc2626', sla: '1 hour' },
   HIGH: { value: 2, label: 'High', color: '#f97316', sla: '4 hours' },
   MEDIUM: { value: 3, label: 'Medium', color: '#eab308', sla: '24 hours' },
-  LOW: { value: 4, label: 'Low', color: '#22c55e', sla: '72 hours' }
+  LOW: { value: 4, label: 'Low', color: '#22c55e', sla: '72 hours' },
 }
 
 export const PLAYBOOKS = [
@@ -42,21 +42,22 @@ export const PLAYBOOKS = [
       'User reports encrypted files',
       'Ransom note discovered',
       'Mass file encryption observed',
-      'Known ransomware C2 communication detected'
+      'Known ransomware C2 communication detected',
     ],
     steps: [
       {
         order: 1,
         title: 'Isolate Affected Systems',
-        description: 'Immediately isolate infected systems from the network to prevent lateral movement.',
+        description:
+          'Immediately isolate infected systems from the network to prevent lateral movement.',
         actions: [
           { type: 'manual', action: 'Disconnect network cable or disable WiFi' },
           { type: 'automation', action: 'quarantine_host', platform: 'crowdstrike' },
           { type: 'automation', action: 'isolate_endpoint', platform: 'sentinelone' },
-          { type: 'automation', action: 'block_host', platform: 'firewall' }
+          { type: 'automation', action: 'block_host', platform: 'firewall' },
         ],
         evidence: ['Screenshot of isolation confirmation', 'Network disconnect timestamp'],
-        sla: '15 minutes'
+        sla: '15 minutes',
       },
       {
         order: 2,
@@ -65,23 +66,27 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'manual', action: 'Do NOT power off systems - preserve memory' },
           { type: 'automation', action: 'memory_dump', platform: 'velociraptor' },
-          { type: 'automation', action: 'collect_artifacts', platform: 'kape' }
+          { type: 'automation', action: 'collect_artifacts', platform: 'kape' },
         ],
         evidence: ['Memory dump files', 'Process list', 'Network connections', 'Running services'],
-        sla: '30 minutes'
+        sla: '30 minutes',
       },
       {
         order: 3,
         title: 'Identify Ransomware Variant',
-        description: 'Determine the ransomware family to understand capabilities and potential decryption options.',
+        description:
+          'Determine the ransomware family to understand capabilities and potential decryption options.',
         actions: [
           { type: 'manual', action: 'Collect ransom note text' },
           { type: 'manual', action: 'Identify encrypted file extension' },
           { type: 'automation', action: 'submit_sample', platform: 'virustotal' },
-          { type: 'reference', action: 'Check ID Ransomware (id-ransomware.malwarehunterteam.com)' }
+          {
+            type: 'reference',
+            action: 'Check ID Ransomware (id-ransomware.malwarehunterteam.com)',
+          },
         ],
         evidence: ['Ransom note copy', 'Sample encrypted file', 'File extension pattern'],
-        sla: '1 hour'
+        sla: '1 hour',
       },
       {
         order: 4,
@@ -90,10 +95,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'manual', action: 'Query EDR for related detections' },
           { type: 'automation', action: 'search_iocs', platform: 'siem' },
-          { type: 'manual', action: 'Check shared drives and network storage' }
+          { type: 'manual', action: 'Check shared drives and network storage' },
         ],
         evidence: ['List of affected systems', 'Affected data inventory', 'Impact timeline'],
-        sla: '2 hours'
+        sla: '2 hours',
       },
       {
         order: 5,
@@ -103,10 +108,10 @@ export const PLAYBOOKS = [
           { type: 'manual', action: 'Notify Security leadership' },
           { type: 'manual', action: 'Notify IT leadership' },
           { type: 'manual', action: 'Consider legal/compliance notification requirements' },
-          { type: 'manual', action: 'Engage incident response retainer if needed' }
+          { type: 'manual', action: 'Engage incident response retainer if needed' },
         ],
         evidence: ['Stakeholder notification log', 'Decision documentation'],
-        sla: '2 hours'
+        sla: '2 hours',
       },
       {
         order: 6,
@@ -115,21 +120,21 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'automation', action: 'block_iocs', platform: 'firewall' },
           { type: 'automation', action: 'disable_compromised_accounts', platform: 'ad' },
-          { type: 'manual', action: 'Segment affected network zones' }
+          { type: 'manual', action: 'Segment affected network zones' },
         ],
         evidence: ['Blocked IOCs list', 'Disabled accounts', 'Network changes'],
-        sla: '4 hours'
-      }
+        sla: '4 hours',
+      },
     ],
     automationHooks: {
       onTrigger: ['slack_alert', 'pagerduty_page', 'create_ticket'],
-      onComplete: ['generate_report', 'update_metrics']
+      onComplete: ['generate_report', 'update_metrics'],
     },
     references: [
       { name: 'CISA Ransomware Guide', url: 'https://www.cisa.gov/stopransomware' },
-      { name: 'No More Ransom', url: 'https://www.nomoreransom.org' }
+      { name: 'No More Ransom', url: 'https://www.nomoreransom.org' },
     ],
-    mitreTechniques: ['T1486', 'T1490', 'T1489']
+    mitreTechniques: ['T1486', 'T1490', 'T1489'],
   },
 
   // =====================================================
@@ -145,7 +150,7 @@ export const PLAYBOOKS = [
       'User reports suspicious email',
       'Email gateway detects phishing',
       'URL detected as malicious post-delivery',
-      'Credential harvesting page identified'
+      'Credential harvesting page identified',
     ],
     steps: [
       {
@@ -155,10 +160,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'manual', action: 'Extract full email headers' },
           { type: 'automation', action: 'parse_headers', platform: 'email_security' },
-          { type: 'reference', action: 'Check SPF, DKIM, DMARC results' }
+          { type: 'reference', action: 'Check SPF, DKIM, DMARC results' },
         ],
         evidence: ['Full email headers', 'Authentication results'],
-        sla: '30 minutes'
+        sla: '30 minutes',
       },
       {
         order: 2,
@@ -167,10 +172,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'manual', action: 'Extract sender address, reply-to, URLs, attachments' },
           { type: 'automation', action: 'detonate_url', platform: 'urlscan' },
-          { type: 'automation', action: 'analyze_attachment', platform: 'sandbox' }
+          { type: 'automation', action: 'analyze_attachment', platform: 'sandbox' },
         ],
         evidence: ['URL analysis results', 'Attachment analysis', 'IOC list'],
-        sla: '1 hour'
+        sla: '1 hour',
       },
       {
         order: 3,
@@ -178,10 +183,10 @@ export const PLAYBOOKS = [
         description: 'Find all recipients of the phishing email.',
         actions: [
           { type: 'automation', action: 'search_message_trace', platform: 'email_gateway' },
-          { type: 'manual', action: 'Query email logs for subject/sender' }
+          { type: 'manual', action: 'Query email logs for subject/sender' },
         ],
         evidence: ['Recipient list', 'Delivery timeline'],
-        sla: '1 hour'
+        sla: '1 hour',
       },
       {
         order: 4,
@@ -190,10 +195,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'automation', action: 'delete_emails', platform: 'o365' },
           { type: 'automation', action: 'block_sender', platform: 'email_gateway' },
-          { type: 'automation', action: 'block_urls', platform: 'proxy' }
+          { type: 'automation', action: 'block_urls', platform: 'proxy' },
         ],
         evidence: ['Deletion confirmation', 'Block rules added'],
-        sla: '2 hours'
+        sla: '2 hours',
       },
       {
         order: 5,
@@ -202,10 +207,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'automation', action: 'search_proxy_logs', platform: 'proxy' },
           { type: 'manual', action: 'Interview reported clickers' },
-          { type: 'manual', action: 'Check for credential reuse' }
+          { type: 'manual', action: 'Check for credential reuse' },
         ],
         evidence: ['Click logs', 'User interviews', 'Compromise assessment'],
-        sla: '4 hours'
+        sla: '4 hours',
       },
       {
         order: 6,
@@ -214,20 +219,18 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'automation', action: 'reset_password', platform: 'ad' },
           { type: 'automation', action: 'revoke_sessions', platform: 'azure_ad' },
-          { type: 'manual', action: 'Notify affected users' }
+          { type: 'manual', action: 'Notify affected users' },
         ],
         evidence: ['Password reset confirmation', 'User notification'],
-        sla: '2 hours'
-      }
+        sla: '2 hours',
+      },
     ],
     automationHooks: {
       onTrigger: ['create_ticket', 'slack_alert'],
-      onComplete: ['update_threat_intel', 'user_awareness_tracking']
+      onComplete: ['update_threat_intel', 'user_awareness_tracking'],
     },
-    references: [
-      { name: 'NIST Phishing Guidance', url: 'https://www.nist.gov/phishing' }
-    ],
-    mitreTechniques: ['T1566.001', 'T1566.002', 'T1598']
+    references: [{ name: 'NIST Phishing Guidance', url: 'https://www.nist.gov/phishing' }],
+    mitreTechniques: ['T1566.001', 'T1566.002', 'T1598'],
   },
 
   // =====================================================
@@ -243,7 +246,7 @@ export const PLAYBOOKS = [
       'EDR detects malware execution',
       'AV quarantines malicious file',
       'Suspicious process behavior detected',
-      'C2 communication identified'
+      'C2 communication identified',
     ],
     steps: [
       {
@@ -253,10 +256,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'manual', action: 'Review EDR alert details' },
           { type: 'automation', action: 'get_detection_context', platform: 'edr' },
-          { type: 'automation', action: 'check_hash_reputation', platform: 'virustotal' }
+          { type: 'automation', action: 'check_hash_reputation', platform: 'virustotal' },
         ],
         evidence: ['Detection details', 'Hash analysis', 'File metadata'],
-        sla: '15 minutes'
+        sla: '15 minutes',
       },
       {
         order: 2,
@@ -265,10 +268,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'automation', action: 'kill_process', platform: 'edr' },
           { type: 'automation', action: 'quarantine_file', platform: 'edr' },
-          { type: 'automation', action: 'block_c2', platform: 'firewall' }
+          { type: 'automation', action: 'block_c2', platform: 'firewall' },
         ],
         evidence: ['Process termination log', 'Quarantine confirmation', 'Firewall rules'],
-        sla: '30 minutes'
+        sla: '30 minutes',
       },
       {
         order: 3,
@@ -277,10 +280,15 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'automation', action: 'collect_artifacts', platform: 'edr' },
           { type: 'manual', action: 'Preserve original malware sample' },
-          { type: 'automation', action: 'timeline_analysis', platform: 'velociraptor' }
+          { type: 'automation', action: 'timeline_analysis', platform: 'velociraptor' },
         ],
-        evidence: ['Malware sample', 'Execution timeline', 'Registry changes', 'File system changes'],
-        sla: '2 hours'
+        evidence: [
+          'Malware sample',
+          'Execution timeline',
+          'Registry changes',
+          'File system changes',
+        ],
+        sla: '2 hours',
       },
       {
         order: 4,
@@ -289,10 +297,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'manual', action: 'Review recent email attachments' },
           { type: 'manual', action: 'Check download history' },
-          { type: 'automation', action: 'correlate_events', platform: 'siem' }
+          { type: 'automation', action: 'correlate_events', platform: 'siem' },
         ],
         evidence: ['Entry vector determination', 'Initial access timeline'],
-        sla: '4 hours'
+        sla: '4 hours',
       },
       {
         order: 5,
@@ -300,10 +308,10 @@ export const PLAYBOOKS = [
         description: 'Search for indicators of compromise across the environment.',
         actions: [
           { type: 'automation', action: 'ioc_sweep', platform: 'edr' },
-          { type: 'automation', action: 'search_related_hashes', platform: 'siem' }
+          { type: 'automation', action: 'search_related_hashes', platform: 'siem' },
         ],
         evidence: ['Hunt results', 'Additional affected systems'],
-        sla: '8 hours'
+        sla: '8 hours',
       },
       {
         order: 6,
@@ -312,20 +320,23 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'automation', action: 'full_scan', platform: 'edr' },
           { type: 'manual', action: 'Verify system integrity' },
-          { type: 'manual', action: 'Restore from known-good backup if needed' }
+          { type: 'manual', action: 'Restore from known-good backup if needed' },
         ],
         evidence: ['Clean scan results', 'Recovery documentation'],
-        sla: '24 hours'
-      }
+        sla: '24 hours',
+      },
     ],
     automationHooks: {
       onTrigger: ['create_ticket', 'slack_alert', 'enrich_iocs'],
-      onComplete: ['block_iocs_globally', 'generate_report']
+      onComplete: ['block_iocs_globally', 'generate_report'],
     },
     references: [
-      { name: 'NIST Malware Incident Handling', url: 'https://csrc.nist.gov/publications/detail/sp/800-83/rev-1/final' }
+      {
+        name: 'NIST Malware Incident Handling',
+        url: 'https://csrc.nist.gov/publications/detail/sp/800-83/rev-1/final',
+      },
     ],
-    mitreTechniques: ['T1059', 'T1055', 'T1071']
+    mitreTechniques: ['T1059', 'T1055', 'T1071'],
   },
 
   // =====================================================
@@ -342,7 +353,7 @@ export const PLAYBOOKS = [
       'Impossible travel alert',
       'Suspicious authentication patterns',
       'User reports unauthorized access',
-      'Credential stuffing attack detected'
+      'Credential stuffing attack detected',
     ],
     steps: [
       {
@@ -352,10 +363,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'manual', action: 'Review authentication logs' },
           { type: 'automation', action: 'check_haveibeenpwned', platform: 'hibp' },
-          { type: 'manual', action: 'Interview user if applicable' }
+          { type: 'manual', action: 'Interview user if applicable' },
         ],
         evidence: ['Auth logs', 'Breach check results', 'User statement'],
-        sla: '30 minutes'
+        sla: '30 minutes',
       },
       {
         order: 2,
@@ -364,10 +375,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'automation', action: 'reset_password', platform: 'ad' },
           { type: 'automation', action: 'revoke_all_sessions', platform: 'azure_ad' },
-          { type: 'automation', action: 'revoke_oauth_tokens', platform: 'identity' }
+          { type: 'automation', action: 'revoke_oauth_tokens', platform: 'identity' },
         ],
         evidence: ['Reset confirmation', 'Session revocation log'],
-        sla: '15 minutes'
+        sla: '15 minutes',
       },
       {
         order: 3,
@@ -376,10 +387,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'automation', action: 'get_auth_history', platform: 'siem' },
           { type: 'automation', action: 'get_email_rules', platform: 'o365' },
-          { type: 'manual', action: 'Check for data access/exfiltration' }
+          { type: 'manual', action: 'Check for data access/exfiltration' },
         ],
         evidence: ['Activity timeline', 'Email rule audit', 'Data access logs'],
-        sla: '2 hours'
+        sla: '2 hours',
       },
       {
         order: 4,
@@ -388,10 +399,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'automation', action: 'check_mfa_devices', platform: 'azure_ad' },
           { type: 'manual', action: 'Review app passwords' },
-          { type: 'manual', action: 'Check OAuth app consents' }
+          { type: 'manual', action: 'Check OAuth app consents' },
         ],
         evidence: ['MFA device list', 'App consent audit'],
-        sla: '2 hours'
+        sla: '2 hours',
       },
       {
         order: 5,
@@ -400,17 +411,17 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'manual', action: 'Call/email user directly' },
           { type: 'manual', action: 'Provide new credentials securely' },
-          { type: 'manual', action: 'Recommend password manager' }
+          { type: 'manual', action: 'Recommend password manager' },
         ],
         evidence: ['User notification record', 'New credential delivery confirmation'],
-        sla: '4 hours'
-      }
+        sla: '4 hours',
+      },
     ],
     automationHooks: {
       onTrigger: ['create_ticket', 'disable_account_temporary'],
-      onComplete: ['update_user_risk_score', 'security_awareness_flag']
+      onComplete: ['update_user_risk_score', 'security_awareness_flag'],
     },
-    mitreTechniques: ['T1078', 'T1110', 'T1556']
+    mitreTechniques: ['T1078', 'T1110', 'T1556'],
   },
 
   // =====================================================
@@ -421,12 +432,13 @@ export const PLAYBOOKS = [
     name: 'Critical Vulnerability Response',
     category: PLAYBOOK_CATEGORIES.VULNERABILITY,
     severity: SEVERITY_LEVELS.CRITICAL,
-    description: 'Response procedure for critical vulnerabilities added to CISA KEV or with active exploitation.',
+    description:
+      'Response procedure for critical vulnerabilities added to CISA KEV or with active exploitation.',
     triggerConditions: [
       'Vulnerability added to CISA KEV',
       'Active exploitation reported',
       'CVSS 9.0+ with public exploit',
-      'Zero-day disclosed'
+      'Zero-day disclosed',
     ],
     steps: [
       {
@@ -436,10 +448,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'automation', action: 'scan_for_vulnerability', platform: 'vuln_scanner' },
           { type: 'automation', action: 'query_asset_inventory', platform: 'cmdb' },
-          { type: 'manual', action: 'Identify internet-facing vulnerable systems' }
+          { type: 'manual', action: 'Identify internet-facing vulnerable systems' },
         ],
         evidence: ['Scan results', 'Affected asset list', 'Exposure assessment'],
-        sla: '2 hours'
+        sla: '2 hours',
       },
       {
         order: 2,
@@ -448,10 +460,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'manual', action: 'Categorize by business criticality' },
           { type: 'manual', action: 'Identify internet-exposed systems' },
-          { type: 'manual', action: 'Determine data sensitivity' }
+          { type: 'manual', action: 'Determine data sensitivity' },
         ],
         evidence: ['Prioritized remediation list'],
-        sla: '4 hours'
+        sla: '4 hours',
       },
       {
         order: 3,
@@ -460,10 +472,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'manual', action: 'Disable vulnerable service if possible' },
           { type: 'automation', action: 'deploy_firewall_rules', platform: 'firewall' },
-          { type: 'manual', action: 'Implement network segmentation' }
+          { type: 'manual', action: 'Implement network segmentation' },
         ],
         evidence: ['Mitigation documentation', 'Firewall rules'],
-        sla: '8 hours'
+        sla: '8 hours',
       },
       {
         order: 4,
@@ -472,10 +484,10 @@ export const PLAYBOOKS = [
         actions: [
           { type: 'automation', action: 'deploy_patch', platform: 'sccm' },
           { type: 'manual', action: 'Test in staging first for critical systems' },
-          { type: 'manual', action: 'Coordinate maintenance windows' }
+          { type: 'manual', action: 'Coordinate maintenance windows' },
         ],
         evidence: ['Patch deployment logs', 'Post-patch verification'],
-        sla: '72 hours for critical, 2 weeks for others'
+        sla: '72 hours for critical, 2 weeks for others',
       },
       {
         order: 5,
@@ -483,10 +495,10 @@ export const PLAYBOOKS = [
         description: 'Confirm vulnerabilities are resolved.',
         actions: [
           { type: 'automation', action: 'rescan_systems', platform: 'vuln_scanner' },
-          { type: 'manual', action: 'Validate service functionality' }
+          { type: 'manual', action: 'Validate service functionality' },
         ],
         evidence: ['Clean scan results', 'Validation checklist'],
-        sla: '24 hours post-patch'
+        sla: '24 hours post-patch',
       },
       {
         order: 6,
@@ -494,35 +506,38 @@ export const PLAYBOOKS = [
         description: 'Check if vulnerability was exploited before patching.',
         actions: [
           { type: 'automation', action: 'search_exploit_indicators', platform: 'siem' },
-          { type: 'manual', action: 'Review logs for exploitation patterns' }
+          { type: 'manual', action: 'Review logs for exploitation patterns' },
         ],
         evidence: ['Hunt results', 'Exploitation assessment'],
-        sla: '48 hours'
-      }
+        sla: '48 hours',
+      },
     ],
     automationHooks: {
       onTrigger: ['create_ticket', 'notify_asset_owners', 'create_change_request'],
-      onComplete: ['update_vuln_metrics', 'generate_report']
+      onComplete: ['update_vuln_metrics', 'generate_report'],
     },
     references: [
-      { name: 'CISA KEV Catalog', url: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog' }
+      {
+        name: 'CISA KEV Catalog',
+        url: 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog',
+      },
     ],
-    mitreTechniques: ['T1190', 'T1210']
-  }
+    mitreTechniques: ['T1190', 'T1210'],
+  },
 ]
 
 /**
  * Get playbook by ID
  */
 export function getPlaybook(id) {
-  return PLAYBOOKS.find(p => p.id === id)
+  return PLAYBOOKS.find((p) => p.id === id)
 }
 
 /**
  * Get playbooks by category
  */
 export function getPlaybooksByCategory(category) {
-  return PLAYBOOKS.filter(p => p.category === category)
+  return PLAYBOOKS.filter((p) => p.category === category)
 }
 
 /**
@@ -537,10 +552,11 @@ export function getAllPlaybooks() {
  */
 export function searchPlaybooks(query) {
   const q = query.toLowerCase()
-  return PLAYBOOKS.filter(p =>
-    p.name.toLowerCase().includes(q) ||
-    p.description.toLowerCase().includes(q) ||
-    p.triggerConditions.some(tc => tc.toLowerCase().includes(q))
+  return PLAYBOOKS.filter(
+    (p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.triggerConditions.some((tc) => tc.toLowerCase().includes(q))
   )
 }
 

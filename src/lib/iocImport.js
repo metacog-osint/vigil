@@ -10,8 +10,8 @@ const STIX_TYPE_MAP = {
   'ipv4-addr': 'ip',
   'ipv6-addr': 'ip',
   'domain-name': 'domain',
-  'url': 'url',
-  'file': 'hash',
+  url: 'url',
+  file: 'hash',
   'email-addr': 'email',
   'mac-addr': 'mac',
   'autonomous-system': 'asn',
@@ -135,18 +135,18 @@ export function parseSTIX(stixJson) {
 const MISP_TYPE_MAP = {
   'ip-src': 'ip',
   'ip-dst': 'ip',
-  'domain': 'domain',
-  'hostname': 'domain',
-  'url': 'url',
-  'link': 'url',
-  'md5': 'md5',
-  'sha1': 'sha1',
-  'sha256': 'sha256',
-  'sha512': 'sha512',
-  'ssdeep': 'ssdeep',
+  domain: 'domain',
+  hostname: 'domain',
+  url: 'url',
+  link: 'url',
+  md5: 'md5',
+  sha1: 'sha1',
+  sha256: 'sha256',
+  sha512: 'sha512',
+  ssdeep: 'ssdeep',
   'email-src': 'email',
   'email-dst': 'email',
-  'filename': 'filename',
+  filename: 'filename',
   'filename|md5': 'md5',
   'filename|sha1': 'sha1',
   'filename|sha256': 'sha256',
@@ -161,7 +161,7 @@ export function parseMISP(mispJson) {
   }
 
   // Handle single event or array of events
-  const events = data.Event ? [data.Event] : (data.response || []).map(r => r.Event)
+  const events = data.Event ? [data.Event] : (data.response || []).map((r) => r.Event)
 
   for (const event of events) {
     if (!event) continue
@@ -192,7 +192,7 @@ export function parseMISP(mispJson) {
         to_ids: attr.to_ids === '1' || attr.to_ids === true,
         timestamp: attr.timestamp ? new Date(attr.timestamp * 1000).toISOString() : null,
         misp_uuid: attr.uuid,
-        tags: (attr.Tag || []).map(t => t.name),
+        tags: (attr.Tag || []).map((t) => t.name),
       })
     }
 
@@ -224,7 +224,8 @@ export function parseOpenIOC(xmlString) {
   const metadata = { format: 'openioc' }
 
   // Extract indicator items using regex (basic XML parsing)
-  const itemRegex = /<IndicatorItem[^>]*>[\s\S]*?<Context[^>]*document="([^"]*)"[^>]*search="([^"]*)"[^/]*\/>[\s\S]*?<Content[^>]*>([^<]*)<\/Content>[\s\S]*?<\/IndicatorItem>/gi
+  const itemRegex =
+    /<IndicatorItem[^>]*>[\s\S]*?<Context[^>]*document="([^"]*)"[^>]*search="([^"]*)"[^/]*\/>[\s\S]*?<Content[^>]*>([^<]*)<\/Content>[\s\S]*?<\/IndicatorItem>/gi
 
   let match
   while ((match = itemRegex.exec(xmlString)) !== null) {
@@ -254,7 +255,11 @@ export function parseIOCFile(content, filename = '') {
   const contentStr = typeof content === 'string' ? content : JSON.stringify(content)
 
   // Try to detect format
-  if (filename.endsWith('.xml') || contentStr.includes('<ioc ') || contentStr.includes('<OpenIOC')) {
+  if (
+    filename.endsWith('.xml') ||
+    contentStr.includes('<ioc ') ||
+    contentStr.includes('<OpenIOC')
+  ) {
     return { ...parseOpenIOC(contentStr), format: 'openioc' }
   }
 
@@ -314,7 +319,19 @@ async function enrichDomain(value) {
     enrichment.tld = value.split('.').pop()
 
     // Check if it's a known bad TLD
-    const suspiciousTLDs = ['xyz', 'top', 'club', 'work', 'click', 'link', 'gq', 'ml', 'cf', 'tk', 'ga']
+    const suspiciousTLDs = [
+      'xyz',
+      'top',
+      'club',
+      'work',
+      'click',
+      'link',
+      'gq',
+      'ml',
+      'cf',
+      'tk',
+      'ga',
+    ]
     enrichment.suspicious_tld = suspiciousTLDs.includes(enrichment.tld.toLowerCase())
   } catch (e) {
     enrichment.error = e.message
@@ -351,11 +368,7 @@ async function enrichIOC(ioc) {
 
 // Import parsed IOCs to database
 export async function importIOCs(parsedIOCs, userId, options = {}) {
-  const {
-    source = 'import',
-    tags = [],
-    autoEnrich = false,
-  } = options
+  const { source = 'import', tags = [], autoEnrich = false } = options
 
   const results = {
     total: parsedIOCs.length,

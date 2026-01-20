@@ -14,11 +14,7 @@ import {
   ChangeSummaryCard,
 } from '../../../components'
 
-export default function ActivityTab({
-  weekComparison,
-  changeSummary,
-  calendarData,
-}) {
+export default function ActivityTab({ weekComparison, changeSummary, calendarData }) {
   return (
     <div className="space-y-6">
       {/* Trend Analysis Row */}

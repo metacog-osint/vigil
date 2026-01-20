@@ -5,13 +5,13 @@
 
 // Actor type colors (hex values for charts/graphs)
 export const ACTOR_TYPE_COLORS = {
-  ransomware: '#ef4444',  // red-500
-  apt: '#8b5cf6',         // violet-500
-  cybercrime: '#f97316',  // orange-500
-  hacktivism: '#22c55e',  // green-500
-  initial_access_broker: '#eab308',  // yellow-500
-  data_extortion: '#ec4899',  // pink-500
-  default: '#6b7280',     // gray-500
+  ransomware: '#ef4444', // red-500
+  apt: '#8b5cf6', // violet-500
+  cybercrime: '#f97316', // orange-500
+  hacktivism: '#22c55e', // green-500
+  initial_access_broker: '#eab308', // yellow-500
+  data_extortion: '#ec4899', // pink-500
+  default: '#6b7280', // gray-500
 }
 
 // Actor type Tailwind classes
@@ -27,9 +27,9 @@ export const ACTOR_TYPE_CLASSES = {
 
 // Trend status colors
 export const TREND_COLORS = {
-  ESCALATING: '#ef4444',  // red
-  STABLE: '#6b7280',      // gray
-  DECLINING: '#22c55e',   // green
+  ESCALATING: '#ef4444', // red
+  STABLE: '#6b7280', // gray
+  DECLINING: '#22c55e', // green
 }
 
 // Trend status Tailwind classes
@@ -41,11 +41,11 @@ export const TREND_CLASSES = {
 
 // Severity colors (for CVEs, alerts)
 export const SEVERITY_COLORS = {
-  critical: '#dc2626',  // red-600
-  high: '#f97316',      // orange-500
-  medium: '#eab308',    // yellow-500
-  low: '#3b82f6',       // blue-500
-  info: '#6b7280',      // gray-500
+  critical: '#dc2626', // red-600
+  high: '#f97316', // orange-500
+  medium: '#eab308', // yellow-500
+  low: '#3b82f6', // blue-500
+  info: '#6b7280', // gray-500
 }
 
 // Severity Tailwind classes
@@ -91,19 +91,19 @@ export const TLP_CLASSES = {
 
 // Risk score colors (based on score value)
 export const RISK_SCORE_COLORS = {
-  critical: '#dc2626',  // 80+
-  high: '#f97316',      // 60-79
-  medium: '#eab308',    // 40-59
-  low: '#3b82f6',       // <40
+  critical: '#dc2626', // 80+
+  high: '#f97316', // 60-79
+  medium: '#eab308', // 40-59
+  low: '#3b82f6', // <40
 }
 
 // Activity intensity colors (for heatmaps/calendars)
 export const INTENSITY_COLORS = [
-  'bg-gray-800',         // 0 - no activity
-  'bg-red-900/50',       // 1 - low
-  'bg-red-700/60',       // 2 - medium
-  'bg-red-500/70',       // 3 - high
-  'bg-red-400',          // 4 - very high
+  'bg-gray-800', // 0 - no activity
+  'bg-red-900/50', // 1 - low
+  'bg-red-700/60', // 2 - medium
+  'bg-red-500/70', // 3 - high
+  'bg-red-400', // 4 - very high
 ]
 
 // Chart color palette

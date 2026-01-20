@@ -29,41 +29,41 @@ const OPERATORS = {
 // Field aliases for user-friendly queries
 const FIELD_ALIASES = {
   // Common
-  'type': 'type',
-  'source': 'source',
-  'tag': 'tags',
-  'tags': 'tags',
+  type: 'type',
+  source: 'source',
+  tag: 'tags',
+  tags: 'tags',
 
   // IOCs
-  'ip': 'value',
-  'hash': 'value',
-  'domain': 'value',
-  'url': 'value',
-  'confidence': 'confidence',
-  'seen': 'last_seen',
-  'first_seen': 'first_seen',
-  'last_seen': 'last_seen',
+  ip: 'value',
+  hash: 'value',
+  domain: 'value',
+  url: 'value',
+  confidence: 'confidence',
+  seen: 'last_seen',
+  first_seen: 'first_seen',
+  last_seen: 'last_seen',
 
   // Actors
-  'actor': 'name',
-  'name': 'name',
-  'country': 'origin_country',
-  'sector': 'target_sectors',
-  'motivation': 'motivation',
-  'trend': 'trend_status',
+  actor: 'name',
+  name: 'name',
+  country: 'origin_country',
+  sector: 'target_sectors',
+  motivation: 'motivation',
+  trend: 'trend_status',
 
   // Vulnerabilities
-  'cve': 'cve_id',
-  'cvss': 'cvss_score',
-  'severity': 'severity',
-  'kev': 'kev_date',
-  'exploited': 'exploited_in_wild',
-  'vendor': 'affected_vendors',
-  'product': 'affected_products',
+  cve: 'cve_id',
+  cvss: 'cvss_score',
+  severity: 'severity',
+  kev: 'kev_date',
+  exploited: 'exploited_in_wild',
+  vendor: 'affected_vendors',
+  product: 'affected_products',
 
   // Incidents
-  'victim': 'victim_name',
-  'date': 'discovered_date',
+  victim: 'victim_name',
+  date: 'discovered_date',
 }
 
 // Parse a query string into an AST
@@ -236,7 +236,12 @@ export function buildSupabaseQuery(supabaseQuery, conditions) {
     }
 
     // Handle array fields (tags, sectors)
-    if (field === 'tags' || field === 'target_sectors' || field.endsWith('_vendors') || field.endsWith('_products')) {
+    if (
+      field === 'tags' ||
+      field === 'target_sectors' ||
+      field.endsWith('_vendors') ||
+      field.endsWith('_products')
+    ) {
       supabaseQuery = supabaseQuery.contains(field, [value])
       continue
     }
@@ -311,9 +316,20 @@ function getRelevantFields(entityType) {
 
   switch (entityType) {
     case 'iocs':
-      return { ...common, confidence: 'confidence', first_seen: 'first_seen', last_seen: 'last_seen' }
+      return {
+        ...common,
+        confidence: 'confidence',
+        first_seen: 'first_seen',
+        last_seen: 'last_seen',
+      }
     case 'actors':
-      return { ...common, name: 'name', country: 'origin_country', sector: 'target_sectors', trend: 'trend_status' }
+      return {
+        ...common,
+        name: 'name',
+        country: 'origin_country',
+        sector: 'target_sectors',
+        trend: 'trend_status',
+      }
     case 'vulnerabilities':
       return { ...common, cve: 'cve_id', cvss: 'cvss_score', severity: 'severity', kev: 'kev_date' }
     case 'incidents':
@@ -333,7 +349,7 @@ function getValueSuggestions(field) {
     exploited: ['true', 'false'],
   }
 
-  return (suggestions[field] || []).map(v => ({
+  return (suggestions[field] || []).map((v) => ({
     text: `${field}:${v}`,
     description: v,
   }))
@@ -353,8 +369,10 @@ export function validateQuery(queryString) {
     // Check for unknown fields
     for (const condition of parsed) {
       if (condition.type === 'condition') {
-        if (!Object.values(FIELD_ALIASES).includes(condition.field) &&
-            !Object.keys(FIELD_ALIASES).includes(condition.originalField)) {
+        if (
+          !Object.values(FIELD_ALIASES).includes(condition.field) &&
+          !Object.keys(FIELD_ALIASES).includes(condition.originalField)
+        ) {
           return {
             valid: false,
             message: `Unknown field: ${condition.originalField}`,

@@ -12,13 +12,7 @@ export const PLATFORMS = {
     icon: 'slack',
     color: '#4A154B',
     oauthUrl: 'https://slack.com/oauth/v2/authorize',
-    scopes: [
-      'commands',
-      'chat:write',
-      'chat:write.public',
-      'users:read',
-      'channels:read',
-    ],
+    scopes: ['commands', 'chat:write', 'chat:write.public', 'users:read', 'channels:read'],
   },
   teams: {
     name: 'Microsoft Teams',
@@ -136,22 +130,25 @@ export const chatIntegrations = {
   async createFromOAuth(userId, platform, oauthData) {
     const { data, error } = await supabase
       .from('chat_integrations')
-      .upsert({
-        user_id: userId,
-        platform,
-        workspace_id: oauthData.workspaceId,
-        workspace_name: oauthData.workspaceName,
-        access_token: oauthData.accessToken,
-        refresh_token: oauthData.refreshToken,
-        token_expires_at: oauthData.expiresAt,
-        bot_user_id: oauthData.botUserId,
-        bot_access_token: oauthData.botAccessToken,
-        scopes: oauthData.scopes,
-        is_active: true,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id,platform,workspace_id',
-      })
+      .upsert(
+        {
+          user_id: userId,
+          platform,
+          workspace_id: oauthData.workspaceId,
+          workspace_name: oauthData.workspaceName,
+          access_token: oauthData.accessToken,
+          refresh_token: oauthData.refreshToken,
+          token_expires_at: oauthData.expiresAt,
+          bot_user_id: oauthData.botUserId,
+          bot_access_token: oauthData.botAccessToken,
+          scopes: oauthData.scopes,
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'user_id,platform,workspace_id',
+        }
+      )
       .select()
       .single()
 
@@ -209,10 +206,7 @@ export const chatIntegrations = {
    * Delete integration completely
    */
   async delete(integrationId) {
-    const { error } = await supabase
-      .from('chat_integrations')
-      .delete()
-      .eq('id', integrationId)
+    const { error } = await supabase.from('chat_integrations').delete().eq('id', integrationId)
 
     if (error) throw error
   },
@@ -444,9 +438,10 @@ export const messageQueue = {
         status: newStatus,
         retry_count: data.retry_count + 1,
         last_error: errorMessage,
-        scheduled_at: newStatus === 'pending'
-          ? new Date(Date.now() + Math.pow(2, data.retry_count) * 60000).toISOString()
-          : undefined,
+        scheduled_at:
+          newStatus === 'pending'
+            ? new Date(Date.now() + Math.pow(2, data.retry_count) * 60000).toISOString()
+            : undefined,
       })
       .eq('id', messageId)
   },
@@ -721,7 +716,10 @@ export function formatTeamsCard(type, data) {
       card.body = [{ type: 'TextBlock', text: JSON.stringify(data) }]
   }
 
-  return { type: 'message', attachments: [{ contentType: 'application/vnd.microsoft.card.adaptive', content: card }] }
+  return {
+    type: 'message',
+    attachments: [{ contentType: 'application/vnd.microsoft.card.adaptive', content: card }],
+  }
 }
 
 export default {

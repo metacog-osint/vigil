@@ -27,11 +27,7 @@ const StatCard = memo(function StatCard({ label, value, trend, trendLabel, icon 
             </div>
           )}
         </div>
-        {icon && (
-          <div className="text-gray-500">
-            {icon}
-          </div>
-        )}
+        {icon && <div className="text-gray-500">{icon}</div>}
       </div>
     </div>
   )

@@ -76,40 +76,43 @@ export default function Events() {
   const [selectedEvent, setSelectedEvent] = useState(null)
 
   // Load events
-  const loadEvents = useCallback(async (reset = false) => {
-    if (reset) {
-      setLoading(true)
-      setEvents([])
-    } else {
-      setLoadingMore(true)
-    }
-
-    try {
-      const offset = reset ? 0 : events.length
-      const { data, total, error } = await unifiedEvents.getTimeline({
-        days: timeRange,
-        types: selectedTypes,
-        severity,
-        search,
-        limit: PAGE_SIZE,
-        offset,
-      })
-
-      if (error) throw error
-
+  const loadEvents = useCallback(
+    async (reset = false) => {
       if (reset) {
-        setEvents(data || [])
+        setLoading(true)
+        setEvents([])
       } else {
-        setEvents(prev => [...prev, ...(data || [])])
+        setLoadingMore(true)
       }
-      setTotalCount(total || 0)
-    } catch (error) {
-      console.error('Error loading events:', error)
-    } finally {
-      setLoading(false)
-      setLoadingMore(false)
-    }
-  }, [timeRange, selectedTypes, severity, search, events.length])
+
+      try {
+        const offset = reset ? 0 : events.length
+        const { data, total, error } = await unifiedEvents.getTimeline({
+          days: timeRange,
+          types: selectedTypes,
+          severity,
+          search,
+          limit: PAGE_SIZE,
+          offset,
+        })
+
+        if (error) throw error
+
+        if (reset) {
+          setEvents(data || [])
+        } else {
+          setEvents((prev) => [...prev, ...(data || [])])
+        }
+        setTotalCount(total || 0)
+      } catch (error) {
+        console.error('Error loading events:', error)
+      } finally {
+        setLoading(false)
+        setLoadingMore(false)
+      }
+    },
+    [timeRange, selectedTypes, severity, search, events.length]
+  )
 
   // Load stats
   const loadStats = useCallback(async () => {
@@ -145,10 +148,8 @@ export default function Events() {
 
   // Toggle type filter
   const toggleType = (type) => {
-    setSelectedTypes(prev =>
-      prev.includes(type)
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     )
   }
 
@@ -170,7 +171,7 @@ export default function Events() {
       value,
       color: TYPE_COLORS[key],
     }))
-    .filter(d => d.value > 0)
+    .filter((d) => d.value > 0)
 
   return (
     <div className="space-y-6">
@@ -192,18 +193,30 @@ export default function Events() {
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                />
               </svg>
               Table
             </button>
             <button
               onClick={() => setViewMode('overview')}
               className={`px-3 py-1.5 text-sm flex items-center gap-1 ${
-                viewMode === 'overview' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'
+                viewMode === 'overview'
+                  ? 'bg-cyan-600 text-white'
+                  : 'text-gray-400 hover:text-white'
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
               </svg>
               Overview
             </button>
@@ -215,7 +228,7 @@ export default function Events() {
       <div className="flex flex-wrap gap-3 items-center">
         {/* Time range */}
         <div className="flex gap-1">
-          {TIME_RANGES.map(range => (
+          {TIME_RANGES.map((range) => (
             <button
               key={range.value}
               onClick={() => setTimeRange(range.value)}
@@ -236,8 +249,10 @@ export default function Events() {
           onChange={(e) => setSeverity(e.target.value)}
           className={`cyber-input text-sm ${severity ? 'ring-2 ring-cyan-500 border-cyan-500' : ''}`}
         >
-          {SEVERITIES.map(s => (
-            <option key={s.value} value={s.value}>{s.label}</option>
+          {SEVERITIES.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
           ))}
         </select>
 
@@ -256,7 +271,12 @@ export default function Events() {
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
         </div>
 
@@ -267,7 +287,12 @@ export default function Events() {
             className="text-sm text-gray-400 hover:text-cyan-400 flex items-center gap-1.5 px-3 py-2 rounded border border-gray-700 hover:border-gray-600"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
             Clear
           </button>
@@ -276,7 +301,7 @@ export default function Events() {
 
       {/* Type filter chips / Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {EVENT_TYPES.map(type => {
+        {EVENT_TYPES.map((type) => {
           const config = getEventTypeConfig(type)
           const count = stats[type] || 0
           const isSelected = selectedTypes.includes(type)
@@ -292,7 +317,11 @@ export default function Events() {
               <div className="flex items-center justify-between mb-1">
                 <EventTypeBadge type={type} size="xs" showLabel={false} />
                 {isSelected && (
-                  <svg className={`w-4 h-4 ${config.textClass}`} fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className={`w-4 h-4 ${config.textClass}`}
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                   </svg>
                 )}
@@ -331,10 +360,7 @@ export default function Events() {
         {/* Detail panel - desktop sidebar */}
         {selectedEvent && viewMode === 'table' && (
           <div className="hidden lg:block">
-            <EventDetailPanel
-              event={selectedEvent}
-              onClose={() => setSelectedEvent(null)}
-            />
+            <EventDetailPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />
           </div>
         )}
       </div>
@@ -351,7 +377,12 @@ export default function Events() {
                 aria-label="Close"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -367,7 +398,15 @@ export default function Events() {
   )
 }
 
-function TableView({ events, loading, loadingMore, totalCount, selectedEvent, onSelectEvent, onLoadMore }) {
+function TableView({
+  events,
+  loading,
+  loadingMore,
+  totalCount,
+  selectedEvent,
+  onSelectEvent,
+  onLoadMore,
+}) {
   if (loading) {
     return <SkeletonTable rows={10} cols={5} />
   }
@@ -375,8 +414,18 @@ function TableView({ events, loading, loadingMore, totalCount, selectedEvent, on
   if (events.length === 0) {
     return (
       <div className="cyber-card p-12 text-center">
-        <svg className="w-12 h-12 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <svg
+          className="w-12 h-12 mx-auto text-gray-600 mb-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
         </svg>
         <h3 className="text-lg font-medium text-white mb-2">No events found</h3>
         <p className="text-gray-400">Try adjusting your filters or time range</p>
@@ -489,7 +538,12 @@ function OverviewView({ stats, dailyCounts, pieData, loading }) {
           <Tooltip content="Daily count of security events by type">
             <span className="text-gray-500 hover:text-gray-300 cursor-help">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </span>
           </Tooltip>
@@ -498,16 +552,16 @@ function OverviewView({ stats, dailyCounts, pieData, loading }) {
           <AreaChart data={dailyCounts}>
             <defs>
               <linearGradient id="ransomwareGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4}/>
-                <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="alertGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#eab308" stopOpacity={0.4}/>
-                <stop offset="95%" stopColor="#eab308" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#eab308" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#eab308" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="vulnGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f97316" stopOpacity={0.4}/>
-                <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#f97316" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -516,17 +570,53 @@ function OverviewView({ stats, dailyCounts, pieData, loading }) {
               stroke="#6b7280"
               fontSize={11}
               tickLine={false}
-              tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              tickFormatter={(d) =>
+                new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+              }
             />
             <YAxis stroke="#6b7280" fontSize={11} tickLine={false} />
             <RechartsTooltip
-              contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+              contentStyle={{
+                backgroundColor: '#1f2937',
+                border: '1px solid #374151',
+                borderRadius: '8px',
+              }}
               labelStyle={{ color: '#9ca3af' }}
-              labelFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              labelFormatter={(d) =>
+                new Date(d).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                })
+              }
             />
-            <Area type="monotone" dataKey="ransomware" name="Ransomware" stroke="#ef4444" strokeWidth={2} fill="url(#ransomwareGrad)" stackId="1" />
-            <Area type="monotone" dataKey="alert" name="Alerts" stroke="#eab308" strokeWidth={2} fill="url(#alertGrad)" stackId="1" />
-            <Area type="monotone" dataKey="vulnerability" name="KEVs" stroke="#f97316" strokeWidth={2} fill="url(#vulnGrad)" stackId="1" />
+            <Area
+              type="monotone"
+              dataKey="ransomware"
+              name="Ransomware"
+              stroke="#ef4444"
+              strokeWidth={2}
+              fill="url(#ransomwareGrad)"
+              stackId="1"
+            />
+            <Area
+              type="monotone"
+              dataKey="alert"
+              name="Alerts"
+              stroke="#eab308"
+              strokeWidth={2}
+              fill="url(#alertGrad)"
+              stackId="1"
+            />
+            <Area
+              type="monotone"
+              dataKey="vulnerability"
+              name="KEVs"
+              stroke="#f97316"
+              strokeWidth={2}
+              fill="url(#vulnGrad)"
+              stackId="1"
+            />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -552,7 +642,11 @@ function OverviewView({ stats, dailyCounts, pieData, loading }) {
                   ))}
                 </Pie>
                 <RechartsTooltip
-                  contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                  contentStyle={{
+                    backgroundColor: '#1f2937',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                  }}
                 />
                 <Legend
                   layout="vertical"
@@ -575,7 +669,9 @@ function OverviewView({ stats, dailyCounts, pieData, loading }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded">
               <span className="text-gray-400">Total Events</span>
-              <span className="text-2xl font-bold text-white">{stats.total?.toLocaleString() || 0}</span>
+              <span className="text-2xl font-bold text-white">
+                {stats.total?.toLocaleString() || 0}
+              </span>
             </div>
             {Object.entries(stats)
               .filter(([key]) => key !== 'total')
@@ -586,7 +682,10 @@ function OverviewView({ stats, dailyCounts, pieData, loading }) {
                 return (
                   <div key={type} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: TYPE_COLORS[type] }} />
+                      <div
+                        className={`w-3 h-3 rounded-full`}
+                        style={{ backgroundColor: TYPE_COLORS[type] }}
+                      />
                       <span className="text-gray-300">{config.label}</span>
                     </div>
                     <span className="text-white font-medium">{count.toLocaleString()}</span>

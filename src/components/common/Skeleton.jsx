@@ -15,12 +15,7 @@ export function Skeleton({ className, ...props }) {
 }
 
 export function SkeletonLine({ width = '100%', height = '1rem', className = '' }) {
-  return (
-    <Skeleton
-      className={className}
-      style={{ width, height }}
-    />
-  )
+  return <Skeleton className={className} style={{ width, height }} />
 }
 
 // Avatar skeleton

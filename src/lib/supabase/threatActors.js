@@ -7,7 +7,15 @@ import { supabase } from './client'
 
 export const threatActors = {
   async getAll(options = {}) {
-    const { limit = 100, offset = 0, search = '', sector = '', trendStatus = '', actorType = '', status = '' } = options
+    const {
+      limit = 100,
+      offset = 0,
+      search = '',
+      sector = '',
+      trendStatus = '',
+      actorType = '',
+      status = '',
+    } = options
 
     let query = supabase
       .from('threat_actors')
@@ -42,11 +50,13 @@ export const threatActors = {
   async getById(id) {
     return supabase
       .from('threat_actors')
-      .select(`
+      .select(
+        `
         *,
         incidents:incidents(count),
         iocs:iocs(count)
-      `)
+      `
+      )
       .eq('id', id)
       .single()
   },
@@ -93,10 +103,12 @@ export const threatActors = {
       return { data: [], error }
     }
 
-    const actorsWithCounts = actors.map(actor => ({
-      ...actor,
-      incident_count: [{ count: actorCounts[actor.id] || 0 }],
-    })).sort((a, b) => (b.incident_count[0]?.count || 0) - (a.incident_count[0]?.count || 0))
+    const actorsWithCounts = actors
+      .map((actor) => ({
+        ...actor,
+        incident_count: [{ count: actorCounts[actor.id] || 0 }],
+      }))
+      .sort((a, b) => (b.incident_count[0]?.count || 0) - (a.incident_count[0]?.count || 0))
 
     return { data: actorsWithCounts, error: null }
   },
@@ -112,9 +124,18 @@ export const threatActors = {
 
   async getTrendSummary() {
     const [escalating, stable, declining] = await Promise.all([
-      supabase.from('threat_actors').select('*', { count: 'exact', head: true }).eq('trend_status', 'ESCALATING'),
-      supabase.from('threat_actors').select('*', { count: 'exact', head: true }).eq('trend_status', 'STABLE'),
-      supabase.from('threat_actors').select('*', { count: 'exact', head: true }).eq('trend_status', 'DECLINING'),
+      supabase
+        .from('threat_actors')
+        .select('*', { count: 'exact', head: true })
+        .eq('trend_status', 'ESCALATING'),
+      supabase
+        .from('threat_actors')
+        .select('*', { count: 'exact', head: true })
+        .eq('trend_status', 'STABLE'),
+      supabase
+        .from('threat_actors')
+        .select('*', { count: 'exact', head: true })
+        .eq('trend_status', 'DECLINING'),
     ])
 
     return {

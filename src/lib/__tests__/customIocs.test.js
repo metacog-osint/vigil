@@ -16,40 +16,56 @@ import {
 } from '../customIocs'
 
 // Mock supabase
-const mockListsSelectOrder = vi.fn(() => Promise.resolve({
-  data: [{ id: 'list-1', name: 'Test List' }],
-  error: null
-}))
-const mockListsSelectSingle = vi.fn(() => Promise.resolve({
-  data: { id: 'list-1', name: 'Test List' },
-  error: null
-}))
-const mockListsInsertSingle = vi.fn(() => Promise.resolve({
-  data: { id: 'list-1', name: 'New List' },
-  error: null
-}))
-const mockListsUpdateSingle = vi.fn(() => Promise.resolve({
-  data: { id: 'list-1', name: 'Updated List' },
-  error: null
-}))
+const mockListsSelectOrder = vi.fn(() =>
+  Promise.resolve({
+    data: [{ id: 'list-1', name: 'Test List' }],
+    error: null,
+  })
+)
+const mockListsSelectSingle = vi.fn(() =>
+  Promise.resolve({
+    data: { id: 'list-1', name: 'Test List' },
+    error: null,
+  })
+)
+const mockListsInsertSingle = vi.fn(() =>
+  Promise.resolve({
+    data: { id: 'list-1', name: 'New List' },
+    error: null,
+  })
+)
+const mockListsUpdateSingle = vi.fn(() =>
+  Promise.resolve({
+    data: { id: 'list-1', name: 'Updated List' },
+    error: null,
+  })
+)
 const mockListsDelete = vi.fn(() => Promise.resolve({ error: null }))
 
-const mockIocsSelectOrder = vi.fn(() => Promise.resolve({
-  data: [{ id: 'ioc-1', value: '8.8.8.8' }],
-  error: null
-}))
-const mockIocsInsertSingle = vi.fn(() => Promise.resolve({
-  data: { id: 'ioc-1', value: '8.8.8.8' },
-  error: null
-}))
-const mockIocsUpsertSelect = vi.fn(() => Promise.resolve({
-  data: [{ id: 'ioc-1' }, { id: 'ioc-2' }],
-  error: null
-}))
-const mockIocsUpdateSingle = vi.fn(() => Promise.resolve({
-  data: { id: 'ioc-1', confidence: 90 },
-  error: null
-}))
+const mockIocsSelectOrder = vi.fn(() =>
+  Promise.resolve({
+    data: [{ id: 'ioc-1', value: '8.8.8.8' }],
+    error: null,
+  })
+)
+const mockIocsInsertSingle = vi.fn(() =>
+  Promise.resolve({
+    data: { id: 'ioc-1', value: '8.8.8.8' },
+    error: null,
+  })
+)
+const mockIocsUpsertSelect = vi.fn(() =>
+  Promise.resolve({
+    data: [{ id: 'ioc-1' }, { id: 'ioc-2' }],
+    error: null,
+  })
+)
+const mockIocsUpdateSingle = vi.fn(() =>
+  Promise.resolve({
+    data: { id: 'ioc-1', confidence: 90 },
+    error: null,
+  })
+)
 const mockIocsDelete = vi.fn(() => Promise.resolve({ error: null }))
 
 vi.mock('../supabase', () => ({
@@ -94,7 +110,12 @@ vi.mock('../supabase', () => ({
               eq: vi.fn(() => ({
                 order: mockIocsSelectOrder,
               })),
-              is: vi.fn(() => Promise.resolve({ data: [{ id: 'ioc-1', value_normalized: '8.8.8.8' }], error: null })),
+              is: vi.fn(() =>
+                Promise.resolve({
+                  data: [{ id: 'ioc-1', value_normalized: '8.8.8.8' }],
+                  error: null,
+                })
+              ),
             })),
           })),
           insert: vi.fn(() => ({
@@ -371,7 +392,7 @@ describe('THREAT_TYPES', () => {
   })
 
   it('should include common threat types', () => {
-    const values = THREAT_TYPES.map(t => t.value)
+    const values = THREAT_TYPES.map((t) => t.value)
     expect(values).toContain('malware')
     expect(values).toContain('c2')
     expect(values).toContain('phishing')
@@ -397,11 +418,15 @@ describe('normalizeIocValue', () => {
 
   describe('hashes', () => {
     it('should lowercase MD5 hashes', () => {
-      expect(normalizeIocValue('5D41402ABC4B2A76B9719D911017C592', 'md5')).toBe('5d41402abc4b2a76b9719d911017c592')
+      expect(normalizeIocValue('5D41402ABC4B2A76B9719D911017C592', 'md5')).toBe(
+        '5d41402abc4b2a76b9719d911017c592'
+      )
     })
 
     it('should lowercase SHA1 hashes', () => {
-      expect(normalizeIocValue('AAF4C61DDCC5E8A2DABEDE0F3B482CD9AEA9434D', 'sha1')).toBe('aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d')
+      expect(normalizeIocValue('AAF4C61DDCC5E8A2DABEDE0F3B482CD9AEA9434D', 'sha1')).toBe(
+        'aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d'
+      )
     })
 
     it('should lowercase SHA256 hashes', () => {
@@ -461,7 +486,9 @@ describe('detectIocType', () => {
     })
 
     it('should detect SHA256 hashes (64 chars)', () => {
-      expect(detectIocType('2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824')).toBe('sha256')
+      expect(
+        detectIocType('2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824')
+      ).toBe('sha256')
     })
   })
 
@@ -558,7 +585,8 @@ describe('parseIocsFromText', () => {
 
 describe('parseIocsFromCsv', () => {
   it('should parse CSV with standard headers', () => {
-    const csv = 'value,type,threat_type,description\n192.168.1.1,ip,c2,Command server\nexample.com,domain,phishing,Phishing site'
+    const csv =
+      'value,type,threat_type,description\n192.168.1.1,ip,c2,Command server\nexample.com,domain,phishing,Phishing site'
     const result = parseIocsFromCsv(csv)
 
     expect(result).toHaveLength(2)

@@ -28,19 +28,24 @@ export const STATUS_OPTIONS = [
 ]
 
 // Sector filter options
-export const SECTOR_FILTER_OPTIONS = SECTORS.map(s => ({
+export const SECTOR_FILTER_OPTIONS = SECTORS.map((s) => ({
   value: s,
   label: getSectorLabel(s),
-  color: 'bg-cyan-400'
+  color: 'bg-cyan-400',
 }))
 
 // Get status color class
 export function getStatusColor(status) {
   switch (status) {
-    case 'claimed': return 'bg-orange-900/50 text-orange-400 border border-orange-800'
-    case 'confirmed': return 'bg-red-900/50 text-red-400 border border-red-800'
-    case 'leaked': return 'bg-red-900/70 text-red-300 border border-red-700'
-    case 'paid': return 'bg-yellow-900/50 text-yellow-400 border border-yellow-800'
-    default: return 'bg-gray-800/50 text-gray-400 border border-gray-700'
+    case 'claimed':
+      return 'bg-orange-900/50 text-orange-400 border border-orange-800'
+    case 'confirmed':
+      return 'bg-red-900/50 text-red-400 border border-red-800'
+    case 'leaked':
+      return 'bg-red-900/70 text-red-300 border border-red-700'
+    case 'paid':
+      return 'bg-yellow-900/50 text-yellow-400 border border-yellow-800'
+    default:
+      return 'bg-gray-800/50 text-gray-400 border border-gray-700'
   }
 }

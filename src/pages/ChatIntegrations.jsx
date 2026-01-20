@@ -127,7 +127,12 @@ export default function ChatIntegrations() {
             className="cyber-button-primary flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             Connect Platform
           </button>
@@ -161,10 +166,7 @@ export default function ChatIntegrations() {
             <p className="text-gray-500 text-sm mb-4">
               Connect Slack or Teams to query threat intelligence from chat
             </p>
-            <button
-              onClick={() => setShowConnectModal(true)}
-              className="cyber-button-primary"
-            >
+            <button onClick={() => setShowConnectModal(true)} className="cyber-button-primary">
               Connect Your First Platform
             </button>
           </div>
@@ -195,7 +197,11 @@ export default function ChatIntegrations() {
                             style={{ backgroundColor: platform?.color + '30' }}
                           >
                             <span className="text-lg">
-                              {integration.platform === 'slack' ? '📱' : integration.platform === 'teams' ? '💬' : '🎮'}
+                              {integration.platform === 'slack'
+                                ? '📱'
+                                : integration.platform === 'teams'
+                                  ? '💬'
+                                  : '🎮'}
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
@@ -232,9 +238,7 @@ export default function ChatIntegrations() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="cyber-card p-4">
                       <div className="text-gray-400 text-sm">Commands (7d)</div>
-                      <div className="text-2xl font-bold text-white">
-                        {stats?.total || 0}
-                      </div>
+                      <div className="text-2xl font-bold text-white">{stats?.total || 0}</div>
                     </div>
                     <div className="cyber-card p-4">
                       <div className="text-gray-400 text-sm">Success Rate</div>
@@ -263,9 +267,7 @@ export default function ChatIntegrations() {
                         key={v}
                         onClick={() => setView(v)}
                         className={`px-4 py-2 text-sm font-medium rounded-t transition-colors ${
-                          view === v
-                            ? 'bg-gray-800 text-white'
-                            : 'text-gray-400 hover:text-white'
+                          view === v ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'
                         }`}
                       >
                         {v.charAt(0).toUpperCase() + v.slice(1)}
@@ -285,7 +287,8 @@ export default function ChatIntegrations() {
                           <div className="text-center py-8 text-gray-500">
                             <p>No subscriptions yet.</p>
                             <p className="text-sm mt-1">
-                              Use <code className="bg-gray-800 px-1 rounded">/vigil subscribe</code> in a channel
+                              Use <code className="bg-gray-800 px-1 rounded">/vigil subscribe</code>{' '}
+                              in a channel
                             </p>
                           </div>
                         ) : (
@@ -322,8 +325,18 @@ export default function ChatIntegrations() {
                                   onClick={() => handleDeleteSubscription(sub)}
                                   className="p-1 text-gray-500 hover:text-red-400"
                                 >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
                                   </svg>
                                 </button>
                               </div>
@@ -338,16 +351,11 @@ export default function ChatIntegrations() {
                         <h4 className="font-medium text-white">Available Commands</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {Object.values(COMMANDS).map((cmd) => (
-                            <div
-                              key={cmd.name}
-                              className="p-3 bg-gray-800/30 rounded-lg"
-                            >
+                            <div key={cmd.name} className="p-3 bg-gray-800/30 rounded-lg">
                               <div className="font-mono text-sm text-cyber-accent mb-1">
                                 {cmd.usage}
                               </div>
-                              <div className="text-sm text-gray-400">
-                                {cmd.description}
-                              </div>
+                              <div className="text-sm text-gray-400">{cmd.description}</div>
                               <div className="text-xs text-gray-600 mt-2">
                                 e.g., {cmd.examples[0]}
                               </div>
@@ -379,20 +387,14 @@ export default function ChatIntegrations() {
                                         : 'bg-red-500'
                                     }`}
                                   />
-                                  <span className="font-mono text-gray-300">
-                                    /{log.command}
-                                  </span>
+                                  <span className="font-mono text-gray-300">/{log.command}</span>
                                   {log.arguments && (
-                                    <span className="text-gray-500">
-                                      {log.arguments}
-                                    </span>
+                                    <span className="text-gray-500">{log.arguments}</span>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-3 text-xs text-gray-500">
                                   <span>@{log.platform_user_name || 'unknown'}</span>
-                                  <span>
-                                    {new Date(log.executed_at).toLocaleTimeString()}
-                                  </span>
+                                  <span>{new Date(log.executed_at).toLocaleTimeString()}</span>
                                 </div>
                               </div>
                             ))}
@@ -432,7 +434,12 @@ export default function ChatIntegrations() {
                   className="text-gray-400 hover:text-white"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>

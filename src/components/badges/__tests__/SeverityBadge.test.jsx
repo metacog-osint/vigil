@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { SeverityBadge, SeverityDot, SeverityBar, EPSSBadge, classifyBySeverity } from '../SeverityBadge'
+import {
+  SeverityBadge,
+  SeverityDot,
+  SeverityBar,
+  EPSSBadge,
+  classifyBySeverity,
+} from '../SeverityBadge'
 
 describe('classifyBySeverity', () => {
   it('returns critical for scores >= 9.0', () => {
@@ -222,6 +228,9 @@ describe('EPSSBadge', () => {
   it('includes percentile in title when provided', () => {
     const { container } = render(<EPSSBadge score={0.1} percentile={0.95} />)
 
-    expect(container.firstChild).toHaveAttribute('title', expect.stringContaining('95th percentile'))
+    expect(container.firstChild).toHaveAttribute(
+      'title',
+      expect.stringContaining('95th percentile')
+    )
   })
 })

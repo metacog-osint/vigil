@@ -7,30 +7,26 @@ import { useMemo } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 
 const REGION_COLORS = {
-  'north_america': '#3b82f6',
-  'europe': '#10b981',
-  'asia_pacific': '#f59e0b',
-  'latin_america': '#8b5cf6',
-  'middle_east': '#ef4444',
-  'africa': '#ec4899',
-  'global': '#6b7280',
+  north_america: '#3b82f6',
+  europe: '#10b981',
+  asia_pacific: '#f59e0b',
+  latin_america: '#8b5cf6',
+  middle_east: '#ef4444',
+  africa: '#ec4899',
+  global: '#6b7280',
 }
 
 const REGION_LABELS = {
-  'north_america': 'North America',
-  'europe': 'Europe',
-  'asia_pacific': 'Asia Pacific',
-  'latin_america': 'Latin America',
-  'middle_east': 'Middle East',
-  'africa': 'Africa',
-  'global': 'Global',
+  north_america: 'North America',
+  europe: 'Europe',
+  asia_pacific: 'Asia Pacific',
+  latin_america: 'Latin America',
+  middle_east: 'Middle East',
+  africa: 'Africa',
+  global: 'Global',
 }
 
-export function RegionComparison({
-  userRegion,
-  regionData = [],
-  loading = false,
-}) {
+export function RegionComparison({ userRegion, regionData = [], loading = false }) {
   // Prepare chart data
   const chartData = useMemo(() => {
     if (!regionData.length) return []
@@ -48,7 +44,7 @@ export function RegionComparison({
 
   // Find user's region stats
   const userRegionStats = useMemo(() => {
-    return chartData.find(r => r.isUserRegion) || null
+    return chartData.find((r) => r.isUserRegion) || null
   }, [chartData])
 
   // Calculate global vs user region comparison
@@ -88,9 +84,7 @@ export function RegionComparison({
         <div className="text-sm text-gray-400 mt-1">
           {data.value} incidents ({data.percentage}%)
         </div>
-        {data.isUserRegion && (
-          <div className="text-xs text-cyan-400 mt-1">Your region</div>
-        )}
+        {data.isUserRegion && <div className="text-xs text-cyan-400 mt-1">Your region</div>}
       </div>
     )
   }
@@ -124,7 +118,8 @@ export function RegionComparison({
         <h3 className="text-sm font-medium text-gray-300">Regional Distribution</h3>
         {userRegion && (
           <span className="text-xs text-gray-500">
-            Your region: <span className="text-cyan-400">{REGION_LABELS[userRegion] || userRegion}</span>
+            Your region:{' '}
+            <span className="text-cyan-400">{REGION_LABELS[userRegion] || userRegion}</span>
           </span>
         )}
       </div>
@@ -167,18 +162,18 @@ export function RegionComparison({
               <div className="text-xs text-gray-500 uppercase tracking-wider">
                 {REGION_LABELS[userRegion] || userRegion}
               </div>
-              <div className="text-2xl font-bold text-cyan-400 mt-1">
-                {userRegionStats.value}
-              </div>
+              <div className="text-2xl font-bold text-cyan-400 mt-1">{userRegionStats.value}</div>
               <div className="text-xs text-gray-400">
                 {userRegionStats.percentage}% of global incidents
               </div>
 
               {comparison && (
-                <div className={`
+                <div
+                  className={`
                   mt-2 text-xs
                   ${comparison.isAboveAverage ? 'text-red-400' : 'text-green-400'}
-                `}>
+                `}
+                >
                   {comparison.isAboveAverage ? '↑' : '↓'} {comparison.percentDiff}%
                   {comparison.isAboveAverage ? ' above' : ' below'} average
                 </div>
@@ -195,7 +190,9 @@ export function RegionComparison({
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: region.isUserRegion ? '#06b6d4' : region.color }}
                   ></span>
-                  <span className={region.isUserRegion ? 'text-white font-medium' : 'text-gray-400'}>
+                  <span
+                    className={region.isUserRegion ? 'text-white font-medium' : 'text-gray-400'}
+                  >
                     {region.label}
                   </span>
                 </div>

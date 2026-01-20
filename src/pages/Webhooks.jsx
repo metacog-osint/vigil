@@ -50,7 +50,7 @@ export default function Webhooks() {
   async function handleToggle(hook) {
     try {
       const updated = await webhooks.toggle(hook.id, !hook.is_enabled)
-      setHookList(prev => prev.map(h => h.id === hook.id ? updated : h))
+      setHookList((prev) => prev.map((h) => (h.id === hook.id ? updated : h)))
     } catch (err) {
       alert('Failed to update webhook: ' + err.message)
     }
@@ -60,7 +60,7 @@ export default function Webhooks() {
     if (!confirm('Delete this webhook? This cannot be undone.')) return
     try {
       await webhooks.delete(hookId)
-      setHookList(prev => prev.filter(h => h.id !== hookId))
+      setHookList((prev) => prev.filter((h) => h.id !== hookId))
       if (selectedHook?.id === hookId) setSelectedHook(null)
     } catch (err) {
       alert('Failed to delete webhook: ' + err.message)
@@ -70,7 +70,7 @@ export default function Webhooks() {
   async function handleCreate(data) {
     try {
       const newHook = await webhooks.create(user.uid, data)
-      setHookList(prev => [newHook, ...prev])
+      setHookList((prev) => [newHook, ...prev])
       setShowCreate(false)
       setSelectedHook(newHook)
     } catch (err) {
@@ -83,8 +83,18 @@ export default function Webhooks() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            <svg
+              className="w-8 h-8 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+              />
             </svg>
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Team Feature</h2>
@@ -100,14 +110,9 @@ export default function Webhooks() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Webhooks</h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Push events to your systems in real-time
-          </p>
+          <p className="text-gray-400 text-sm mt-1">Push events to your systems in real-time</p>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="cyber-button-primary"
-        >
+        <button onClick={() => setShowCreate(true)} className="cyber-button-primary">
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
@@ -124,8 +129,18 @@ export default function Webhooks() {
           ) : hookList.length === 0 ? (
             <div className="cyber-card p-6 text-center">
               <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                <svg
+                  className="w-6 h-6 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                  />
                 </svg>
               </div>
               <p className="text-gray-500 text-sm">No webhooks configured</p>
@@ -137,7 +152,7 @@ export default function Webhooks() {
               </button>
             </div>
           ) : (
-            hookList.map(hook => (
+            hookList.map((hook) => (
               <div
                 key={hook.id}
                 onClick={() => setSelectedHook(hook)}
@@ -147,7 +162,9 @@ export default function Webhooks() {
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-medium text-white truncate">{hook.name}</span>
-                  <span className={`w-2 h-2 rounded-full ${hook.is_enabled ? 'bg-green-500' : 'bg-gray-500'}`} />
+                  <span
+                    className={`w-2 h-2 rounded-full ${hook.is_enabled ? 'bg-green-500' : 'bg-gray-500'}`}
+                  />
                 </div>
                 <div className="text-xs text-gray-500 truncate">{hook.url}</div>
                 <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
@@ -166,7 +183,7 @@ export default function Webhooks() {
             <WebhookDetail
               webhook={selectedHook}
               onUpdate={(updated) => {
-                setHookList(prev => prev.map(h => h.id === updated.id ? updated : h))
+                setHookList((prev) => prev.map((h) => (h.id === updated.id ? updated : h)))
                 setSelectedHook(updated)
               }}
               onDelete={() => handleDelete(selectedHook.id)}
@@ -182,10 +199,7 @@ export default function Webhooks() {
 
       {/* Create Modal */}
       {showCreate && (
-        <CreateWebhookModal
-          onClose={() => setShowCreate(false)}
-          onCreate={handleCreate}
-        />
+        <CreateWebhookModal onClose={() => setShowCreate(false)} onCreate={handleCreate} />
       )}
     </div>
   )
@@ -244,16 +258,19 @@ function WebhookDetail({ webhook, onUpdate, onDelete, onToggle }) {
           <button
             onClick={onToggle}
             className={`px-3 py-1.5 rounded text-sm ${
-              webhook.is_enabled
-                ? 'bg-green-500/20 text-green-400'
-                : 'bg-gray-700 text-gray-400'
+              webhook.is_enabled ? 'bg-green-500/20 text-green-400' : 'bg-gray-700 text-gray-400'
             }`}
           >
             {webhook.is_enabled ? 'Enabled' : 'Disabled'}
           </button>
           <button onClick={onDelete} className="text-red-400 hover:text-red-300 p-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
           </button>
         </div>
@@ -264,7 +281,9 @@ function WebhookDetail({ webhook, onUpdate, onDelete, onToggle }) {
         <button
           onClick={() => setActiveTab('config')}
           className={`px-4 py-2 text-sm ${
-            activeTab === 'config' ? 'text-cyber-accent border-b-2 border-cyber-accent' : 'text-gray-400'
+            activeTab === 'config'
+              ? 'text-cyber-accent border-b-2 border-cyber-accent'
+              : 'text-gray-400'
           }`}
         >
           Configuration
@@ -272,7 +291,9 @@ function WebhookDetail({ webhook, onUpdate, onDelete, onToggle }) {
         <button
           onClick={() => setActiveTab('deliveries')}
           className={`px-4 py-2 text-sm ${
-            activeTab === 'deliveries' ? 'text-cyber-accent border-b-2 border-cyber-accent' : 'text-gray-400'
+            activeTab === 'deliveries'
+              ? 'text-cyber-accent border-b-2 border-cyber-accent'
+              : 'text-gray-400'
           }`}
         >
           Deliveries
@@ -287,7 +308,7 @@ function WebhookDetail({ webhook, onUpdate, onDelete, onToggle }) {
             <div>
               <div className="text-sm text-gray-400 mb-2">Subscribed Events</div>
               <div className="flex flex-wrap gap-2">
-                {webhook.events?.map(event => (
+                {webhook.events?.map((event) => (
                   <span key={event} className="px-2 py-1 bg-gray-800 rounded text-xs text-gray-300">
                     {WEBHOOK_EVENTS[event]?.name || event}
                   </span>
@@ -304,7 +325,8 @@ function WebhookDetail({ webhook, onUpdate, onDelete, onToggle }) {
                 <div className="text-sm text-gray-400 mb-2">Signing Secret</div>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 bg-gray-800 px-3 py-2 rounded text-sm text-gray-300 font-mono">
-                    {webhook.secret.substring(0, 8)}...{webhook.secret.substring(webhook.secret.length - 8)}
+                    {webhook.secret.substring(0, 8)}...
+                    {webhook.secret.substring(webhook.secret.length - 8)}
                   </code>
                   <button
                     onClick={() => navigator.clipboard.writeText(webhook.secret)}
@@ -368,7 +390,9 @@ function WebhookDetail({ webhook, onUpdate, onDelete, onToggle }) {
                   <div className="text-xs text-gray-500">Failed</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold text-yellow-400">{stats.pending + stats.retrying}</div>
+                  <div className="text-xl font-bold text-yellow-400">
+                    {stats.pending + stats.retrying}
+                  </div>
                   <div className="text-xs text-gray-500">Pending</div>
                 </div>
               </div>
@@ -381,7 +405,7 @@ function WebhookDetail({ webhook, onUpdate, onDelete, onToggle }) {
               <div className="text-center text-gray-500 py-4">No deliveries yet</div>
             ) : (
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {deliveries.map(delivery => (
+                {deliveries.map((delivery) => (
                   <DeliveryRow key={delivery.id} delivery={delivery} />
                 ))}
               </div>
@@ -407,7 +431,9 @@ function DeliveryRow({ delivery }) {
       >
         <div className="flex items-center gap-3">
           <span className={`w-2 h-2 rounded-full ${STATUS_COLORS[delivery.status]}`} />
-          <span className="text-sm text-white">{WEBHOOK_EVENTS[delivery.event_type]?.name || delivery.event_type}</span>
+          <span className="text-sm text-white">
+            {WEBHOOK_EVENTS[delivery.event_type]?.name || delivery.event_type}
+          </span>
         </div>
         <div className="flex items-center gap-3 text-xs text-gray-500">
           {delivery.response_time_ms && <span>{delivery.response_time_ms}ms</span>}
@@ -427,7 +453,9 @@ function DeliveryRow({ delivery }) {
         <div className="p-3 border-t border-gray-800 space-y-2">
           <div className="flex items-center gap-2 text-sm">
             <span className="text-gray-500">Status:</span>
-            <span className={`capitalize ${delivery.status === 'success' ? 'text-green-400' : delivery.status === 'failed' ? 'text-red-400' : 'text-yellow-400'}`}>
+            <span
+              className={`capitalize ${delivery.status === 'success' ? 'text-green-400' : delivery.status === 'failed' ? 'text-red-400' : 'text-yellow-400'}`}
+            >
               {delivery.status}
             </span>
             {delivery.response_status && (
@@ -477,19 +505,17 @@ function CreateWebhookModal({ onClose, onCreate }) {
   }
 
   function toggleEvent(eventId) {
-    setSelectedEvents(prev =>
-      prev.includes(eventId)
-        ? prev.filter(e => e !== eventId)
-        : [...prev, eventId]
+    setSelectedEvents((prev) =>
+      prev.includes(eventId) ? prev.filter((e) => e !== eventId) : [...prev, eventId]
     )
   }
 
   function toggleCategory(categoryEvents) {
-    const allSelected = categoryEvents.every(e => selectedEvents.includes(e.id))
+    const allSelected = categoryEvents.every((e) => selectedEvents.includes(e.id))
     if (allSelected) {
-      setSelectedEvents(prev => prev.filter(e => !categoryEvents.find(ce => ce.id === e)))
+      setSelectedEvents((prev) => prev.filter((e) => !categoryEvents.find((ce) => ce.id === e)))
     } else {
-      setSelectedEvents(prev => [...new Set([...prev, ...categoryEvents.map(e => e.id)])])
+      setSelectedEvents((prev) => [...new Set([...prev, ...categoryEvents.map((e) => e.id)])])
     }
   }
 
@@ -515,7 +541,12 @@ function CreateWebhookModal({ onClose, onCreate }) {
           <h3 className="text-lg font-semibold text-white">Create Webhook</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -557,7 +588,9 @@ function CreateWebhookModal({ onClose, onCreate }) {
               className="cyber-input w-full"
             >
               {Object.entries(AUTH_TYPES).map(([key, auth]) => (
-                <option key={key} value={key}>{auth.label}</option>
+                <option key={key} value={key}>
+                  {auth.label}
+                </option>
               ))}
             </select>
             <p className="text-gray-500 text-xs mt-1">{AUTH_TYPES[authType].description}</p>
@@ -572,14 +605,14 @@ function CreateWebhookModal({ onClose, onCreate }) {
                   <label className="flex items-center gap-2 cursor-pointer mb-2">
                     <input
                       type="checkbox"
-                      checked={data.events.every(e => selectedEvents.includes(e.id))}
+                      checked={data.events.every((e) => selectedEvents.includes(e.id))}
                       onChange={() => toggleCategory(data.events)}
                       className="rounded border-gray-600"
                     />
                     <span className="text-sm font-medium text-white">{data.label}</span>
                   </label>
                   <div className="ml-6 space-y-1">
-                    {data.events.map(event => (
+                    {data.events.map((event) => (
                       <label key={event.id} className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -600,7 +633,9 @@ function CreateWebhookModal({ onClose, onCreate }) {
         <div className="p-4 border-t border-gray-800 flex justify-between items-center">
           <span className="text-sm text-gray-500">{selectedEvents.length} events selected</span>
           <div className="flex gap-3">
-            <button type="button" onClick={onClose} className="cyber-button">Cancel</button>
+            <button type="button" onClick={onClose} className="cyber-button">
+              Cancel
+            </button>
             <button
               onClick={handleSubmit}
               disabled={saving || !name || !url || selectedEvents.length === 0 || urlError}

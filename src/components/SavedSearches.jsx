@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { savedSearches, recentSearches, getFilterSummary, COLOR_OPTIONS } from '../lib/savedSearches'
+import {
+  savedSearches,
+  recentSearches,
+  getFilterSummary,
+  COLOR_OPTIONS,
+} from '../lib/savedSearches'
 
 /**
  * SavedSearches Panel - Shows saved and recent searches for a page
@@ -50,7 +55,7 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
     if (!confirm('Delete this saved search?')) return
     try {
       await savedSearches.delete(searchId, user.uid)
-      setSearches(prev => prev.filter(s => s.id !== searchId))
+      setSearches((prev) => prev.filter((s) => s.id !== searchId))
     } catch (err) {
       alert('Failed to delete: ' + err.message)
     }
@@ -59,7 +64,7 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
   async function handleTogglePin(search) {
     try {
       const updated = await savedSearches.togglePin(search.id, user.uid, !search.is_pinned)
-      setSearches(prev => prev.map(s => s.id === search.id ? updated : s))
+      setSearches((prev) => prev.map((s) => (s.id === search.id ? updated : s)))
     } catch (err) {
       console.error('Failed to toggle pin:', err)
     }
@@ -68,10 +73,12 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
   async function handleSetDefault(search) {
     try {
       await savedSearches.setDefault(search.id, user.uid, page)
-      setSearches(prev => prev.map(s => ({
-        ...s,
-        is_default: s.id === search.id,
-      })))
+      setSearches((prev) =>
+        prev.map((s) => ({
+          ...s,
+          is_default: s.id === search.id,
+        }))
+      )
     } catch (err) {
       console.error('Failed to set default:', err)
     }
@@ -84,7 +91,7 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
         page,
         filters: currentFilters,
       })
-      setSearches(prev => [...prev, newSearch])
+      setSearches((prev) => [...prev, newSearch])
       setShowSaveModal(false)
     } catch (err) {
       alert('Failed to save: ' + err.message)
@@ -99,7 +106,9 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
           <button
             onClick={() => setActiveTab('saved')}
             className={`px-3 py-1 text-sm rounded ${
-              activeTab === 'saved' ? 'bg-cyber-accent/20 text-cyber-accent' : 'text-gray-400 hover:text-white'
+              activeTab === 'saved'
+                ? 'bg-cyber-accent/20 text-cyber-accent'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             Saved
@@ -107,7 +116,9 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
           <button
             onClick={() => setActiveTab('recent')}
             className={`px-3 py-1 text-sm rounded ${
-              activeTab === 'recent' ? 'bg-cyber-accent/20 text-cyber-accent' : 'text-gray-400 hover:text-white'
+              activeTab === 'recent'
+                ? 'bg-cyber-accent/20 text-cyber-accent'
+                : 'text-gray-400 hover:text-white'
             }`}
           >
             Recent
@@ -123,7 +134,12 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
           {onClose && (
             <button onClick={onClose} className="text-gray-400 hover:text-white">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -136,12 +152,10 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
           <div className="text-center py-4 text-gray-400 text-sm">Loading...</div>
         ) : activeTab === 'saved' ? (
           searches.length === 0 ? (
-            <div className="text-center py-4 text-gray-500 text-sm">
-              No saved searches yet
-            </div>
+            <div className="text-center py-4 text-gray-500 text-sm">No saved searches yet</div>
           ) : (
             <div className="space-y-1">
-              {searches.map(search => (
+              {searches.map((search) => (
                 <SearchItem
                   key={search.id}
                   search={search}
@@ -153,30 +167,26 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
               ))}
             </div>
           )
+        ) : recent.length === 0 ? (
+          <div className="text-center py-4 text-gray-500 text-sm">No recent searches</div>
         ) : (
-          recent.length === 0 ? (
-            <div className="text-center py-4 text-gray-500 text-sm">
-              No recent searches
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {recent.map(search => (
-                <div
-                  key={search.id}
-                  onClick={() => handleApplyRecent(search)}
-                  className="p-2 rounded hover:bg-gray-800/50 cursor-pointer"
-                >
-                  <div className="text-sm text-gray-300 truncate">
-                    {search.query || getFilterSummary(search.filters)}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {search.result_count !== null && `${search.result_count} results • `}
-                    {new Date(search.searched_at).toLocaleString()}
-                  </div>
+          <div className="space-y-1">
+            {recent.map((search) => (
+              <div
+                key={search.id}
+                onClick={() => handleApplyRecent(search)}
+                className="p-2 rounded hover:bg-gray-800/50 cursor-pointer"
+              >
+                <div className="text-sm text-gray-300 truncate">
+                  {search.query || getFilterSummary(search.filters)}
                 </div>
-              ))}
-            </div>
-          )
+                <div className="text-xs text-gray-500 mt-1">
+                  {search.result_count !== null && `${search.result_count} results • `}
+                  {new Date(search.searched_at).toLocaleString()}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -203,7 +213,9 @@ function SearchItem({ search, onApply, onDelete, onTogglePin, onSetDefault }) {
       <div
         onClick={onApply}
         className={`p-2 rounded cursor-pointer flex items-center gap-2 ${
-          search.is_default ? 'bg-cyber-accent/10 border border-cyber-accent/30' : 'hover:bg-gray-800/50'
+          search.is_default
+            ? 'bg-cyber-accent/10 border border-cyber-accent/30'
+            : 'hover:bg-gray-800/50'
         }`}
       >
         {/* Color indicator */}
@@ -216,26 +228,34 @@ function SearchItem({ search, onApply, onDelete, onTogglePin, onSetDefault }) {
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-white truncate">{search.name}</span>
             {search.is_pinned && (
-              <svg className="w-3 h-3 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className="w-3 h-3 text-yellow-400 flex-shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
             )}
-            {search.is_default && (
-              <span className="text-xs text-cyber-accent">(default)</span>
-            )}
+            {search.is_default && <span className="text-xs text-cyber-accent">(default)</span>}
           </div>
-          <div className="text-xs text-gray-500 truncate">
-            {getFilterSummary(search.filters)}
-          </div>
+          <div className="text-xs text-gray-500 truncate">{getFilterSummary(search.filters)}</div>
         </div>
 
         {/* Menu button */}
         <button
-          onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu) }}
+          onClick={(e) => {
+            e.stopPropagation()
+            setShowMenu(!showMenu)
+          }}
           className="p-1 text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+            />
           </svg>
         </button>
       </div>
@@ -246,19 +266,28 @@ function SearchItem({ search, onApply, onDelete, onTogglePin, onSetDefault }) {
           <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
           <div className="absolute right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-20 py-1 min-w-32">
             <button
-              onClick={() => { onTogglePin(); setShowMenu(false) }}
+              onClick={() => {
+                onTogglePin()
+                setShowMenu(false)
+              }}
               className="w-full px-3 py-1.5 text-sm text-left text-gray-300 hover:bg-gray-800"
             >
               {search.is_pinned ? 'Unpin' : 'Pin to top'}
             </button>
             <button
-              onClick={() => { onSetDefault(); setShowMenu(false) }}
+              onClick={() => {
+                onSetDefault()
+                setShowMenu(false)
+              }}
               className="w-full px-3 py-1.5 text-sm text-left text-gray-300 hover:bg-gray-800"
             >
               Set as default
             </button>
             <button
-              onClick={() => { onDelete(); setShowMenu(false) }}
+              onClick={() => {
+                onDelete()
+                setShowMenu(false)
+              }}
               className="w-full px-3 py-1.5 text-sm text-left text-red-400 hover:bg-gray-800"
             >
               Delete
@@ -295,7 +324,12 @@ function SaveSearchModal({ onClose, onSave, filters }) {
           <h3 className="text-lg font-semibold text-white">Save Search</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -327,13 +361,15 @@ function SaveSearchModal({ onClose, onSave, filters }) {
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">Color</label>
             <div className="flex gap-2">
-              {COLOR_OPTIONS.map(opt => (
+              {COLOR_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   type="button"
                   onClick={() => setColor(color === opt.value ? '' : opt.value)}
                   className={`w-6 h-6 rounded-full ${opt.class} ${
-                    color === opt.value ? 'ring-2 ring-offset-2 ring-offset-cyber-dark ring-white' : ''
+                    color === opt.value
+                      ? 'ring-2 ring-offset-2 ring-offset-cyber-dark ring-white'
+                      : ''
                   }`}
                 />
               ))}
@@ -369,7 +405,9 @@ function SaveSearchModal({ onClose, onSave, filters }) {
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="cyber-button">Cancel</button>
+            <button type="button" onClick={onClose} className="cyber-button">
+              Cancel
+            </button>
             <button type="submit" disabled={saving || !name} className="cyber-button-primary">
               {saving ? 'Saving...' : 'Save'}
             </button>
@@ -409,7 +447,12 @@ export function SaveSearchButton({ page, currentFilters, onSaved }) {
         title="Save current search"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+          />
         </svg>
       </button>
 

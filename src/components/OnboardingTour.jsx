@@ -10,7 +10,8 @@ const TOUR_STEPS = [
   {
     id: 'welcome',
     title: 'Welcome to Vigil',
-    description: 'Your cyber threat intelligence command center. Let\'s take a quick tour of the key features.',
+    description:
+      "Your cyber threat intelligence command center. Let's take a quick tour of the key features.",
     target: null,
     position: 'center',
     route: '/',
@@ -18,7 +19,8 @@ const TOUR_STEPS = [
   {
     id: 'dashboard',
     title: 'Dashboard Overview',
-    description: 'Your home base shows real-time threat statistics, trending actors, and recent incidents at a glance.',
+    description:
+      'Your home base shows real-time threat statistics, trending actors, and recent incidents at a glance.',
     target: '[data-tour="dashboard-stats"]',
     position: 'bottom',
     route: '/',
@@ -26,7 +28,8 @@ const TOUR_STEPS = [
   {
     id: 'events',
     title: 'Unified Events',
-    description: 'All security events from ransomware, vulnerabilities, IOCs, and alerts in one timeline.',
+    description:
+      'All security events from ransomware, vulnerabilities, IOCs, and alerts in one timeline.',
     target: '[data-tour="nav-events"]',
     position: 'right',
     route: '/events',
@@ -42,7 +45,8 @@ const TOUR_STEPS = [
   {
     id: 'search',
     title: 'Quick Search',
-    description: 'Press Cmd+K (or Ctrl+K) anytime to search across actors, incidents, CVEs, and IOCs.',
+    description:
+      'Press Cmd+K (or Ctrl+K) anytime to search across actors, incidents, CVEs, and IOCs.',
     target: '[data-tour="search-button"]',
     position: 'bottom',
     route: '/actors',
@@ -58,15 +62,17 @@ const TOUR_STEPS = [
   {
     id: 'settings',
     title: 'Personalize Your Feed',
-    description: 'Set up your industry and tech stack (like Cisco, Microsoft) to get alerts tailored to YOUR organization.',
+    description:
+      'Set up your industry and tech stack (like Cisco, Microsoft) to get alerts tailored to YOUR organization.',
     target: '[data-tour="nav-settings"]',
     position: 'right',
     route: '/settings',
   },
   {
     id: 'complete',
-    title: 'You\'re All Set!',
-    description: 'Head to Settings to personalize your feed. Get Cisco zero-days, healthcare incidents, or whatever matters to you - before it hits the news.',
+    title: "You're All Set!",
+    description:
+      'Head to Settings to personalize your feed. Get Cisco zero-days, healthcare incidents, or whatever matters to you - before it hits the news.',
     target: null,
     position: 'center',
     route: '/settings',
@@ -74,7 +80,11 @@ const TOUR_STEPS = [
 ]
 
 function TourTooltip({ step, onNext, onPrev, onSkip, currentIndex, totalSteps }) {
-  const [position, setPosition] = useState({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' })
+  const [position, setPosition] = useState({
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+  })
 
   useEffect(() => {
     if (step.target) {
@@ -161,10 +171,7 @@ function TourTooltip({ step, onNext, onPrev, onSkip, currentIndex, totalSteps })
         <p className="text-gray-400 text-sm mb-4">{step.description}</p>
 
         <div className="flex items-center justify-between">
-          <button
-            onClick={onSkip}
-            className="text-gray-500 hover:text-gray-300 text-sm"
-          >
+          <button onClick={onSkip} className="text-gray-500 hover:text-gray-300 text-sm">
             Skip tour
           </button>
 
@@ -306,10 +313,7 @@ export function RestartTourButton() {
   const { resetTour } = useTour()
 
   return (
-    <button
-      onClick={resetTour}
-      className="text-sm text-cyan-400 hover:text-cyan-300"
-    >
+    <button onClick={resetTour} className="text-sm text-cyan-400 hover:text-cyan-300">
       Restart onboarding tour
     </button>
   )

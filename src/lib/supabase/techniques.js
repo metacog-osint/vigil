@@ -27,11 +27,7 @@ export const techniques = {
   },
 
   async getById(techniqueId) {
-    return supabase
-      .from('techniques')
-      .select('*')
-      .eq('id', techniqueId)
-      .single()
+    return supabase.from('techniques').select('*').eq('id', techniqueId).single()
   },
 
   async getByTactic(tactic, limit = 50) {
@@ -46,21 +42,21 @@ export const techniques = {
   async getForActor(actorId) {
     return supabase
       .from('actor_techniques')
-      .select(`
+      .select(
+        `
         *,
         technique:techniques(*)
-      `)
+      `
+      )
       .eq('actor_id', actorId)
       .order('created_at', { ascending: false })
   },
 
   async getTacticSummary() {
-    const { data } = await supabase
-      .from('techniques')
-      .select('tactics')
+    const { data } = await supabase.from('techniques').select('tactics')
 
     const counts = {}
-    for (const row of (data || [])) {
+    for (const row of data || []) {
       for (const tactic of row.tactics || []) {
         counts[tactic] = (counts[tactic] || 0) + 1
       }
