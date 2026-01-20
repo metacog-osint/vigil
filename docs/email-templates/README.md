@@ -1,28 +1,28 @@
 # Vigil Email Templates
 
-Branded email templates for Supabase Auth emails.
+Branded email templates for Supabase Auth emails. Uses inline CSS with pure HTML eye icons - no external images that can break or get blocked.
 
 ## Templates
 
-| Template | File | Supabase Template Name |
-|----------|------|------------------------|
-| Email Verification | `verification.html` | Confirm signup |
-| Password Reset | `password-reset.html` | Reset password |
-| Magic Link | `magic-link.html` | Magic Link |
+| Template | File | Supabase Template Name | Subject Line |
+|----------|------|------------------------|--------------|
+| Email Verification | `verification.html` | Confirm signup | `Verify your email - Vigil` |
+| Password Reset | `password-reset.html` | Reset password | `Reset your password - Vigil` |
+| Magic Link | `magic-link.html` | Magic Link | `Sign in to Vigil` |
 
 ## How to Apply in Supabase
 
-1. Go to your **Supabase Dashboard**
-2. Navigate to **Authentication** → **Email Templates**
-3. For each template:
+1. Go to your **Supabase Dashboard**: https://supabase.com/dashboard
+2. Select your project
+3. Navigate to **Authentication** → **Email Templates**
+4. For each template:
    - Select the template type (e.g., "Confirm signup")
-   - Copy the HTML from the corresponding file
-   - Paste into the **Message body** field
-   - Update the **Subject** field:
-     - Confirm signup: `Verify your email - Vigil`
-     - Reset password: `Reset your password - Vigil`
-     - Magic Link: `Sign in to Vigil`
+   - Open the corresponding `.html` file and copy ALL contents
+   - Paste into the **Message body** field (replace everything)
+   - Update the **Subject** field (see table above)
    - Click **Save**
+
+**Important:** You must copy the raw HTML, not the rendered view. Open the file in a text editor or view raw on GitHub.
 
 ## Template Variables
 
