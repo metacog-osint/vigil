@@ -1,6 +1,8 @@
 # Vigil Email Templates
 
-Branded email templates for Supabase Auth emails. Uses inline CSS with pure HTML eye icons - no external images that can break or get blocked.
+Branded email templates for Supabase Auth emails.
+
+**Design approach:** Uses only email-safe elements - basic tables, inline styles, and Unicode characters. No `position: absolute`, no external images, no fancy CSS that breaks in Gmail/Outlook.
 
 ## Templates
 
