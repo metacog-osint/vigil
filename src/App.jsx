@@ -59,6 +59,8 @@ import { SubscriptionProvider } from './contexts/SubscriptionContext'
 import { TenantProvider } from './contexts/TenantContext'
 import { ToastProvider } from './contexts/ToastContext'
 import { FocusModeProvider } from './hooks/useFocusMode'
+import { DemoProvider, useDemo } from './contexts/DemoContext'
+import { DemoBanner } from './components/demo'
 
 // Loading fallback for lazy routes
 function PageLoader() {
@@ -116,7 +118,11 @@ function ProtectedApp() {
 
   // Track page views
   usePageTracking()
-  const { shouldShow: shouldShowPersonalization, loading: personalizationLoading, dismiss: dismissPersonalization } = usePersonalizationWizard()
+  const {
+    shouldShow: shouldShowPersonalization,
+    loading: personalizationLoading,
+    dismiss: dismissPersonalization,
+  } = usePersonalizationWizard()
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -144,130 +150,165 @@ function ProtectedApp() {
 
   return (
     <TenantProvider>
-    <SubscriptionProvider>
-    <ToastProvider>
-    <FocusModeProvider>
-    <div className="min-h-screen bg-cyber-darker flex">
-      {/* Skip to main content link for accessibility */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-cyber-accent focus:text-white focus:rounded-lg focus:outline-none"
-      >
-        Skip to main content
-      </a>
+      <SubscriptionProvider>
+        <ToastProvider>
+          <FocusModeProvider>
+            <div className="min-h-screen bg-cyber-darker flex flex-col">
+              {/* Demo mode banner */}
+              <DemoBanner />
 
-      {/* Sidebar */}
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        isCollapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
+              {/* Skip to main content link for accessibility */}
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-cyber-accent focus:text-white focus:rounded-lg focus:outline-none"
+              >
+                Skip to main content
+              </a>
 
-      {/* Main content */}
-      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
-        <Header
-          onMenuClick={() => setSidebarOpen(true)}
-          onSearchClick={() => setSearchOpen(true)}
-          user={user}
-          isOnline={isOnline}
-        />
+              <div className="flex flex-1">
+                {/* Sidebar */}
+                <Sidebar
+                  isOpen={sidebarOpen}
+                  onClose={() => setSidebarOpen(false)}
+                  isCollapsed={sidebarCollapsed}
+                  onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+                />
 
-        <main id="main-content" role="main" className="flex-1 p-4 lg:p-6 overflow-auto" tabIndex={-1}>
-          <ErrorBoundary name="PageContent" title="Page Error">
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/events" element={<Activity />} />
-                <Route path="/actors" element={<ThreatActors />} />
-                <Route path="/ransomware" element={<Navigate to="/events?view=ransomware" replace />} />
-                <Route path="/incidents" element={<Navigate to="/events?view=ransomware" replace />} />
-                <Route path="/vulnerabilities" element={<Vulnerabilities />} />
-                <Route path="/advisories" element={<Advisories />} />
-                <Route path="/iocs" element={<IOCs />} />
-                <Route path="/bulk-search" element={<Navigate to="/iocs?tab=bulk" replace />} />
-                <Route path="/custom-iocs" element={<Navigate to="/iocs?tab=custom" replace />} />
-                <Route path="/advanced-search" element={<AdvancedSearch />} />
-                <Route path="/techniques" element={<Techniques />} />
-                <Route path="/watchlists" element={<Watchlists />} />
-                <Route path="/alerts" element={<Alerts />} />
-                <Route path="/trends" element={<TrendAnalysis />} />
-                <Route path="/threat-hunts" element={<ThreatHunts />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/api-docs" element={<ApiDocs />} />
-                <Route path="/api-playground" element={<ApiPlayground />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/investigations" element={<Investigations />} />
-                <Route path="/assets" element={<Assets />} />
-                <Route path="/audit-logs" element={<AuditLogs />} />
-                <Route path="/status" element={<Status />} />
-                <Route path="/webhooks" element={<Webhooks />} />
-                <Route path="/vendors" element={<Vendors />} />
-                <Route path="/benchmarks" element={<Benchmarks />} />
-                <Route path="/chat" element={<ChatIntegrations />} />
-                <Route path="/compare" element={<Compare />} />
-                <Route path="/help" element={<Help />} />
-                <Route path="/settings" element={<SettingsLayout />} />
-                <Route path="/ops" element={<OpsDashboard />} />
-                <Route path="/patterns" element={<Patterns />} />
-                <Route path="/attack-chains" element={<AttackChains />} />
-                <Route path="/geographic-analysis" element={<GeographicAnalysis />} />
-                {/* Redirect auth pages to dashboard if already logged in */}
-                <Route path="/auth" element={<Navigate to="/" replace />} />
-                <Route path="/login" element={<Navigate to="/" replace />} />
-                <Route path="/register" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-          </ErrorBoundary>
-        </main>
+                {/* Main content */}
+                <div
+                  className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}
+                >
+                  <Header
+                    onMenuClick={() => setSidebarOpen(true)}
+                    onSearchClick={() => setSearchOpen(true)}
+                    user={user}
+                    isOnline={isOnline}
+                  />
 
-        {/* Offline indicator */}
-        {!isOnline && (
-          <div className="fixed bottom-4 right-4 bg-yellow-900/90 text-yellow-200 px-4 py-2 rounded-lg text-sm flex items-center gap-2">
-            <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
-            Offline - Using cached data
-          </div>
-        )}
-      </div>
+                  <main
+                    id="main-content"
+                    role="main"
+                    className="flex-1 p-4 lg:p-6 overflow-auto"
+                    tabIndex={-1}
+                  >
+                    <ErrorBoundary name="PageContent" title="Page Error">
+                      <Suspense fallback={<PageLoader />}>
+                        <Routes>
+                          <Route path="/" element={<Dashboard />} />
+                          <Route path="/events" element={<Activity />} />
+                          <Route path="/actors" element={<ThreatActors />} />
+                          <Route
+                            path="/ransomware"
+                            element={<Navigate to="/events?view=ransomware" replace />}
+                          />
+                          <Route
+                            path="/incidents"
+                            element={<Navigate to="/events?view=ransomware" replace />}
+                          />
+                          <Route path="/vulnerabilities" element={<Vulnerabilities />} />
+                          <Route path="/advisories" element={<Advisories />} />
+                          <Route path="/iocs" element={<IOCs />} />
+                          <Route
+                            path="/bulk-search"
+                            element={<Navigate to="/iocs?tab=bulk" replace />}
+                          />
+                          <Route
+                            path="/custom-iocs"
+                            element={<Navigate to="/iocs?tab=custom" replace />}
+                          />
+                          <Route path="/advanced-search" element={<AdvancedSearch />} />
+                          <Route path="/techniques" element={<Techniques />} />
+                          <Route path="/watchlists" element={<Watchlists />} />
+                          <Route path="/alerts" element={<Alerts />} />
+                          <Route path="/trends" element={<TrendAnalysis />} />
+                          <Route path="/threat-hunts" element={<ThreatHunts />} />
+                          <Route path="/pricing" element={<Pricing />} />
+                          <Route path="/api-docs" element={<ApiDocs />} />
+                          <Route path="/api-playground" element={<ApiPlayground />} />
+                          <Route path="/reports" element={<Reports />} />
+                          <Route path="/investigations" element={<Investigations />} />
+                          <Route path="/assets" element={<Assets />} />
+                          <Route path="/audit-logs" element={<AuditLogs />} />
+                          <Route path="/status" element={<Status />} />
+                          <Route path="/webhooks" element={<Webhooks />} />
+                          <Route path="/vendors" element={<Vendors />} />
+                          <Route path="/benchmarks" element={<Benchmarks />} />
+                          <Route path="/chat" element={<ChatIntegrations />} />
+                          <Route path="/compare" element={<Compare />} />
+                          <Route path="/help" element={<Help />} />
+                          <Route path="/settings" element={<SettingsLayout />} />
+                          <Route path="/ops" element={<OpsDashboard />} />
+                          <Route path="/patterns" element={<Patterns />} />
+                          <Route path="/attack-chains" element={<AttackChains />} />
+                          <Route path="/geographic-analysis" element={<GeographicAnalysis />} />
+                          {/* Redirect auth pages to dashboard if already logged in */}
+                          <Route path="/auth" element={<Navigate to="/" replace />} />
+                          <Route path="/login" element={<Navigate to="/" replace />} />
+                          <Route path="/register" element={<Navigate to="/" replace />} />
+                        </Routes>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </main>
 
-      {/* Search Modal */}
-      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+                  {/* Offline indicator */}
+                  {!isOnline && (
+                    <div className="fixed bottom-4 right-4 bg-yellow-900/90 text-yellow-200 px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+                      <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                      Offline - Using cached data
+                    </div>
+                  )}
+                </div>
+              </div>
 
-      {/* Keyboard Shortcuts Help Modal */}
-      <KeyboardShortcutsModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
+              {/* Search Modal */}
+              <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
 
-      {/* Personalization Wizard - shows for first-time users, takes priority over tour */}
-      {(shouldShowPersonalization || showPersonalization) && (
-        <PersonalizationWizard
-          onComplete={() => {
-            setShowPersonalization(false)
-            dismissPersonalization()
-          }}
-          onSkip={() => {
-            setShowPersonalization(false)
-            dismissPersonalization()
-          }}
-        />
-      )}
+              {/* Keyboard Shortcuts Help Modal */}
+              <KeyboardShortcutsModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
 
-      {/* Onboarding Tour - only shows after personalization check completes and wizard is not needed */}
-      {!personalizationLoading && !shouldShowPersonalization && !showPersonalization && (
-        <OnboardingTour />
-      )}
-    </div>
-    </FocusModeProvider>
-    </ToastProvider>
-    </SubscriptionProvider>
+              {/* Personalization Wizard - shows for first-time users, takes priority over tour */}
+              {(shouldShowPersonalization || showPersonalization) && (
+                <PersonalizationWizard
+                  onComplete={() => {
+                    setShowPersonalization(false)
+                    dismissPersonalization()
+                  }}
+                  onSkip={() => {
+                    setShowPersonalization(false)
+                    dismissPersonalization()
+                  }}
+                />
+              )}
+
+              {/* Onboarding Tour - only shows after personalization check completes and wizard is not needed */}
+              {!personalizationLoading && !shouldShowPersonalization && !showPersonalization && (
+                <OnboardingTour />
+              )}
+            </div>
+          </FocusModeProvider>
+        </ToastProvider>
+      </SubscriptionProvider>
     </TenantProvider>
   )
 }
 
-function App() {
+// Inner component that uses demo context
+function AppContent() {
   const { user, loading: authLoading } = useAuth()
+  const { isDemoMode } = useDemo()
 
   // Show loading state while checking auth
   if (authLoading) {
     return <AuthLoader />
+  }
+
+  // Demo mode bypasses auth - show protected app with demo data
+  if (isDemoMode) {
+    return (
+      <ErrorBoundary name="AppRoot" title="Application Error">
+        <ProtectedApp />
+      </ErrorBoundary>
+    )
   }
 
   // Auth gate: show public layout if not authenticated
@@ -280,6 +321,14 @@ function App() {
     <ErrorBoundary name="AppRoot" title="Application Error">
       <ProtectedApp />
     </ErrorBoundary>
+  )
+}
+
+function App() {
+  return (
+    <DemoProvider>
+      <AppContent />
+    </DemoProvider>
   )
 }
 

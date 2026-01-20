@@ -5,15 +5,16 @@
  * proposition and encourages registration.
  */
 
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
+import { useDemo } from '../contexts/DemoContext'
 
 const FEATURES = [
   {
     icon: '🎯',
     title: 'Threat Actor Tracking',
-    description: 'Monitor 200+ ransomware groups and APTs. See who\'s escalating, their targets, and TTPs.',
+    description:
+      "Monitor 200+ ransomware groups and APTs. See who's escalating, their targets, and TTPs.",
   },
   {
     icon: '🔴',
@@ -33,7 +34,8 @@ const FEATURES = [
   {
     icon: '📊',
     title: 'Trend Analysis',
-    description: 'See which threats are escalating. Week-over-week comparisons and sector breakdowns.',
+    description:
+      'See which threats are escalating. Week-over-week comparisons and sector breakdowns.',
   },
   {
     icon: '🔔',
@@ -51,19 +53,19 @@ const STATS = [
 
 const TESTIMONIALS = [
   {
-    quote: "Vigil gives us threat intel that used to cost $60K/year from enterprise vendors.",
-    author: "Security Director",
-    company: "Mid-size Healthcare Org",
+    quote: 'Vigil gives us threat intel that used to cost $60K/year from enterprise vendors.',
+    author: 'Security Director',
+    company: 'Mid-size Healthcare Org',
   },
   {
     quote: "We automated our IOC feeds with Vigil's API. Our SIEM is always up to date now.",
-    author: "Security Engineer",
-    company: "MSSP",
+    author: 'Security Engineer',
+    company: 'MSSP',
   },
   {
-    quote: "The relevance scoring is a game-changer. We only see threats that matter to us.",
-    author: "SOC Manager",
-    company: "Financial Services",
+    quote: 'The relevance scoring is a game-changer. We only see threats that matter to us.',
+    author: 'SOC Manager',
+    company: 'Financial Services',
   },
 ]
 
@@ -72,7 +74,13 @@ const PRICING_PREVIEW = [
     name: 'Free',
     price: '$0',
     period: 'forever',
-    features: ['Full threat actor database', 'Incident feed', 'CVE/KEV tracking', 'IOC search', 'Trend analysis'],
+    features: [
+      'Full threat actor database',
+      'Incident feed',
+      'CVE/KEV tracking',
+      'IOC search',
+      'Trend analysis',
+    ],
     cta: 'Get Started',
     highlighted: false,
   },
@@ -80,7 +88,13 @@ const PRICING_PREVIEW = [
     name: 'Professional',
     price: '$39',
     period: '/month',
-    features: ['Everything in Free', 'Org profile & relevance scoring', 'Email digests', 'CSV exports', 'Watchlists & alerts'],
+    features: [
+      'Everything in Free',
+      'Org profile & relevance scoring',
+      'Email digests',
+      'CSV exports',
+      'Watchlists & alerts',
+    ],
     cta: 'Start Free Trial',
     highlighted: true,
   },
@@ -88,18 +102,34 @@ const PRICING_PREVIEW = [
     name: 'Team',
     price: '$129',
     period: '/month',
-    features: ['Everything in Pro', 'API access (25K req/mo)', 'STIX exports', '5 team members', 'Priority support'],
+    features: [
+      'Everything in Pro',
+      'API access (25K req/mo)',
+      'STIX exports',
+      '5 team members',
+      'Priority support',
+    ],
     cta: 'Start Free Trial',
     highlighted: false,
   },
 ]
 
 const DATA_SOURCES = [
-  'CISA KEV', 'ThreatFox', 'URLhaus', 'MalwareBazaar', 'Ransomwatch',
-  'MITRE ATT&CK', 'NVD', 'EPSS', 'GreyNoise', 'Abuse.ch',
+  'CISA KEV',
+  'ThreatFox',
+  'URLhaus',
+  'MalwareBazaar',
+  'Ransomwatch',
+  'MITRE ATT&CK',
+  'NVD',
+  'EPSS',
+  'GreyNoise',
+  'Abuse.ch',
 ]
 
 function HeroSection() {
+  const { enterDemoMode } = useDemo()
+
   return (
     <section className="relative py-20 lg:py-32 overflow-hidden">
       {/* Background effects */}
@@ -119,8 +149,8 @@ function HeroSection() {
         </h1>
 
         <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
-          Track ransomware groups, monitor vulnerabilities, and get alerts that matter.
-          Built for security teams who need signal, not noise.
+          Track ransomware groups, monitor vulnerabilities, and get alerts that matter. Built for
+          security teams who need signal, not noise.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -130,17 +160,35 @@ function HeroSection() {
           >
             Start Free — No Credit Card
           </Link>
-          <Link
-            to="/auth?mode=login"
-            className="w-full sm:w-auto px-8 py-4 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors text-lg border border-gray-700"
+          <button
+            onClick={enterDemoMode}
+            className="w-full sm:w-auto px-8 py-4 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors text-lg border border-gray-700 inline-flex items-center justify-center gap-2"
           >
-            Sign In
-          </Link>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            Try Interactive Demo
+          </button>
         </div>
 
-        <p className="text-sm text-gray-500 mt-6">
-          Join 500+ security teams using Vigil
+        <p className="text-sm text-gray-500 mt-4">
+          <button onClick={() => {}} className="text-gray-400 hover:text-white transition-colors">
+            <Link to="/auth?mode=login">Already have an account? Sign in</Link>
+          </button>
         </p>
+
+        <p className="text-sm text-gray-500 mt-2">Join 500+ security teams using Vigil</p>
       </div>
     </section>
   )
@@ -174,7 +222,8 @@ function FeaturesSection() {
             Everything You Need to Track Threats
           </h2>
           <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-            Aggregated from 30+ public threat feeds, enriched and correlated for actionable intelligence.
+            Aggregated from 30+ public threat feeds, enriched and correlated for actionable
+            intelligence.
           </p>
         </div>
 
@@ -201,7 +250,7 @@ function PreviewSection() {
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            See What's Happening Right Now
+            See What&apos;s Happening Right Now
           </h2>
           <p className="text-lg text-gray-400">
             Real-time dashboard showing global threat activity
@@ -320,12 +369,9 @@ function TestimonialsSection() {
 
         <div className="grid md:grid-cols-3 gap-6">
           {TESTIMONIALS.map((testimonial, i) => (
-            <div
-              key={i}
-              className="p-6 bg-gray-800/50 border border-gray-700 rounded-xl"
-            >
+            <div key={i} className="p-6 bg-gray-800/50 border border-gray-700 rounded-xl">
               <div className="text-3xl mb-4">💬</div>
-              <p className="text-gray-300 mb-4 italic">"{testimonial.quote}"</p>
+              <p className="text-gray-300 mb-4 italic">&ldquo;{testimonial.quote}&rdquo;</p>
               <div>
                 <div className="text-white font-medium">{testimonial.author}</div>
                 <div className="text-sm text-gray-500">{testimonial.company}</div>
@@ -346,9 +392,7 @@ function PricingSection() {
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-lg text-gray-400">
-            Start free, upgrade when you need more
-          </p>
+          <p className="text-lg text-gray-400">Start free, upgrade when you need more</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
@@ -363,9 +407,7 @@ function PricingSection() {
               )}
             >
               {plan.highlighted && (
-                <div className="text-xs font-medium text-cyber-accent mb-4">
-                  MOST POPULAR
-                </div>
+                <div className="text-xs font-medium text-cyber-accent mb-4">MOST POPULAR</div>
               )}
               <h3 className="text-xl font-semibold text-white mb-2">{plan.name}</h3>
               <div className="flex items-baseline gap-1 mb-4">
@@ -375,8 +417,18 @@ function PricingSection() {
               <ul className="space-y-3 mb-6">
                 {plan.features.map((feature, j) => (
                   <li key={j} className="flex items-start gap-2 text-sm text-gray-400">
-                    <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-5 h-5 text-green-500 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     {feature}
                   </li>
@@ -415,8 +467,8 @@ function CTASection() {
           Ready to Level Up Your Threat Intel?
         </h2>
         <p className="text-lg text-gray-400 mb-8">
-          Join hundreds of security teams using Vigil to stay ahead of threats.
-          Free forever, no credit card required.
+          Join hundreds of security teams using Vigil to stay ahead of threats. Free forever, no
+          credit card required.
         </p>
         <Link
           to="/auth?mode=register"
@@ -442,13 +494,23 @@ function Footer() {
             <span className="text-gray-500">by The Intelligence Company</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-gray-500">
-            <Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link>
-            <a href="mailto:support@theintelligence.company" className="hover:text-white transition-colors">Contact</a>
-            <a href="https://github.com/theintelligencecompany/vigil" className="hover:text-white transition-colors">GitHub</a>
+            <Link to="/pricing" className="hover:text-white transition-colors">
+              Pricing
+            </Link>
+            <a
+              href="mailto:support@theintelligence.company"
+              className="hover:text-white transition-colors"
+            >
+              Contact
+            </a>
+            <a
+              href="https://github.com/theintelligencecompany/vigil"
+              className="hover:text-white transition-colors"
+            >
+              GitHub
+            </a>
           </div>
-          <div className="text-sm text-gray-500">
-            © 2026 The Intelligence Company
-          </div>
+          <div className="text-sm text-gray-500">© 2026 The Intelligence Company</div>
         </div>
       </div>
     </footer>
