@@ -15,8 +15,14 @@ const SECTOR_COLORS = {
 }
 
 const DEFAULT_COLORS = [
-  '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6',
-  '#ec4899', '#10b981', '#f97316', '#6366f1',
+  '#ef4444',
+  '#f59e0b',
+  '#3b82f6',
+  '#8b5cf6',
+  '#ec4899',
+  '#10b981',
+  '#f97316',
+  '#6366f1',
 ]
 
 export function SectorChart({
@@ -54,7 +60,10 @@ export function SectorChart({
 
   if (!data || data.length === 0) {
     return (
-      <div className={clsx('flex items-center justify-center text-gray-500 text-sm', className)} style={{ height }}>
+      <div
+        className={clsx('flex items-center justify-center text-gray-500 text-sm', className)}
+        style={{ height }}
+      >
         No sector data available
       </div>
     )
@@ -76,11 +85,7 @@ export function SectorChart({
             style={{ cursor: onSectorClick ? 'pointer' : 'default' }}
           >
             {chartData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={entry.color}
-                stroke="transparent"
-              />
+              <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
@@ -108,19 +113,16 @@ export function SectorChart({
   )
 }
 
-export function SectorBarChart({
-  data = [],
-  onSectorClick,
-  className = '',
-}) {
-  const maxValue = Math.max(...data.map(d => d.count || d.value), 1)
+export function SectorBarChart({ data = [], onSectorClick, className = '' }) {
+  const maxValue = Math.max(...data.map((d) => d.count || d.value), 1)
 
   return (
     <div className={clsx('space-y-2', className)}>
       {data.slice(0, 8).map((item, i) => {
         const value = item.count || item.value
         const percentage = (value / maxValue) * 100
-        const color = SECTOR_COLORS[item.sector?.toLowerCase()] || DEFAULT_COLORS[i % DEFAULT_COLORS.length]
+        const color =
+          SECTOR_COLORS[item.sector?.toLowerCase()] || DEFAULT_COLORS[i % DEFAULT_COLORS.length]
 
         return (
           <button

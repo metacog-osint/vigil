@@ -44,9 +44,9 @@ function useForceSimulation(nodes, links, width, height) {
       })
 
       // Attraction from links
-      links.forEach(link => {
-        const source = pos.find(p => p.id === link.source)
-        const target = pos.find(p => p.id === link.target)
+      links.forEach((link) => {
+        const source = pos.find((p) => p.id === link.source)
+        const target = pos.find((p) => p.id === link.target)
         if (!source || !target) return
 
         const dx = target.x - source.x
@@ -61,7 +61,7 @@ function useForceSimulation(nodes, links, width, height) {
       })
 
       // Update positions with damping
-      pos.forEach(node => {
+      pos.forEach((node) => {
         node.vx *= 0.6
         node.vy *= 0.6
         node.x += node.vx
@@ -99,25 +99,23 @@ function calculateRelationship(actor1, actor2) {
   }
 
   // Shared sectors
-  const sharedSectors = actor1.target_sectors?.filter(
-    s => actor2.target_sectors?.includes(s)
-  ) || []
+  const sharedSectors =
+    actor1.target_sectors?.filter((s) => actor2.target_sectors?.includes(s)) || []
   if (sharedSectors.length > 0) {
     score += sharedSectors.length * 15
     reasons.push(`Shared sectors: ${sharedSectors.join(', ')}`)
   }
 
   // Shared TTPs
-  const sharedTtps = actor1.ttps?.filter(t => actor2.ttps?.includes(t)) || []
+  const sharedTtps = actor1.ttps?.filter((t) => actor2.ttps?.includes(t)) || []
   if (sharedTtps.length > 0) {
     score += sharedTtps.length * 10
     reasons.push(`${sharedTtps.length} shared TTPs`)
   }
 
   // Shared countries
-  const sharedCountries = actor1.target_countries?.filter(
-    c => actor2.target_countries?.includes(c)
-  ) || []
+  const sharedCountries =
+    actor1.target_countries?.filter((c) => actor2.target_countries?.includes(c)) || []
   if (sharedCountries.length > 0) {
     score += sharedCountries.length * 5
     reasons.push(`${sharedCountries.length} shared target countries`)
@@ -166,7 +164,9 @@ export default function ActorRelationshipGraph({
 
       let query = supabase
         .from('threat_actors')
-        .select('id, name, actor_type, target_sectors, target_countries, ttps, trend_status, incidents_7d')
+        .select(
+          'id, name, actor_type, target_sectors, target_countries, ttps, trend_status, incidents_7d'
+        )
         .order('incidents_7d', { ascending: false, nullsFirst: false })
         .limit(limit)
 
@@ -182,12 +182,16 @@ export default function ActorRelationshipGraph({
           // Get actors with similar characteristics
           const { data } = await supabase
             .from('threat_actors')
-            .select('id, name, actor_type, target_sectors, target_countries, ttps, trend_status, incidents_7d')
-            .or(`actor_type.eq.${focusActor.actor_type},target_sectors.cs.{${focusActor.target_sectors?.[0] || ''}}`)
+            .select(
+              'id, name, actor_type, target_sectors, target_countries, ttps, trend_status, incidents_7d'
+            )
+            .or(
+              `actor_type.eq.${focusActor.actor_type},target_sectors.cs.{${focusActor.target_sectors?.[0] || ''}}`
+            )
             .limit(limit)
 
           if (data) {
-            setActors([focusActor, ...data.filter(a => a.id !== focusActorId)])
+            setActors([focusActor, ...data.filter((a) => a.id !== focusActorId)])
           }
         }
       } else {
@@ -205,7 +209,7 @@ export default function ActorRelationshipGraph({
 
   // Calculate nodes and links
   const { nodes, links } = useMemo(() => {
-    const nodeList = actors.map(actor => ({
+    const nodeList = actors.map((actor) => ({
       id: actor.id,
       name: actor.name,
       type: actor.actor_type,
@@ -267,7 +271,7 @@ export default function ActorRelationshipGraph({
 
   // Get link for node
   const getNodeLinks = (nodeId) => {
-    return links.filter(l => l.source === nodeId || l.target === nodeId)
+    return links.filter((l) => l.source === nodeId || l.target === nodeId)
   }
 
   if (loading) {
@@ -283,12 +287,14 @@ export default function ActorRelationshipGraph({
       {/* Legend */}
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-3">
-          {Object.entries(TYPE_COLORS).filter(([k]) => k !== 'default').map(([type, color]) => (
-            <div key={type} className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-              <span className="text-gray-400 capitalize">{type.replace('_', ' ')}</span>
-            </div>
-          ))}
+          {Object.entries(TYPE_COLORS)
+            .filter(([k]) => k !== 'default')
+            .map(([type, color]) => (
+              <div key={type} className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
+                <span className="text-gray-400 capitalize">{type.replace('_', ' ')}</span>
+              </div>
+            ))}
         </div>
         <div className="text-gray-500">
           {nodes.length} actors • {links.length} relationships
@@ -304,11 +310,12 @@ export default function ActorRelationshipGraph({
         <svg width="100%" height="100%">
           {/* Links */}
           {links.map((link, i) => {
-            const source = positions.find(p => p.id === link.source)
-            const target = positions.find(p => p.id === link.target)
+            const source = positions.find((p) => p.id === link.source)
+            const target = positions.find((p) => p.id === link.target)
             if (!source || !target) return null
 
-            const isHighlighted = selectedActor &&
+            const isHighlighted =
+              selectedActor &&
               (link.source === selectedActor.id || link.target === selectedActor.id)
 
             return (
@@ -328,9 +335,10 @@ export default function ActorRelationshipGraph({
           {/* Nodes */}
           {positions.map((node) => {
             const isSelected = selectedActor?.id === node.id
-            const isConnected = selectedActor &&
-              getNodeLinks(selectedActor.id).some(l =>
-                l.source === node.id || l.target === node.id
+            const isConnected =
+              selectedActor &&
+              getNodeLinks(selectedActor.id).some(
+                (l) => l.source === node.id || l.target === node.id
               )
 
             return (
@@ -420,7 +428,7 @@ export default function ActorRelationshipGraph({
             <div className="grid grid-cols-2 gap-2">
               {getNodeLinks(selectedActor.id).map((link, i) => {
                 const otherId = link.source === selectedActor.id ? link.target : link.source
-                const other = positions.find(p => p.id === otherId)
+                const other = positions.find((p) => p.id === otherId)
                 if (!other) return null
 
                 return (
@@ -465,9 +473,7 @@ export default function ActorRelationshipGraph({
             </div>
           )}
           {tooltip.incidents_7d > 0 && (
-            <div className="text-xs text-cyan-400 mt-1">
-              {tooltip.incidents_7d} incidents (7d)
-            </div>
+            <div className="text-xs text-cyan-400 mt-1">{tooltip.incidents_7d} incidents (7d)</div>
           )}
         </div>
       )}
@@ -482,10 +488,7 @@ export function ActorGraphMini({ onViewFull }) {
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-white">Actor Relationships</h3>
         {onViewFull && (
-          <button
-            onClick={onViewFull}
-            className="text-xs text-cyan-400 hover:text-cyan-300"
-          >
+          <button onClick={onViewFull} className="text-xs text-cyan-400 hover:text-cyan-300">
             Expand
           </button>
         )}

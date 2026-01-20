@@ -4,7 +4,13 @@
  */
 
 import { useState, useEffect } from 'react'
-import { scheduledReports, REPORT_SECTIONS, REPORT_TEMPLATES, FREQUENCY_OPTIONS, DAY_OPTIONS } from '../lib/scheduledReports'
+import {
+  scheduledReports,
+  REPORT_SECTIONS,
+  REPORT_TEMPLATES,
+  FREQUENCY_OPTIONS,
+  DAY_OPTIONS,
+} from '../lib/scheduledReports'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../contexts/SubscriptionContext'
 import { UpgradePrompt } from '../components/UpgradePrompt'
@@ -74,7 +80,7 @@ export default function Reports() {
   async function handleUpdate(reportId, updates) {
     try {
       const updated = await scheduledReports.update(reportId, userId, updates)
-      setReports(reports.map(r => r.id === reportId ? updated : r))
+      setReports(reports.map((r) => (r.id === reportId ? updated : r)))
       setEditingReport(null)
     } catch (err) {
       setError(err.message)
@@ -85,7 +91,7 @@ export default function Reports() {
     if (!confirm('Delete this scheduled report?')) return
     try {
       await scheduledReports.delete(reportId, userId)
-      setReports(reports.filter(r => r.id !== reportId))
+      setReports(reports.filter((r) => r.id !== reportId))
     } catch (err) {
       setError(err.message)
     }
@@ -94,7 +100,7 @@ export default function Reports() {
   async function handleToggle(report) {
     try {
       const updated = await scheduledReports.toggle(report.id, userId, !report.is_enabled)
-      setReports(reports.map(r => r.id === report.id ? updated : r))
+      setReports(reports.map((r) => (r.id === report.id ? updated : r)))
     } catch (err) {
       setError(err.message)
     }
@@ -147,7 +153,9 @@ export default function Reports() {
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
           {error}
-          <button onClick={() => setError(null)} className="ml-2 underline">Dismiss</button>
+          <button onClick={() => setError(null)} className="ml-2 underline">
+            Dismiss
+          </button>
         </div>
       )}
 
@@ -155,8 +163,18 @@ export default function Reports() {
       {reports.length === 0 ? (
         <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-12 text-center">
           <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <svg
+              className="w-8 h-8 text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
           </div>
           <h3 className="text-lg font-medium text-white mb-2">No scheduled reports yet</h3>
@@ -172,7 +190,7 @@ export default function Reports() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {reports.map(report => (
+          {reports.map((report) => (
             <ReportCard
               key={report.id}
               report={report}
@@ -190,7 +208,7 @@ export default function Reports() {
         <div>
           <h2 className="text-lg font-medium text-white mb-4">Recent Reports</h2>
           <div className="bg-gray-800/30 border border-gray-700 rounded-lg divide-y divide-gray-700">
-            {history.slice(0, 5).map(item => (
+            {history.slice(0, 5).map((item) => (
               <div key={item.id} className="p-4 flex items-center justify-between">
                 <div>
                   <div className="text-white font-medium">
@@ -227,9 +245,8 @@ export default function Reports() {
             setShowCreateModal(false)
             setEditingReport(null)
           }}
-          onSave={editingReport
-            ? (updates) => handleUpdate(editingReport.id, updates)
-            : handleCreate
+          onSave={
+            editingReport ? (updates) => handleUpdate(editingReport.id, updates) : handleCreate
           }
           tier={tier}
         />
@@ -248,12 +265,15 @@ export default function Reports() {
 }
 
 function ReportCard({ report, onToggle, onEdit, onDelete, onViewHistory }) {
-  const frequencyLabel = FREQUENCY_OPTIONS.find(f => f.value === report.frequency)?.label || report.frequency
+  const frequencyLabel =
+    FREQUENCY_OPTIONS.find((f) => f.value === report.frequency)?.label || report.frequency
 
   return (
-    <div className={`bg-gray-800/30 border rounded-lg p-5 transition-colors ${
-      report.is_enabled ? 'border-gray-700' : 'border-gray-800 opacity-60'
-    }`}>
+    <div
+      className={`bg-gray-800/30 border rounded-lg p-5 transition-colors ${
+        report.is_enabled ? 'border-gray-700' : 'border-gray-800 opacity-60'
+      }`}
+    >
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="text-white font-medium">{report.name}</h3>
@@ -267,19 +287,18 @@ function ReportCard({ report, onToggle, onEdit, onDelete, onViewHistory }) {
             report.is_enabled ? 'bg-cyan-500' : 'bg-gray-700'
           }`}
         >
-          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-            report.is_enabled ? 'left-6' : 'left-1'
-          }`} />
+          <span
+            className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+              report.is_enabled ? 'left-6' : 'left-1'
+            }`}
+          />
         </button>
       </div>
 
       {/* Sections */}
       <div className="flex flex-wrap gap-1 mb-3">
-        {(report.sections || []).map(sectionId => (
-          <span
-            key={sectionId}
-            className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 rounded"
-          >
+        {(report.sections || []).map((sectionId) => (
+          <span key={sectionId} className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 rounded">
             {REPORT_SECTIONS[sectionId]?.label || sectionId}
           </span>
         ))}
@@ -345,17 +364,22 @@ function ReportModal({ report, onClose, onSave, tier }) {
   const [deliveryDay, setDeliveryDay] = useState(report?.delivery_day || 1)
   const [deliveryTime, setDeliveryTime] = useState(report?.delivery_time?.slice(0, 5) || '08:00')
   const [timezone, setTimezone] = useState(report?.timezone || 'UTC')
-  const [sections, setSections] = useState(report?.sections || ['summary', 'incidents', 'actors', 'vulnerabilities'])
+  const [sections, setSections] = useState(
+    report?.sections || ['summary', 'incidents', 'actors', 'vulnerabilities']
+  )
   const [recipients, setRecipients] = useState((report?.recipients || []).join(', '))
-  const [branding, setBranding] = useState(report?.branding || { logoUrl: '', primaryColor: '#06b6d4' })
+  const [branding, setBranding] = useState(
+    report?.branding || { logoUrl: '', primaryColor: '#06b6d4' }
+  )
   const [saving, setSaving] = useState(false)
 
   // Frequency limits by tier
-  const allowedFrequencies = tier === 'enterprise'
-    ? ['daily', 'weekly', 'monthly']
-    : tier === 'team'
+  const allowedFrequencies =
+    tier === 'enterprise'
       ? ['daily', 'weekly', 'monthly']
-      : ['weekly', 'monthly'] // Professional
+      : tier === 'team'
+        ? ['daily', 'weekly', 'monthly']
+        : ['weekly', 'monthly'] // Professional
 
   const handleSelectTemplate = (template) => {
     setSelectedTemplate(template)
@@ -377,7 +401,10 @@ function ReportModal({ report, onClose, onSave, tier }) {
       deliveryTime: deliveryTime + ':00',
       timezone,
       sections,
-      recipients: recipients.split(',').map(e => e.trim()).filter(Boolean),
+      recipients: recipients
+        .split(',')
+        .map((e) => e.trim())
+        .filter(Boolean),
       filters: {},
       format: 'pdf',
       branding,
@@ -387,10 +414,8 @@ function ReportModal({ report, onClose, onSave, tier }) {
   }
 
   const toggleSection = (sectionId) => {
-    setSections(prev =>
-      prev.includes(sectionId)
-        ? prev.filter(s => s !== sectionId)
-        : [...prev, sectionId]
+    setSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((s) => s !== sectionId) : [...prev, sectionId]
     )
   }
 
@@ -408,7 +433,7 @@ function ReportModal({ report, onClose, onSave, tier }) {
             </div>
 
             <div className="p-6 space-y-3">
-              {Object.values(REPORT_TEMPLATES).map(template => (
+              {Object.values(REPORT_TEMPLATES).map((template) => (
                 <button
                   key={template.id}
                   onClick={() => handleSelectTemplate(template)}
@@ -428,8 +453,11 @@ function ReportModal({ report, onClose, onSave, tier }) {
                   </div>
                   <p className="text-sm text-gray-400 mt-1">{template.description}</p>
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {template.sections.map(s => (
-                      <span key={s} className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 rounded">
+                    {template.sections.map((s) => (
+                      <span
+                        key={s}
+                        className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 rounded"
+                      >
                         {REPORT_SECTIONS[s]?.label || s}
                       </span>
                     ))}
@@ -460,7 +488,12 @@ function ReportModal({ report, onClose, onSave, tier }) {
                     className="p-1 text-gray-400 hover:text-white"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
                     </svg>
                   </button>
                 )}
@@ -469,7 +502,9 @@ function ReportModal({ report, onClose, onSave, tier }) {
                     {report ? 'Edit Report' : 'Configure Report'}
                   </h2>
                   <p className="text-sm text-gray-400 mt-1">
-                    {selectedTemplate?.name ? `Based on: ${selectedTemplate.name}` : 'Configure your automated threat intelligence digest'}
+                    {selectedTemplate?.name
+                      ? `Based on: ${selectedTemplate.name}`
+                      : 'Configure your automated threat intelligence digest'}
                   </p>
                 </div>
               </div>
@@ -498,13 +533,14 @@ function ReportModal({ report, onClose, onSave, tier }) {
                     onChange={(e) => setFrequency(e.target.value)}
                     className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
                   >
-                    {FREQUENCY_OPTIONS.map(opt => (
+                    {FREQUENCY_OPTIONS.map((opt) => (
                       <option
                         key={opt.value}
                         value={opt.value}
                         disabled={!allowedFrequencies.includes(opt.value)}
                       >
-                        {opt.label} {!allowedFrequencies.includes(opt.value) && '(Upgrade required)'}
+                        {opt.label}{' '}
+                        {!allowedFrequencies.includes(opt.value) && '(Upgrade required)'}
                       </option>
                     ))}
                   </select>
@@ -520,15 +556,19 @@ function ReportModal({ report, onClose, onSave, tier }) {
                       onChange={(e) => setDeliveryDay(parseInt(e.target.value))}
                       className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
                     >
-                      {DAY_OPTIONS[frequency]?.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      {DAY_OPTIONS[frequency]?.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
                       ))}
                     </select>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Delivery Time</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Delivery Time
+                  </label>
                   <input
                     type="time"
                     value={deliveryTime}
@@ -544,8 +584,10 @@ function ReportModal({ report, onClose, onSave, tier }) {
                     onChange={(e) => setTimezone(e.target.value)}
                     className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
                   >
-                    {TIMEZONES.map(tz => (
-                      <option key={tz.value} value={tz.value}>{tz.label}</option>
+                    {TIMEZONES.map((tz) => (
+                      <option key={tz.value} value={tz.value}>
+                        {tz.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -553,9 +595,11 @@ function ReportModal({ report, onClose, onSave, tier }) {
 
               {/* Sections */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">Report Sections</label>
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  Report Sections
+                </label>
                 <div className="grid grid-cols-2 gap-3">
-                  {Object.values(REPORT_SECTIONS).map(section => (
+                  {Object.values(REPORT_SECTIONS).map((section) => (
                     <label
                       key={section.id}
                       className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -603,13 +647,17 @@ function ReportModal({ report, onClose, onSave, tier }) {
                         <input
                           type="color"
                           value={branding.primaryColor || '#06b6d4'}
-                          onChange={(e) => setBranding({ ...branding, primaryColor: e.target.value })}
+                          onChange={(e) =>
+                            setBranding({ ...branding, primaryColor: e.target.value })
+                          }
                           className="h-10 w-14 rounded cursor-pointer border border-gray-700"
                         />
                         <input
                           type="text"
                           value={branding.primaryColor || '#06b6d4'}
-                          onChange={(e) => setBranding({ ...branding, primaryColor: e.target.value })}
+                          onChange={(e) =>
+                            setBranding({ ...branding, primaryColor: e.target.value })
+                          }
                           className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500"
                           placeholder="#06b6d4"
                         />
@@ -648,7 +696,7 @@ function ReportModal({ report, onClose, onSave, tier }) {
                   disabled={saving || !name.trim() || sections.length === 0}
                   className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {saving ? 'Saving...' : (report ? 'Save Changes' : 'Create Report')}
+                  {saving ? 'Saving...' : report ? 'Save Changes' : 'Create Report'}
                 </button>
               </div>
             </form>
@@ -692,7 +740,12 @@ function HistoryModal({ report, userId, onClose }) {
             className="p-2 text-gray-400 hover:text-white transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -703,12 +756,10 @@ function HistoryModal({ report, userId, onClose }) {
               <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
             </div>
           ) : history.length === 0 ? (
-            <div className="py-12 text-center text-gray-400">
-              No reports generated yet
-            </div>
+            <div className="py-12 text-center text-gray-400">No reports generated yet</div>
           ) : (
             <div className="divide-y divide-gray-700">
-              {history.map(item => (
+              {history.map((item) => (
                 <div key={item.id} className="p-4 hover:bg-gray-800/30">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-white">
@@ -720,7 +771,9 @@ function HistoryModal({ report, userId, onClose }) {
                     <div className="flex gap-4 text-sm text-gray-400">
                       {item.stats.incidents && <span>{item.stats.incidents} incidents</span>}
                       {item.stats.actors && <span>{item.stats.actors} actors</span>}
-                      {item.stats.vulnerabilities && <span>{item.stats.vulnerabilities} vulns</span>}
+                      {item.stats.vulnerabilities && (
+                        <span>{item.stats.vulnerabilities} vulns</span>
+                      )}
                     </div>
                   )}
                   {item.error_message && (

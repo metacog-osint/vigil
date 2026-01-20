@@ -9,10 +9,12 @@ export const watchlists = {
   async getAll(userId = 'anonymous') {
     return supabase
       .from('watchlists')
-      .select(`
+      .select(
+        `
         *,
         items:watchlist_items(count)
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
   },
@@ -25,10 +27,12 @@ export const watchlists = {
   async getById(id, userId) {
     const query = supabase
       .from('watchlists')
-      .select(`
+      .select(
+        `
         *,
         items:watchlist_items(*)
-      `)
+      `
+      )
       .eq('id', id)
 
     // If userId provided, verify ownership
@@ -40,11 +44,7 @@ export const watchlists = {
   },
 
   async create(watchlist) {
-    return supabase
-      .from('watchlists')
-      .insert(watchlist)
-      .select()
-      .single()
+    return supabase.from('watchlists').insert(watchlist).select().single()
   },
 
   /**
@@ -77,11 +77,7 @@ export const watchlists = {
       return { error: { message: 'User ID required for delete' } }
     }
 
-    return supabase
-      .from('watchlists')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId)
+    return supabase.from('watchlists').delete().eq('id', id).eq('user_id', userId)
   },
 
   /**
@@ -148,10 +144,12 @@ export const watchlists = {
   async isWatched(entityId, userId = 'anonymous') {
     const { data } = await supabase
       .from('watchlist_items')
-      .select(`
+      .select(
+        `
         *,
         watchlist:watchlists!inner(user_id)
-      `)
+      `
+      )
       .eq('entity_id', entityId)
       .eq('watchlist.user_id', userId)
     return data && data.length > 0

@@ -6,11 +6,36 @@ import { formatDistanceToNow } from 'date-fns'
 
 // Reputation level styling
 const REPUTATION_LEVELS = {
-  malicious: { label: 'Malicious', color: 'text-red-400', bgColor: 'bg-red-500/20', barColor: 'bg-red-500' },
-  suspicious: { label: 'Suspicious', color: 'text-orange-400', bgColor: 'bg-orange-500/20', barColor: 'bg-orange-500' },
-  risky: { label: 'Risky', color: 'text-yellow-400', bgColor: 'bg-yellow-500/20', barColor: 'bg-yellow-500' },
-  low_risk: { label: 'Low Risk', color: 'text-green-400', bgColor: 'bg-green-500/20', barColor: 'bg-green-500' },
-  unknown: { label: 'Unknown', color: 'text-gray-400', bgColor: 'bg-gray-500/20', barColor: 'bg-gray-500' },
+  malicious: {
+    label: 'Malicious',
+    color: 'text-red-400',
+    bgColor: 'bg-red-500/20',
+    barColor: 'bg-red-500',
+  },
+  suspicious: {
+    label: 'Suspicious',
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/20',
+    barColor: 'bg-orange-500',
+  },
+  risky: {
+    label: 'Risky',
+    color: 'text-yellow-400',
+    bgColor: 'bg-yellow-500/20',
+    barColor: 'bg-yellow-500',
+  },
+  low_risk: {
+    label: 'Low Risk',
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/20',
+    barColor: 'bg-green-500',
+  },
+  unknown: {
+    label: 'Unknown',
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-500/20',
+    barColor: 'bg-gray-500',
+  },
 }
 
 function ReputationSection({ ioc }) {
@@ -51,12 +76,20 @@ function ReputationSection({ ioc }) {
           <div className="space-y-1">
             {factors.slice(0, 6).map((factor, i) => (
               <div key={i} className="flex items-center justify-between text-xs">
-                <span className="text-gray-300 capitalize">{factor.source?.replace(/_/g, ' ')}</span>
+                <span className="text-gray-300 capitalize">
+                  {factor.source?.replace(/_/g, ' ')}
+                </span>
                 <div className="flex items-center gap-2">
-                  {factor.type && (
-                    <span className="text-gray-500">{factor.type}</span>
-                  )}
-                  <span className={factor.score >= 15 ? 'text-red-400' : factor.score >= 10 ? 'text-orange-400' : 'text-gray-400'}>
+                  {factor.type && <span className="text-gray-500">{factor.type}</span>}
+                  <span
+                    className={
+                      factor.score >= 15
+                        ? 'text-red-400'
+                        : factor.score >= 10
+                          ? 'text-orange-400'
+                          : 'text-gray-400'
+                    }
+                  >
                     +{factor.score}
                   </span>
                 </div>
@@ -195,9 +228,7 @@ function VirusTotalSection({ metadata, iocType, iocValue }) {
                 {malicious}/{total}
               </span>
               {suspicious > 0 && (
-                <span className="text-xs text-yellow-400 ml-2">
-                  ({suspicious} suspicious)
-                </span>
+                <span className="text-xs text-yellow-400 ml-2">({suspicious} suspicious)</span>
               )}
             </div>
           </div>
@@ -352,8 +383,12 @@ export function EnrichmentPanel({ ioc, onEnrich, isEnriching }) {
   // Determine which enrichments are available based on IOC type
   const iocType = ioc?.type
   const canEnrichShodan = iocType === 'ip'
-  const canEnrichVT = ['ip', 'domain', 'sha256', 'sha1', 'md5', 'hash_sha256', 'hash_md5'].includes(iocType)
-  const canEnrichHA = ['sha256', 'sha1', 'md5', 'hash_sha256', 'hash_md5', 'hash_sha1'].includes(iocType)
+  const canEnrichVT = ['ip', 'domain', 'sha256', 'sha1', 'md5', 'hash_sha256', 'hash_md5'].includes(
+    iocType
+  )
+  const canEnrichHA = ['sha256', 'sha1', 'md5', 'hash_sha256', 'hash_md5', 'hash_sha1'].includes(
+    iocType
+  )
 
   if (!hasEnrichment && !onEnrich) return null
 
@@ -410,11 +445,7 @@ export function EnrichmentPanel({ ioc, onEnrich, isEnriching }) {
               {hasReputation && <ReputationSection ioc={ioc} />}
               {canEnrichShodan && <ShodanSection metadata={metadata} />}
               {canEnrichVT && (
-                <VirusTotalSection
-                  metadata={metadata}
-                  iocType={iocType}
-                  iocValue={ioc?.value}
-                />
+                <VirusTotalSection metadata={metadata} iocType={iocType} iocValue={ioc?.value} />
               )}
               {canEnrichHA && <HybridAnalysisSection metadata={metadata} />}
             </>
@@ -436,9 +467,14 @@ export function EnrichmentBadges({ metadata, ioc }) {
     if (score > 0 || level !== 'unknown') {
       badges.push({
         label: `Risk: ${score}`,
-        color: level === 'malicious' ? 'badge-critical' :
-               level === 'suspicious' ? 'badge-high' :
-               level === 'risky' ? 'badge-medium' : 'badge-info',
+        color:
+          level === 'malicious'
+            ? 'badge-critical'
+            : level === 'suspicious'
+              ? 'badge-high'
+              : level === 'risky'
+                ? 'badge-medium'
+                : 'badge-info',
         title: `${config.label} - IP reputation score based on ${(ioc.reputation_factors || []).length} sources`,
       })
     }

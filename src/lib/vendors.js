@@ -24,7 +24,11 @@ export const VENDOR_CATEGORIES = {
 
 // Criticality levels
 export const CRITICALITY_LEVELS = {
-  critical: { label: 'Critical', color: 'red', description: 'Business cannot operate without this vendor' },
+  critical: {
+    label: 'Critical',
+    color: 'red',
+    description: 'Business cannot operate without this vendor',
+  },
   high: { label: 'High', color: 'orange', description: 'Significant impact if unavailable' },
   medium: { label: 'Medium', color: 'yellow', description: 'Moderate impact, workarounds exist' },
   low: { label: 'Low', color: 'green', description: 'Minimal impact if unavailable' },
@@ -64,10 +68,7 @@ export const vendors = {
    * Get all vendors for a user/team
    */
   async getAll(userId, teamId = null) {
-    let query = supabase
-      .from('vendors')
-      .select('*')
-      .eq('user_id', userId)
+    let query = supabase.from('vendors').select('*').eq('user_id', userId)
 
     if (teamId) {
       query = query.or(`team_id.eq.${teamId}`)
@@ -85,11 +86,7 @@ export const vendors = {
    * Get vendor by ID
    */
   async getById(vendorId) {
-    const { data, error } = await supabase
-      .from('vendors')
-      .select('*')
-      .eq('id', vendorId)
-      .single()
+    const { data, error } = await supabase.from('vendors').select('*').eq('id', vendorId).single()
 
     if (error && error.code !== 'PGRST116') throw error
     return data
@@ -146,23 +143,41 @@ export const vendors = {
     const updateData = { updated_at: new Date().toISOString() }
 
     const fields = [
-      'name', 'domain', 'website', 'description', 'category', 'criticality',
-      'primary_contact', 'contact_email', 'contract_owner',
-      'contract_start_date', 'contract_end_date', 'contract_value',
-      'data_types', 'data_classification', 'technologies', 'notes', 'status'
+      'name',
+      'domain',
+      'website',
+      'description',
+      'category',
+      'criticality',
+      'primary_contact',
+      'contact_email',
+      'contract_owner',
+      'contract_start_date',
+      'contract_end_date',
+      'contract_value',
+      'data_types',
+      'data_classification',
+      'technologies',
+      'notes',
+      'status',
     ]
 
-    const boolFields = ['is_monitored', 'monitor_breaches', 'monitor_vulnerabilities', 'monitor_news']
+    const boolFields = [
+      'is_monitored',
+      'monitor_breaches',
+      'monitor_vulnerabilities',
+      'monitor_news',
+    ]
 
-    fields.forEach(field => {
-      const camelField = field.replace(/_([a-z])/g, g => g[1].toUpperCase())
+    fields.forEach((field) => {
+      const camelField = field.replace(/_([a-z])/g, (g) => g[1].toUpperCase())
       if (updates[camelField] !== undefined) {
         updateData[field] = updates[camelField]
       }
     })
 
-    boolFields.forEach(field => {
-      const camelField = field.replace(/_([a-z])/g, g => g[1].toUpperCase())
+    boolFields.forEach((field) => {
+      const camelField = field.replace(/_([a-z])/g, (g) => g[1].toUpperCase())
       if (updates[camelField] !== undefined) {
         updateData[field] = updates[camelField]
       }
@@ -254,16 +269,18 @@ export const vendorEvents = {
    */
   async getOpen(userId, teamId = null) {
     const vendorList = await vendors.getAll(userId, teamId)
-    const vendorIds = vendorList.map(v => v.id)
+    const vendorIds = vendorList.map((v) => v.id)
 
     if (vendorIds.length === 0) return []
 
     const { data, error } = await supabase
       .from('vendor_risk_events')
-      .select(`
+      .select(
+        `
         *,
         vendor:vendors(id, name, criticality)
-      `)
+      `
+      )
       .in('vendor_id', vendorIds)
       .in('status', ['open', 'acknowledged'])
       .order('event_date', { ascending: false })

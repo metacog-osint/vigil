@@ -3,11 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import {
-  parseQuery,
-  validateQuery,
-  getQuerySuggestions,
-} from '../queryParser'
+import { parseQuery, validateQuery, getQuerySuggestions } from '../queryParser'
 
 describe('parseQuery', () => {
   describe('basic parsing', () => {
@@ -205,28 +201,30 @@ describe('validateQuery', () => {
 describe('getQuerySuggestions', () => {
   it('should suggest fields based on entity type', () => {
     const suggestions = getQuerySuggestions('iocs', 'con')
-    expect(suggestions.some(s => s.text.startsWith('confidence'))).toBe(true)
+    expect(suggestions.some((s) => s.text.startsWith('confidence'))).toBe(true)
   })
 
   it('should suggest fields for actors entity', () => {
     const suggestions = getQuerySuggestions('actors', 'tr')
-    expect(suggestions.some(s => s.text.startsWith('trend'))).toBe(true)
+    expect(suggestions.some((s) => s.text.startsWith('trend'))).toBe(true)
   })
 
   it('should suggest fields for vulnerabilities', () => {
     const suggestions = getQuerySuggestions('vulnerabilities', 'cv')
-    expect(suggestions.some(s => s.text.startsWith('cve') || s.text.startsWith('cvss'))).toBe(true)
+    expect(suggestions.some((s) => s.text.startsWith('cve') || s.text.startsWith('cvss'))).toBe(
+      true
+    )
   })
 
   it('should suggest values for known fields', () => {
     const suggestions = getQuerySuggestions('iocs', 'type:')
     expect(suggestions.length).toBeGreaterThan(0)
-    expect(suggestions.some(s => s.text.includes('ip'))).toBe(true)
+    expect(suggestions.some((s) => s.text.includes('ip'))).toBe(true)
   })
 
   it('should suggest severity values', () => {
     const suggestions = getQuerySuggestions('vulnerabilities', 'severity:')
-    expect(suggestions.some(s => s.text.includes('critical'))).toBe(true)
+    expect(suggestions.some((s) => s.text.includes('critical'))).toBe(true)
   })
 })
 

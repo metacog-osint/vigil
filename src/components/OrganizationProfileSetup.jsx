@@ -4,25 +4,77 @@ import { clsx } from 'clsx'
 import { SECTORS_TITLE_CASE as SECTORS, REGIONS } from '../lib/constants'
 
 const COUNTRIES = [
-  'United States', 'United Kingdom', 'Canada', 'Germany', 'France',
-  'Australia', 'Japan', 'South Korea', 'India', 'Brazil',
-  'Mexico', 'Italy', 'Spain', 'Netherlands', 'Switzerland',
-  'Singapore', 'Israel', 'UAE', 'Saudi Arabia', 'South Africa',
+  'United States',
+  'United Kingdom',
+  'Canada',
+  'Germany',
+  'France',
+  'Australia',
+  'Japan',
+  'South Korea',
+  'India',
+  'Brazil',
+  'Mexico',
+  'Italy',
+  'Spain',
+  'Netherlands',
+  'Switzerland',
+  'Singapore',
+  'Israel',
+  'UAE',
+  'Saudi Arabia',
+  'South Africa',
 ]
 
 const TECH_VENDORS = [
-  'Microsoft', 'Cisco', 'VMware', 'AWS', 'Google Cloud', 'Azure',
-  'Oracle', 'SAP', 'Salesforce', 'Adobe', 'IBM', 'Dell',
-  'Fortinet', 'Palo Alto Networks', 'CrowdStrike', 'Citrix',
-  'Juniper', 'F5', 'Splunk', 'ServiceNow', 'Okta', 'Zscaler',
+  'Microsoft',
+  'Cisco',
+  'VMware',
+  'AWS',
+  'Google Cloud',
+  'Azure',
+  'Oracle',
+  'SAP',
+  'Salesforce',
+  'Adobe',
+  'IBM',
+  'Dell',
+  'Fortinet',
+  'Palo Alto Networks',
+  'CrowdStrike',
+  'Citrix',
+  'Juniper',
+  'F5',
+  'Splunk',
+  'ServiceNow',
+  'Okta',
+  'Zscaler',
 ]
 
 const TECH_PRODUCTS = [
-  'Windows Server', 'Active Directory', 'Exchange Server', 'Office 365',
-  'Linux', 'Apache', 'Nginx', 'IIS', 'Docker', 'Kubernetes',
-  'MySQL', 'PostgreSQL', 'MongoDB', 'SQL Server', 'Oracle DB',
-  'VPN', 'Firewall', 'Load Balancer', 'WAF', 'SIEM',
-  'Endpoint Protection', 'Email Gateway', 'Backup Solution',
+  'Windows Server',
+  'Active Directory',
+  'Exchange Server',
+  'Office 365',
+  'Linux',
+  'Apache',
+  'Nginx',
+  'IIS',
+  'Docker',
+  'Kubernetes',
+  'MySQL',
+  'PostgreSQL',
+  'MongoDB',
+  'SQL Server',
+  'Oracle DB',
+  'VPN',
+  'Firewall',
+  'Load Balancer',
+  'WAF',
+  'SIEM',
+  'Endpoint Protection',
+  'Email Gateway',
+  'Backup Solution',
 ]
 
 function StepIndicator({ currentStep, totalSteps }) {
@@ -308,10 +360,7 @@ export function OrganizationProfileSummary({ profile, onEdit }) {
           <div className="text-xs text-gray-500 mb-2">Monitored Vendors</div>
           <div className="flex flex-wrap gap-1">
             {profile.tech_vendors.slice(0, 8).map((vendor) => (
-              <span
-                key={vendor}
-                className="px-2 py-0.5 bg-gray-700 text-gray-300 text-xs rounded"
-              >
+              <span key={vendor} className="px-2 py-0.5 bg-gray-700 text-gray-300 text-xs rounded">
                 {vendor}
               </span>
             ))}

@@ -183,12 +183,12 @@ export function actorToStix(actor) {
 
   // Add sector targeting
   if (actor.target_sectors?.length > 0) {
-    threatActor.labels.push(...actor.target_sectors.map(s => `targets-${s}`))
+    threatActor.labels.push(...actor.target_sectors.map((s) => `targets-${s}`))
   }
 
   // Add country targeting
   if (actor.target_countries?.length > 0) {
-    threatActor.labels.push(...actor.target_countries.map(c => `targets-${c.toLowerCase()}`))
+    threatActor.labels.push(...actor.target_countries.map((c) => `targets-${c.toLowerCase()}`))
   }
 
   return threatActor
@@ -296,7 +296,9 @@ export function incidentToStix(incident) {
     created: stixTimestamp(incident.created_at),
     modified: stixTimestamp(incident.updated_at || incident.created_at),
     name: `Incident: ${incident.victim_name}`,
-    description: incident.description || `Attack on ${incident.victim_name} by ${incident.threat_actor?.name || 'unknown actor'}`,
+    description:
+      incident.description ||
+      `Attack on ${incident.victim_name} by ${incident.threat_actor?.name || 'unknown actor'}`,
     report_types: ['threat-actor', 'attack-pattern'],
     published: stixTimestamp(incident.discovered_date || incident.created_at),
     object_refs: [],

@@ -58,8 +58,8 @@ export default function NotificationBell({ userId = 'anonymous' }) {
 
     const unsubscribe = notifications.subscribeToUser(userId, (payload) => {
       if (payload.new) {
-        setNotificationList(prev => [payload.new, ...prev].slice(0, 20))
-        setUnreadCount(prev => prev + 1)
+        setNotificationList((prev) => [payload.new, ...prev].slice(0, 20))
+        setUnreadCount((prev) => prev + 1)
       }
     })
 
@@ -94,17 +94,19 @@ export default function NotificationBell({ userId = 'anonymous' }) {
       }
 
       if (data && data.length > 0) {
-        setNotificationList(data.map(n => ({
-          id: n.id,
-          type: n.notification_type,
-          title: n.title,
-          description: n.message,
-          date: n.created_at,
-          severity: n.severity,
-          link: n.link,
-          read: !!n.read_at,
-          icon: NOTIFICATION_ICONS[n.notification_type] || 'ℹ️',
-        })))
+        setNotificationList(
+          data.map((n) => ({
+            id: n.id,
+            type: n.notification_type,
+            title: n.title,
+            description: n.message,
+            date: n.created_at,
+            severity: n.severity,
+            link: n.link,
+            read: !!n.read_at,
+            icon: NOTIFICATION_ICONS[n.notification_type] || 'ℹ️',
+          }))
+        )
         setUsesFallback(false)
       } else {
         // No notifications in table - use fallback
@@ -127,7 +129,7 @@ export default function NotificationBell({ userId = 'anonymous' }) {
       // Get recent CISA alerts
       const { data: alertData } = await alerts.getRecent({ limit: 3 })
       if (alertData) {
-        alertData.forEach(alert => {
+        alertData.forEach((alert) => {
           notifs.push({
             id: `alert-${alert.id}`,
             type: 'alert',
@@ -145,7 +147,7 @@ export default function NotificationBell({ userId = 'anonymous' }) {
       // Get recent KEVs
       const { data: kevData } = await vulnerabilities.getRecent({ limit: 3, kevOnly: true })
       if (kevData) {
-        kevData.forEach(vuln => {
+        kevData.forEach((vuln) => {
           notifs.push({
             id: `kev-${vuln.cve_id}`,
             type: 'kev',
@@ -163,7 +165,7 @@ export default function NotificationBell({ userId = 'anonymous' }) {
       // Get escalating actors
       const { data: actorData } = await threatActors.getAll({ trendStatus: 'ESCALATING', limit: 3 })
       if (actorData) {
-        actorData.forEach(actor => {
+        actorData.forEach((actor) => {
           notifs.push({
             id: `actor-${actor.id}`,
             type: 'actor',
@@ -184,7 +186,7 @@ export default function NotificationBell({ userId = 'anonymous' }) {
 
       // Set unread count based on items from last 24h
       const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-      const recentCount = notifs.filter(n => new Date(n.date) > dayAgo).length
+      const recentCount = notifs.filter((n) => new Date(n.date) > dayAgo).length
       setUnreadCount(recentCount)
     } catch (error) {
       console.error('Error loading fallback notifications:', error)
@@ -195,17 +197,17 @@ export default function NotificationBell({ userId = 'anonymous' }) {
     if (usesFallback) return // Can't mark as read in fallback mode
 
     await notifications.markAsRead(notificationId)
-    setNotificationList(prev => prev.map(n =>
-      n.id === notificationId ? { ...n, read: true } : n
-    ))
-    setUnreadCount(prev => Math.max(0, prev - 1))
+    setNotificationList((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+    )
+    setUnreadCount((prev) => Math.max(0, prev - 1))
   }
 
   async function handleMarkAllAsRead() {
     if (usesFallback) return
 
     await notifications.markAllAsRead(userId)
-    setNotificationList(prev => prev.map(n => ({ ...n, read: true })))
+    setNotificationList((prev) => prev.map((n) => ({ ...n, read: true })))
     setUnreadCount(0)
   }
 
@@ -231,8 +233,18 @@ export default function NotificationBell({ userId = 'anonymous' }) {
         className="relative p-2 rounded-lg hover:bg-gray-800 transition-colors"
         title="Notifications"
       >
-        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        <svg
+          className="w-5 h-5 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          />
         </svg>
 
         {/* Unread Badge */}
@@ -250,9 +262,7 @@ export default function NotificationBell({ userId = 'anonymous' }) {
           <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-white">Notifications</span>
-              {unreadCount > 0 && (
-                <span className="text-xs text-cyan-400">{unreadCount} new</span>
-              )}
+              {unreadCount > 0 && <span className="text-xs text-cyan-400">{unreadCount} new</span>}
             </div>
             {unreadCount > 0 && !usesFallback && (
               <button
@@ -290,9 +300,7 @@ export default function NotificationBell({ userId = 'anonymous' }) {
                 >
                   <div className="flex gap-3">
                     {/* Icon */}
-                    <span className="text-lg flex-shrink-0 mt-0.5">
-                      {notification.icon}
-                    </span>
+                    <span className="text-lg flex-shrink-0 mt-0.5">{notification.icon}</span>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
@@ -308,19 +316,21 @@ export default function NotificationBell({ userId = 'anonymous' }) {
                       </div>
 
                       {notification.description && (
-                        <p className="text-xs text-gray-500 truncate">
-                          {notification.description}
-                        </p>
+                        <p className="text-xs text-gray-500 truncate">{notification.description}</p>
                       )}
 
                       <div className="flex items-center gap-2 mt-1">
                         {notification.severity && notification.severity !== 'info' && (
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded border ${SEVERITY_COLORS[notification.severity]}`}>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded border ${SEVERITY_COLORS[notification.severity]}`}
+                          >
                             {notification.severity.toUpperCase()}
                           </span>
                         )}
                         <span className="text-[10px] text-gray-600">
-                          {notification.date ? formatDistanceToNow(new Date(notification.date), { addSuffix: true }) : ''}
+                          {notification.date
+                            ? formatDistanceToNow(new Date(notification.date), { addSuffix: true })
+                            : ''}
                         </span>
                       </div>
                     </div>

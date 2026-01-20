@@ -133,12 +133,8 @@ export function SimilarItems({
               {type === 'incident' && item.sector && (
                 <span className="ml-2">Sector: {item.sector}</span>
               )}
-              {type === 'actor' && item.actor_type && (
-                <span>Type: {item.actor_type}</span>
-              )}
-              {type === 'vulnerability' && item.severity && (
-                <span>Severity: {item.severity}</span>
-              )}
+              {type === 'actor' && item.actor_type && <span>Type: {item.actor_type}</span>}
+              {type === 'vulnerability' && item.severity && <span>Severity: {item.severity}</span>}
             </div>
           </Link>
         ))}

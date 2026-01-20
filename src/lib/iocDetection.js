@@ -106,7 +106,8 @@ export function detectIOCType(input) {
   }
 
   // Clean input
-  const cleaned = input.trim()
+  const cleaned = input
+    .trim()
     .replace(/\[.\]/g, '.') // Defang: [.] -> .
     .replace(/hxxp/gi, 'http') // Defang: hxxp -> http
     .replace(/\s+/g, '') // Remove whitespace
@@ -167,9 +168,7 @@ export function validateIOC(value, type) {
  * @returns {string} Normalized value
  */
 export function normalizeIOC(value, type) {
-  let normalized = value.trim()
-    .replace(/\[.\]/g, '.')
-    .replace(/hxxp/gi, 'http')
+  let normalized = value.trim().replace(/\[.\]/g, '.').replace(/hxxp/gi, 'http')
 
   // Lowercase domains and emails
   if (['domain', 'email', 'url'].includes(type)) {

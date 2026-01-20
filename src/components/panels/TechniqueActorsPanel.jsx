@@ -23,9 +23,9 @@ function LoadingState() {
 function ActorTypeBadge({ type }) {
   const colors = {
     'Nation-State': 'bg-red-900/50 text-red-400 border-red-700/50',
-    'Criminal': 'bg-orange-900/50 text-orange-400 border-orange-700/50',
-    'Hacktivist': 'bg-purple-900/50 text-purple-400 border-purple-700/50',
-    'Unknown': 'bg-gray-800 text-gray-400 border-gray-700',
+    Criminal: 'bg-orange-900/50 text-orange-400 border-orange-700/50',
+    Hacktivist: 'bg-purple-900/50 text-purple-400 border-purple-700/50',
+    Unknown: 'bg-gray-800 text-gray-400 border-gray-700',
   }
 
   return (
@@ -43,21 +43,13 @@ function ActorItem({ actor, usageNotes, confidence }) {
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="font-medium text-white truncate">
-            {actor?.name || 'Unknown Actor'}
-          </span>
-          {actor?.trend_status && (
-            <TrendBadge status={actor.trend_status} showLabel={false} />
-          )}
+          <span className="font-medium text-white truncate">{actor?.name || 'Unknown Actor'}</span>
+          {actor?.trend_status && <TrendBadge status={actor.trend_status} showLabel={false} />}
         </div>
         <ActorTypeBadge type={actor?.actor_type} />
       </div>
 
-      {usageNotes && (
-        <p className="mt-2 text-xs text-gray-400 line-clamp-2">
-          {usageNotes}
-        </p>
-      )}
+      {usageNotes && <p className="mt-2 text-xs text-gray-400 line-clamp-2">{usageNotes}</p>}
 
       {actor?.target_sectors?.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
@@ -77,11 +69,7 @@ function ActorItem({ actor, usageNotes, confidence }) {
         </div>
       )}
 
-      {confidence && (
-        <div className="mt-2 text-xs text-gray-500">
-          Confidence: {confidence}
-        </div>
-      )}
+      {confidence && <div className="mt-2 text-xs text-gray-500">Confidence: {confidence}</div>}
     </Link>
   )
 }
@@ -120,7 +108,12 @@ export default function TechniqueActorsPanel({ techniqueId, techniqueName }) {
       <div className="mt-4">
         <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+            />
           </svg>
           Actors Using This Technique
         </h4>
@@ -143,14 +136,17 @@ export default function TechniqueActorsPanel({ techniqueId, techniqueName }) {
       <div className="mt-4">
         <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+            />
           </svg>
           Threat Actors
         </h4>
         <div className="p-4 bg-gray-800/50 rounded border border-gray-700/50 text-center">
-          <p className="text-sm text-gray-500">
-            No known actors using this technique
-          </p>
+          <p className="text-sm text-gray-500">No known actors using this technique</p>
         </div>
       </div>
     )
@@ -168,7 +164,12 @@ export default function TechniqueActorsPanel({ techniqueId, techniqueName }) {
     <div className="mt-4">
       <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+          />
         </svg>
         Actors Using {techniqueName || 'This Technique'}
         <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-cyan-900/50 text-cyan-400 border border-cyan-700/50">
@@ -205,7 +206,12 @@ export default function TechniqueActorsPanel({ techniqueId, techniqueName }) {
         >
           View on MITRE ATT&CK
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            />
           </svg>
         </a>
       </div>

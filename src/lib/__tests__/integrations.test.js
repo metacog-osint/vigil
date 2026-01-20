@@ -14,22 +14,30 @@ import {
 } from '../integrations'
 
 // Mock supabase
-const mockSelectOrder = vi.fn(() => Promise.resolve({
-  data: [{ id: 'int-1', integration_type: 'slack' }],
-  error: null
-}))
-const mockSelectSingle = vi.fn(() => Promise.resolve({
-  data: { id: 'int-1', integration_type: 'slack', config: {} },
-  error: null
-}))
-const mockUpsertSingle = vi.fn(() => Promise.resolve({
-  data: { id: 'int-1', integration_type: 'slack' },
-  error: null
-}))
-const mockUpdateSingle = vi.fn(() => Promise.resolve({
-  data: { id: 'int-1', is_enabled: true },
-  error: null
-}))
+const mockSelectOrder = vi.fn(() =>
+  Promise.resolve({
+    data: [{ id: 'int-1', integration_type: 'slack' }],
+    error: null,
+  })
+)
+const mockSelectSingle = vi.fn(() =>
+  Promise.resolve({
+    data: { id: 'int-1', integration_type: 'slack', config: {} },
+    error: null,
+  })
+)
+const mockUpsertSingle = vi.fn(() =>
+  Promise.resolve({
+    data: { id: 'int-1', integration_type: 'slack' },
+    error: null,
+  })
+)
+const mockUpdateSingle = vi.fn(() =>
+  Promise.resolve({
+    data: { id: 'int-1', is_enabled: true },
+    error: null,
+  })
+)
 const mockDelete = vi.fn(() => Promise.resolve({ error: null }))
 const mockLogInsert = vi.fn(() => Promise.resolve({ error: null }))
 
@@ -118,7 +126,10 @@ describe('integrations CRUD', () => {
     })
 
     it('should throw on other database errors', async () => {
-      mockSelectSingle.mockResolvedValueOnce({ data: null, error: { code: 'OTHER', message: 'Error' } })
+      mockSelectSingle.mockResolvedValueOnce({
+        data: null,
+        error: { code: 'OTHER', message: 'Error' },
+      })
 
       await expect(integrations.get('user-123', 'slack')).rejects.toThrow()
     })
@@ -215,8 +226,18 @@ describe('integrations CRUD', () => {
 
 describe('INTEGRATION_TYPES', () => {
   it('should define all expected integration types', () => {
-    const expectedTypes = ['slack', 'teams', 'jira', 'servicenow', 'pagerduty', 'webhook', 'splunk', 'elastic', 'sentinel']
-    expectedTypes.forEach(type => {
+    const expectedTypes = [
+      'slack',
+      'teams',
+      'jira',
+      'servicenow',
+      'pagerduty',
+      'webhook',
+      'splunk',
+      'elastic',
+      'sentinel',
+    ]
+    expectedTypes.forEach((type) => {
       expect(INTEGRATION_TYPES[type]).toBeDefined()
     })
   })
@@ -295,19 +316,19 @@ describe('slack formatters', () => {
 
     it('should include header with victim name', () => {
       const result = slack.formatIncident(mockIncident)
-      const header = result.blocks.find(b => b.type === 'header')
+      const header = result.blocks.find((b) => b.type === 'header')
       expect(header.text.text).toContain('Acme Corp')
     })
 
     it('should include actor information in fields', () => {
       const result = slack.formatIncident(mockIncident)
-      const section = result.blocks.find(b => b.type === 'section' && b.fields)
-      expect(section.fields.some(f => f.text.includes('LockBit'))).toBe(true)
+      const section = result.blocks.find((b) => b.type === 'section' && b.fields)
+      expect(section.fields.some((f) => f.text.includes('LockBit'))).toBe(true)
     })
 
     it('should include View in Vigil button', () => {
       const result = slack.formatIncident(mockIncident)
-      const actions = result.blocks.find(b => b.type === 'actions')
+      const actions = result.blocks.find((b) => b.type === 'actions')
       expect(actions.elements[0].url).toContain('vigil.theintelligence.company')
       expect(actions.elements[0].url).toContain(mockIncident.id)
     })
@@ -315,8 +336,8 @@ describe('slack formatters', () => {
     it('should handle missing threat actor', () => {
       const incidentNoActor = { ...mockIncident, threat_actor: null }
       const result = slack.formatIncident(incidentNoActor)
-      const section = result.blocks.find(b => b.type === 'section' && b.fields)
-      expect(section.fields.some(f => f.text.includes('Unknown'))).toBe(true)
+      const section = result.blocks.find((b) => b.type === 'section' && b.fields)
+      expect(section.fields.some((f) => f.text.includes('Unknown'))).toBe(true)
     })
 
     it('should set color based on severity', () => {
@@ -335,21 +356,21 @@ describe('slack formatters', () => {
 
     it('should include CVE ID in header', () => {
       const result = slack.formatKEV(mockVuln)
-      const header = result.blocks.find(b => b.type === 'header')
+      const header = result.blocks.find((b) => b.type === 'header')
       expect(header.text.text).toContain('CVE-2024-1234')
     })
 
     it('should include CVSS score', () => {
       const result = slack.formatKEV(mockVuln)
-      const section = result.blocks.find(b => b.type === 'section' && b.fields)
-      expect(section.fields.some(f => f.text.includes('9.8'))).toBe(true)
+      const section = result.blocks.find((b) => b.type === 'section' && b.fields)
+      expect(section.fields.some((f) => f.text.includes('9.8'))).toBe(true)
     })
 
     it('should truncate long descriptions', () => {
       const longDesc = 'A'.repeat(600)
       const vulnLongDesc = { ...mockVuln, description: longDesc }
       const result = slack.formatKEV(vulnLongDesc)
-      const section = result.blocks.find(b => b.type === 'section' && b.text)
+      const section = result.blocks.find((b) => b.type === 'section' && b.text)
       expect(section.text.text.length).toBeLessThanOrEqual(500)
     })
   })
@@ -364,20 +385,20 @@ describe('slack formatters', () => {
 
     it('should include actor name in header', () => {
       const result = slack.formatActorEscalation(mockActor)
-      const header = result.blocks.find(b => b.type === 'header')
+      const header = result.blocks.find((b) => b.type === 'header')
       expect(header.text.text).toContain('LockBit')
     })
 
     it('should include incident velocity', () => {
       const result = slack.formatActorEscalation(mockActor)
-      const section = result.blocks.find(b => b.type === 'section' && b.text)
+      const section = result.blocks.find((b) => b.type === 'section' && b.text)
       expect(section.text.text).toContain('3.5')
     })
 
     it('should include 7-day incident count', () => {
       const result = slack.formatActorEscalation(mockActor)
-      const section = result.blocks.find(b => b.type === 'section' && b.fields)
-      expect(section.fields.some(f => f.text.includes('25'))).toBe(true)
+      const section = result.blocks.find((b) => b.type === 'section' && b.fields)
+      expect(section.fields.some((f) => f.text.includes('25'))).toBe(true)
     })
   })
 })
@@ -416,9 +437,9 @@ describe('teams formatters', () => {
     it('should include facts with actor, sector, country', () => {
       const result = teams.formatIncident(mockIncident)
       const facts = result.sections[0].facts
-      expect(facts.some(f => f.name === 'Actor' && f.value === 'LockBit')).toBe(true)
-      expect(facts.some(f => f.name === 'Sector' && f.value === 'finance')).toBe(true)
-      expect(facts.some(f => f.name === 'Country' && f.value === 'US')).toBe(true)
+      expect(facts.some((f) => f.name === 'Actor' && f.value === 'LockBit')).toBe(true)
+      expect(facts.some((f) => f.name === 'Sector' && f.value === 'finance')).toBe(true)
+      expect(facts.some((f) => f.name === 'Country' && f.value === 'US')).toBe(true)
     })
 
     it('should include action button', () => {
@@ -439,7 +460,7 @@ describe('teams formatters', () => {
     it('should include CVSS in facts', () => {
       const result = teams.formatKEV(mockVuln)
       const facts = result.sections[0].facts
-      expect(facts.some(f => f.name === 'CVSS' && f.value === '9.8')).toBe(true)
+      expect(facts.some((f) => f.name === 'CVSS' && f.value === '9.8')).toBe(true)
     })
   })
 })

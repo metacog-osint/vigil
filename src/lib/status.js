@@ -119,10 +119,12 @@ export const statusIncidents = {
   async getActive() {
     const { data, error } = await supabase
       .from('status_incidents')
-      .select(`
+      .select(
+        `
         *,
         updates:status_incident_updates(*)
-      `)
+      `
+      )
       .neq('status', 'resolved')
       .eq('is_public', true)
       .order('started_at', { ascending: false })
@@ -140,10 +142,12 @@ export const statusIncidents = {
 
     const { data, error } = await supabase
       .from('status_incidents')
-      .select(`
+      .select(
+        `
         *,
         updates:status_incident_updates(*)
-      `)
+      `
+      )
       .eq('is_public', true)
       .gte('started_at', since.toISOString())
       .order('started_at', { ascending: false })
@@ -158,10 +162,12 @@ export const statusIncidents = {
   async getById(incidentId) {
     const { data, error } = await supabase
       .from('status_incidents')
-      .select(`
+      .select(
+        `
         *,
         updates:status_incident_updates(*)
-      `)
+      `
+      )
       .eq('id', incidentId)
       .single()
 
@@ -393,14 +399,16 @@ export const statusOverview = {
     const { data, error } = await supabase.rpc('get_system_status')
 
     if (error) throw error
-    return data?.[0] || {
-      overall_status: 'operational',
-      components_operational: 0,
-      components_degraded: 0,
-      components_outage: 0,
-      active_incidents: 0,
-      upcoming_maintenance: 0,
-    }
+    return (
+      data?.[0] || {
+        overall_status: 'operational',
+        components_operational: 0,
+        components_degraded: 0,
+        components_outage: 0,
+        active_incidents: 0,
+        upcoming_maintenance: 0,
+      }
+    )
   },
 
   /**
@@ -447,7 +455,10 @@ export const statusOverview = {
     let query = supabase
       .from('status_uptime_records')
       .select('component_id, uptime_percent')
-      .gte('recorded_date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+      .gte(
+        'recorded_date',
+        new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      )
 
     if (componentIds && componentIds.length > 0) {
       query = query.in('component_id', componentIds)

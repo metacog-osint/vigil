@@ -21,7 +21,7 @@ import {
   regenerateWebhookSecret,
   formatWebhookType,
   getWebhookIcon,
-  validateWebhookUrl
+  validateWebhookUrl,
 } from '../lib/alerts'
 import { formatDistanceToNow } from 'date-fns'
 import { UpgradePrompt } from './UpgradePrompt'
@@ -41,10 +41,18 @@ const TIMEZONES = [
 ]
 
 const EVENT_TYPES = [
-  { id: 'ransomware', label: 'Ransomware Incidents', description: 'New victim claims on leak sites' },
+  {
+    id: 'ransomware',
+    label: 'Ransomware Incidents',
+    description: 'New victim claims on leak sites',
+  },
   { id: 'kev', label: 'CISA KEV Additions', description: 'CVEs added to Known Exploited list' },
   { id: 'cisa_alert', label: 'CISA Alerts', description: 'Security advisories from CISA' },
-  { id: 'watchlist', label: 'Watchlist Activity', description: 'Updates to actors/CVEs you follow' },
+  {
+    id: 'watchlist',
+    label: 'Watchlist Activity',
+    description: 'Updates to actors/CVEs you follow',
+  },
   { id: 'vendor_cve', label: 'Vendor CVEs', description: 'CVEs affecting your tech stack' },
 ]
 
@@ -86,7 +94,7 @@ export default function AlertSettingsSection() {
     quiet_hours_start: '22:00',
     quiet_hours_end: '07:00',
     timezone: 'UTC',
-    severity_threshold: 'low'
+    severity_threshold: 'low',
   })
 
   // Webhooks state
@@ -99,7 +107,7 @@ export default function AlertSettingsSection() {
     type: 'slack',
     url: '',
     eventTypes: ['ransomware', 'kev', 'cisa_alert'],
-    severityMin: 'medium'
+    severityMin: 'medium',
   })
 
   // Delivery logs state
@@ -133,7 +141,7 @@ export default function AlertSettingsSection() {
     try {
       const [prefs, hooks] = await Promise.all([
         getAlertPreferences(user.uid),
-        hasCustomAlerts ? getWebhooks(user.uid) : Promise.resolve([])
+        hasCustomAlerts ? getWebhooks(user.uid) : Promise.resolve([]),
       ])
 
       setPreferences(prefs)
@@ -209,7 +217,7 @@ export default function AlertSettingsSection() {
         type: 'slack',
         url: '',
         eventTypes: ['ransomware', 'kev', 'cisa_alert'],
-        severityMin: 'medium'
+        severityMin: 'medium',
       })
     } catch (err) {
       console.error('Failed to create webhook:', err)
@@ -222,7 +230,7 @@ export default function AlertSettingsSection() {
 
     try {
       await deleteWebhook(webhookId)
-      setWebhooks(webhooks.filter(w => w.id !== webhookId))
+      setWebhooks(webhooks.filter((w) => w.id !== webhookId))
     } catch (err) {
       console.error('Failed to delete webhook:', err)
       setError('Failed to delete webhook')
@@ -238,14 +246,14 @@ export default function AlertSettingsSection() {
       setTestResult({
         webhookId,
         success: true,
-        message: result?.message || 'Test message sent successfully!'
+        message: result?.message || 'Test message sent successfully!',
       })
     } catch (err) {
       console.error('Webhook test failed:', err)
       setTestResult({
         webhookId,
         success: false,
-        message: err.message || 'Failed to send test message'
+        message: err.message || 'Failed to send test message',
       })
     } finally {
       setTestingWebhookId(null)
@@ -278,9 +286,7 @@ export default function AlertSettingsSection() {
     try {
       const newSecret = await regenerateWebhookSecret(webhookId)
       // Update local state with new secret
-      setWebhooks(webhooks.map(w =>
-        w.id === webhookId ? { ...w, secret: newSecret } : w
-      ))
+      setWebhooks(webhooks.map((w) => (w.id === webhookId ? { ...w, secret: newSecret } : w)))
     } catch (err) {
       console.error('Failed to regenerate secret:', err)
       setError('Failed to regenerate webhook secret')
@@ -296,7 +302,7 @@ export default function AlertSettingsSection() {
   }
 
   function handlePreferenceChange(key, value) {
-    setPreferences(prev => ({ ...prev, [key]: value }))
+    setPreferences((prev) => ({ ...prev, [key]: value }))
   }
 
   if (loading) {
@@ -357,7 +363,7 @@ export default function AlertSettingsSection() {
               Choose which events trigger push notifications:
             </p>
 
-            {EVENT_TYPES.map(event => (
+            {EVENT_TYPES.map((event) => (
               <label key={event.id} className="flex items-center justify-between">
                 <div>
                   <span className="text-sm text-gray-300">{event.label}</span>
@@ -380,9 +386,7 @@ export default function AlertSettingsSection() {
         <div className="flex items-center justify-between">
           <div>
             <h4 className="text-sm font-medium text-white">Email Alerts</h4>
-            <p className="text-xs text-gray-500 mt-1">
-              Receive email notifications and digests
-            </p>
+            <p className="text-xs text-gray-500 mt-1">Receive email notifications and digests</p>
           </div>
           <button
             onClick={() => handlePreferenceChange('email_alerts', !preferences.email_alerts)}
@@ -448,8 +452,10 @@ export default function AlertSettingsSection() {
                     onChange={(e) => handlePreferenceChange('timezone', e.target.value)}
                     className="cyber-input w-full"
                   >
-                    {TIMEZONES.map(tz => (
-                      <option key={tz.value} value={tz.value}>{tz.label}</option>
+                    {TIMEZONES.map((tz) => (
+                      <option key={tz.value} value={tz.value}>
+                        {tz.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -469,8 +475,10 @@ export default function AlertSettingsSection() {
                 onChange={(e) => handlePreferenceChange('severity_threshold', e.target.value)}
                 className="cyber-input w-full"
               >
-                {SEVERITY_LEVELS.map(level => (
-                  <option key={level.value} value={level.value}>{level.label}</option>
+                {SEVERITY_LEVELS.map((level) => (
+                  <option key={level.value} value={level.value}>
+                    {level.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -488,7 +496,9 @@ export default function AlertSettingsSection() {
             </p>
           </div>
           <button
-            onClick={() => handlePreferenceChange('quiet_hours_enabled', !preferences.quiet_hours_enabled)}
+            onClick={() =>
+              handlePreferenceChange('quiet_hours_enabled', !preferences.quiet_hours_enabled)
+            }
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               preferences.quiet_hours_enabled ? 'bg-cyber-primary' : 'bg-gray-700'
             }`}
@@ -532,11 +542,7 @@ export default function AlertSettingsSection() {
 
       {/* Save Button */}
       <div className="flex justify-end pt-4 border-t border-gray-800">
-        <button
-          onClick={handleSavePreferences}
-          disabled={saving}
-          className="cyber-button-primary"
-        >
+        <button onClick={handleSavePreferences} disabled={saving} className="cyber-button-primary">
           {saving ? 'Saving...' : 'Save Preferences'}
         </button>
       </div>
@@ -551,10 +557,7 @@ export default function AlertSettingsSection() {
             </p>
           </div>
           {hasCustomAlerts && (
-            <button
-              onClick={() => setShowAddWebhook(true)}
-              className="cyber-button text-sm"
-            >
+            <button onClick={() => setShowAddWebhook(true)} className="cyber-button text-sm">
               + Add Webhook
             </button>
           )}
@@ -571,7 +574,7 @@ export default function AlertSettingsSection() {
             {/* Existing Webhooks */}
             {webhooks.length > 0 ? (
               <div className="space-y-3">
-                {webhooks.map(webhook => (
+                {webhooks.map((webhook) => (
                   <div key={webhook.id} className="bg-gray-800/50 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -584,16 +587,19 @@ export default function AlertSettingsSection() {
                         <div>
                           <p className="text-sm font-medium text-white">{webhook.name}</p>
                           <p className="text-xs text-gray-500">
-                            {formatWebhookType(webhook.webhook_type)} · {webhook.event_types?.length || 0} event types
+                            {formatWebhookType(webhook.webhook_type)} ·{' '}
+                            {webhook.event_types?.length || 0} event types
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          webhook.is_active
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'bg-gray-500/20 text-gray-400'
-                        }`}>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            webhook.is_active
+                              ? 'bg-green-500/20 text-green-400'
+                              : 'bg-gray-500/20 text-gray-400'
+                          }`}
+                        >
                           {webhook.is_active ? 'Active' : 'Inactive'}
                         </span>
                         <button
@@ -604,30 +610,55 @@ export default function AlertSettingsSection() {
                           {testingWebhookId === webhook.id ? (
                             <span className="flex items-center gap-1">
                               <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
                               </svg>
                               Testing...
                             </span>
-                          ) : 'Test'}
+                          ) : (
+                            'Test'
+                          )}
                         </button>
                         <button
                           onClick={() => handleDeleteWebhook(webhook.id)}
                           className="text-gray-500 hover:text-red-400 transition-colors p-1"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
                           </svg>
                         </button>
                       </div>
                     </div>
                     {/* Test result feedback */}
                     {testResult && testResult.webhookId === webhook.id && (
-                      <div className={`mt-3 px-3 py-2 rounded text-xs ${
-                        testResult.success
-                          ? 'bg-green-500/10 text-green-400 border border-green-500/30'
-                          : 'bg-red-500/10 text-red-400 border border-red-500/30'
-                      }`}>
+                      <div
+                        className={`mt-3 px-3 py-2 rounded text-xs ${
+                          testResult.success
+                            ? 'bg-green-500/10 text-green-400 border border-green-500/30'
+                            : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                        }`}
+                      >
                         {testResult.success ? '✓' : '✗'} {testResult.message}
                       </div>
                     )}
@@ -636,9 +667,11 @@ export default function AlertSettingsSection() {
                     {webhook.webhook_type === 'generic' && (
                       <div className="mt-3 pt-3 border-t border-gray-700">
                         <button
-                          onClick={() => setExpandedWebhookId(
-                            expandedWebhookId === webhook.id ? null : webhook.id
-                          )}
+                          onClick={() =>
+                            setExpandedWebhookId(
+                              expandedWebhookId === webhook.id ? null : webhook.id
+                            )
+                          }
                           className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
                         >
                           <svg
@@ -647,7 +680,12 @@ export default function AlertSettingsSection() {
                             stroke="currentColor"
                             viewBox="0 0 24 24"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
                           </svg>
                           HMAC Signature Verification
                         </button>
@@ -681,14 +719,17 @@ export default function AlertSettingsSection() {
                             <div className="text-xs text-gray-500 space-y-1">
                               <p>
                                 <span className="text-gray-400">Header:</span>{' '}
-                                <code className="text-gray-300">{webhook.hmac_header || 'X-Vigil-Signature'}</code>
+                                <code className="text-gray-300">
+                                  {webhook.hmac_header || 'X-Vigil-Signature'}
+                                </code>
                               </p>
                               <p>
                                 <span className="text-gray-400">Algorithm:</span>{' '}
                                 <code className="text-gray-300">HMAC-SHA256</code>
                               </p>
                               <p className="text-gray-600 mt-2">
-                                Verify payloads using: <code>HMAC-SHA256(request_body, secret)</code>
+                                Verify payloads using:{' '}
+                                <code>HMAC-SHA256(request_body, secret)</code>
                               </p>
                             </div>
                           </div>
@@ -714,7 +755,12 @@ export default function AlertSettingsSection() {
                 className="text-sm text-gray-400 hover:text-cyber-accent transition-colors flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                  />
                 </svg>
                 View Delivery Logs
               </button>
@@ -762,16 +808,19 @@ export default function AlertSettingsSection() {
                         className="cyber-input w-full"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        {newWebhook.type === 'slack' && 'Find this in Slack > Apps > Incoming Webhooks'}
-                        {newWebhook.type === 'discord' && 'Find this in Server Settings > Integrations > Webhooks'}
-                        {newWebhook.type === 'teams' && 'Find this in Channel > Connectors > Incoming Webhook'}
+                        {newWebhook.type === 'slack' &&
+                          'Find this in Slack > Apps > Incoming Webhooks'}
+                        {newWebhook.type === 'discord' &&
+                          'Find this in Server Settings > Integrations > Webhooks'}
+                        {newWebhook.type === 'teams' &&
+                          'Find this in Channel > Connectors > Incoming Webhook'}
                       </p>
                     </div>
 
                     <div>
                       <label className="block text-sm text-gray-400 mb-2">Event Types</label>
                       <div className="space-y-2">
-                        {EVENT_TYPES.slice(0, 3).map(event => (
+                        {EVENT_TYPES.slice(0, 3).map((event) => (
                           <label key={event.id} className="flex items-center gap-2">
                             <input
                               type="checkbox"
@@ -779,7 +828,7 @@ export default function AlertSettingsSection() {
                               onChange={(e) => {
                                 const types = e.target.checked
                                   ? [...newWebhook.eventTypes, event.id]
-                                  : newWebhook.eventTypes.filter(t => t !== event.id)
+                                  : newWebhook.eventTypes.filter((t) => t !== event.id)
                                 setNewWebhook({ ...newWebhook, eventTypes: types })
                               }}
                               className="rounded border-gray-600 text-cyber-primary"
@@ -794,21 +843,22 @@ export default function AlertSettingsSection() {
                       <label className="block text-sm text-gray-400 mb-1">Minimum Severity</label>
                       <select
                         value={newWebhook.severityMin}
-                        onChange={(e) => setNewWebhook({ ...newWebhook, severityMin: e.target.value })}
+                        onChange={(e) =>
+                          setNewWebhook({ ...newWebhook, severityMin: e.target.value })
+                        }
                         className="cyber-input w-full"
                       >
-                        {SEVERITY_LEVELS.map(level => (
-                          <option key={level.value} value={level.value}>{level.label}</option>
+                        {SEVERITY_LEVELS.map((level) => (
+                          <option key={level.value} value={level.value}>
+                            {level.label}
+                          </option>
                         ))}
                       </select>
                     </div>
                   </div>
 
                   <div className="flex justify-end gap-3 mt-6">
-                    <button
-                      onClick={() => setShowAddWebhook(false)}
-                      className="cyber-button"
-                    >
+                    <button onClick={() => setShowAddWebhook(false)} className="cyber-button">
                       Cancel
                     </button>
                     <button
@@ -833,8 +883,18 @@ export default function AlertSettingsSection() {
                       onClick={() => setShowDeliveryLogs(false)}
                       className="text-gray-400 hover:text-white transition-colors"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                   </div>
@@ -842,15 +902,32 @@ export default function AlertSettingsSection() {
                   <div className="flex-1 overflow-auto p-4">
                     {logsLoading ? (
                       <div className="flex items-center justify-center py-12">
-                        <svg className="w-6 h-6 animate-spin text-cyber-accent" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="w-6 h-6 animate-spin text-cyber-accent"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                       </div>
                     ) : deliveryLogs.length === 0 ? (
                       <div className="text-center py-12">
                         <p className="text-gray-500">No delivery logs yet</p>
-                        <p className="text-gray-600 text-sm mt-1">Logs will appear here when alerts are sent</p>
+                        <p className="text-gray-600 text-sm mt-1">
+                          Logs will appear here when alerts are sent
+                        </p>
                       </div>
                     ) : (
                       <table className="w-full">
@@ -863,32 +940,42 @@ export default function AlertSettingsSection() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-800/50">
-                          {deliveryLogs.map(log => (
+                          {deliveryLogs.map((log) => (
                             <tr key={log.id} className="text-sm">
                               <td className="py-3 text-gray-400">
-                                {log.queued_at ? formatDistanceToNow(new Date(log.queued_at), { addSuffix: true }) : '—'}
+                                {log.queued_at
+                                  ? formatDistanceToNow(new Date(log.queued_at), {
+                                      addSuffix: true,
+                                    })
+                                  : '—'}
                               </td>
-                              <td className="py-3 text-gray-300">
-                                {log.event_type || '—'}
-                              </td>
+                              <td className="py-3 text-gray-300">{log.event_type || '—'}</td>
                               <td className="py-3">
-                                <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded ${
-                                  log.status === 'delivered' || log.status === 'sent'
-                                    ? 'bg-green-500/20 text-green-400'
+                                <span
+                                  className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded ${
+                                    log.status === 'delivered' || log.status === 'sent'
+                                      ? 'bg-green-500/20 text-green-400'
+                                      : log.status === 'failed'
+                                        ? 'bg-red-500/20 text-red-400'
+                                        : log.status === 'pending' || log.status === 'queued'
+                                          ? 'bg-yellow-500/20 text-yellow-400'
+                                          : 'bg-gray-500/20 text-gray-400'
+                                  }`}
+                                >
+                                  {log.status === 'delivered' || log.status === 'sent'
+                                    ? '✓'
                                     : log.status === 'failed'
-                                    ? 'bg-red-500/20 text-red-400'
-                                    : log.status === 'pending' || log.status === 'queued'
-                                    ? 'bg-yellow-500/20 text-yellow-400'
-                                    : 'bg-gray-500/20 text-gray-400'
-                                }`}>
-                                  {log.status === 'delivered' || log.status === 'sent' ? '✓' :
-                                   log.status === 'failed' ? '✗' : '○'} {log.status}
+                                      ? '✗'
+                                      : '○'}{' '}
+                                  {log.status}
                                 </span>
                               </td>
                               <td className="py-3 text-gray-500 text-xs font-mono">
                                 {log.response_code ? `HTTP ${log.response_code}` : '—'}
                                 {log.retry_count > 0 && (
-                                  <span className="ml-2 text-yellow-500">({log.retry_count} retries)</span>
+                                  <span className="ml-2 text-yellow-500">
+                                    ({log.retry_count} retries)
+                                  </span>
                                 )}
                               </td>
                             </tr>
@@ -903,15 +990,22 @@ export default function AlertSettingsSection() {
                       onClick={loadDeliveryLogs}
                       className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
                       </svg>
                       Refresh
                     </button>
-                    <button
-                      onClick={() => setShowDeliveryLogs(false)}
-                      className="cyber-button"
-                    >
+                    <button onClick={() => setShowDeliveryLogs(false)} className="cyber-button">
                       Close
                     </button>
                   </div>

@@ -14,7 +14,10 @@ import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useSubscription } from '../contexts/SubscriptionContext'
 import { UpgradePrompt } from '../components/UpgradePrompt'
-import { useInvestigationData, useInvestigationActions } from './investigations/useInvestigationData'
+import {
+  useInvestigationData,
+  useInvestigationActions,
+} from './investigations/useInvestigationData'
 import InvestigationDetail from './investigations/InvestigationDetail.jsx'
 import CreateInvestigationModal from './investigations/CreateInvestigationModal.jsx'
 import {
@@ -54,11 +57,7 @@ export default function Investigations() {
   } = useInvestigationData(userId, hasAccess, filters)
 
   // Actions
-  const {
-    handleCreate,
-    handleUpdateStatus,
-    handleDelete,
-  } = useInvestigationActions(
+  const { handleCreate, handleUpdateStatus, handleDelete } = useInvestigationActions(
     userId,
     investigationList,
     setInvestigationList,
@@ -100,7 +99,12 @@ export default function Investigations() {
           className="flex items-center gap-2 text-gray-400 hover:text-white"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           </svg>
           <span className="text-sm">{investigationList.length} Investigations</span>
         </button>
@@ -136,7 +140,12 @@ export default function Investigations() {
               className="p-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
             </button>
           </div>
@@ -168,8 +177,18 @@ export default function Investigations() {
         ) : (
           <div className="flex items-center justify-center h-full bg-gray-800/20 rounded-lg border border-gray-700">
             <div className="text-center text-gray-500">
-              <svg className="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="w-16 h-16 mx-auto mb-4 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
               <p>Select an investigation to view details</p>
               <p className="text-sm mt-1">or create a new one</p>
@@ -198,7 +217,9 @@ export default function Investigations() {
       {error && (
         <div className="fixed bottom-4 right-4 bg-red-500/90 text-white px-4 py-2 rounded-lg">
           {error}
-          <button onClick={() => setError(null)} className="ml-2">&times;</button>
+          <button onClick={() => setError(null)} className="ml-2">
+            &times;
+          </button>
         </div>
       )}
     </div>

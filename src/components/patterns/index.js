@@ -6,11 +6,7 @@
  */
 
 // Campaign pattern components
-export {
-  CampaignCard,
-  CampaignCardCompact,
-  default as CampaignCardDefault,
-} from './CampaignCard'
+export { CampaignCard, CampaignCardCompact, default as CampaignCardDefault } from './CampaignCard'
 
 // Anomaly alert components
 export {

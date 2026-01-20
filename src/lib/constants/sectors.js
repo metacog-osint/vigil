@@ -76,7 +76,7 @@ export const SECTOR_ICONS = {
 }
 
 // Full sector objects with value, label, and icon
-export const SECTORS_WITH_DETAILS = SECTOR_VALUES.map(value => ({
+export const SECTORS_WITH_DETAILS = SECTOR_VALUES.map((value) => ({
   value,
   label: SECTOR_LABELS[value] || value,
   icon: SECTOR_ICONS[value] || '📁',
@@ -87,13 +87,13 @@ export const SECTORS = SECTOR_VALUES
 
 // Title case sectors for certain UI components
 export const SECTORS_TITLE_CASE = SECTOR_VALUES.map(
-  s => SECTOR_LABELS[s] || s.charAt(0).toUpperCase() + s.slice(1)
+  (s) => SECTOR_LABELS[s] || s.charAt(0).toUpperCase() + s.slice(1)
 )
 
 // Sector filter options for select dropdowns
 export const SECTOR_FILTER_OPTIONS = [
   { value: '', label: 'All Sectors' },
-  ...SECTOR_VALUES.map(value => ({
+  ...SECTOR_VALUES.map((value) => ({
     value,
     label: SECTOR_LABELS[value] || value,
   })),

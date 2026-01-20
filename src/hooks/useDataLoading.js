@@ -35,48 +35,51 @@ export function useDataLoading(fetchFn, options = {}) {
   const cacheRef = useRef({ data: null, timestamp: 0 })
   const abortControllerRef = useRef(null)
 
-  const fetchData = useCallback(async (ignoreCache = false) => {
-    // Check cache
-    if (!ignoreCache && cacheTime > 0 && cacheRef.current.data) {
-      const cacheAge = Date.now() - cacheRef.current.timestamp
-      if (cacheAge < cacheTime) {
-        setData(cacheRef.current.data)
-        return cacheRef.current.data
-      }
-    }
-
-    // Cancel previous request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
-    }
-    abortControllerRef.current = new AbortController()
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      const result = await fetchFn({ signal: abortControllerRef.current.signal })
-
-      setData(result)
-      setLastFetchedAt(new Date())
-
-      // Update cache
-      if (cacheTime > 0) {
-        cacheRef.current = { data: result, timestamp: Date.now() }
+  const fetchData = useCallback(
+    async (ignoreCache = false) => {
+      // Check cache
+      if (!ignoreCache && cacheTime > 0 && cacheRef.current.data) {
+        const cacheAge = Date.now() - cacheRef.current.timestamp
+        if (cacheAge < cacheTime) {
+          setData(cacheRef.current.data)
+          return cacheRef.current.data
+        }
       }
 
-      onSuccess?.(result)
-      return result
-    } catch (err) {
-      if (err.name === 'AbortError') return
+      // Cancel previous request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+      abortControllerRef.current = new AbortController()
 
-      setError(err.message || 'An error occurred')
-      onError?.(err)
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }, [fetchFn, cacheTime, onSuccess, onError])
+      setLoading(true)
+      setError(null)
+
+      try {
+        const result = await fetchFn({ signal: abortControllerRef.current.signal })
+
+        setData(result)
+        setLastFetchedAt(new Date())
+
+        // Update cache
+        if (cacheTime > 0) {
+          cacheRef.current = { data: result, timestamp: Date.now() }
+        }
+
+        onSuccess?.(result)
+        return result
+      } catch (err) {
+        if (err.name === 'AbortError') return
+
+        setError(err.message || 'An error occurred')
+        onError?.(err)
+        throw err
+      } finally {
+        setLoading(false)
+      }
+    },
+    [fetchFn, cacheTime, onSuccess, onError]
+  )
 
   // Refresh without cache
   const refresh = useCallback(() => fetchData(true), [fetchData])
@@ -99,7 +102,7 @@ export function useDataLoading(fetchFn, options = {}) {
     error,
     refresh,
     lastFetchedAt,
-    isStale: cacheTime > 0 && lastFetchedAt && (Date.now() - lastFetchedAt.getTime() > cacheTime),
+    isStale: cacheTime > 0 && lastFetchedAt && Date.now() - lastFetchedAt.getTime() > cacheTime,
   }
 }
 
@@ -109,13 +112,7 @@ export function useDataLoading(fetchFn, options = {}) {
  * @param {Object} options - Configuration options
  */
 export function usePaginatedData(fetchFn, options = {}) {
-  const {
-    deps = [],
-    limit = 50,
-    initialPage = 1,
-    onSuccess,
-    onError,
-  } = options
+  const { deps = [], limit = 50, initialPage = 1, onSuccess, onError } = options
 
   const [data, setData] = useState([])
   const [page, setPage] = useState(initialPage)
@@ -125,39 +122,42 @@ export function usePaginatedData(fetchFn, options = {}) {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState(null)
 
-  const fetchPage = useCallback(async (pageNum, append = false) => {
-    if (append) {
-      setLoadingMore(true)
-    } else {
-      setLoading(true)
-      setPage(pageNum)
-    }
-    setError(null)
-
-    try {
-      const result = await fetchFn({ page: pageNum, limit })
-
+  const fetchPage = useCallback(
+    async (pageNum, append = false) => {
       if (append) {
-        setData((prev) => [...prev, ...result.data])
+        setLoadingMore(true)
       } else {
-        setData(result.data)
+        setLoading(true)
+        setPage(pageNum)
       }
+      setError(null)
 
-      setTotalCount(result.total || result.data.length)
-      setHasMore(result.hasMore ?? result.data.length === limit)
-      setPage(pageNum)
+      try {
+        const result = await fetchFn({ page: pageNum, limit })
 
-      onSuccess?.(result)
-      return result
-    } catch (err) {
-      setError(err.message || 'An error occurred')
-      onError?.(err)
-      throw err
-    } finally {
-      setLoading(false)
-      setLoadingMore(false)
-    }
-  }, [fetchFn, limit, onSuccess, onError])
+        if (append) {
+          setData((prev) => [...prev, ...result.data])
+        } else {
+          setData(result.data)
+        }
+
+        setTotalCount(result.total || result.data.length)
+        setHasMore(result.hasMore ?? result.data.length === limit)
+        setPage(pageNum)
+
+        onSuccess?.(result)
+        return result
+      } catch (err) {
+        setError(err.message || 'An error occurred')
+        onError?.(err)
+        throw err
+      } finally {
+        setLoading(false)
+        setLoadingMore(false)
+      }
+    },
+    [fetchFn, limit, onSuccess, onError]
+  )
 
   const loadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
@@ -193,12 +193,7 @@ export function usePaginatedData(fetchFn, options = {}) {
  * @param {Object} options - Configuration options
  */
 export function useInfiniteData(fetchFn, options = {}) {
-  const {
-    deps = [],
-    limit = 50,
-    onSuccess,
-    onError,
-  } = options
+  const { deps = [], limit = 50, onSuccess, onError } = options
 
   const [data, setData] = useState([])
   const [cursor, setCursor] = useState(null)
@@ -207,37 +202,40 @@ export function useInfiniteData(fetchFn, options = {}) {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState(null)
 
-  const fetchData = useCallback(async (cursorValue, append = false) => {
-    if (append) {
-      setLoadingMore(true)
-    } else {
-      setLoading(true)
-    }
-    setError(null)
-
-    try {
-      const result = await fetchFn({ cursor: cursorValue, limit })
-
+  const fetchData = useCallback(
+    async (cursorValue, append = false) => {
       if (append) {
-        setData((prev) => [...prev, ...result.data])
+        setLoadingMore(true)
       } else {
-        setData(result.data)
+        setLoading(true)
       }
+      setError(null)
 
-      setCursor(result.nextCursor)
-      setHasMore(!!result.nextCursor)
+      try {
+        const result = await fetchFn({ cursor: cursorValue, limit })
 
-      onSuccess?.(result)
-      return result
-    } catch (err) {
-      setError(err.message || 'An error occurred')
-      onError?.(err)
-      throw err
-    } finally {
-      setLoading(false)
-      setLoadingMore(false)
-    }
-  }, [fetchFn, limit, onSuccess, onError])
+        if (append) {
+          setData((prev) => [...prev, ...result.data])
+        } else {
+          setData(result.data)
+        }
+
+        setCursor(result.nextCursor)
+        setHasMore(!!result.nextCursor)
+
+        onSuccess?.(result)
+        return result
+      } catch (err) {
+        setError(err.message || 'An error occurred')
+        onError?.(err)
+        throw err
+      } finally {
+        setLoading(false)
+        setLoadingMore(false)
+      }
+    },
+    [fetchFn, limit, onSuccess, onError]
+  )
 
   const loadMore = useCallback(() => {
     if (!loadingMore && hasMore && cursor) {

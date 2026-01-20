@@ -29,7 +29,8 @@ const MOCK_ACTORS = [
     name: 'LockBit 3.0',
     actor_type: 'Ransomware',
     origin_country: 'Russia',
-    description: 'LockBit is one of the most prolific Ransomware-as-a-Service (RaaS) operations globally. Known for fast encryption, double extortion tactics, and their bug bounty program for finding vulnerabilities in their own malware.',
+    description:
+      'LockBit is one of the most prolific Ransomware-as-a-Service (RaaS) operations globally. Known for fast encryption, double extortion tactics, and their bug bounty program for finding vulnerabilities in their own malware.',
     trend_status: 'ESCALATING',
     status: 'active',
     incidents_7d: 12,
@@ -49,7 +50,8 @@ const MOCK_ACTORS = [
     name: 'BlackCat (ALPHV)',
     actor_type: 'Ransomware',
     origin_country: 'Russia',
-    description: 'Sophisticated ransomware group using Rust-based malware. Believed to be a rebrand/successor of DarkSide and BlackMatter operations. Known for targeting critical infrastructure and high-value targets.',
+    description:
+      'Sophisticated ransomware group using Rust-based malware. Believed to be a rebrand/successor of DarkSide and BlackMatter operations. Known for targeting critical infrastructure and high-value targets.',
     trend_status: 'ESCALATING',
     status: 'active',
     incidents_7d: 8,
@@ -69,7 +71,8 @@ const MOCK_ACTORS = [
     name: 'APT29 (Cozy Bear)',
     actor_type: 'Nation-State',
     origin_country: 'Russia',
-    description: 'Russian state-sponsored threat group associated with the SVR (Foreign Intelligence Service). Known for SolarWinds supply chain attack and targeting government, diplomatic, and research organizations.',
+    description:
+      'Russian state-sponsored threat group associated with the SVR (Foreign Intelligence Service). Known for SolarWinds supply chain attack and targeting government, diplomatic, and research organizations.',
     trend_status: 'STABLE',
     status: 'active',
     incidents_7d: 2,
@@ -89,7 +92,8 @@ const MOCK_ACTORS = [
     name: 'Cl0p',
     actor_type: 'Ransomware',
     origin_country: 'Russia',
-    description: 'Ransomware group notorious for exploiting zero-day vulnerabilities in file transfer software (MOVEit, GoAnywhere, Accellion). Focuses on data theft and extortion over encryption.',
+    description:
+      'Ransomware group notorious for exploiting zero-day vulnerabilities in file transfer software (MOVEit, GoAnywhere, Accellion). Focuses on data theft and extortion over encryption.',
     trend_status: 'DECLINING',
     status: 'active',
     incidents_7d: 3,
@@ -109,7 +113,8 @@ const MOCK_ACTORS = [
     name: 'Play Ransomware',
     actor_type: 'Ransomware',
     origin_country: 'Unknown',
-    description: 'Emerging ransomware group that has rapidly grown in 2024. Uses similar tactics to Hive and Nokoyawa. Known for targeting SMBs and mid-market enterprises.',
+    description:
+      'Emerging ransomware group that has rapidly grown in 2024. Uses similar tactics to Hive and Nokoyawa. Known for targeting SMBs and mid-market enterprises.',
     trend_status: 'ESCALATING',
     status: 'active',
     incidents_7d: 6,
@@ -129,7 +134,8 @@ const MOCK_ACTORS = [
     name: 'Lazarus Group',
     actor_type: 'Nation-State',
     origin_country: 'North Korea',
-    description: 'North Korean state-sponsored APT known for financially motivated attacks, cryptocurrency theft, and destructive malware. Responsible for WannaCry, Sony Pictures hack, and numerous bank heists.',
+    description:
+      'North Korean state-sponsored APT known for financially motivated attacks, cryptocurrency theft, and destructive malware. Responsible for WannaCry, Sony Pictures hack, and numerous bank heists.',
     trend_status: 'STABLE',
     status: 'active',
     incidents_7d: 1,
@@ -155,7 +161,8 @@ const MOCK_INCIDENTS = [
     actor_id: 'demo-actor-blackcat',
     threat_actor: { id: 'demo-actor-blackcat', name: 'BlackCat (ALPHV)' },
     discovered_date: daysAgo(2),
-    description: 'Major healthcare system impacted by ransomware attack affecting 140 hospitals across 19 states. EHR systems offline, diverting ambulances.',
+    description:
+      'Major healthcare system impacted by ransomware attack affecting 140 hospitals across 19 states. EHR systems offline, diverting ambulances.',
     status: 'confirmed',
     source: 'ransomwatch',
     data_stolen: true,
@@ -170,7 +177,8 @@ const MOCK_INCIDENTS = [
     actor_id: 'demo-actor-lockbit',
     threat_actor: { id: 'demo-actor-lockbit', name: 'LockBit 3.0' },
     discovered_date: daysAgo(5),
-    description: '43GB of data exfiltrated and published after ransom deadline passed. Includes supplier information and internal communications.',
+    description:
+      '43GB of data exfiltrated and published after ransom deadline passed. Includes supplier information and internal communications.',
     status: 'confirmed',
     source: 'ransomwatch',
     data_stolen: true,
@@ -185,7 +193,8 @@ const MOCK_INCIDENTS = [
     actor_id: 'demo-actor-lockbit',
     threat_actor: { id: 'demo-actor-lockbit', name: 'LockBit 3.0' },
     discovered_date: daysAgo(10),
-    description: 'International shipping services disrupted for weeks. Ransom negotiation transcripts leaked showing $80M demand.',
+    description:
+      'International shipping services disrupted for weeks. Ransom negotiation transcripts leaked showing $80M demand.',
     status: 'confirmed',
     source: 'ransomwatch',
     data_stolen: true,
@@ -200,7 +209,8 @@ const MOCK_INCIDENTS = [
     actor_id: 'demo-actor-blackcat',
     threat_actor: { id: 'demo-actor-blackcat', name: 'BlackCat (ALPHV)' },
     discovered_date: daysAgo(12),
-    description: 'Casino and hotel operations disrupted. Slot machines, room keys, and reservation systems impacted. Social engineering via help desk.',
+    description:
+      'Casino and hotel operations disrupted. Slot machines, room keys, and reservation systems impacted. Social engineering via help desk.',
     status: 'confirmed',
     source: 'ransomwatch',
     data_stolen: true,
@@ -215,7 +225,8 @@ const MOCK_INCIDENTS = [
     actor_id: 'demo-actor-blackcat',
     threat_actor: { id: 'demo-actor-blackcat', name: 'BlackCat (ALPHV)' },
     discovered_date: daysAgo(15),
-    description: 'Healthcare payment processor breach affecting pharmacies and providers nationwide. Prescription processing delayed for millions.',
+    description:
+      'Healthcare payment processor breach affecting pharmacies and providers nationwide. Prescription processing delayed for millions.',
     status: 'confirmed',
     source: 'ransomwatch',
     data_stolen: true,
@@ -230,7 +241,8 @@ const MOCK_INCIDENTS = [
     actor_id: 'demo-actor-lockbit',
     threat_actor: { id: 'demo-actor-lockbit', name: 'LockBit 3.0' },
     discovered_date: daysAgo(18),
-    description: 'Consumer goods manufacturer hit with ransomware. Production and distribution impacted, product shortages reported.',
+    description:
+      'Consumer goods manufacturer hit with ransomware. Production and distribution impacted, product shortages reported.',
     status: 'confirmed',
     source: 'ransomwatch',
     data_stolen: true,
@@ -245,7 +257,8 @@ const MOCK_INCIDENTS = [
     actor_id: 'demo-actor-play',
     threat_actor: { id: 'demo-actor-play', name: 'Play Ransomware' },
     discovered_date: daysAgo(20),
-    description: 'Building automation and security systems vendor breached. 27TB of data stolen including DHS floor plans.',
+    description:
+      'Building automation and security systems vendor breached. 27TB of data stolen including DHS floor plans.',
     status: 'confirmed',
     source: 'ransomwatch',
     data_stolen: true,
@@ -260,7 +273,8 @@ const MOCK_INCIDENTS = [
     actor_id: 'demo-actor-clop',
     threat_actor: { id: 'demo-actor-clop', name: 'Cl0p' },
     discovered_date: daysAgo(25),
-    description: 'Mass exploitation of MOVEit Transfer CVE-2023-34362. Over 2,500 organizations impacted including government agencies.',
+    description:
+      'Mass exploitation of MOVEit Transfer CVE-2023-34362. Over 2,500 organizations impacted including government agencies.',
     status: 'confirmed',
     source: 'ransomwatch',
     data_stolen: true,
@@ -273,7 +287,8 @@ const MOCK_VULNERABILITIES = [
   {
     id: 'demo-vuln-1',
     cve_id: 'CVE-2024-21887',
-    description: 'Ivanti Connect Secure and Policy Secure contain a command injection vulnerability in the web component that allows an authenticated administrator to send specially crafted requests and execute arbitrary commands.',
+    description:
+      'Ivanti Connect Secure and Policy Secure contain a command injection vulnerability in the web component that allows an authenticated administrator to send specially crafted requests and execute arbitrary commands.',
     cvss_score: 9.1,
     cvss_vector: 'CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H',
     epss_score: 0.97,
@@ -290,7 +305,8 @@ const MOCK_VULNERABILITIES = [
   {
     id: 'demo-vuln-2',
     cve_id: 'CVE-2023-34362',
-    description: 'Progress MOVEit Transfer SQL injection vulnerability allows unauthenticated attackers to access the database and execute arbitrary code.',
+    description:
+      'Progress MOVEit Transfer SQL injection vulnerability allows unauthenticated attackers to access the database and execute arbitrary code.',
     cvss_score: 9.8,
     cvss_vector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H',
     epss_score: 0.95,
@@ -307,7 +323,8 @@ const MOCK_VULNERABILITIES = [
   {
     id: 'demo-vuln-3',
     cve_id: 'CVE-2024-1709',
-    description: 'ConnectWise ScreenConnect authentication bypass vulnerability allows attackers to create admin accounts and execute code remotely.',
+    description:
+      'ConnectWise ScreenConnect authentication bypass vulnerability allows attackers to create admin accounts and execute code remotely.',
     cvss_score: 10.0,
     cvss_vector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H',
     epss_score: 0.94,
@@ -324,7 +341,8 @@ const MOCK_VULNERABILITIES = [
   {
     id: 'demo-vuln-4',
     cve_id: 'CVE-2024-3400',
-    description: 'Palo Alto Networks PAN-OS command injection vulnerability in GlobalProtect gateway. Allows unauthenticated RCE with root privileges.',
+    description:
+      'Palo Alto Networks PAN-OS command injection vulnerability in GlobalProtect gateway. Allows unauthenticated RCE with root privileges.',
     cvss_score: 10.0,
     cvss_vector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H',
     epss_score: 0.96,
@@ -341,7 +359,8 @@ const MOCK_VULNERABILITIES = [
   {
     id: 'demo-vuln-5',
     cve_id: 'CVE-2023-4966',
-    description: 'Citrix NetScaler ADC and Gateway sensitive information disclosure (Citrix Bleed). Allows session token theft.',
+    description:
+      'Citrix NetScaler ADC and Gateway sensitive information disclosure (Citrix Bleed). Allows session token theft.',
     cvss_score: 9.4,
     cvss_vector: 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:L',
     epss_score: 0.93,
@@ -358,14 +377,102 @@ const MOCK_VULNERABILITIES = [
 ]
 
 const MOCK_IOCS = [
-  { id: 'demo-ioc-1', type: 'ip', value: '185.220.101.34', actor_id: 'demo-actor-lockbit', actor_name: 'LockBit 3.0', confidence: 'high', source: 'ThreatFox', first_seen: daysAgo(5), last_seen: today(), tags: ['c2', 'ransomware'] },
-  { id: 'demo-ioc-2', type: 'domain', value: 'lockbit3753ekiocyo5epmpy6klmejchjtzddoekjlnt6mu3qh4de2id.onion', actor_id: 'demo-actor-lockbit', actor_name: 'LockBit 3.0', confidence: 'high', source: 'Ransomwatch', first_seen: daysAgo(30), last_seen: today(), tags: ['leak-site', 'tor'] },
-  { id: 'demo-ioc-3', type: 'sha256', value: 'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456', actor_id: 'demo-actor-blackcat', actor_name: 'BlackCat (ALPHV)', confidence: 'high', source: 'MalwareBazaar', first_seen: daysAgo(10), last_seen: daysAgo(2), tags: ['ransomware', 'rust'] },
-  { id: 'demo-ioc-4', type: 'ip', value: '45.129.14.83', actor_id: 'demo-actor-apt29', actor_name: 'APT29 (Cozy Bear)', confidence: 'medium', source: 'ThreatFox', first_seen: daysAgo(20), last_seen: daysAgo(5), tags: ['apt', 'c2'] },
-  { id: 'demo-ioc-5', type: 'domain', value: 'update-microsoft-security.com', actor_id: 'demo-actor-apt29', actor_name: 'APT29 (Cozy Bear)', confidence: 'high', source: 'URLhaus', first_seen: daysAgo(15), last_seen: daysAgo(3), tags: ['phishing', 'typosquat'] },
-  { id: 'demo-ioc-6', type: 'ip', value: '91.215.85.142', actor_id: 'demo-actor-clop', actor_name: 'Cl0p', confidence: 'high', source: 'ThreatFox', first_seen: daysAgo(25), last_seen: daysAgo(8), tags: ['c2', 'moveit'] },
-  { id: 'demo-ioc-7', type: 'sha256', value: 'deadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678', actor_id: 'demo-actor-play', actor_name: 'Play Ransomware', confidence: 'high', source: 'MalwareBazaar', first_seen: daysAgo(7), last_seen: daysAgo(1), tags: ['ransomware', 'encryptor'] },
-  { id: 'demo-ioc-8', type: 'url', value: 'hxxps://malicious-update[.]com/payload.exe', actor_id: 'demo-actor-lockbit', actor_name: 'LockBit 3.0', confidence: 'medium', source: 'URLhaus', first_seen: daysAgo(3), last_seen: today(), tags: ['payload', 'dropper'] },
+  {
+    id: 'demo-ioc-1',
+    type: 'ip',
+    value: '185.220.101.34',
+    actor_id: 'demo-actor-lockbit',
+    actor_name: 'LockBit 3.0',
+    confidence: 'high',
+    source: 'ThreatFox',
+    first_seen: daysAgo(5),
+    last_seen: today(),
+    tags: ['c2', 'ransomware'],
+  },
+  {
+    id: 'demo-ioc-2',
+    type: 'domain',
+    value: 'lockbit3753ekiocyo5epmpy6klmejchjtzddoekjlnt6mu3qh4de2id.onion',
+    actor_id: 'demo-actor-lockbit',
+    actor_name: 'LockBit 3.0',
+    confidence: 'high',
+    source: 'Ransomwatch',
+    first_seen: daysAgo(30),
+    last_seen: today(),
+    tags: ['leak-site', 'tor'],
+  },
+  {
+    id: 'demo-ioc-3',
+    type: 'sha256',
+    value: 'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
+    actor_id: 'demo-actor-blackcat',
+    actor_name: 'BlackCat (ALPHV)',
+    confidence: 'high',
+    source: 'MalwareBazaar',
+    first_seen: daysAgo(10),
+    last_seen: daysAgo(2),
+    tags: ['ransomware', 'rust'],
+  },
+  {
+    id: 'demo-ioc-4',
+    type: 'ip',
+    value: '45.129.14.83',
+    actor_id: 'demo-actor-apt29',
+    actor_name: 'APT29 (Cozy Bear)',
+    confidence: 'medium',
+    source: 'ThreatFox',
+    first_seen: daysAgo(20),
+    last_seen: daysAgo(5),
+    tags: ['apt', 'c2'],
+  },
+  {
+    id: 'demo-ioc-5',
+    type: 'domain',
+    value: 'update-microsoft-security.com',
+    actor_id: 'demo-actor-apt29',
+    actor_name: 'APT29 (Cozy Bear)',
+    confidence: 'high',
+    source: 'URLhaus',
+    first_seen: daysAgo(15),
+    last_seen: daysAgo(3),
+    tags: ['phishing', 'typosquat'],
+  },
+  {
+    id: 'demo-ioc-6',
+    type: 'ip',
+    value: '91.215.85.142',
+    actor_id: 'demo-actor-clop',
+    actor_name: 'Cl0p',
+    confidence: 'high',
+    source: 'ThreatFox',
+    first_seen: daysAgo(25),
+    last_seen: daysAgo(8),
+    tags: ['c2', 'moveit'],
+  },
+  {
+    id: 'demo-ioc-7',
+    type: 'sha256',
+    value: 'deadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678',
+    actor_id: 'demo-actor-play',
+    actor_name: 'Play Ransomware',
+    confidence: 'high',
+    source: 'MalwareBazaar',
+    first_seen: daysAgo(7),
+    last_seen: daysAgo(1),
+    tags: ['ransomware', 'encryptor'],
+  },
+  {
+    id: 'demo-ioc-8',
+    type: 'url',
+    value: 'hxxps://malicious-update[.]com/payload.exe',
+    actor_id: 'demo-actor-lockbit',
+    actor_name: 'LockBit 3.0',
+    confidence: 'medium',
+    source: 'URLhaus',
+    first_seen: daysAgo(3),
+    last_seen: today(),
+    tags: ['payload', 'dropper'],
+  },
 ]
 
 const MOCK_PATTERNS = [
@@ -373,12 +480,17 @@ const MOCK_PATTERNS = [
     id: 'demo-pattern-1',
     type: 'campaign',
     name: 'Healthcare Targeting Surge',
-    description: 'Multiple ransomware groups showing coordinated increase in healthcare sector targeting. LockBit and BlackCat leading with 35% increase in healthcare victims.',
+    description:
+      'Multiple ransomware groups showing coordinated increase in healthcare sector targeting. LockBit and BlackCat leading with 35% increase in healthcare victims.',
     confidence: 85,
     severity: 'high',
     actors: ['LockBit 3.0', 'BlackCat (ALPHV)'],
     sectors: ['healthcare'],
-    indicators: ['Increased affiliate recruitment', 'New healthcare-specific TTPs', 'Timing around open enrollment'],
+    indicators: [
+      'Increased affiliate recruitment',
+      'New healthcare-specific TTPs',
+      'Timing around open enrollment',
+    ],
     detected_at: daysAgo(3),
     status: 'active',
   },
@@ -386,7 +498,8 @@ const MOCK_PATTERNS = [
     id: 'demo-pattern-2',
     type: 'temporal_cluster',
     name: 'Weekend Activity Spike',
-    description: 'Unusual 48-hour burst of ransomware deployment detected across multiple groups. 23 incidents in 48 hours vs. typical 8-10.',
+    description:
+      'Unusual 48-hour burst of ransomware deployment detected across multiple groups. 23 incidents in 48 hours vs. typical 8-10.',
     confidence: 72,
     severity: 'medium',
     actors: ['Multiple'],
@@ -399,7 +512,8 @@ const MOCK_PATTERNS = [
     id: 'demo-pattern-3',
     type: 'ttp_cluster',
     name: 'ScreenConnect Exploitation Wave',
-    description: 'Mass exploitation of CVE-2024-1709 detected. At least 5 ransomware groups actively targeting unpatched ScreenConnect instances.',
+    description:
+      'Mass exploitation of CVE-2024-1709 detected. At least 5 ransomware groups actively targeting unpatched ScreenConnect instances.',
     confidence: 92,
     severity: 'critical',
     actors: ['LockBit 3.0', 'BlackCat (ALPHV)', 'Black Basta', 'Play Ransomware', 'Akira'],
@@ -411,7 +525,8 @@ const MOCK_PATTERNS = [
     id: 'demo-pattern-4',
     type: 'geographic',
     name: 'LATAM Expansion',
-    description: 'Play Ransomware showing significant expansion into Latin American markets. Brazil and Argentina incidents up 200% month-over-month.',
+    description:
+      'Play Ransomware showing significant expansion into Latin American markets. Brazil and Argentina incidents up 200% month-over-month.',
     confidence: 78,
     severity: 'medium',
     actors: ['Play Ransomware'],
@@ -425,18 +540,35 @@ const MOCK_ATTACK_CHAINS = [
   {
     id: 'demo-chain-1',
     name: 'LockBit Healthcare Campaign 2024',
-    description: 'Coordinated campaign targeting US healthcare organizations via compromised RMM tools and vulnerable Citrix appliances.',
+    description:
+      'Coordinated campaign targeting US healthcare organizations via compromised RMM tools and vulnerable Citrix appliances.',
     actor_id: 'demo-actor-lockbit',
     actor_name: 'LockBit 3.0',
     target_sectors: ['healthcare'],
     target_countries: ['United States'],
     stages: [
-      { phase: 'Initial Access', technique: 'T1190', description: 'Exploit Citrix Bleed (CVE-2023-4966)' },
-      { phase: 'Initial Access', technique: 'T1133', description: 'Compromised ScreenConnect (CVE-2024-1709)' },
-      { phase: 'Execution', technique: 'T1059.001', description: 'PowerShell for payload delivery' },
+      {
+        phase: 'Initial Access',
+        technique: 'T1190',
+        description: 'Exploit Citrix Bleed (CVE-2023-4966)',
+      },
+      {
+        phase: 'Initial Access',
+        technique: 'T1133',
+        description: 'Compromised ScreenConnect (CVE-2024-1709)',
+      },
+      {
+        phase: 'Execution',
+        technique: 'T1059.001',
+        description: 'PowerShell for payload delivery',
+      },
       { phase: 'Persistence', technique: 'T1547', description: 'Registry run keys' },
       { phase: 'Defense Evasion', technique: 'T1562.001', description: 'Disable security tools' },
-      { phase: 'Lateral Movement', technique: 'T1021.001', description: 'RDP with stolen credentials' },
+      {
+        phase: 'Lateral Movement',
+        technique: 'T1021.001',
+        description: 'RDP with stolen credentials',
+      },
       { phase: 'Exfiltration', technique: 'T1567', description: 'Data exfil to cloud storage' },
       { phase: 'Impact', technique: 'T1486', description: 'LockBit 3.0 ransomware deployment' },
     ],
@@ -450,15 +582,24 @@ const MOCK_ATTACK_CHAINS = [
   {
     id: 'demo-chain-2',
     name: 'Cl0p MOVEit Mass Exploitation',
-    description: 'Zero-day exploitation campaign targeting MOVEit Transfer instances globally. Data theft focused with no encryption.',
+    description:
+      'Zero-day exploitation campaign targeting MOVEit Transfer instances globally. Data theft focused with no encryption.',
     actor_id: 'demo-actor-clop',
     actor_name: 'Cl0p',
     target_sectors: ['finance', 'healthcare', 'government', 'education'],
     target_countries: ['United States', 'United Kingdom', 'Canada', 'Germany'],
     stages: [
-      { phase: 'Initial Access', technique: 'T1190', description: 'Exploit MOVEit SQL injection (CVE-2023-34362)' },
+      {
+        phase: 'Initial Access',
+        technique: 'T1190',
+        description: 'Exploit MOVEit SQL injection (CVE-2023-34362)',
+      },
       { phase: 'Execution', technique: 'T1059', description: 'Web shell deployment' },
-      { phase: 'Collection', technique: 'T1005', description: 'Automated data collection from file transfers' },
+      {
+        phase: 'Collection',
+        technique: 'T1005',
+        description: 'Automated data collection from file transfers',
+      },
       { phase: 'Exfiltration', technique: 'T1567', description: 'Mass data exfiltration' },
       { phase: 'Impact', technique: 'T1657', description: 'Extortion via leak site' },
     ],
@@ -472,15 +613,24 @@ const MOCK_ATTACK_CHAINS = [
   {
     id: 'demo-chain-3',
     name: 'APT29 Government Targeting 2024',
-    description: 'Ongoing espionage campaign targeting government and diplomatic organizations via phishing and supply chain compromise.',
+    description:
+      'Ongoing espionage campaign targeting government and diplomatic organizations via phishing and supply chain compromise.',
     actor_id: 'demo-actor-apt29',
     actor_name: 'APT29 (Cozy Bear)',
     target_sectors: ['government', 'defense', 'think-tanks'],
     target_countries: ['United States', 'NATO Members', 'Ukraine'],
     stages: [
       { phase: 'Reconnaissance', technique: 'T1598', description: 'Spearphishing for information' },
-      { phase: 'Initial Access', technique: 'T1566.002', description: 'Spearphishing link to credential harvester' },
-      { phase: 'Initial Access', technique: 'T1195.002', description: 'Compromise software supply chain' },
+      {
+        phase: 'Initial Access',
+        technique: 'T1566.002',
+        description: 'Spearphishing link to credential harvester',
+      },
+      {
+        phase: 'Initial Access',
+        technique: 'T1195.002',
+        description: 'Compromise software supply chain',
+      },
       { phase: 'Persistence', technique: 'T1078', description: 'Valid cloud accounts' },
       { phase: 'Collection', technique: 'T1114', description: 'Email collection' },
       { phase: 'Exfiltration', technique: 'T1041', description: 'Exfil over C2 channel' },
@@ -495,25 +645,153 @@ const MOCK_ATTACK_CHAINS = [
 ]
 
 const MOCK_INDUSTRY_THREATS = [
-  { industry: 'Healthcare', event_count: 847, unique_actors: 23, top_actor: 'LockBit 3.0', actor_type: 'Ransomware', events_last_90d: 156, trend: 35 },
-  { industry: 'Manufacturing', event_count: 612, unique_actors: 18, top_actor: 'LockBit 3.0', actor_type: 'Ransomware', events_last_90d: 98, trend: 12 },
-  { industry: 'Finance', event_count: 534, unique_actors: 31, top_actor: 'BlackCat (ALPHV)', actor_type: 'Ransomware', events_last_90d: 87, trend: -5 },
-  { industry: 'Government', event_count: 423, unique_actors: 42, top_actor: 'APT29 (Cozy Bear)', actor_type: 'Nation-State', events_last_90d: 65, trend: 8 },
-  { industry: 'Education', event_count: 398, unique_actors: 15, top_actor: 'Vice Society', actor_type: 'Ransomware', events_last_90d: 72, trend: 22 },
-  { industry: 'Technology', event_count: 356, unique_actors: 28, top_actor: 'Lazarus Group', actor_type: 'Nation-State', events_last_90d: 54, trend: 15 },
-  { industry: 'Retail', event_count: 289, unique_actors: 14, top_actor: 'Cl0p', actor_type: 'Ransomware', events_last_90d: 45, trend: -18 },
-  { industry: 'Energy', event_count: 234, unique_actors: 19, top_actor: 'BlackCat (ALPHV)', actor_type: 'Ransomware', events_last_90d: 38, trend: 28 },
+  {
+    industry: 'Healthcare',
+    event_count: 847,
+    unique_actors: 23,
+    top_actor: 'LockBit 3.0',
+    actor_type: 'Ransomware',
+    events_last_90d: 156,
+    trend: 35,
+  },
+  {
+    industry: 'Manufacturing',
+    event_count: 612,
+    unique_actors: 18,
+    top_actor: 'LockBit 3.0',
+    actor_type: 'Ransomware',
+    events_last_90d: 98,
+    trend: 12,
+  },
+  {
+    industry: 'Finance',
+    event_count: 534,
+    unique_actors: 31,
+    top_actor: 'BlackCat (ALPHV)',
+    actor_type: 'Ransomware',
+    events_last_90d: 87,
+    trend: -5,
+  },
+  {
+    industry: 'Government',
+    event_count: 423,
+    unique_actors: 42,
+    top_actor: 'APT29 (Cozy Bear)',
+    actor_type: 'Nation-State',
+    events_last_90d: 65,
+    trend: 8,
+  },
+  {
+    industry: 'Education',
+    event_count: 398,
+    unique_actors: 15,
+    top_actor: 'Vice Society',
+    actor_type: 'Ransomware',
+    events_last_90d: 72,
+    trend: 22,
+  },
+  {
+    industry: 'Technology',
+    event_count: 356,
+    unique_actors: 28,
+    top_actor: 'Lazarus Group',
+    actor_type: 'Nation-State',
+    events_last_90d: 54,
+    trend: 15,
+  },
+  {
+    industry: 'Retail',
+    event_count: 289,
+    unique_actors: 14,
+    top_actor: 'Cl0p',
+    actor_type: 'Ransomware',
+    events_last_90d: 45,
+    trend: -18,
+  },
+  {
+    industry: 'Energy',
+    event_count: 234,
+    unique_actors: 19,
+    top_actor: 'BlackCat (ALPHV)',
+    actor_type: 'Ransomware',
+    events_last_90d: 38,
+    trend: 28,
+  },
 ]
 
 const MOCK_COUNTRY_THREATS = [
-  { country: 'US', country_name: 'United States', total_events: 2847, unique_actors: 89, nation_state_events: 423, criminal_events: 2124, hacktivist_events: 300 },
-  { country: 'GB', country_name: 'United Kingdom', total_events: 534, unique_actors: 45, nation_state_events: 87, criminal_events: 412, hacktivist_events: 35 },
-  { country: 'DE', country_name: 'Germany', total_events: 423, unique_actors: 38, nation_state_events: 65, criminal_events: 334, hacktivist_events: 24 },
-  { country: 'FR', country_name: 'France', total_events: 312, unique_actors: 32, nation_state_events: 45, criminal_events: 245, hacktivist_events: 22 },
-  { country: 'AU', country_name: 'Australia', total_events: 287, unique_actors: 28, nation_state_events: 34, criminal_events: 231, hacktivist_events: 22 },
-  { country: 'CA', country_name: 'Canada', total_events: 265, unique_actors: 25, nation_state_events: 28, criminal_events: 215, hacktivist_events: 22 },
-  { country: 'BR', country_name: 'Brazil', total_events: 198, unique_actors: 18, nation_state_events: 12, criminal_events: 172, hacktivist_events: 14 },
-  { country: 'JP', country_name: 'Japan', total_events: 156, unique_actors: 22, nation_state_events: 45, criminal_events: 98, hacktivist_events: 13 },
+  {
+    country: 'US',
+    country_name: 'United States',
+    total_events: 2847,
+    unique_actors: 89,
+    nation_state_events: 423,
+    criminal_events: 2124,
+    hacktivist_events: 300,
+  },
+  {
+    country: 'GB',
+    country_name: 'United Kingdom',
+    total_events: 534,
+    unique_actors: 45,
+    nation_state_events: 87,
+    criminal_events: 412,
+    hacktivist_events: 35,
+  },
+  {
+    country: 'DE',
+    country_name: 'Germany',
+    total_events: 423,
+    unique_actors: 38,
+    nation_state_events: 65,
+    criminal_events: 334,
+    hacktivist_events: 24,
+  },
+  {
+    country: 'FR',
+    country_name: 'France',
+    total_events: 312,
+    unique_actors: 32,
+    nation_state_events: 45,
+    criminal_events: 245,
+    hacktivist_events: 22,
+  },
+  {
+    country: 'AU',
+    country_name: 'Australia',
+    total_events: 287,
+    unique_actors: 28,
+    nation_state_events: 34,
+    criminal_events: 231,
+    hacktivist_events: 22,
+  },
+  {
+    country: 'CA',
+    country_name: 'Canada',
+    total_events: 265,
+    unique_actors: 25,
+    nation_state_events: 28,
+    criminal_events: 215,
+    hacktivist_events: 22,
+  },
+  {
+    country: 'BR',
+    country_name: 'Brazil',
+    total_events: 198,
+    unique_actors: 18,
+    nation_state_events: 12,
+    criminal_events: 172,
+    hacktivist_events: 14,
+  },
+  {
+    country: 'JP',
+    country_name: 'Japan',
+    total_events: 156,
+    unique_actors: 22,
+    nation_state_events: 45,
+    criminal_events: 98,
+    hacktivist_events: 13,
+  },
 ]
 
 // Generate daily counts for charts
@@ -561,104 +839,126 @@ export function useDemoData() {
       incidentsTotal: 52847,
       kevTotal: 1124,
       iocTotal: 1247893,
-      escalatingActors: MOCK_ACTORS.filter(a => a.trend_status === 'ESCALATING').length,
+      escalatingActors: MOCK_ACTORS.filter((a) => a.trend_status === 'ESCALATING').length,
     })
   }, [isDemoMode])
 
   // Threat Actors functions
-  const getActors = useCallback(async (options = {}) => {
-    if (!isDemoMode) return null
-    const { limit = 100, search = '', trendStatus = '', actorType = '' } = options
+  const getActors = useCallback(
+    async (options = {}) => {
+      if (!isDemoMode) return null
+      const { limit = 100, search = '', trendStatus = '', actorType = '' } = options
 
-    let filtered = [...MOCK_ACTORS]
+      let filtered = [...MOCK_ACTORS]
 
-    if (search) {
-      const searchLower = search.toLowerCase()
-      filtered = filtered.filter(a =>
-        a.name.toLowerCase().includes(searchLower) ||
-        a.aliases?.some(alias => alias.toLowerCase().includes(searchLower))
-      )
-    }
+      if (search) {
+        const searchLower = search.toLowerCase()
+        filtered = filtered.filter(
+          (a) =>
+            a.name.toLowerCase().includes(searchLower) ||
+            a.aliases?.some((alias) => alias.toLowerCase().includes(searchLower))
+        )
+      }
 
-    if (trendStatus) {
-      filtered = filtered.filter(a => a.trend_status === trendStatus)
-    }
+      if (trendStatus) {
+        filtered = filtered.filter((a) => a.trend_status === trendStatus)
+      }
 
-    if (actorType) {
-      filtered = filtered.filter(a => a.actor_type.toLowerCase() === actorType.toLowerCase())
-    }
+      if (actorType) {
+        filtered = filtered.filter((a) => a.actor_type.toLowerCase() === actorType.toLowerCase())
+      }
 
-    return mockResponse(filtered.slice(0, limit), filtered.length)
-  }, [isDemoMode])
+      return mockResponse(filtered.slice(0, limit), filtered.length)
+    },
+    [isDemoMode]
+  )
 
-  const getActorById = useCallback(async (id) => {
-    if (!isDemoMode) return null
-    const actor = MOCK_ACTORS.find(a => a.id === id)
-    return mockResponse(actor)
-  }, [isDemoMode])
+  const getActorById = useCallback(
+    async (id) => {
+      if (!isDemoMode) return null
+      const actor = MOCK_ACTORS.find((a) => a.id === id)
+      return mockResponse(actor)
+    },
+    [isDemoMode]
+  )
 
-  const getEscalatingActors = useCallback(async (limit = 10) => {
-    if (!isDemoMode) return null
-    const escalating = MOCK_ACTORS
-      .filter(a => a.trend_status === 'ESCALATING')
-      .sort((a, b) => b.incident_velocity - a.incident_velocity)
-      .slice(0, limit)
-    return mockResponse(escalating)
-  }, [isDemoMode])
+  const getEscalatingActors = useCallback(
+    async (limit = 10) => {
+      if (!isDemoMode) return null
+      const escalating = MOCK_ACTORS.filter((a) => a.trend_status === 'ESCALATING')
+        .sort((a, b) => b.incident_velocity - a.incident_velocity)
+        .slice(0, limit)
+      return mockResponse(escalating)
+    },
+    [isDemoMode]
+  )
 
-  const getTopActors = useCallback(async (_days = 30, limit = 10) => {
-    if (!isDemoMode) return null
-    const sorted = [...MOCK_ACTORS]
-      .sort((a, b) => b.incidents_7d - a.incidents_7d)
-      .slice(0, limit)
-      .map(actor => ({
-        ...actor,
-        incident_count: [{ count: actor.incidents_7d * 4 }], // Approximate 30-day count
-      }))
-    return mockResponse(sorted)
-  }, [isDemoMode])
+  const getTopActors = useCallback(
+    async (_days = 30, limit = 10) => {
+      if (!isDemoMode) return null
+      const sorted = [...MOCK_ACTORS]
+        .sort((a, b) => b.incidents_7d - a.incidents_7d)
+        .slice(0, limit)
+        .map((actor) => ({
+          ...actor,
+          incident_count: [{ count: actor.incidents_7d * 4 }], // Approximate 30-day count
+        }))
+      return mockResponse(sorted)
+    },
+    [isDemoMode]
+  )
 
   const getTrendSummary = useCallback(async () => {
     if (!isDemoMode) return null
     return {
-      escalating: MOCK_ACTORS.filter(a => a.trend_status === 'ESCALATING').length,
-      stable: MOCK_ACTORS.filter(a => a.trend_status === 'STABLE').length,
-      declining: MOCK_ACTORS.filter(a => a.trend_status === 'DECLINING').length,
+      escalating: MOCK_ACTORS.filter((a) => a.trend_status === 'ESCALATING').length,
+      stable: MOCK_ACTORS.filter((a) => a.trend_status === 'STABLE').length,
+      declining: MOCK_ACTORS.filter((a) => a.trend_status === 'DECLINING').length,
     }
   }, [isDemoMode])
 
   // Incidents functions
-  const getIncidents = useCallback(async (options = {}) => {
-    if (!isDemoMode) return null
-    const { limit = 50, search = '', sector = '' } = options
+  const getIncidents = useCallback(
+    async (options = {}) => {
+      if (!isDemoMode) return null
+      const { limit = 50, search = '', sector = '' } = options
 
-    let filtered = [...MOCK_INCIDENTS]
+      let filtered = [...MOCK_INCIDENTS]
 
-    if (search) {
-      const searchLower = search.toLowerCase()
-      filtered = filtered.filter(i =>
-        i.victim_name.toLowerCase().includes(searchLower) ||
-        i.victim_sector?.toLowerCase().includes(searchLower)
-      )
-    }
+      if (search) {
+        const searchLower = search.toLowerCase()
+        filtered = filtered.filter(
+          (i) =>
+            i.victim_name.toLowerCase().includes(searchLower) ||
+            i.victim_sector?.toLowerCase().includes(searchLower)
+        )
+      }
 
-    if (sector) {
-      filtered = filtered.filter(i => i.victim_sector === sector)
-    }
+      if (sector) {
+        filtered = filtered.filter((i) => i.victim_sector === sector)
+      }
 
-    return mockResponse(filtered.slice(0, limit), filtered.length)
-  }, [isDemoMode])
+      return mockResponse(filtered.slice(0, limit), filtered.length)
+    },
+    [isDemoMode]
+  )
 
-  const getRecentIncidents = useCallback(async (options = {}) => {
-    if (!isDemoMode) return null
-    const { limit = 50 } = options
-    return mockResponse(MOCK_INCIDENTS.slice(0, limit), MOCK_INCIDENTS.length)
-  }, [isDemoMode])
+  const getRecentIncidents = useCallback(
+    async (options = {}) => {
+      if (!isDemoMode) return null
+      const { limit = 50 } = options
+      return mockResponse(MOCK_INCIDENTS.slice(0, limit), MOCK_INCIDENTS.length)
+    },
+    [isDemoMode]
+  )
 
-  const getDailyCounts = useCallback(async (days = 90) => {
-    if (!isDemoMode) return null
-    return generateDailyCounts(days)
-  }, [isDemoMode])
+  const getDailyCounts = useCallback(
+    async (days = 90) => {
+      if (!isDemoMode) return null
+      return generateDailyCounts(days)
+    },
+    [isDemoMode]
+  )
 
   const getSectorBreakdown = useCallback(async () => {
     if (!isDemoMode) return null
@@ -666,54 +966,67 @@ export function useDemoData() {
   }, [isDemoMode])
 
   // Vulnerabilities functions
-  const getVulnerabilities = useCallback(async (options = {}) => {
-    if (!isDemoMode) return null
-    const { limit = 50, kevOnly = false } = options
+  const getVulnerabilities = useCallback(
+    async (options = {}) => {
+      if (!isDemoMode) return null
+      const { limit = 50, kevOnly = false } = options
 
-    let filtered = [...MOCK_VULNERABILITIES]
+      let filtered = [...MOCK_VULNERABILITIES]
 
-    if (kevOnly) {
-      filtered = filtered.filter(v => v.kev_date)
-    }
+      if (kevOnly) {
+        filtered = filtered.filter((v) => v.kev_date)
+      }
 
-    return mockResponse(filtered.slice(0, limit), filtered.length)
-  }, [isDemoMode])
+      return mockResponse(filtered.slice(0, limit), filtered.length)
+    },
+    [isDemoMode]
+  )
 
-  const getVulnById = useCallback(async (cveId) => {
-    if (!isDemoMode) return null
-    const vuln = MOCK_VULNERABILITIES.find(v => v.cve_id === cveId)
-    return mockResponse(vuln)
-  }, [isDemoMode])
+  const getVulnById = useCallback(
+    async (cveId) => {
+      if (!isDemoMode) return null
+      const vuln = MOCK_VULNERABILITIES.find((v) => v.cve_id === cveId)
+      return mockResponse(vuln)
+    },
+    [isDemoMode]
+  )
 
   // IOCs functions
-  const getIOCs = useCallback(async (options = {}) => {
-    if (!isDemoMode) return null
-    const { limit = 50, type = '', search = '' } = options
+  const getIOCs = useCallback(
+    async (options = {}) => {
+      if (!isDemoMode) return null
+      const { limit = 50, type = '', search = '' } = options
 
-    let filtered = [...MOCK_IOCS]
+      let filtered = [...MOCK_IOCS]
 
-    if (type) {
-      filtered = filtered.filter(ioc => ioc.type === type)
-    }
+      if (type) {
+        filtered = filtered.filter((ioc) => ioc.type === type)
+      }
 
-    if (search) {
-      const searchLower = search.toLowerCase()
-      filtered = filtered.filter(ioc =>
-        ioc.value.toLowerCase().includes(searchLower) ||
-        ioc.actor_name?.toLowerCase().includes(searchLower)
+      if (search) {
+        const searchLower = search.toLowerCase()
+        filtered = filtered.filter(
+          (ioc) =>
+            ioc.value.toLowerCase().includes(searchLower) ||
+            ioc.actor_name?.toLowerCase().includes(searchLower)
+        )
+      }
+
+      return mockResponse(filtered.slice(0, limit), filtered.length)
+    },
+    [isDemoMode]
+  )
+
+  const searchIOC = useCallback(
+    async (value) => {
+      if (!isDemoMode) return null
+      const matches = MOCK_IOCS.filter((ioc) =>
+        ioc.value.toLowerCase().includes(value.toLowerCase())
       )
-    }
-
-    return mockResponse(filtered.slice(0, limit), filtered.length)
-  }, [isDemoMode])
-
-  const searchIOC = useCallback(async (value) => {
-    if (!isDemoMode) return null
-    const matches = MOCK_IOCS.filter(ioc =>
-      ioc.value.toLowerCase().includes(value.toLowerCase())
-    )
-    return mockResponse(matches)
-  }, [isDemoMode])
+      return mockResponse(matches)
+    },
+    [isDemoMode]
+  )
 
   // Patterns functions
   const getPatterns = useCallback(async () => {
@@ -722,22 +1035,25 @@ export function useDemoData() {
   }, [isDemoMode])
 
   // Attack Chains functions
-  const getAttackChains = useCallback(async (options = {}) => {
-    if (!isDemoMode) return null
-    const { actor_id = '', sector = '' } = options
+  const getAttackChains = useCallback(
+    async (options = {}) => {
+      if (!isDemoMode) return null
+      const { actor_id = '', sector = '' } = options
 
-    let filtered = [...MOCK_ATTACK_CHAINS]
+      let filtered = [...MOCK_ATTACK_CHAINS]
 
-    if (actor_id) {
-      filtered = filtered.filter(c => c.actor_id === actor_id)
-    }
+      if (actor_id) {
+        filtered = filtered.filter((c) => c.actor_id === actor_id)
+      }
 
-    if (sector) {
-      filtered = filtered.filter(c => c.target_sectors?.includes(sector))
-    }
+      if (sector) {
+        filtered = filtered.filter((c) => c.target_sectors?.includes(sector))
+      }
 
-    return mockResponse(filtered)
-  }, [isDemoMode])
+      return mockResponse(filtered)
+    },
+    [isDemoMode]
+  )
 
   // Industry threats
   const getIndustryThreats = useCallback(async () => {
@@ -752,50 +1068,59 @@ export function useDemoData() {
   }, [isDemoMode])
 
   // Correlations
-  const getActorCorrelations = useCallback(async (actorId) => {
-    if (!isDemoMode) return null
+  const getActorCorrelations = useCallback(
+    async (actorId) => {
+      if (!isDemoMode) return null
 
-    const actor = MOCK_ACTORS.find(a => a.id === actorId)
-    if (!actor) return mockResponse(null)
+      const actor = MOCK_ACTORS.find((a) => a.id === actorId)
+      if (!actor) return mockResponse(null)
 
-    const actorIncidents = MOCK_INCIDENTS.filter(i => i.actor_id === actorId)
-    const actorIOCs = MOCK_IOCS.filter(i => i.actor_id === actorId)
-    const actorChains = MOCK_ATTACK_CHAINS.filter(c => c.actor_id === actorId)
+      const actorIncidents = MOCK_INCIDENTS.filter((i) => i.actor_id === actorId)
+      const actorIOCs = MOCK_IOCS.filter((i) => i.actor_id === actorId)
+      const actorChains = MOCK_ATTACK_CHAINS.filter((c) => c.actor_id === actorId)
 
-    // Find vulnerabilities this actor exploits
-    const actorVulns = MOCK_VULNERABILITIES.filter(v =>
-      v.exploiting_actors?.some(a => actor.name.includes(a) || a.includes(actor.name.split(' ')[0]))
-    )
+      // Find vulnerabilities this actor exploits
+      const actorVulns = MOCK_VULNERABILITIES.filter((v) =>
+        v.exploiting_actors?.some(
+          (a) => actor.name.includes(a) || a.includes(actor.name.split(' ')[0])
+        )
+      )
 
-    return mockResponse({
-      actor,
-      incidents: actorIncidents,
-      iocs: actorIOCs,
-      vulnerabilities: actorVulns,
-      attackChains: actorChains,
-      techniques: actor.ttps || [],
-    })
-  }, [isDemoMode])
+      return mockResponse({
+        actor,
+        incidents: actorIncidents,
+        iocs: actorIOCs,
+        vulnerabilities: actorVulns,
+        attackChains: actorChains,
+        techniques: actor.ttps || [],
+      })
+    },
+    [isDemoMode]
+  )
 
-  const getVulnActors = useCallback(async (cveId) => {
-    if (!isDemoMode) return null
+  const getVulnActors = useCallback(
+    async (cveId) => {
+      if (!isDemoMode) return null
 
-    const vuln = MOCK_VULNERABILITIES.find(v => v.cve_id === cveId)
-    if (!vuln) return mockResponse([])
+      const vuln = MOCK_VULNERABILITIES.find((v) => v.cve_id === cveId)
+      if (!vuln) return mockResponse([])
 
-    const actorNames = vuln.exploiting_actors || []
-    const actors = MOCK_ACTORS.filter(a =>
-      actorNames.some(name => a.name.includes(name) || name.includes(a.name.split(' ')[0]))
-    )
+      const actorNames = vuln.exploiting_actors || []
+      const actors = MOCK_ACTORS.filter((a) =>
+        actorNames.some((name) => a.name.includes(name) || name.includes(a.name.split(' ')[0]))
+      )
 
-    return mockResponse(actors)
-  }, [isDemoMode])
+      return mockResponse(actors)
+    },
+    [isDemoMode]
+  )
 
   // AI Summary
   const getAISummary = useCallback(async () => {
     if (!isDemoMode) return null
     return {
-      summary: 'LockBit 3.0 and BlackCat continue to dominate ransomware activity with a combined 35% increase in healthcare targeting this month. The mass exploitation of ConnectWise ScreenConnect (CVE-2024-1709) has enabled at least 5 ransomware groups to compromise new victims. APT29 activity remains elevated with ongoing campaigns against government and diplomatic targets following geopolitical tensions. Recommend prioritizing patches for Ivanti, Citrix, and ConnectWise products.',
+      summary:
+        'LockBit 3.0 and BlackCat continue to dominate ransomware activity with a combined 35% increase in healthcare targeting this month. The mass exploitation of ConnectWise ScreenConnect (CVE-2024-1709) has enabled at least 5 ransomware groups to compromise new victims. APT29 activity remains elevated with ongoing campaigns against government and diplomatic targets following geopolitical tensions. Recommend prioritizing patches for Ivanti, Citrix, and ConnectWise products.',
       generated_at: new Date().toISOString(),
       key_points: [
         'Healthcare sector seeing 35% increase in ransomware attacks',
@@ -819,85 +1144,88 @@ export function useDemoData() {
   }, [isDemoMode])
 
   // Memoized return value to prevent infinite re-renders
-  return useMemo(() => ({
-    isDemoMode,
+  return useMemo(
+    () => ({
+      isDemoMode,
 
-    // Direct data access (static arrays)
-    actors: MOCK_ACTORS,
-    incidents: MOCK_INCIDENTS,
-    vulnerabilities: MOCK_VULNERABILITIES,
-    iocs: MOCK_IOCS,
-    patterns: MOCK_PATTERNS,
-    attackChains: MOCK_ATTACK_CHAINS,
-    industryThreats: MOCK_INDUSTRY_THREATS,
-    countryThreats: MOCK_COUNTRY_THREATS,
+      // Direct data access (static arrays)
+      actors: MOCK_ACTORS,
+      incidents: MOCK_INCIDENTS,
+      vulnerabilities: MOCK_VULNERABILITIES,
+      iocs: MOCK_IOCS,
+      patterns: MOCK_PATTERNS,
+      attackChains: MOCK_ATTACK_CHAINS,
+      industryThreats: MOCK_INDUSTRY_THREATS,
+      countryThreats: MOCK_COUNTRY_THREATS,
 
-    // Dashboard
-    getDashboardOverview,
+      // Dashboard
+      getDashboardOverview,
 
-    // Threat Actors
-    getActors,
-    getActorById,
-    getEscalatingActors,
-    getTopActors,
-    getTrendSummary,
+      // Threat Actors
+      getActors,
+      getActorById,
+      getEscalatingActors,
+      getTopActors,
+      getTrendSummary,
 
-    // Incidents
-    getIncidents,
-    getRecentIncidents,
-    getDailyCounts,
-    getSectorBreakdown,
+      // Incidents
+      getIncidents,
+      getRecentIncidents,
+      getDailyCounts,
+      getSectorBreakdown,
 
-    // Vulnerabilities
-    getVulnerabilities,
-    getVulnById,
+      // Vulnerabilities
+      getVulnerabilities,
+      getVulnById,
 
-    // IOCs
-    getIOCs,
-    searchIOC,
+      // IOCs
+      getIOCs,
+      searchIOC,
 
-    // Patterns
-    getPatterns,
+      // Patterns
+      getPatterns,
 
-    // Attack Chains
-    getAttackChains,
+      // Attack Chains
+      getAttackChains,
 
-    // Correlations
-    getActorCorrelations,
-    getVulnActors,
+      // Correlations
+      getActorCorrelations,
+      getVulnActors,
 
-    // Industry/Country
-    getIndustryThreats,
-    getCountryThreats,
+      // Industry/Country
+      getIndustryThreats,
+      getCountryThreats,
 
-    // AI & Comparisons
-    getAISummary,
-    getWeekComparison,
-  }), [
-    isDemoMode,
-    getDashboardOverview,
-    getActors,
-    getActorById,
-    getEscalatingActors,
-    getTopActors,
-    getTrendSummary,
-    getIncidents,
-    getRecentIncidents,
-    getDailyCounts,
-    getSectorBreakdown,
-    getVulnerabilities,
-    getVulnById,
-    getIOCs,
-    searchIOC,
-    getPatterns,
-    getAttackChains,
-    getActorCorrelations,
-    getVulnActors,
-    getIndustryThreats,
-    getCountryThreats,
-    getAISummary,
-    getWeekComparison,
-  ])
+      // AI & Comparisons
+      getAISummary,
+      getWeekComparison,
+    }),
+    [
+      isDemoMode,
+      getDashboardOverview,
+      getActors,
+      getActorById,
+      getEscalatingActors,
+      getTopActors,
+      getTrendSummary,
+      getIncidents,
+      getRecentIncidents,
+      getDailyCounts,
+      getSectorBreakdown,
+      getVulnerabilities,
+      getVulnById,
+      getIOCs,
+      searchIOC,
+      getPatterns,
+      getAttackChains,
+      getActorCorrelations,
+      getVulnActors,
+      getIndustryThreats,
+      getCountryThreats,
+      getAISummary,
+      getWeekComparison,
+    ]
+  )
 }
 
 export default useDemoData

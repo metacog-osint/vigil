@@ -5,74 +5,298 @@ import { clsx } from 'clsx'
 const illustrations = {
   // Generic empty/search illustration
   search: (
-    <svg className="w-full h-full" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
+    <svg
+      className="w-full h-full"
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle
+        cx="50"
+        cy="50"
+        r="30"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="4 4"
+        opacity="0.3"
+      />
       <circle cx="50" cy="50" r="20" stroke="currentColor" strokeWidth="2" opacity="0.5" />
-      <line x1="72" y1="72" x2="95" y2="95" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity="0.6" />
+      <line
+        x1="72"
+        y1="72"
+        x2="95"
+        y2="95"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        opacity="0.6"
+      />
       <circle cx="95" cy="95" r="8" fill="currentColor" opacity="0.2" />
-      <path d="M45 45 L55 55 M55 45 L45 55" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+      <path
+        d="M45 45 L55 55 M55 45 L45 55"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.4"
+      />
     </svg>
   ),
   // Shield/security illustration
   shield: (
-    <svg className="w-full h-full" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M60 15 L95 30 V60 C95 85 60 105 60 105 C60 105 25 85 25 60 V30 L60 15Z" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
-      <path d="M60 25 L85 37 V58 C85 78 60 93 60 93 C60 93 35 78 35 58 V37 L60 25Z" stroke="currentColor" strokeWidth="2" opacity="0.5" />
-      <path d="M50 55 L57 62 L72 47" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
+    <svg
+      className="w-full h-full"
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M60 15 L95 30 V60 C95 85 60 105 60 105 C60 105 25 85 25 60 V30 L60 15Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="4 4"
+        opacity="0.3"
+      />
+      <path
+        d="M60 25 L85 37 V58 C85 78 60 93 60 93 C60 93 35 78 35 58 V37 L60 25Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        opacity="0.5"
+      />
+      <path
+        d="M50 55 L57 62 L72 47"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.6"
+      />
     </svg>
   ),
   // Users/actors illustration
   users: (
-    <svg className="w-full h-full" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="60" cy="35" r="15" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
+    <svg
+      className="w-full h-full"
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle
+        cx="60"
+        cy="35"
+        r="15"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="4 4"
+        opacity="0.3"
+      />
       <circle cx="60" cy="35" r="10" stroke="currentColor" strokeWidth="2" opacity="0.5" />
-      <path d="M30 95 C30 75 45 65 60 65 C75 65 90 75 90 95" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
-      <path d="M38 90 C38 75 48 68 60 68 C72 68 82 75 82 90" stroke="currentColor" strokeWidth="2" opacity="0.5" />
+      <path
+        d="M30 95 C30 75 45 65 60 65 C75 65 90 75 90 95"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="4 4"
+        opacity="0.3"
+      />
+      <path
+        d="M38 90 C38 75 48 68 60 68 C72 68 82 75 82 90"
+        stroke="currentColor"
+        strokeWidth="2"
+        opacity="0.5"
+      />
       <circle cx="35" cy="50" r="8" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
       <circle cx="85" cy="50" r="8" stroke="currentColor" strokeWidth="1.5" opacity="0.3" />
     </svg>
   ),
   // List/data illustration
   list: (
-    <svg className="w-full h-full" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="20" y="25" width="80" height="15" rx="3" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
-      <rect x="20" y="50" width="80" height="15" rx="3" stroke="currentColor" strokeWidth="2" opacity="0.4" />
-      <rect x="20" y="75" width="80" height="15" rx="3" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
+    <svg
+      className="w-full h-full"
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect
+        x="20"
+        y="25"
+        width="80"
+        height="15"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="4 4"
+        opacity="0.3"
+      />
+      <rect
+        x="20"
+        y="50"
+        width="80"
+        height="15"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="2"
+        opacity="0.4"
+      />
+      <rect
+        x="20"
+        y="75"
+        width="80"
+        height="15"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="4 4"
+        opacity="0.3"
+      />
       <circle cx="30" cy="32.5" r="3" fill="currentColor" opacity="0.5" />
       <circle cx="30" cy="57.5" r="3" fill="currentColor" opacity="0.6" />
       <circle cx="30" cy="82.5" r="3" fill="currentColor" opacity="0.5" />
-      <line x1="40" y1="32.5" x2="90" y2="32.5" stroke="currentColor" strokeWidth="2" opacity="0.3" />
-      <line x1="40" y1="57.5" x2="75" y2="57.5" stroke="currentColor" strokeWidth="2" opacity="0.5" />
-      <line x1="40" y1="82.5" x2="85" y2="82.5" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+      <line
+        x1="40"
+        y1="32.5"
+        x2="90"
+        y2="32.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        opacity="0.3"
+      />
+      <line
+        x1="40"
+        y1="57.5"
+        x2="75"
+        y2="57.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        opacity="0.5"
+      />
+      <line
+        x1="40"
+        y1="82.5"
+        x2="85"
+        y2="82.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        opacity="0.3"
+      />
     </svg>
   ),
   // Alert/warning illustration
   alert: (
-    <svg className="w-full h-full" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M60 20 L100 90 H20 L60 20Z" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
+    <svg
+      className="w-full h-full"
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M60 20 L100 90 H20 L60 20Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="4 4"
+        opacity="0.3"
+      />
       <path d="M60 30 L90 85 H30 L60 30Z" stroke="currentColor" strokeWidth="2" opacity="0.5" />
-      <line x1="60" y1="50" x2="60" y2="65" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity="0.6" />
+      <line
+        x1="60"
+        y1="50"
+        x2="60"
+        y2="65"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        opacity="0.6"
+      />
       <circle cx="60" cy="75" r="3" fill="currentColor" opacity="0.6" />
     </svg>
   ),
   // Chart/analytics illustration
   chart: (
-    <svg className="w-full h-full" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      className="w-full h-full"
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <line x1="20" y1="95" x2="100" y2="95" stroke="currentColor" strokeWidth="2" opacity="0.4" />
       <line x1="20" y1="25" x2="20" y2="95" stroke="currentColor" strokeWidth="2" opacity="0.4" />
-      <rect x="30" y="55" width="15" height="40" rx="2" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
-      <rect x="52" y="35" width="15" height="60" rx="2" stroke="currentColor" strokeWidth="2" opacity="0.5" />
-      <rect x="74" y="50" width="15" height="45" rx="2" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
+      <rect
+        x="30"
+        y="55"
+        width="15"
+        height="40"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="4 4"
+        opacity="0.3"
+      />
+      <rect
+        x="52"
+        y="35"
+        width="15"
+        height="60"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+        opacity="0.5"
+      />
+      <rect
+        x="74"
+        y="50"
+        width="15"
+        height="45"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="4 4"
+        opacity="0.3"
+      />
     </svg>
   ),
   // Network/IOC illustration
   network: (
-    <svg className="w-full h-full" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      className="w-full h-full"
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <circle cx="60" cy="60" r="12" stroke="currentColor" strokeWidth="2" opacity="0.6" />
-      <circle cx="30" cy="35" r="8" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3" opacity="0.4" />
-      <circle cx="90" cy="35" r="8" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3" opacity="0.4" />
-      <circle cx="30" cy="85" r="8" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3" opacity="0.4" />
-      <circle cx="90" cy="85" r="8" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3" opacity="0.4" />
+      <circle
+        cx="30"
+        cy="35"
+        r="8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="3 3"
+        opacity="0.4"
+      />
+      <circle
+        cx="90"
+        cy="35"
+        r="8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="3 3"
+        opacity="0.4"
+      />
+      <circle
+        cx="30"
+        cy="85"
+        r="8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="3 3"
+        opacity="0.4"
+      />
+      <circle
+        cx="90"
+        cy="85"
+        r="8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeDasharray="3 3"
+        opacity="0.4"
+      />
       <line x1="50" y1="52" x2="36" y2="41" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
       <line x1="70" y1="52" x2="84" y2="41" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
       <line x1="50" y1="68" x2="36" y2="79" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
@@ -100,7 +324,13 @@ export function EmptyState({
   const s = sizes[size]
 
   return (
-    <div className={clsx('flex flex-col items-center justify-center px-4 text-center', s.container, className)}>
+    <div
+      className={clsx(
+        'flex flex-col items-center justify-center px-4 text-center',
+        s.container,
+        className
+      )}
+    >
       {/* Illustration or Icon */}
       {illustration && illustrations[illustration] ? (
         <div className={clsx('text-gray-600 mb-4', s.illustration)}>
@@ -113,9 +343,7 @@ export function EmptyState({
       ) : null}
 
       <h3 className={clsx('font-medium text-gray-300 mb-2', s.title)}>{title}</h3>
-      {description && (
-        <p className={clsx('text-gray-500 max-w-sm mb-4', s.desc)}>{description}</p>
-      )}
+      {description && <p className={clsx('text-gray-500 max-w-sm mb-4', s.desc)}>{description}</p>}
       {action && <div className="mt-2">{action}</div>}
     </div>
   )

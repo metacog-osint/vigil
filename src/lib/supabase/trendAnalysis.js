@@ -29,7 +29,7 @@ export const trendAnalysis = {
       sectorChanges: this.calculateSectorChanges(
         current.incidents_by_sector,
         previous.incidents_by_sector
-      )
+      ),
     }
   },
 
@@ -51,39 +51,35 @@ export const trendAnalysis = {
         .from('incidents')
         .select('victim_sector', { count: 'exact' })
         .gte('discovered_date', lastWeekStart.toISOString().split('T')[0])
-        .lt('discovered_date', thisWeekStart.toISOString().split('T')[0])
+        .lt('discovered_date', thisWeekStart.toISOString().split('T')[0]),
     ])
 
     const currentCount = thisWeek.count || 0
     const previousCount = lastWeek.count || 0
-    const changePercent = previousCount > 0
-      ? Math.round(((currentCount - previousCount) / previousCount) * 100)
-      : 0
+    const changePercent =
+      previousCount > 0 ? Math.round(((currentCount - previousCount) / previousCount) * 100) : 0
 
     return {
       currentWeek: { incidents_total: currentCount },
       previousWeek: { incidents_total: previousCount },
-      incidentChange: changePercent
+      incidentChange: changePercent,
     }
   },
 
   calculateSectorChanges(current, previous) {
     const changes = []
-    const allSectors = new Set([
-      ...Object.keys(current || {}),
-      ...Object.keys(previous || {})
-    ])
+    const allSectors = new Set([...Object.keys(current || {}), ...Object.keys(previous || {})])
 
     for (const sector of allSectors) {
       const curr = current?.[sector] || 0
       const prev = previous?.[sector] || 0
-      const change = prev > 0 ? Math.round(((curr - prev) / prev) * 100) : (curr > 0 ? 100 : 0)
+      const change = prev > 0 ? Math.round(((curr - prev) / prev) * 100) : curr > 0 ? 100 : 0
 
       changes.push({
         sector,
         current: curr,
         previous: prev,
-        change
+        change,
       })
     }
 
@@ -101,7 +97,7 @@ export const trendAnalysis = {
 
     const weeklyBySector = {}
 
-    for (const incident of (data || [])) {
+    for (const incident of data || []) {
       const date = new Date(incident.discovered_date)
       const weekStart = this.getWeekStart(date)
       const sector = incident.victim_sector || 'Unknown'
@@ -110,13 +106,13 @@ export const trendAnalysis = {
       weeklyBySector[key] = (weeklyBySector[key] || 0) + 1
     }
 
-    const weeks = [...new Set(Object.keys(weeklyBySector).map(k => k.split('|')[0]))].sort()
-    const sectors = [...new Set(Object.keys(weeklyBySector).map(k => k.split('|')[1]))]
+    const weeks = [...new Set(Object.keys(weeklyBySector).map((k) => k.split('|')[0]))].sort()
+    const sectors = [...new Set(Object.keys(weeklyBySector).map((k) => k.split('|')[1]))]
 
     return {
       weeks,
       sectors,
-      data: weeklyBySector
+      data: weeklyBySector,
     }
   },
 
@@ -154,7 +150,7 @@ export const trendAnalysis = {
         .select('id, name, incidents_7d, trend_status')
         .eq('trend_status', 'ESCALATING')
         .order('incidents_7d', { ascending: false })
-        .limit(10)
+        .limit(10),
     ])
 
     return {
@@ -162,7 +158,7 @@ export const trendAnalysis = {
       newActors: newActors.count || 0,
       newKEVs: newKEVs.count || 0,
       escalatingActors: escalatingActors.data || [],
-      sinceDays
+      sinceDays,
     }
   },
 
@@ -171,9 +167,12 @@ export const trendAnalysis = {
       .from('actor_trend_history')
       .select('*')
       .in('actor_id', actorIds)
-      .gte('recorded_date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+      .gte(
+        'recorded_date',
+        new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      )
       .order('recorded_date', { ascending: true })
-  }
+  },
 }
 
 export default trendAnalysis

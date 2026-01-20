@@ -3,8 +3,11 @@
  */
 import { useState, useEffect, useRef } from 'react'
 import {
-  IOC_TYPES, THREAT_TYPES,
-  parseIocsFromText, parseIocsFromCsv, detectIocType
+  IOC_TYPES,
+  THREAT_TYPES,
+  parseIocsFromText,
+  parseIocsFromCsv,
+  detectIocType,
 } from '../../lib/customIocs'
 import { parseIOCFile } from '../../lib/iocImport'
 
@@ -28,7 +31,12 @@ export function CreateListModal({ onClose, onSave }) {
           <h3 className="text-lg font-semibold text-white">Create New List</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -68,7 +76,9 @@ export function CreateListModal({ onClose, onSave }) {
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <button type="button" onClick={onClose} className="cyber-button">Cancel</button>
+            <button type="button" onClick={onClose} className="cyber-button">
+              Cancel
+            </button>
             <button type="submit" disabled={saving || !name} className="cyber-button-primary">
               {saving ? 'Creating...' : 'Create List'}
             </button>
@@ -116,7 +126,12 @@ export function AddIocModal({ onClose, onSave }) {
           <h3 className="text-lg font-semibold text-white">Add IOC</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -144,7 +159,9 @@ export function AddIocModal({ onClose, onSave }) {
               >
                 <option value="">Auto-detect</option>
                 {Object.entries(IOC_TYPES).map(([key, { label }]) => (
-                  <option key={key} value={key}>{label}</option>
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -158,7 +175,9 @@ export function AddIocModal({ onClose, onSave }) {
               >
                 <option value="">Select...</option>
                 {THREAT_TYPES.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -181,7 +200,9 @@ export function AddIocModal({ onClose, onSave }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">Confidence: {confidence}%</label>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Confidence: {confidence}%
+              </label>
               <input
                 type="range"
                 value={confidence}
@@ -204,7 +225,9 @@ export function AddIocModal({ onClose, onSave }) {
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <button type="button" onClick={onClose} className="cyber-button">Cancel</button>
+            <button type="button" onClick={onClose} className="cyber-button">
+              Cancel
+            </button>
             <button type="submit" disabled={saving || !value} className="cyber-button-primary">
               {saving ? 'Adding...' : 'Add IOC'}
             </button>
@@ -238,13 +261,15 @@ export function ImportModal({ onClose, onImport }) {
         setParsed(parseIocsFromCsv(text))
       } else if (format === 'stix' || format === 'misp') {
         const result = parseIOCFile(text, format === 'stix' ? 'bundle.json' : 'event.json')
-        setParsed(result.iocs.map(ioc => ({
-          value: ioc.value,
-          iocType: ioc.type,
-          threatType: ioc.category || '',
-          description: ioc.description || ioc.comment || '',
-          confidence: ioc.confidence || 70,
-        })))
+        setParsed(
+          result.iocs.map((ioc) => ({
+            value: ioc.value,
+            iocType: ioc.type,
+            threatType: ioc.category || '',
+            description: ioc.description || ioc.comment || '',
+            confidence: ioc.confidence || 70,
+          }))
+        )
       } else {
         setParsed(parseIocsFromText(text))
       }
@@ -266,14 +291,16 @@ export function ImportModal({ onClose, onImport }) {
       const content = e.target.result
       try {
         const result = parseIOCFile(content, file.name)
-        setParsed(result.iocs.map(ioc => ({
-          value: ioc.value,
-          iocType: ioc.type,
-          threatType: ioc.category || '',
-          description: ioc.description || ioc.comment || '',
-          confidence: ioc.confidence || 70,
-        })))
-        setFileInfo(prev => ({ ...prev, format: result.format, metadata: result.metadata }))
+        setParsed(
+          result.iocs.map((ioc) => ({
+            value: ioc.value,
+            iocType: ioc.type,
+            threatType: ioc.category || '',
+            description: ioc.description || ioc.comment || '',
+            confidence: ioc.confidence || 70,
+          }))
+        )
+        setFileInfo((prev) => ({ ...prev, format: result.format, metadata: result.metadata }))
       } catch (err) {
         setParseError(err.message)
         setParsed([])
@@ -300,7 +327,12 @@ export function ImportModal({ onClose, onImport }) {
           <h3 className="text-lg font-semibold text-white">Import IOCs</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -310,14 +342,24 @@ export function ImportModal({ onClose, onImport }) {
           <div className="flex bg-gray-800 rounded-lg p-1">
             <button
               type="button"
-              onClick={() => { setMode('paste'); setParsed([]); setFileInfo(null); setParseError(null) }}
+              onClick={() => {
+                setMode('paste')
+                setParsed([])
+                setFileInfo(null)
+                setParseError(null)
+              }}
               className={`flex-1 py-1.5 text-sm rounded ${mode === 'paste' ? 'bg-cyber-accent text-black' : 'text-gray-400'}`}
             >
               Paste Text
             </button>
             <button
               type="button"
-              onClick={() => { setMode('file'); setParsed([]); setText(''); setParseError(null) }}
+              onClick={() => {
+                setMode('file')
+                setParsed([])
+                setText('')
+                setParseError(null)
+              }}
               className={`flex-1 py-1.5 text-sm rounded ${mode === 'file' ? 'bg-cyber-accent text-black' : 'text-gray-400'}`}
             >
               Upload File
@@ -341,9 +383,7 @@ export function ImportModal({ onClose, onImport }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">
-                  Paste IOCs
-                </label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">Paste IOCs</label>
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
@@ -351,10 +391,10 @@ export function ImportModal({ onClose, onImport }) {
                     format === 'csv'
                       ? 'value,type,threat_type,description\n192.168.1.1,ip,c2,Command and control'
                       : format === 'stix'
-                      ? '{"type": "bundle", "objects": [...]}'
-                      : format === 'misp'
-                      ? '{"Event": {"Attribute": [...]}}'
-                      : '192.168.1.1\nevil.com\n5d41402abc4b2a76b9719d911017c592'
+                        ? '{"type": "bundle", "objects": [...]}'
+                        : format === 'misp'
+                          ? '{"Event": {"Attribute": [...]}}'
+                          : '192.168.1.1\nevil.com\n5d41402abc4b2a76b9719d911017c592'
                   }
                   className="cyber-input w-full h-48 font-mono text-sm"
                 />
@@ -378,8 +418,18 @@ export function ImportModal({ onClose, onImport }) {
               >
                 {fileInfo ? (
                   <div>
-                    <svg className="w-8 h-8 text-green-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-8 h-8 text-green-400 mx-auto mb-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <div className="text-white font-medium">{fileInfo.name}</div>
                     <div className="text-xs text-gray-500 mt-1">
@@ -389,8 +439,18 @@ export function ImportModal({ onClose, onImport }) {
                   </div>
                 ) : (
                   <div>
-                    <svg className="w-8 h-8 text-gray-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    <svg
+                      className="w-8 h-8 text-gray-500 mx-auto mb-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      />
                     </svg>
                     <div className="text-gray-400">Click to upload or drag and drop</div>
                     <div className="text-xs text-gray-500 mt-1">
@@ -413,19 +473,28 @@ export function ImportModal({ onClose, onImport }) {
               <span className="text-green-400 font-medium">{parsed.length}</span>
               <span className="text-gray-400"> IOCs detected</span>
               <div className="mt-2 text-xs text-gray-500">
-                Types: {Object.entries(
+                Types:{' '}
+                {Object.entries(
                   parsed.reduce((acc, p) => {
                     acc[p.iocType] = (acc[p.iocType] || 0) + 1
                     return acc
                   }, {})
-                ).map(([type, count]) => `${type}: ${count}`).join(', ')}
+                )
+                  .map(([type, count]) => `${type}: ${count}`)
+                  .join(', ')}
               </div>
             </div>
           )}
 
           <div className="flex justify-end gap-3 pt-4">
-            <button type="button" onClick={onClose} className="cyber-button">Cancel</button>
-            <button type="submit" disabled={importing || parsed.length === 0} className="cyber-button-primary">
+            <button type="button" onClick={onClose} className="cyber-button">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={importing || parsed.length === 0}
+              className="cyber-button-primary"
+            >
               {importing ? 'Importing...' : `Import ${parsed.length} IOCs`}
             </button>
           </div>
@@ -443,7 +512,12 @@ export function ExportModal({ onClose, onExport, count }) {
           <h3 className="text-lg font-semibold text-white">Export IOCs</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -453,26 +527,17 @@ export function ExportModal({ onClose, onExport, count }) {
             Export {count} IOCs in your preferred format:
           </p>
 
-          <button
-            onClick={() => onExport('csv')}
-            className="w-full cyber-button text-left"
-          >
+          <button onClick={() => onExport('csv')} className="w-full cyber-button text-left">
             <div className="font-medium">CSV</div>
             <div className="text-xs text-gray-500">Comma-separated values for spreadsheets</div>
           </button>
 
-          <button
-            onClick={() => onExport('stix')}
-            className="w-full cyber-button text-left"
-          >
+          <button onClick={() => onExport('stix')} className="w-full cyber-button text-left">
             <div className="font-medium">STIX 2.1</div>
             <div className="text-xs text-gray-500">Standard threat intelligence format</div>
           </button>
 
-          <button
-            onClick={() => onExport('text')}
-            className="w-full cyber-button text-left"
-          >
+          <button onClick={() => onExport('text')} className="w-full cyber-button text-left">
             <div className="font-medium">Plain Text</div>
             <div className="text-xs text-gray-500">One IOC per line</div>
           </button>

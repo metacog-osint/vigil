@@ -86,10 +86,12 @@ export async function getRelevantBreaches(orgProfile, options = {}) {
     }
 
     // Score each breach for relevance
-    return breaches.map((breach) => {
-      const relevance = calculateBreachRelevance(breach, orgProfile)
-      return { ...breach, relevance }
-    }).filter((b) => b.relevance.score > 0)
+    return breaches
+      .map((breach) => {
+        const relevance = calculateBreachRelevance(breach, orgProfile)
+        return { ...breach, relevance }
+      })
+      .filter((b) => b.relevance.score > 0)
       .sort((a, b) => b.relevance.score - a.relevance.score)
   } catch (err) {
     logger.error('Error getting relevant breaches:', err)
@@ -119,7 +121,13 @@ function calculateBreachRelevance(breach, orgProfile) {
   }
 
   // Check data types exposed
-  const sensitiveDataTypes = ['Passwords', 'Credit cards', 'Bank accounts', 'SSN', 'Medical records']
+  const sensitiveDataTypes = [
+    'Passwords',
+    'Credit cards',
+    'Bank accounts',
+    'SSN',
+    'Medical records',
+  ]
   const exposedSensitive = (breach.data_classes || []).filter((dc) =>
     sensitiveDataTypes.some((sdt) => dc.toLowerCase().includes(sdt.toLowerCase()))
   )

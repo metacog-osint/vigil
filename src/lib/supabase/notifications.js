@@ -85,10 +85,7 @@ export const notifications = {
 
   // Delete old notifications (cleanup)
   async deleteExpired() {
-    return supabase
-      .from('notifications')
-      .delete()
-      .lt('expires_at', new Date().toISOString())
+    return supabase.from('notifications').delete().lt('expires_at', new Date().toISOString())
   },
 
   // Subscribe to new notifications for a user

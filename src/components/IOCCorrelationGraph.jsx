@@ -72,7 +72,7 @@ function forceDirectedLayout(nodes, edges, iterations = 100) {
     node.vy = 0
   })
 
-  const nodeMap = new Map(nodes.map(n => [n.id, n]))
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]))
 
   for (let iter = 0; iter < iterations; iter++) {
     // Repulsion between all nodes
@@ -93,7 +93,7 @@ function forceDirectedLayout(nodes, edges, iterations = 100) {
     }
 
     // Attraction along edges
-    edges.forEach(edge => {
+    edges.forEach((edge) => {
       const source = nodeMap.get(edge.source)
       const target = nodeMap.get(edge.target)
       if (!source || !target) return
@@ -110,14 +110,14 @@ function forceDirectedLayout(nodes, edges, iterations = 100) {
     })
 
     // Center gravity
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       node.vx += (width / 2 - node.x) * 0.001
       node.vy += (height / 2 - node.y) * 0.001
     })
 
     // Apply velocities with damping
     const damping = 0.9
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       node.x += node.vx * damping
       node.y += node.vy * damping
       node.vx *= 0.9
@@ -212,10 +212,7 @@ function GraphLegend({ visibleTypes, onToggleType }) {
             visibleTypes.includes(type) ? 'opacity-100' : 'opacity-40'
           }`}
         >
-          <div
-            className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: config.color }}
-          />
+          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: config.color }} />
           <span className="text-gray-300">{config.label}</span>
         </button>
       ))}
@@ -243,17 +240,11 @@ function NodeDetailsPanel({ node, onClose }) {
           ✕
         </button>
       </div>
-      <div className="text-sm text-gray-300 truncate">
-        {node.label || node.id}
-      </div>
+      <div className="text-sm text-gray-300 truncate">{node.label || node.id}</div>
       {node.metadata && (
         <div className="mt-2 text-xs text-gray-400 space-y-1">
-          {node.metadata.source && (
-            <div>Source: {node.metadata.source}</div>
-          )}
-          {node.metadata.confidence && (
-            <div>Confidence: {node.metadata.confidence}%</div>
-          )}
+          {node.metadata.source && <div>Source: {node.metadata.source}</div>}
+          {node.metadata.confidence && <div>Confidence: {node.metadata.confidence}%</div>}
           {node.metadata.first_seen && (
             <div>First seen: {new Date(node.metadata.first_seen).toLocaleDateString()}</div>
           )}
@@ -294,38 +285,39 @@ export default function IOCCorrelationGraph({
 
   // Filter visible nodes
   const visibleNodes = useMemo(() => {
-    return layoutData.nodes.filter(n => visibleTypes.includes(n.type))
+    return layoutData.nodes.filter((n) => visibleTypes.includes(n.type))
   }, [layoutData.nodes, visibleTypes])
 
   const visibleNodeIds = useMemo(() => {
-    return new Set(visibleNodes.map(n => n.id))
+    return new Set(visibleNodes.map((n) => n.id))
   }, [visibleNodes])
 
   // Filter visible edges
   const visibleEdges = useMemo(() => {
-    return layoutData.edges.filter(e =>
-      visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target)
+    return layoutData.edges.filter(
+      (e) => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target)
     )
   }, [layoutData.edges, visibleNodeIds])
 
   // Node map for edge rendering
   const nodeMap = useMemo(() => {
-    return new Map(visibleNodes.map(n => [n.id, n]))
+    return new Map(visibleNodes.map((n) => [n.id, n]))
   }, [visibleNodes])
 
   // Handle node click
-  const handleNodeClick = useCallback((node) => {
-    setSelectedNode(node)
-    onNodeClick?.(node)
-    onNodeSelect?.(node.id)
-  }, [onNodeClick, onNodeSelect])
+  const handleNodeClick = useCallback(
+    (node) => {
+      setSelectedNode(node)
+      onNodeClick?.(node)
+      onNodeSelect?.(node.id)
+    },
+    [onNodeClick, onNodeSelect]
+  )
 
   // Toggle node type visibility
   const handleToggleType = useCallback((type) => {
-    setVisibleTypes(prev =>
-      prev.includes(type)
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
+    setVisibleTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     )
   }, [])
 
@@ -342,7 +334,7 @@ export default function IOCCorrelationGraph({
     const focusId = (selectedNode || hoveredNode)?.id
     const connected = new Set([focusId])
 
-    visibleEdges.forEach(e => {
+    visibleEdges.forEach((e) => {
       if (e.source === focusId) connected.add(e.target)
       if (e.target === focusId) connected.add(e.source)
     })
@@ -358,14 +350,14 @@ export default function IOCCorrelationGraph({
       {showControls && (
         <div className="absolute top-2 left-2 flex gap-1 z-10">
           <button
-            onClick={() => setZoom(z => Math.min(z + 0.2, 3))}
+            onClick={() => setZoom((z) => Math.min(z + 0.2, 3))}
             className="p-1.5 bg-gray-800 rounded hover:bg-gray-700"
             title="Zoom in"
           >
             <MagnifyingGlassPlusIcon className="w-4 h-4 text-gray-400" />
           </button>
           <button
-            onClick={() => setZoom(z => Math.max(z - 0.2, 0.5))}
+            onClick={() => setZoom((z) => Math.max(z - 0.2, 0.5))}
             className="p-1.5 bg-gray-800 rounded hover:bg-gray-700"
             title="Zoom out"
           >
@@ -382,12 +374,7 @@ export default function IOCCorrelationGraph({
       )}
 
       {/* SVG Graph */}
-      <svg
-        ref={svgRef}
-        width="100%"
-        height="100%"
-        className="cursor-move"
-      >
+      <svg ref={svgRef} width="100%" height="100%" className="cursor-move">
         <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
           {/* Edges */}
           {visibleEdges.map((edge, i) => (
@@ -396,7 +383,10 @@ export default function IOCCorrelationGraph({
               edge={edge}
               sourceNode={nodeMap.get(edge.source)}
               targetNode={nodeMap.get(edge.target)}
-              isHighlighted={!shouldHighlight || (connectedNodeIds.has(edge.source) && connectedNodeIds.has(edge.target))}
+              isHighlighted={
+                !shouldHighlight ||
+                (connectedNodeIds.has(edge.source) && connectedNodeIds.has(edge.target))
+              }
             />
           ))}
 
@@ -414,19 +404,11 @@ export default function IOCCorrelationGraph({
       </svg>
 
       {/* Legend */}
-      {showLegend && (
-        <GraphLegend
-          visibleTypes={visibleTypes}
-          onToggleType={handleToggleType}
-        />
-      )}
+      {showLegend && <GraphLegend visibleTypes={visibleTypes} onToggleType={handleToggleType} />}
 
       {/* Node Details */}
       {selectedNode && (
-        <NodeDetailsPanel
-          node={selectedNode}
-          onClose={() => setSelectedNode(null)}
-        />
+        <NodeDetailsPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
       )}
 
       {/* Empty state */}

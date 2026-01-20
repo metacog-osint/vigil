@@ -11,21 +11,20 @@ export const dashboard = {
     const last30d = new Date(now - 30 * 24 * 60 * 60 * 1000)
 
     // Run queries in parallel
-    const [
-      actorCount,
-      incidentCount30d,
-      incidentCountTotal,
-      kevCount,
-      iocCount,
-    ] = await Promise.all([
-      supabase.from('threat_actors').select('*', { count: 'exact', head: true }),
-      supabase.from('incidents').select('*', { count: 'exact', head: true })
-        .gte('discovered_date', last30d.toISOString()),
-      supabase.from('incidents').select('*', { count: 'exact', head: true }),
-      supabase.from('vulnerabilities').select('*', { count: 'exact', head: true })
-        .not('kev_date', 'is', null),
-      supabase.from('iocs').select('*', { count: 'exact', head: true }),
-    ])
+    const [actorCount, incidentCount30d, incidentCountTotal, kevCount, iocCount] =
+      await Promise.all([
+        supabase.from('threat_actors').select('*', { count: 'exact', head: true }),
+        supabase
+          .from('incidents')
+          .select('*', { count: 'exact', head: true })
+          .gte('discovered_date', last30d.toISOString()),
+        supabase.from('incidents').select('*', { count: 'exact', head: true }),
+        supabase
+          .from('vulnerabilities')
+          .select('*', { count: 'exact', head: true })
+          .not('kev_date', 'is', null),
+        supabase.from('iocs').select('*', { count: 'exact', head: true }),
+      ])
 
     return {
       // Correct property names - use these

@@ -12,4 +12,12 @@ export const TIME_RANGES = [
 
 export const ITEMS_PER_PAGE = [10, 25, 50, 100]
 
-export const TAG_COLORS = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#6b7280']
+export const TAG_COLORS = [
+  '#ef4444',
+  '#f59e0b',
+  '#22c55e',
+  '#3b82f6',
+  '#8b5cf6',
+  '#ec4899',
+  '#6b7280',
+]

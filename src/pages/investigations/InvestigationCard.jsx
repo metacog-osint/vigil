@@ -23,7 +23,9 @@ export default function InvestigationCard({ investigation, isSelected, onClick }
       </div>
       <div className="text-xs text-gray-500 mb-2">
         {investigation.category && (
-          <span className="mr-2">{CATEGORIES.find(c => c.value === investigation.category)?.label}</span>
+          <span className="mr-2">
+            {CATEGORIES.find((c) => c.value === investigation.category)?.label}
+          </span>
         )}
         {investigation.entry_count} entries
       </div>
@@ -33,7 +35,7 @@ export default function InvestigationCard({ investigation, isSelected, onClick }
         </span>
         {investigation.priority && (
           <span className={`px-1.5 py-0.5 rounded ${priorityColors.text} ${priorityColors.bg}`}>
-            {PRIORITIES.find(p => p.value === investigation.priority)?.label}
+            {PRIORITIES.find((p) => p.value === investigation.priority)?.label}
           </span>
         )}
       </div>

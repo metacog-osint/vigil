@@ -70,8 +70,10 @@ export default function CreateInvestigationModal({ templates, onClose, onCreate 
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
               >
                 <option value="">Select category</option>
-                {CATEGORIES.map(c => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
+                {CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -83,17 +85,21 @@ export default function CreateInvestigationModal({ templates, onClose, onCreate 
                 onChange={(e) => setPriority(e.target.value)}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
               >
-                {PRIORITIES.map(p => (
-                  <option key={p.value} value={p.value}>{p.label}</option>
+                {PRIORITIES.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Traffic Light Protocol</label>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Traffic Light Protocol
+            </label>
             <div className="flex gap-2">
-              {TLP_OPTIONS.map(t => {
+              {TLP_OPTIONS.map((t) => {
                 const colors = TLP_COLORS[t.value]
                 return (
                   <button
@@ -116,15 +122,19 @@ export default function CreateInvestigationModal({ templates, onClose, onCreate 
 
           {templates.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Start from template</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Start from template
+              </label>
               <select
                 value={templateId}
                 onChange={(e) => setTemplateId(e.target.value)}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
               >
                 <option value="">Blank investigation</option>
-                {templates.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+                {templates.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
                 ))}
               </select>
             </div>

@@ -31,7 +31,7 @@ export default function Activity() {
   // Sync with URL on mount
   useEffect(() => {
     const viewFromUrl = searchParams.get('view')
-    if (viewFromUrl && TABS.find(t => t.id === viewFromUrl)) {
+    if (viewFromUrl && TABS.find((t) => t.id === viewFromUrl)) {
       setActiveTab(viewFromUrl)
     }
   }, [])
@@ -57,9 +57,10 @@ export default function Activity() {
               onClick={() => setActiveTab(tab.id)}
               className={`
                 px-1 py-3 text-sm font-medium border-b-2 transition-colors
-                ${activeTab === tab.id
-                  ? 'border-cyan-500 text-cyan-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
+                ${
+                  activeTab === tab.id
+                    ? 'border-cyan-500 text-cyan-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
                 }
               `}
               title={tab.description}

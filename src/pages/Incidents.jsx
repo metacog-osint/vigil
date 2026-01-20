@@ -40,7 +40,8 @@ export default function Incidents() {
   const tableRef = useRef(null)
 
   // Actor filter hook
-  const { actorFilter, setActorFilter, actorName, setActorName, clearActorFilter } = useActorFilter()
+  const { actorFilter, setActorFilter, actorName, setActorName, clearActorFilter } =
+    useActorFilter()
 
   // Data loading hook
   const {
@@ -90,16 +91,17 @@ export default function Incidents() {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (viewMode === 'overview' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return
+      if (viewMode === 'overview' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')
+        return
 
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
-          setFocusedRowIndex(i => Math.min(i + 1, sortedIncidents.length - 1))
+          setFocusedRowIndex((i) => Math.min(i + 1, sortedIncidents.length - 1))
           break
         case 'ArrowUp':
           e.preventDefault()
-          setFocusedRowIndex(i => Math.max(i - 1, 0))
+          setFocusedRowIndex((i) => Math.max(i - 1, 0))
           break
         case 'Enter':
           if (focusedRowIndex >= 0 && sortedIncidents[focusedRowIndex]) {
@@ -124,12 +126,22 @@ export default function Incidents() {
 
   // CSV Export
   const exportToCSV = useCallback(() => {
-    const dataToExport = selectedRows.size > 0
-      ? sortedIncidents.filter(inc => selectedRows.has(inc.id))
-      : sortedIncidents
+    const dataToExport =
+      selectedRows.size > 0
+        ? sortedIncidents.filter((inc) => selectedRows.has(inc.id))
+        : sortedIncidents
 
-    const headers = ['Victim', 'Actor', 'Sector', 'Country', 'Status', 'Discovered', 'Website', 'Source']
-    const rows = dataToExport.map(inc => [
+    const headers = [
+      'Victim',
+      'Actor',
+      'Sector',
+      'Country',
+      'Status',
+      'Discovered',
+      'Website',
+      'Source',
+    ]
+    const rows = dataToExport.map((inc) => [
       inc.victim_name || '',
       inc.threat_actor?.name || '',
       inc.victim_sector || '',
@@ -137,12 +149,12 @@ export default function Incidents() {
       inc.status || '',
       inc.discovered_date || '',
       inc.victim_website || '',
-      inc.source || ''
+      inc.source || '',
     ])
 
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
@@ -155,16 +167,19 @@ export default function Incidents() {
   }, [selectedRows, sortedIncidents])
 
   // Navigate to actor
-  const goToActor = useCallback((actorId) => {
-    if (actorId) {
-      navigate(`/actors?actor=${actorId}`)
-    }
-  }, [navigate])
+  const goToActor = useCallback(
+    (actorId) => {
+      if (actorId) {
+        navigate(`/actors?actor=${actorId}`)
+      }
+    },
+    [navigate]
+  )
 
   // Row click handler
   const handleRowClick = useCallback((incident, event) => {
     if (event.shiftKey) {
-      setSelectedRows(prev => {
+      setSelectedRows((prev) => {
         const next = new Set(prev)
         if (next.has(incident.id)) {
           next.delete(incident.id)
@@ -185,7 +200,7 @@ export default function Incidents() {
 
     try {
       const { data: lists } = await watchlists.getAll()
-      const incidentList = lists?.find(w => w.entity_type === 'incident')
+      const incidentList = lists?.find((w) => w.entity_type === 'incident')
 
       if (!incidentList) {
         alert('No watchlist found for incidents. Create one first.')
@@ -214,7 +229,8 @@ export default function Incidents() {
     setSortConfig({ field: 'discovered_date', direction: 'desc' })
   }, [clearActorFilter, setSortConfig])
 
-  const hasActiveFilters = search || sectorFilter || statusFilter || countryFilter || actorFilter || timeRange !== 30
+  const hasActiveFilters =
+    search || sectorFilter || statusFilter || countryFilter || actorFilter || timeRange !== 30
 
   return (
     <div className="space-y-6">
@@ -258,7 +274,12 @@ export default function Incidents() {
               className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded flex items-center gap-1.5"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                />
               </svg>
               Saved Filters
             </button>
@@ -276,9 +297,17 @@ export default function Incidents() {
                         className="flex-1 px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-gray-300"
                       />
                       <button
-                        onClick={() => saveCurrentFilter({
-                          search, sectorFilter, statusFilter, countryFilter, timeRange, sortConfig, actorFilter
-                        })}
+                        onClick={() =>
+                          saveCurrentFilter({
+                            search,
+                            sectorFilter,
+                            statusFilter,
+                            countryFilter,
+                            timeRange,
+                            sortConfig,
+                            actorFilter,
+                          })
+                        }
                         disabled={!saveFilterName.trim()}
                         className="px-2 py-1 text-sm bg-cyan-600 hover:bg-cyan-500 text-white rounded disabled:opacity-50"
                       >
@@ -289,8 +318,11 @@ export default function Incidents() {
                   {savedFiltersList.length === 0 ? (
                     <div className="px-3 py-2 text-sm text-gray-500">No saved filters</div>
                   ) : (
-                    savedFiltersList.map(filter => (
-                      <div key={filter.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-800">
+                    savedFiltersList.map((filter) => (
+                      <div
+                        key={filter.id}
+                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-800"
+                      >
                         <button
                           onClick={() => applySavedFilter(filter)}
                           className="flex-1 text-left text-sm text-gray-300 hover:text-white"
@@ -301,8 +333,18 @@ export default function Incidents() {
                           onClick={() => deleteSavedFilter(filter.id)}
                           className="text-gray-500 hover:text-red-400"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
                           </svg>
                         </button>
                       </div>
@@ -320,7 +362,12 @@ export default function Incidents() {
             title={selectedRows.size > 0 ? `Export ${selectedRows.size} selected` : 'Export to CSV'}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
             Export{selectedRows.size > 0 ? ` (${selectedRows.size})` : ''}
           </button>
@@ -332,7 +379,12 @@ export default function Incidents() {
               className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'table' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                />
               </svg>
               Table
             </button>
@@ -341,7 +393,12 @@ export default function Incidents() {
               className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'overview' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+                />
               </svg>
               Overview
             </button>
@@ -360,7 +417,12 @@ export default function Incidents() {
             className="text-cyan-400 hover:text-white flex items-center gap-1 text-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
             Clear
           </button>
@@ -369,10 +431,19 @@ export default function Incidents() {
 
       {/* Keyboard shortcuts hint */}
       <div className="hidden md:flex text-xs text-gray-600 gap-4">
-        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">↑↓</kbd> Navigate</span>
-        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Enter</kbd> View details</span>
-        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">/</kbd> Search</span>
-        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Shift+Click</kbd> Select multiple</span>
+        <span>
+          <kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">↑↓</kbd> Navigate
+        </span>
+        <span>
+          <kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Enter</kbd> View details
+        </span>
+        <span>
+          <kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">/</kbd> Search
+        </span>
+        <span>
+          <kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Shift+Click</kbd> Select
+          multiple
+        </span>
       </div>
 
       {/* Search and Filters */}
@@ -419,7 +490,12 @@ export default function Incidents() {
             className="text-sm text-gray-400 hover:text-cyan-400 flex items-center gap-1.5 px-3 py-2 rounded border border-gray-700 hover:border-gray-600 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
             Clear filters
           </button>
@@ -428,27 +504,38 @@ export default function Incidents() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Tooltip content="Total ransomware incidents matching current filters" source="ransomware.live">
+        <Tooltip
+          content="Total ransomware incidents matching current filters"
+          source="ransomware.live"
+        >
           <div className="cyber-card cursor-help">
             <div className="text-2xl font-bold text-white">{totalCount.toLocaleString()}</div>
             <div className="text-sm text-gray-400">Total Incidents</div>
           </div>
         </Tooltip>
-        <Tooltip content="Incidents discovered in the last 7 days" source="Calculated from discovered_date">
+        <Tooltip
+          content="Incidents discovered in the last 7 days"
+          source="Calculated from discovered_date"
+        >
           <div className="cyber-card cursor-help">
             <div className="text-2xl font-bold text-green-400">
-              {incidentList.filter((i) => {
-                if (!i.discovered_date) return false
-                const d = new Date(i.discovered_date)
-                const weekAgo = new Date()
-                weekAgo.setDate(weekAgo.getDate() - 7)
-                return d >= weekAgo
-              }).length}
+              {
+                incidentList.filter((i) => {
+                  if (!i.discovered_date) return false
+                  const d = new Date(i.discovered_date)
+                  const weekAgo = new Date()
+                  weekAgo.setDate(weekAgo.getDate() - 7)
+                  return d >= weekAgo
+                }).length
+              }
             </div>
             <div className="text-sm text-gray-400">This Week</div>
           </div>
         </Tooltip>
-        <Tooltip content="Most frequently targeted industry sector in current view" source="Sector classification">
+        <Tooltip
+          content="Most frequently targeted industry sector in current view"
+          source="Sector classification"
+        >
           <div className="cyber-card cursor-help">
             {analytics?.topSectors?.[0] ? (
               <>
@@ -467,7 +554,10 @@ export default function Incidents() {
             )}
           </div>
         </Tooltip>
-        <Tooltip content="Distinct threat actor groups with incidents in current view" source="ransomware.live">
+        <Tooltip
+          content="Distinct threat actor groups with incidents in current view"
+          source="ransomware.live"
+        >
           <div className="cyber-card cursor-help">
             <div className="text-2xl font-bold text-cyber-accent">
               {[...new Set(incidentList.map((i) => i.actor_id).filter(Boolean))].length}

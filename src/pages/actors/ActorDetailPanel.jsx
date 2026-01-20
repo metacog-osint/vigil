@@ -101,8 +101,14 @@ export function ActorDetailPanel({
       {/* Activity Timeline */}
       {timelineEvents.length > 0 && (
         <div className="pt-4 border-t border-gray-800">
-          <div className="text-gray-500 mb-2">Recent Activity ({timelineEvents.length} incidents)</div>
-          <Timeline events={timelineEvents} maxItems={5} className={isMobile ? '' : 'max-h-64 overflow-y-auto'} />
+          <div className="text-gray-500 mb-2">
+            Recent Activity ({timelineEvents.length} incidents)
+          </div>
+          <Timeline
+            events={timelineEvents}
+            maxItems={5}
+            className={isMobile ? '' : 'max-h-64 overflow-y-auto'}
+          />
         </div>
       )}
 
@@ -116,7 +122,7 @@ export function ActorDetailPanel({
         <div className="pt-4 border-t border-gray-800">
           <div className="text-gray-500 mb-2">Similar Actors</div>
           <div className="space-y-2">
-            {relatedActors.map(relatedActor => (
+            {relatedActors.map((relatedActor) => (
               <button
                 key={relatedActor.id}
                 onClick={() => onSelectActor?.(relatedActor)}
@@ -136,9 +142,7 @@ export function ActorDetailPanel({
       )}
 
       <div className="pt-4 border-t border-gray-800">
-        <div className="text-gray-500 text-xs">
-          Source: {actor.source || 'Unknown'}
-        </div>
+        <div className="text-gray-500 text-xs">Source: {actor.source || 'Unknown'}</div>
       </div>
     </div>
   )
@@ -155,13 +159,16 @@ export function ActorDetailPanel({
               aria-label="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
-          <div className="cyber-card">
-            {content}
-          </div>
+          <div className="cyber-card">{content}</div>
         </div>
       </div>
     )
@@ -171,12 +178,14 @@ export function ActorDetailPanel({
     <div className="w-80 cyber-card hidden lg:block">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">{actor.name}</h3>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-white"
-        >
+        <button onClick={onClose} className="text-gray-400 hover:text-white">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>

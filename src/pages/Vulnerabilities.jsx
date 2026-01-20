@@ -30,11 +30,11 @@ export default function Vulnerabilities() {
       let data = [...demoData.vulnerabilities]
 
       if (filter === 'critical') {
-        data = data.filter(v => v.cvss_score >= 9.0)
+        data = data.filter((v) => v.cvss_score >= 9.0)
       } else if (filter === 'ransomware') {
-        data = data.filter(v => v.metadata?.ransomware_campaign)
+        data = data.filter((v) => v.metadata?.ransomware_campaign)
       } else if (filter === 'high_epss') {
-        data = data.filter(v => v.epss_score >= 0.1)
+        data = data.filter((v) => v.epss_score >= 0.1)
       }
 
       setVulnList(data)
@@ -72,12 +72,13 @@ export default function Vulnerabilities() {
     }
   }
 
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-white">Known Exploited Vulnerabilities</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-white">
+          Known Exploited Vulnerabilities
+        </h1>
         <p className="text-gray-400 text-sm mt-1">
           CISA KEV catalog - actively exploited vulnerabilities
         </p>
@@ -138,10 +139,12 @@ export default function Vulnerabilities() {
         </div>
         <div className="cyber-card">
           <div className="text-2xl font-bold text-yellow-400">
-            {vulnList.filter((v) => {
-              if (!v.kev_due_date) return false
-              return new Date(v.kev_due_date) < new Date()
-            }).length}
+            {
+              vulnList.filter((v) => {
+                if (!v.kev_due_date) return false
+                return new Date(v.kev_due_date) < new Date()
+              }).length
+            }
           </div>
           <div className="text-sm text-gray-400">Past Due</div>
         </div>
@@ -208,7 +211,10 @@ export default function Vulnerabilities() {
                       <td>
                         <div className="flex flex-wrap gap-1">
                           {(vuln.has_public_exploit || vuln.exploit_count > 0) && (
-                            <span className="px-1.5 py-0.5 text-xs rounded bg-green-900/50 text-green-400 border border-green-700/50" title={`${vuln.exploit_count || 1} public exploit(s)`}>
+                            <span
+                              className="px-1.5 py-0.5 text-xs rounded bg-green-900/50 text-green-400 border border-green-700/50"
+                              title={`${vuln.exploit_count || 1} public exploit(s)`}
+                            >
                               EXP{vuln.exploit_count > 1 ? ` (${vuln.exploit_count})` : ''}
                             </span>
                           )}
@@ -238,7 +244,12 @@ export default function Vulnerabilities() {
                 className="text-gray-400 hover:text-white"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -257,7 +268,10 @@ export default function Vulnerabilities() {
                 {selectedVuln.epss_score && (
                   <div>
                     <div className="text-gray-500 mb-1">EPSS</div>
-                    <EPSSBadge score={selectedVuln.epss_score} percentile={selectedVuln.epss_percentile} />
+                    <EPSSBadge
+                      score={selectedVuln.epss_score}
+                      percentile={selectedVuln.epss_percentile}
+                    />
                   </div>
                 )}
               </div>
@@ -265,18 +279,14 @@ export default function Vulnerabilities() {
               {selectedVuln.affected_vendors?.length > 0 && (
                 <div>
                   <div className="text-gray-500 mb-1">Affected Vendors</div>
-                  <div className="text-gray-300">
-                    {selectedVuln.affected_vendors.join(', ')}
-                  </div>
+                  <div className="text-gray-300">{selectedVuln.affected_vendors.join(', ')}</div>
                 </div>
               )}
 
               {selectedVuln.affected_products?.length > 0 && (
                 <div>
                   <div className="text-gray-500 mb-1">Affected Products</div>
-                  <div className="text-gray-300">
-                    {selectedVuln.affected_products.join(', ')}
-                  </div>
+                  <div className="text-gray-300">{selectedVuln.affected_products.join(', ')}</div>
                 </div>
               )}
 
@@ -316,17 +326,31 @@ export default function Vulnerabilities() {
               {(selectedVuln.has_public_exploit || selectedVuln.exploit_count > 0) && (
                 <div className="p-3 bg-green-900/20 border border-green-800/50 rounded space-y-2">
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    <svg
+                      className="w-4 h-4 text-green-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
                     </svg>
                     <span className="text-green-400 text-xs font-medium">
-                      {selectedVuln.exploit_count || 1} Public Exploit{(selectedVuln.exploit_count || 1) > 1 ? 's' : ''} Available
+                      {selectedVuln.exploit_count || 1} Public Exploit
+                      {(selectedVuln.exploit_count || 1) > 1 ? 's' : ''} Available
                     </span>
                   </div>
                   {selectedVuln.exploit_types?.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {selectedVuln.exploit_types.map((type) => (
-                        <span key={type} className="px-1.5 py-0.5 text-xs rounded bg-green-900/50 text-green-300">
+                        <span
+                          key={type}
+                          className="px-1.5 py-0.5 text-xs rounded bg-green-900/50 text-green-300"
+                        >
                           {type}
                         </span>
                       ))}
@@ -388,7 +412,12 @@ export default function Vulnerabilities() {
                 aria-label="Close"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -407,7 +436,10 @@ export default function Vulnerabilities() {
                 {selectedVuln.epss_score && (
                   <div>
                     <div className="text-gray-500 mb-1">EPSS</div>
-                    <EPSSBadge score={selectedVuln.epss_score} percentile={selectedVuln.epss_percentile} />
+                    <EPSSBadge
+                      score={selectedVuln.epss_score}
+                      percentile={selectedVuln.epss_percentile}
+                    />
                   </div>
                 )}
               </div>
@@ -415,18 +447,14 @@ export default function Vulnerabilities() {
               {selectedVuln.affected_vendors?.length > 0 && (
                 <div>
                   <div className="text-gray-500 mb-1">Affected Vendors</div>
-                  <div className="text-gray-300">
-                    {selectedVuln.affected_vendors.join(', ')}
-                  </div>
+                  <div className="text-gray-300">{selectedVuln.affected_vendors.join(', ')}</div>
                 </div>
               )}
 
               {selectedVuln.affected_products?.length > 0 && (
                 <div>
                   <div className="text-gray-500 mb-1">Affected Products</div>
-                  <div className="text-gray-300">
-                    {selectedVuln.affected_products.join(', ')}
-                  </div>
+                  <div className="text-gray-300">{selectedVuln.affected_products.join(', ')}</div>
                 </div>
               )}
 
@@ -466,17 +494,31 @@ export default function Vulnerabilities() {
               {(selectedVuln.has_public_exploit || selectedVuln.exploit_count > 0) && (
                 <div className="p-3 bg-green-900/20 border border-green-800/50 rounded space-y-2">
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    <svg
+                      className="w-4 h-4 text-green-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
                     </svg>
                     <span className="text-green-400 text-xs font-medium">
-                      {selectedVuln.exploit_count || 1} Public Exploit{(selectedVuln.exploit_count || 1) > 1 ? 's' : ''} Available
+                      {selectedVuln.exploit_count || 1} Public Exploit
+                      {(selectedVuln.exploit_count || 1) > 1 ? 's' : ''} Available
                     </span>
                   </div>
                   {selectedVuln.exploit_types?.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {selectedVuln.exploit_types.map((type) => (
-                        <span key={type} className="px-1.5 py-0.5 text-xs rounded bg-green-900/50 text-green-300">
+                        <span
+                          key={type}
+                          className="px-1.5 py-0.5 text-xs rounded bg-green-900/50 text-green-300"
+                        >
                           {type}
                         </span>
                       ))}

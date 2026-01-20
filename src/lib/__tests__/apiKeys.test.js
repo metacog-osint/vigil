@@ -7,18 +7,41 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Setup mock functions
 const mockInsertSelect = vi.fn(() => Promise.resolve({ data: { id: 'test-id' }, error: null }))
-const mockSelectEqOrder = vi.fn(() => Promise.resolve({ data: [{ id: 'key-1' }, { id: 'key-2' }], error: null }))
-const mockSelectEqEqSingle = vi.fn(() => Promise.resolve({ data: { id: 'key-1', is_active: true }, error: null }))
-const mockUpdateEqEqSelectSingle = vi.fn(() => Promise.resolve({ data: { id: 'key-1', name: 'Updated' }, error: null }))
+const mockSelectEqOrder = vi.fn(() =>
+  Promise.resolve({ data: [{ id: 'key-1' }, { id: 'key-2' }], error: null })
+)
+const mockSelectEqEqSingle = vi.fn(() =>
+  Promise.resolve({ data: { id: 'key-1', is_active: true }, error: null })
+)
+const mockUpdateEqEqSelectSingle = vi.fn(() =>
+  Promise.resolve({ data: { id: 'key-1', name: 'Updated' }, error: null })
+)
 const mockDeleteEqEq = vi.fn(() => Promise.resolve({ error: null }))
-const mockUsageSelect = vi.fn(() => Promise.resolve({
-  data: [
-    { endpoint: '/api/actors', status_code: 200, response_time_ms: 100, created_at: new Date().toISOString() },
-    { endpoint: '/api/actors', status_code: 200, response_time_ms: 150, created_at: new Date().toISOString() },
-    { endpoint: '/api/iocs', status_code: 200, response_time_ms: 80, created_at: new Date().toISOString() },
-  ],
-  error: null
-}))
+const mockUsageSelect = vi.fn(() =>
+  Promise.resolve({
+    data: [
+      {
+        endpoint: '/api/actors',
+        status_code: 200,
+        response_time_ms: 100,
+        created_at: new Date().toISOString(),
+      },
+      {
+        endpoint: '/api/actors',
+        status_code: 200,
+        response_time_ms: 150,
+        created_at: new Date().toISOString(),
+      },
+      {
+        endpoint: '/api/iocs',
+        status_code: 200,
+        response_time_ms: 80,
+        created_at: new Date().toISOString(),
+      },
+    ],
+    error: null,
+  })
+)
 
 // Mock supabase before importing apiKeys
 vi.mock('../supabase', () => ({
@@ -113,21 +136,21 @@ describe('apiKeys', () => {
     it('should handle duplicate key name error', async () => {
       mockInsertSelect.mockResolvedValueOnce({
         data: null,
-        error: { code: '23505', message: 'duplicate key' }
+        error: { code: '23505', message: 'duplicate key' },
       })
 
-      await expect(apiKeys.create('user-123', 'Duplicate Key', ['read']))
-        .rejects.toThrow('An API key named "Duplicate Key" already exists')
+      await expect(apiKeys.create('user-123', 'Duplicate Key', ['read'])).rejects.toThrow(
+        'An API key named "Duplicate Key" already exists'
+      )
     })
 
     it('should throw on database error', async () => {
       mockInsertSelect.mockResolvedValueOnce({
         data: null,
-        error: { message: 'Database error' }
+        error: { message: 'Database error' },
       })
 
-      await expect(apiKeys.create('user-123', 'Test Key', ['read']))
-        .rejects.toThrow()
+      await expect(apiKeys.create('user-123', 'Test Key', ['read'])).rejects.toThrow()
     })
 
     it('should accept expiration date parameter', async () => {
@@ -378,9 +401,10 @@ describe('usage statistics calculations', () => {
 
   it('should handle empty requests array', () => {
     const requests = []
-    const avg = requests.length > 0
-      ? requests.reduce((sum, r) => sum + r.response_time_ms, 0) / requests.length
-      : 0
+    const avg =
+      requests.length > 0
+        ? requests.reduce((sum, r) => sum + r.response_time_ms, 0) / requests.length
+        : 0
     expect(avg).toBe(0)
   })
 
@@ -393,7 +417,7 @@ describe('usage statistics calculations', () => {
     ]
 
     const counts = {}
-    requests.forEach(r => {
+    requests.forEach((r) => {
       counts[r.endpoint] = (counts[r.endpoint] || 0) + 1
     })
 
@@ -421,7 +445,14 @@ describe('usage statistics calculations', () => {
 })
 
 describe('allowed fields for update', () => {
-  const allowedFields = ['name', 'scopes', 'is_active', 'expires_at', 'rate_limit_per_minute', 'rate_limit_per_day']
+  const allowedFields = [
+    'name',
+    'scopes',
+    'is_active',
+    'expires_at',
+    'rate_limit_per_minute',
+    'rate_limit_per_day',
+  ]
 
   it('should include name in allowed fields', () => {
     expect(allowedFields).toContain('name')

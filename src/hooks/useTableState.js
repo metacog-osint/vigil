@@ -15,11 +15,7 @@ import { useState, useCallback, useMemo } from 'react'
  * @returns {Object} Table state and handlers
  */
 export function useTableState(data = [], options = {}) {
-  const {
-    idField = 'id',
-    defaultSort = null,
-    pageSize = 0,
-  } = options
+  const { idField = 'id', defaultSort = null, pageSize = 0 } = options
 
   // Sorting state
   const [sortConfig, setSortConfig] = useState(defaultSort)
@@ -141,9 +137,12 @@ export function useTableState(data = [], options = {}) {
   }, [data, selectedIds, idField])
 
   // Pagination handlers
-  const goToPage = useCallback((page) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
-  }, [totalPages])
+  const goToPage = useCallback(
+    (page) => {
+      setCurrentPage(Math.max(1, Math.min(page, totalPages)))
+    },
+    [totalPages]
+  )
 
   const nextPage = useCallback(() => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
@@ -168,7 +167,7 @@ export function useTableState(data = [], options = {}) {
     sortConfig,
     setSortConfig,
     handleSort,
-    getSortDirection: (field) => sortConfig?.field === field ? sortConfig.direction : null,
+    getSortDirection: (field) => (sortConfig?.field === field ? sortConfig.direction : null),
 
     // Selection
     selectedIds,
@@ -193,7 +192,8 @@ export function useTableState(data = [], options = {}) {
     hasPrevPage: currentPage > 1,
     hasNextPage: currentPage < totalPages,
     startIndex: pageSize > 0 ? (currentPage - 1) * pageSize + 1 : 1,
-    endIndex: pageSize > 0 ? Math.min(currentPage * pageSize, sortedData.length) : sortedData.length,
+    endIndex:
+      pageSize > 0 ? Math.min(currentPage * pageSize, sortedData.length) : sortedData.length,
     totalItems: sortedData.length,
   }
 }
@@ -204,69 +204,72 @@ export function useTableState(data = [], options = {}) {
  * @param {Object} options - Configuration options
  */
 export function useTableKeyboard(tableState, options = {}) {
-  const {
-    onSelect,
-    onOpen,
-    onEscape,
-  } = options
+  const { onSelect, onOpen, onEscape } = options
 
   const [focusedIndex, setFocusedIndex] = useState(-1)
 
-  const handleKeyDown = useCallback((event) => {
-    // Don't handle if user is typing in an input
-    if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'TEXTAREA') {
-      return
-    }
+  const handleKeyDown = useCallback(
+    (event) => {
+      // Don't handle if user is typing in an input
+      if (
+        event.target.tagName === 'INPUT' ||
+        event.target.tagName === 'SELECT' ||
+        event.target.tagName === 'TEXTAREA'
+      ) {
+        return
+      }
 
-    const { displayData, handleSelectOne, selectedIds } = tableState
+      const { displayData, handleSelectOne, selectedIds } = tableState
 
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault()
-        setFocusedIndex((prev) => Math.min(prev + 1, displayData.length - 1))
-        break
-
-      case 'ArrowUp':
-        event.preventDefault()
-        setFocusedIndex((prev) => Math.max(prev - 1, 0))
-        break
-
-      case 'Enter':
-        if (focusedIndex >= 0 && displayData[focusedIndex]) {
+      switch (event.key) {
+        case 'ArrowDown':
           event.preventDefault()
-          onOpen?.(displayData[focusedIndex])
-        }
-        break
+          setFocusedIndex((prev) => Math.min(prev + 1, displayData.length - 1))
+          break
 
-      case ' ':
-        if (focusedIndex >= 0 && displayData[focusedIndex]) {
+        case 'ArrowUp':
           event.preventDefault()
-          const id = displayData[focusedIndex].id
-          handleSelectOne(id)
-          onSelect?.(displayData[focusedIndex], !selectedIds.has(id))
-        }
-        break
+          setFocusedIndex((prev) => Math.max(prev - 1, 0))
+          break
 
-      case 'Escape':
-        event.preventDefault()
-        setFocusedIndex(-1)
-        onEscape?.()
-        break
+        case 'Enter':
+          if (focusedIndex >= 0 && displayData[focusedIndex]) {
+            event.preventDefault()
+            onOpen?.(displayData[focusedIndex])
+          }
+          break
 
-      case 'Home':
-        event.preventDefault()
-        setFocusedIndex(0)
-        break
+        case ' ':
+          if (focusedIndex >= 0 && displayData[focusedIndex]) {
+            event.preventDefault()
+            const id = displayData[focusedIndex].id
+            handleSelectOne(id)
+            onSelect?.(displayData[focusedIndex], !selectedIds.has(id))
+          }
+          break
 
-      case 'End':
-        event.preventDefault()
-        setFocusedIndex(displayData.length - 1)
-        break
+        case 'Escape':
+          event.preventDefault()
+          setFocusedIndex(-1)
+          onEscape?.()
+          break
 
-      default:
-        break
-    }
-  }, [tableState, focusedIndex, onSelect, onOpen, onEscape])
+        case 'Home':
+          event.preventDefault()
+          setFocusedIndex(0)
+          break
+
+        case 'End':
+          event.preventDefault()
+          setFocusedIndex(displayData.length - 1)
+          break
+
+        default:
+          break
+      }
+    },
+    [tableState, focusedIndex, onSelect, onOpen, onEscape]
+  )
 
   return {
     focusedIndex,

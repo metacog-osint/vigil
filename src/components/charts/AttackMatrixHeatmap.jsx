@@ -21,20 +21,20 @@ const TACTICS_ORDER = [
 
 // Short names for mobile
 const TACTIC_SHORT = {
-  'Reconnaissance': 'Recon',
+  Reconnaissance: 'Recon',
   'Resource Development': 'Resource',
   'Initial Access': 'Initial',
-  'Execution': 'Exec',
-  'Persistence': 'Persist',
+  Execution: 'Exec',
+  Persistence: 'Persist',
   'Privilege Escalation': 'PrivEsc',
   'Defense Evasion': 'DefEvas',
   'Credential Access': 'Creds',
-  'Discovery': 'Discov',
+  Discovery: 'Discov',
   'Lateral Movement': 'LatMov',
-  'Collection': 'Collect',
+  Collection: 'Collect',
   'Command and Control': 'C2',
-  'Exfiltration': 'Exfil',
-  'Impact': 'Impact',
+  Exfiltration: 'Exfil',
+  Impact: 'Impact',
 }
 
 function getIntensityColor(count, maxCount) {
@@ -90,10 +90,7 @@ export function AttackMatrixHeatmap({
     return { matrix: tacticMap, maxCount }
   }, [techniques, actorTechniques])
 
-  const maxTechniquesPerTactic = Math.max(
-    ...Array.from(matrix.values()).map(t => t.length),
-    0
-  )
+  const maxTechniquesPerTactic = Math.max(...Array.from(matrix.values()).map((t) => t.length), 0)
 
   return (
     <div className={clsx('overflow-x-auto', className)}>
@@ -132,9 +129,7 @@ export function AttackMatrixHeatmap({
                 </button>
               ))}
               {techs.length > 15 && (
-                <div className="text-xs text-gray-600 text-center">
-                  +{techs.length - 15} more
-                </div>
+                <div className="text-xs text-gray-600 text-center">+{techs.length - 15} more</div>
               )}
             </div>
           )
@@ -155,13 +150,9 @@ export function AttackMatrixHeatmap({
   )
 }
 
-export function AttackMatrixMini({
-  techniques = [],
-  actorTechniques = [],
-  className = '',
-}) {
+export function AttackMatrixMini({ techniques = [], actorTechniques = [], className = '' }) {
   const tacticCounts = useMemo(() => {
-    const techMap = new Map(techniques.map(t => [t.id, t.tactics || []]))
+    const techMap = new Map(techniques.map((t) => [t.id, t.tactics || []]))
     const counts = {}
     for (const tactic of TACTICS_ORDER) {
       counts[tactic] = 0
@@ -187,10 +178,7 @@ export function AttackMatrixMini({
         return (
           <div
             key={tactic}
-            className={clsx(
-              'w-4 h-8 rounded-sm',
-              getIntensityColor(count, maxCount)
-            )}
+            className={clsx('w-4 h-8 rounded-sm', getIntensityColor(count, maxCount))}
             title={`${TACTIC_SHORT[tactic]}: ${count}`}
           />
         )

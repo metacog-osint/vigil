@@ -7,7 +7,9 @@ const IncidentsPage = lazy(() => import('../Incidents'))
 
 export default function IncidentsContent() {
   return (
-    <Suspense fallback={<div className="animate-pulse text-gray-400">Loading ransomware data...</div>}>
+    <Suspense
+      fallback={<div className="animate-pulse text-gray-400">Loading ransomware data...</div>}
+    >
       <div className="activity-content-wrapper -mt-6">
         <IncidentsPage />
       </div>

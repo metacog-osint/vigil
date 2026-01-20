@@ -60,8 +60,8 @@ export default function Advisories() {
 
       setStats({
         total: ecosystemStats.reduce((sum, e) => sum + e.total, 0),
-        critical: severityStats.find(s => s.severity === 'critical')?.count || 0,
-        high: severityStats.find(s => s.severity === 'high')?.count || 0,
+        critical: severityStats.find((s) => s.severity === 'critical')?.count || 0,
+        high: severityStats.find((s) => s.severity === 'high')?.count || 0,
         ecosystems: ecosystemStats,
       })
     } catch (error) {
@@ -160,9 +160,7 @@ export default function Advisories() {
           ) : advisoryList.length === 0 ? (
             <div className="cyber-card text-center py-12">
               <div className="text-gray-400 mb-2">No advisories found</div>
-              <p className="text-gray-500 text-sm">
-                Run the GHSA ingestion to populate this data.
-              </p>
+              <p className="text-gray-500 text-sm">Run the GHSA ingestion to populate this data.</p>
             </div>
           ) : (
             <div className="cyber-card overflow-hidden">
@@ -225,7 +223,12 @@ export default function Advisories() {
                 aria-label="Close"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -305,7 +308,10 @@ export default function Advisories() {
 
               <div className="pt-4 border-t border-gray-800 space-y-2">
                 <a
-                  href={selectedAdvisory.source_url || `https://github.com/advisories/${selectedAdvisory.ghsa_id}`}
+                  href={
+                    selectedAdvisory.source_url ||
+                    `https://github.com/advisories/${selectedAdvisory.ghsa_id}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block text-cyber-accent text-xs hover:underline"
@@ -340,7 +346,12 @@ export default function Advisories() {
                 aria-label="Close"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -364,7 +375,9 @@ export default function Advisories() {
 
               <div>
                 <div className="text-gray-500 mb-1">Package</div>
-                <div className="text-gray-300 font-mono">{selectedAdvisory.package_name || '—'}</div>
+                <div className="text-gray-300 font-mono">
+                  {selectedAdvisory.package_name || '—'}
+                </div>
               </div>
 
               {selectedAdvisory.vulnerable_versions && (
@@ -387,7 +400,10 @@ export default function Advisories() {
 
               <div className="pt-4 border-t border-gray-800 space-y-2">
                 <a
-                  href={selectedAdvisory.source_url || `https://github.com/advisories/${selectedAdvisory.ghsa_id}`}
+                  href={
+                    selectedAdvisory.source_url ||
+                    `https://github.com/advisories/${selectedAdvisory.ghsa_id}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block text-cyber-accent hover:underline"

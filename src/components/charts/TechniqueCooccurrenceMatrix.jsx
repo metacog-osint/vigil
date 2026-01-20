@@ -10,12 +10,12 @@ import { Link } from 'react-router-dom'
 import { correlations } from '../../lib/supabase'
 
 const CELL_COLORS = [
-  'bg-gray-800',      // 0
-  'bg-blue-900/50',   // 1
-  'bg-blue-800/60',   // 2-3
-  'bg-blue-700/70',   // 4-5
-  'bg-blue-600/80',   // 6-9
-  'bg-cyber-accent',  // 10+
+  'bg-gray-800', // 0
+  'bg-blue-900/50', // 1
+  'bg-blue-800/60', // 2-3
+  'bg-blue-700/70', // 4-5
+  'bg-blue-600/80', // 6-9
+  'bg-cyber-accent', // 10+
 ]
 
 function getCellColor(count) {
@@ -50,7 +50,12 @@ function CooccurrenceDetail({ data, onClose }) {
         <h4 className="text-sm font-medium text-white">Technique Pair</h4>
         <button onClick={onClose} className="text-gray-400 hover:text-white">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -139,10 +144,8 @@ export function TechniqueCooccurrenceMatrix({ techniqueId, limit = 10 }) {
       setError(null)
 
       try {
-        const { data: cooccurrenceData, error: fetchError } = await correlations.getTechniqueCooccurrence(
-          techniqueId,
-          limit
-        )
+        const { data: cooccurrenceData, error: fetchError } =
+          await correlations.getTechniqueCooccurrence(techniqueId, limit)
 
         if (fetchError) throw fetchError
         setData(cooccurrenceData || [])
@@ -178,9 +181,7 @@ export function TechniqueCooccurrenceMatrix({ techniqueId, limit = 10 }) {
 
   if (!data || data.length === 0) {
     return (
-      <div className="text-sm text-gray-500 text-center py-4">
-        No co-occurrence data available
-      </div>
+      <div className="text-sm text-gray-500 text-center py-4">No co-occurrence data available</div>
     )
   }
 
@@ -196,15 +197,21 @@ export function TechniqueCooccurrenceMatrix({ techniqueId, limit = 10 }) {
           <div
             key={i}
             className="flex items-center gap-3 p-2 bg-gray-800/50 rounded hover:bg-gray-800 transition-colors cursor-pointer"
-            onClick={() => setSelectedCell({
-              techniqueA: techniqueId,
-              techniqueB: item.technique_b || item.technique_id,
-              count: item.shared_actor_count || item.count,
-              actors: item.actors_using_both || item.actors || []
-            })}
+            onClick={() =>
+              setSelectedCell({
+                techniqueA: techniqueId,
+                techniqueB: item.technique_b || item.technique_id,
+                count: item.shared_actor_count || item.count,
+                actors: item.actors_using_both || item.actors || [],
+              })
+            }
           >
-            <div className={`w-8 h-8 rounded ${getCellColor(item.shared_actor_count || item.count)} flex items-center justify-center`}>
-              <span className="text-xs font-bold text-white">{item.shared_actor_count || item.count}</span>
+            <div
+              className={`w-8 h-8 rounded ${getCellColor(item.shared_actor_count || item.count)} flex items-center justify-center`}
+            >
+              <span className="text-xs font-bold text-white">
+                {item.shared_actor_count || item.count}
+              </span>
             </div>
             <div className="flex-1">
               <div className="text-sm text-white font-mono">
@@ -222,10 +229,7 @@ export function TechniqueCooccurrenceMatrix({ techniqueId, limit = 10 }) {
       </div>
 
       {selectedCell && (
-        <CooccurrenceDetail
-          data={selectedCell}
-          onClose={() => setSelectedCell(null)}
-        />
+        <CooccurrenceDetail data={selectedCell} onClose={() => setSelectedCell(null)} />
       )}
     </div>
   )
@@ -239,11 +243,11 @@ export function TechniqueCooccurrenceFullMatrix({ techniques, cooccurrenceData }
   const matrix = useMemo(() => {
     const map = new Map()
 
-    for (const item of (cooccurrenceData || [])) {
+    for (const item of cooccurrenceData || []) {
       const key = `${item.technique_a}|${item.technique_b}`
       map.set(key, {
         count: item.shared_actor_count,
-        actors: item.actors_using_both || []
+        actors: item.actors_using_both || [],
       })
     }
 
@@ -267,7 +271,7 @@ export function TechniqueCooccurrenceFullMatrix({ techniques, cooccurrenceData }
         {/* Header row */}
         <div className="flex">
           <div className="w-20" /> {/* Empty corner */}
-          {displayTechniques.map(tech => (
+          {displayTechniques.map((tech) => (
             <div
               key={tech.id}
               className="w-8 h-20 flex items-end justify-center pb-1"
@@ -281,21 +285,22 @@ export function TechniqueCooccurrenceFullMatrix({ techniques, cooccurrenceData }
         </div>
 
         {/* Matrix rows */}
-        {displayTechniques.map(techA => (
+        {displayTechniques.map((techA) => (
           <div key={techA.id} className="flex">
             <div className="w-20 h-8 flex items-center pr-2">
               <span className="text-[10px] text-gray-400 truncate" title={techA.name}>
                 {techA.mitre_id}
               </span>
             </div>
-            {displayTechniques.map(techB => {
+            {displayTechniques.map((techB) => {
               if (techA.id === techB.id) {
                 return <div key={techB.id} className="w-8 h-8 bg-gray-900" />
               }
 
-              const key = techA.mitre_id < techB.mitre_id
-                ? `${techA.mitre_id}|${techB.mitre_id}`
-                : `${techB.mitre_id}|${techA.mitre_id}`
+              const key =
+                techA.mitre_id < techB.mitre_id
+                  ? `${techA.mitre_id}|${techB.mitre_id}`
+                  : `${techB.mitre_id}|${techA.mitre_id}`
               const cellData = matrix.get(key)
 
               return (
@@ -314,10 +319,7 @@ export function TechniqueCooccurrenceFullMatrix({ techniques, cooccurrenceData }
       </div>
 
       {selectedCell && (
-        <CooccurrenceDetail
-          data={selectedCell}
-          onClose={() => setSelectedCell(null)}
-        />
+        <CooccurrenceDetail data={selectedCell} onClose={() => setSelectedCell(null)} />
       )}
     </div>
   )

@@ -156,10 +156,7 @@ export const tenants = {
         .select('id', { count: 'exact', head: true })
         .eq('tenant_id', tenantId)
         .eq('status', 'active'),
-      supabase
-        .from('teams')
-        .select('id', { count: 'exact', head: true })
-        .eq('tenant_id', tenantId),
+      supabase.from('teams').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
       supabase.rpc('get_tenant_api_usage', { p_tenant_id: tenantId }),
     ])
 
@@ -424,10 +421,7 @@ export const domains = {
    */
   async setPrimary(tenantId, domainId) {
     // First, unset all primary flags
-    await supabase
-      .from('tenant_domains')
-      .update({ is_primary: false })
-      .eq('tenant_id', tenantId)
+    await supabase.from('tenant_domains').update({ is_primary: false }).eq('tenant_id', tenantId)
 
     // Set the new primary
     const { data, error } = await supabase

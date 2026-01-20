@@ -142,7 +142,7 @@ function matchesActorFilters(actor, profile) {
   // Check sector match
   if (profile.sector && actor.target_sectors) {
     const sectorMatch = actor.target_sectors.some(
-      s => s.toLowerCase() === profile.sector.toLowerCase()
+      (s) => s.toLowerCase() === profile.sector.toLowerCase()
     )
     if (sectorMatch) return true
   }
@@ -150,16 +150,14 @@ function matchesActorFilters(actor, profile) {
   // Check country/region match
   if (profile.country && actor.target_countries) {
     const countryMatch = actor.target_countries.some(
-      c => c.toLowerCase() === profile.country.toLowerCase()
+      (c) => c.toLowerCase() === profile.country.toLowerCase()
     )
     if (countryMatch) return true
   }
 
   if (profile.region && actor.target_countries) {
     const regionCountries = getRegionCountries(profile.region)
-    const regionMatch = actor.target_countries.some(
-      c => regionCountries.includes(c)
-    )
+    const regionMatch = actor.target_countries.some((c) => regionCountries.includes(c))
     if (regionMatch) return true
   }
 
@@ -187,20 +185,16 @@ function matchesIncidentFilters(incident, profile) {
 function matchesVulnerabilityFilters(vuln, profile) {
   // Check vendor match
   if (profile.tech_vendors?.length > 0 && vuln.affected_vendors) {
-    const vendorMatch = vuln.affected_vendors.some(
-      v => profile.tech_vendors.some(
-        pv => v.toLowerCase().includes(pv.toLowerCase())
-      )
+    const vendorMatch = vuln.affected_vendors.some((v) =>
+      profile.tech_vendors.some((pv) => v.toLowerCase().includes(pv.toLowerCase()))
     )
     if (vendorMatch) return true
   }
 
   // Check product match
   if (profile.tech_stack?.length > 0 && vuln.affected_products) {
-    const productMatch = vuln.affected_products.some(
-      p => profile.tech_stack.some(
-        pp => p.toLowerCase().includes(pp.toLowerCase())
-      )
+    const productMatch = vuln.affected_products.some((p) =>
+      profile.tech_stack.some((pp) => p.toLowerCase().includes(pp.toLowerCase()))
     )
     if (productMatch) return true
   }
@@ -213,12 +207,51 @@ function matchesVulnerabilityFilters(vuln, profile) {
  */
 function getRegionCountries(region) {
   const regionMap = {
-    'north_america': ['United States', 'Canada', 'Mexico'],
-    'europe': ['United Kingdom', 'Germany', 'France', 'Italy', 'Spain', 'Netherlands', 'Belgium', 'Switzerland', 'Austria', 'Poland', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Ireland'],
-    'asia_pacific': ['Japan', 'South Korea', 'Australia', 'New Zealand', 'Singapore', 'India', 'China', 'Taiwan', 'Hong Kong', 'Thailand', 'Malaysia', 'Indonesia', 'Philippines', 'Vietnam'],
-    'latin_america': ['Brazil', 'Argentina', 'Chile', 'Colombia', 'Peru', 'Mexico'],
-    'middle_east': ['United Arab Emirates', 'Saudi Arabia', 'Israel', 'Qatar', 'Kuwait', 'Bahrain', 'Oman'],
-    'africa': ['South Africa', 'Nigeria', 'Kenya', 'Egypt', 'Morocco'],
+    north_america: ['United States', 'Canada', 'Mexico'],
+    europe: [
+      'United Kingdom',
+      'Germany',
+      'France',
+      'Italy',
+      'Spain',
+      'Netherlands',
+      'Belgium',
+      'Switzerland',
+      'Austria',
+      'Poland',
+      'Sweden',
+      'Norway',
+      'Denmark',
+      'Finland',
+      'Ireland',
+    ],
+    asia_pacific: [
+      'Japan',
+      'South Korea',
+      'Australia',
+      'New Zealand',
+      'Singapore',
+      'India',
+      'China',
+      'Taiwan',
+      'Hong Kong',
+      'Thailand',
+      'Malaysia',
+      'Indonesia',
+      'Philippines',
+      'Vietnam',
+    ],
+    latin_america: ['Brazil', 'Argentina', 'Chile', 'Colombia', 'Peru', 'Mexico'],
+    middle_east: [
+      'United Arab Emirates',
+      'Saudi Arabia',
+      'Israel',
+      'Qatar',
+      'Kuwait',
+      'Bahrain',
+      'Oman',
+    ],
+    africa: ['South Africa', 'Nigeria', 'Kenya', 'Egypt', 'Morocco'],
   }
   return regionMap[region] || []
 }
@@ -242,12 +275,12 @@ export function getFilterDescription(profile) {
 
 function formatRegion(region) {
   const regionNames = {
-    'north_america': 'North America',
-    'europe': 'Europe',
-    'asia_pacific': 'Asia Pacific',
-    'latin_america': 'Latin America',
-    'middle_east': 'Middle East',
-    'africa': 'Africa',
+    north_america: 'North America',
+    europe: 'Europe',
+    asia_pacific: 'Asia Pacific',
+    latin_america: 'Latin America',
+    middle_east: 'Middle East',
+    africa: 'Africa',
   }
   return regionNames[region] || region
 }

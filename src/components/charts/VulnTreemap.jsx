@@ -83,8 +83,8 @@ export function VulnTreemap({
       // Order by severity
       const order = ['critical', 'high', 'medium', 'low', 'none']
       return order
-        .filter(s => groups[s])
-        .map(s => ({
+        .filter((s) => groups[s])
+        .map((s) => ({
           ...groups[s],
           value: groups[s].children.reduce((sum, c) => sum + c.value, 0),
         }))
@@ -106,7 +106,7 @@ export function VulnTreemap({
       }
 
       return Object.values(groups)
-        .map(g => ({
+        .map((g) => ({
           ...g,
           value: g.children.reduce((sum, c) => sum + c.value, 0),
           severity: getMostCommonSeverity(g.children),
@@ -116,7 +116,7 @@ export function VulnTreemap({
     }
 
     // Default: flat list by CVSS score
-    return data.slice(0, 50).map(vuln => ({
+    return data.slice(0, 50).map((vuln) => ({
       name: vuln.cve_id,
       value: vuln.cvss_score || 5,
       severity: vuln.severity?.toLowerCase() || 'medium',
@@ -141,7 +141,10 @@ export function VulnTreemap({
             </span>
             <span
               className="text-xs px-1.5 py-0.5 rounded capitalize"
-              style={{ backgroundColor: SEVERITY_COLORS[item.severity] + '40', color: SEVERITY_COLORS[item.severity] }}
+              style={{
+                backgroundColor: SEVERITY_COLORS[item.severity] + '40',
+                color: SEVERITY_COLORS[item.severity],
+              }}
             >
               {item.severity}
             </span>
@@ -177,15 +180,14 @@ export function VulnTreemap({
 
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 mt-4 text-xs">
-        {Object.entries(SEVERITY_COLORS).slice(0, 4).map(([sev, color]) => (
-          <div key={sev} className="flex items-center gap-1.5">
-            <div
-              className="w-3 h-3 rounded"
-              style={{ backgroundColor: color }}
-            />
-            <span className="text-gray-400 capitalize">{sev}</span>
-          </div>
-        ))}
+        {Object.entries(SEVERITY_COLORS)
+          .slice(0, 4)
+          .map(([sev, color]) => (
+            <div key={sev} className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: color }} />
+              <span className="text-gray-400 capitalize">{sev}</span>
+            </div>
+          ))}
       </div>
     </div>
   )
@@ -201,10 +203,7 @@ function getMostCommonSeverity(items) {
 }
 
 // Mini version for cards
-export function VulnTreemapMini({
-  data = [],
-  className = '',
-}) {
+export function VulnTreemapMini({ data = [], className = '' }) {
   const severityCounts = useMemo(() => {
     const counts = { critical: 0, high: 0, medium: 0, low: 0 }
 
@@ -227,11 +226,7 @@ export function VulnTreemapMini({
   const total = Object.values(severityCounts).reduce((a, b) => a + b, 0) || 1
 
   if (total === 0) {
-    return (
-      <div className={clsx('text-center text-gray-500 text-sm py-4', className)}>
-        No data
-      </div>
-    )
+    return <div className={clsx('text-center text-gray-500 text-sm py-4', className)}>No data</div>
   }
 
   return (
@@ -251,9 +246,7 @@ export function VulnTreemapMini({
               }}
               title={`${sev}: ${count}`}
             >
-              {width > 15 && (
-                <span className="text-white text-xs font-medium">{count}</span>
-              )}
+              {width > 15 && <span className="text-white text-xs font-medium">{count}</span>}
             </div>
           )
         })}
@@ -262,10 +255,7 @@ export function VulnTreemapMini({
       <div className="grid grid-cols-2 gap-1 text-xs">
         {Object.entries(severityCounts).map(([sev, count]) => (
           <div key={sev} className="flex items-center gap-1.5">
-            <div
-              className="w-2 h-2 rounded-sm"
-              style={{ backgroundColor: SEVERITY_COLORS[sev] }}
-            />
+            <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: SEVERITY_COLORS[sev] }} />
             <span className="text-gray-400 capitalize">{sev}</span>
             <span className="text-gray-500">({count})</span>
           </div>

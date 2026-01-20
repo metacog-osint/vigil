@@ -23,7 +23,8 @@ export const INTEGRATION_TYPES = {
     icon: 'teams',
     requiredFields: ['webhook_url'],
     optionalFields: ['channel_name'],
-    docsUrl: 'https://docs.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook',
+    docsUrl:
+      'https://docs.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook',
   },
   jira: {
     name: 'Jira',
@@ -31,7 +32,8 @@ export const INTEGRATION_TYPES = {
     icon: 'jira',
     requiredFields: ['site_url', 'email', 'api_token', 'project_key'],
     optionalFields: ['issue_type', 'priority_mapping'],
-    docsUrl: 'https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/',
+    docsUrl:
+      'https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/',
   },
   servicenow: {
     name: 'ServiceNow',
@@ -39,7 +41,8 @@ export const INTEGRATION_TYPES = {
     icon: 'servicenow',
     requiredFields: ['instance_url', 'username', 'password'],
     optionalFields: ['assignment_group', 'category'],
-    docsUrl: 'https://docs.servicenow.com/bundle/rome-application-development/page/integrate/inbound-rest/concept/c_RESTAPI.html',
+    docsUrl:
+      'https://docs.servicenow.com/bundle/rome-application-development/page/integrate/inbound-rest/concept/c_RESTAPI.html',
   },
   pagerduty: {
     name: 'PagerDuty',
@@ -71,7 +74,8 @@ export const INTEGRATION_TYPES = {
     icon: 'elastic',
     requiredFields: ['elasticsearch_url', 'api_key'],
     optionalFields: ['index_pattern'],
-    docsUrl: 'https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-api-key.html',
+    docsUrl:
+      'https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-api-key.html',
   },
   sentinel: {
     name: 'Microsoft Sentinel',
@@ -216,16 +220,14 @@ export const integrations = {
    * Log integration activity
    */
   async log(integrationId, userId, eventType, eventData, status = 'success', errorMessage = null) {
-    const { error } = await supabase
-      .from('integration_logs')
-      .insert({
-        integration_id: integrationId,
-        user_id: userId,
-        event_type: eventType,
-        event_data: eventData,
-        status,
-        error_message: errorMessage,
-      })
+    const { error } = await supabase.from('integration_logs').insert({
+      integration_id: integrationId,
+      user_id: userId,
+      event_type: eventType,
+      event_data: eventData,
+      status,
+      error_message: errorMessage,
+    })
 
     if (error) console.error('Error logging integration activity:', error)
   },
@@ -467,7 +469,10 @@ export const teams = {
           '@type': 'OpenUri',
           name: 'View in Vigil',
           targets: [
-            { os: 'default', uri: `https://vigil.theintelligence.company/ransomware?id=${incident.id}` },
+            {
+              os: 'default',
+              uri: `https://vigil.theintelligence.company/ransomware?id=${incident.id}`,
+            },
           ],
         },
       ],
@@ -499,7 +504,10 @@ export const teams = {
           '@type': 'OpenUri',
           name: 'View Details',
           targets: [
-            { os: 'default', uri: `https://vigil.theintelligence.company/vulnerabilities?cve=${vuln.cve_id}` },
+            {
+              os: 'default',
+              uri: `https://vigil.theintelligence.company/vulnerabilities?cve=${vuln.cve_id}`,
+            },
           ],
         },
       ],
@@ -520,9 +528,9 @@ export const jira = {
     const response = await fetch(`${config.site_url}/rest/api/3/issue`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${auth}`,
+        Authorization: `Basic ${auth}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify({
         fields: {
@@ -679,7 +687,7 @@ export const webhooks = {
         encoder.encode(JSON.stringify(payload))
       )
       headers['X-Vigil-Signature'] = Array.from(new Uint8Array(signature))
-        .map(b => b.toString(16).padStart(2, '0'))
+        .map((b) => b.toString(16).padStart(2, '0'))
         .join('')
     }
 
@@ -704,7 +712,7 @@ export const siemFormats = {
    * Format IOCs for Splunk
    */
   splunkIOCs(iocs) {
-    return iocs.map(ioc => ({
+    return iocs.map((ioc) => ({
       time: new Date(ioc.created_at).getTime() / 1000,
       event: {
         type: 'ioc',
@@ -722,7 +730,7 @@ export const siemFormats = {
    * Format IOCs for Elastic
    */
   elasticIOCs(iocs) {
-    return iocs.map(ioc => ({
+    return iocs.map((ioc) => ({
       '@timestamp': ioc.created_at,
       event: { kind: 'enrichment', category: 'threat' },
       threat: {
@@ -741,7 +749,7 @@ export const siemFormats = {
    * Format for Microsoft Sentinel (Log Analytics)
    */
   sentinelIOCs(iocs) {
-    return iocs.map(ioc => ({
+    return iocs.map((ioc) => ({
       TimeGenerated: ioc.created_at,
       IndicatorType: ioc.type,
       IndicatorValue: ioc.value,
@@ -794,8 +802,8 @@ async function testJiraConnection(config) {
 
   const response = await fetch(`${config.site_url}/rest/api/3/myself`, {
     headers: {
-      'Authorization': `Basic ${auth}`,
-      'Accept': 'application/json',
+      Authorization: `Basic ${auth}`,
+      Accept: 'application/json',
     },
   })
 

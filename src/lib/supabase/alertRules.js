@@ -23,11 +23,7 @@ export const alertRules = {
 
   // Get a single rule by ID
   async getById(ruleId) {
-    return supabase
-      .from('user_alert_rules')
-      .select('*')
-      .eq('id', ruleId)
-      .single()
+    return supabase.from('user_alert_rules').select('*').eq('id', ruleId).single()
   },
 
   // Create a new rule
@@ -41,43 +37,34 @@ export const alertRules = {
       notifyInApp = true,
     } = rule
 
-    return supabase.from('user_alert_rules').insert({
-      user_id: userId,
-      rule_name: ruleName,
-      rule_type: ruleType,
-      conditions,
-      notify_email: notifyEmail,
-      notify_in_app: notifyInApp,
-      enabled: true,
-    }).select().single()
+    return supabase
+      .from('user_alert_rules')
+      .insert({
+        user_id: userId,
+        rule_name: ruleName,
+        rule_type: ruleType,
+        conditions,
+        notify_email: notifyEmail,
+        notify_in_app: notifyInApp,
+        enabled: true,
+      })
+      .select()
+      .single()
   },
 
   // Update a rule
   async update(ruleId, updates) {
-    return supabase
-      .from('user_alert_rules')
-      .update(updates)
-      .eq('id', ruleId)
-      .select()
-      .single()
+    return supabase.from('user_alert_rules').update(updates).eq('id', ruleId).select().single()
   },
 
   // Delete a rule
   async delete(ruleId) {
-    return supabase
-      .from('user_alert_rules')
-      .delete()
-      .eq('id', ruleId)
+    return supabase.from('user_alert_rules').delete().eq('id', ruleId)
   },
 
   // Toggle rule enabled status
   async toggle(ruleId, enabled) {
-    return supabase
-      .from('user_alert_rules')
-      .update({ enabled })
-      .eq('id', ruleId)
-      .select()
-      .single()
+    return supabase.from('user_alert_rules').update({ enabled }).eq('id', ruleId).select().single()
   },
 
   // Record a trigger event

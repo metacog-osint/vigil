@@ -192,7 +192,9 @@ export function detectTemporalClusters(incidents, windowMs = TIME_WINDOWS.DAY) {
 
       if (!existingCluster) {
         // Analyze cluster characteristics
-        const actors = [...new Set(windowIncidents.map((i) => i.threat_actor?.name).filter(Boolean))]
+        const actors = [
+          ...new Set(windowIncidents.map((i) => i.threat_actor?.name).filter(Boolean)),
+        ]
         const sectors = [...new Set(windowIncidents.map((i) => i.sector).filter(Boolean))]
 
         patterns.push({
@@ -268,7 +270,8 @@ export function detectCampaigns(incidents) {
 
     // Sort by time
     const sorted = [...actorIncs].sort(
-      (a, b) => new Date(a.discovered_at || a.created_at) - new Date(b.discovered_at || b.created_at)
+      (a, b) =>
+        new Date(a.discovered_at || a.created_at) - new Date(b.discovered_at || b.created_at)
     )
 
     // Find time-bounded clusters that might be campaigns
@@ -287,9 +290,7 @@ export function detectCampaigns(incidents) {
         if (campaignIncidents.length >= MIN_PATTERN_OCCURRENCES) {
           const actor = actorIncs[0]?.threat_actor
           const sectors = [...new Set(campaignIncidents.map((i) => i.sector).filter(Boolean))]
-          const ttps = [
-            ...new Set(campaignIncidents.flatMap((i) => i.ttps || []).filter(Boolean)),
-          ]
+          const ttps = [...new Set(campaignIncidents.flatMap((i) => i.ttps || []).filter(Boolean))]
 
           campaigns.push({
             type: PATTERN_TYPES.CAMPAIGN,
@@ -491,9 +492,7 @@ export function getPatternRecommendations(patterns) {
   }
 
   // Check for anomalies
-  const spikes = patterns.filter(
-    (p) => p.type === PATTERN_TYPES.ANOMALY && p.direction === 'spike'
-  )
+  const spikes = patterns.filter((p) => p.type === PATTERN_TYPES.ANOMALY && p.direction === 'spike')
   if (spikes.length > 0) {
     const topSpike = spikes[0]
     recommendations.push({

@@ -186,11 +186,15 @@ export function generateDigestEmail(digest) {
           <div class="stat-card">
             <div class="stat-value">${digest.summary.totalIncidents}</div>
             <div class="stat-label">Incidents</div>
-            ${digest.summary.incidentChange !== 0 ? `
+            ${
+              digest.summary.incidentChange !== 0
+                ? `
               <div class="stat-change ${digest.summary.incidentChange > 0 ? 'up' : 'down'}">
                 ${digest.summary.incidentChange > 0 ? '↑' : '↓'} ${Math.abs(digest.summary.incidentChange)}%
               </div>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
           <div class="stat-card">
             <div class="stat-value">${digest.summary.escalatingActors}</div>
@@ -203,20 +207,28 @@ export function generateDigestEmail(digest) {
         </div>
       </div>
 
-      ${digest.relevantToYou ? `
+      ${
+        digest.relevantToYou
+          ? `
       <!-- Relevant to You -->
       <div class="section">
         <div class="section-title">🎯 Relevant to You</div>
         <div class="relevant-box">
-          ${digest.relevantToYou.actors.map(actor => `
+          ${digest.relevantToYou.actors
+            .map(
+              (actor) => `
             <div class="relevant-item">
               <div>
                 <div class="item-name">${actor.name}</div>
                 <div class="item-meta">${actor.incidentCount} incidents | ${actor.reason}</div>
               </div>
             </div>
-          `).join('')}
-          ${digest.relevantToYou.vulnerabilities.map(vuln => `
+          `
+            )
+            .join('')}
+          ${digest.relevantToYou.vulnerabilities
+            .map(
+              (vuln) => `
             <div class="relevant-item">
               <div>
                 <div class="item-name">${vuln.name}</div>
@@ -224,15 +236,21 @@ export function generateDigestEmail(digest) {
               </div>
               <span class="badge badge-${vuln.severity?.toLowerCase() || 'medium'}">${vuln.severity || 'Unknown'}</span>
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <!-- Top Actors -->
       <div class="section">
         <div class="section-title">👤 Top Threat Actors</div>
-        ${digest.topActors.map(actor => `
+        ${digest.topActors
+          .map(
+            (actor) => `
           <div class="list-item">
             <div class="list-item-title">
               ${actor.name}
@@ -240,25 +258,35 @@ export function generateDigestEmail(digest) {
             </div>
             <div class="list-item-meta">${actor.incidentCount} incidents this period</div>
           </div>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
 
       <!-- Top Incidents -->
       <div class="section">
         <div class="section-title">🔥 Recent Incidents</div>
-        ${digest.topIncidents.map(inc => `
+        ${digest.topIncidents
+          .map(
+            (inc) => `
           <div class="list-item">
             <div class="list-item-title">${inc.victimName}</div>
             <div class="list-item-meta">${inc.actorName} | ${inc.sector || 'Unknown sector'} | ${formatDate(inc.date)}</div>
           </div>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
 
       <!-- New Vulnerabilities -->
-      ${digest.newVulnerabilities.length > 0 ? `
+      ${
+        digest.newVulnerabilities.length > 0
+          ? `
       <div class="section">
         <div class="section-title">🔓 New Vulnerabilities</div>
-        ${digest.newVulnerabilities.map(vuln => `
+        ${digest.newVulnerabilities
+          .map(
+            (vuln) => `
           <div class="list-item">
             <div class="list-item-title">
               ${vuln.name}
@@ -267,9 +295,13 @@ export function generateDigestEmail(digest) {
             </div>
             <div class="list-item-meta">${vuln.description || 'No description available'}</div>
           </div>
-        `).join('')}
+        `
+          )
+          .join('')}
       </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <!-- CTA -->
       <div style="text-align: center;">
@@ -319,10 +351,10 @@ ${formatDateRange(digest.period)}
 🎯 RELEVANT TO YOU
 
 `
-    digest.relevantToYou.actors.forEach(actor => {
+    digest.relevantToYou.actors.forEach((actor) => {
       text += `• ${actor.name} - ${actor.incidentCount} incidents (${actor.reason})\n`
     })
-    digest.relevantToYou.vulnerabilities.forEach(vuln => {
+    digest.relevantToYou.vulnerabilities.forEach((vuln) => {
       text += `• ${vuln.name} [${vuln.severity}] - ${vuln.reason}\n`
     })
   }
@@ -331,7 +363,7 @@ ${formatDateRange(digest.period)}
 👤 TOP THREAT ACTORS
 
 `
-  digest.topActors.forEach(actor => {
+  digest.topActors.forEach((actor) => {
     text += `• ${actor.name} - ${actor.incidentCount} incidents${actor.trendStatus === 'ESCALATING' ? ' [ESCALATING]' : ''}\n`
   })
 
@@ -339,7 +371,7 @@ ${formatDateRange(digest.period)}
 🔥 RECENT INCIDENTS
 
 `
-  digest.topIncidents.forEach(inc => {
+  digest.topIncidents.forEach((inc) => {
     text += `• ${inc.victimName} - ${inc.actorName} (${formatDate(inc.date)})\n`
   })
 
@@ -348,7 +380,7 @@ ${formatDateRange(digest.period)}
 🔓 NEW VULNERABILITIES
 
 `
-    digest.newVulnerabilities.forEach(vuln => {
+    digest.newVulnerabilities.forEach((vuln) => {
       text += `• ${vuln.name} [${vuln.severity}]${vuln.isKEV ? ' [KEV]' : ''}\n`
     })
   }

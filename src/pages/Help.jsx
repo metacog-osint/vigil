@@ -7,7 +7,12 @@ const HELP_SECTIONS = [
     title: 'Getting Started',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M13 10V3L4 14h7v7l9-11h-7z"
+        />
       </svg>
     ),
     content: `
@@ -38,7 +43,12 @@ Vigil is a cyber threat intelligence platform that aggregates data from multiple
     title: 'Search Syntax',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        />
       </svg>
     ),
     content: `
@@ -122,7 +132,12 @@ NOT status:inactive     # Exclude inactive
     title: 'IOC Enrichment',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
       </svg>
     ),
     content: `
@@ -184,7 +199,12 @@ Enrichment data is refreshed:
     title: 'Watchlists',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+        />
       </svg>
     ),
     content: `
@@ -237,7 +257,12 @@ Enable notifications to get alerts when:
     title: 'Integrations',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"
+        />
       </svg>
     ),
     content: `
@@ -303,7 +328,12 @@ Export data in SIEM-compatible formats.
     title: 'Keyboard Shortcuts',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+        />
       </svg>
     ),
     content: `
@@ -358,7 +388,12 @@ Navigate Vigil efficiently with keyboard shortcuts.
     title: 'Data Sources',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
+        />
       </svg>
     ),
     content: `
@@ -418,7 +453,12 @@ Look for the sync status indicator in the footer to see when data was last updat
     title: 'API Access',
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+        />
       </svg>
     ),
     content: `
@@ -497,15 +537,24 @@ function formatMarkdown(md) {
     .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold text-white mt-6 mb-2">$1</h3>')
     .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-white mt-8 mb-4">$1</h2>')
     .replace(/^\| (.*) \|$/gim, (match) => {
-      const cells = match.split('|').filter(c => c.trim())
-      const isHeader = cells.some(c => c.includes('---'))
+      const cells = match.split('|').filter((c) => c.trim())
+      const isHeader = cells.some((c) => c.includes('---'))
       if (isHeader) return ''
-      return `<tr>${cells.map(c => `<td class="border border-gray-700 px-3 py-2 text-sm">${c.trim()}</td>`).join('')}</tr>`
+      return `<tr>${cells.map((c) => `<td class="border border-gray-700 px-3 py-2 text-sm">${c.trim()}</td>`).join('')}</tr>`
     })
-    .replace(/(<tr>.*<\/tr>\n?)+/g, (match) => `<table class="w-full border-collapse mb-4">${match}</table>`)
+    .replace(
+      /(<tr>.*<\/tr>\n?)+/g,
+      (match) => `<table class="w-full border-collapse mb-4">${match}</table>`
+    )
     .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
-    .replace(/`([^`]+)`/g, '<code class="bg-gray-800 px-1.5 py-0.5 rounded text-cyber-accent text-sm font-mono">$1</code>')
-    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="bg-gray-900 p-4 rounded-lg overflow-x-auto mb-4"><code class="text-sm font-mono text-gray-300">$2</code></pre>')
+    .replace(
+      /`([^`]+)`/g,
+      '<code class="bg-gray-800 px-1.5 py-0.5 rounded text-cyber-accent text-sm font-mono">$1</code>'
+    )
+    .replace(
+      /```(\w*)\n([\s\S]*?)```/g,
+      '<pre class="bg-gray-900 p-4 rounded-lg overflow-x-auto mb-4"><code class="text-sm font-mono text-gray-300">$2</code></pre>'
+    )
     .replace(/^- (.*$)/gim, '<li class="text-gray-300 ml-4">$1</li>')
     .replace(/(<li>.*<\/li>\n?)+/g, '<ul class="list-disc mb-4">$&</ul>')
     .replace(/^\d+\. (.*$)/gim, '<li class="text-gray-300 ml-4">$1</li>')
@@ -521,9 +570,7 @@ export default function Help() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white">Help Center</h1>
-        <p className="text-gray-400 text-sm mt-1">
-          Learn how to use Vigil effectively
-        </p>
+        <p className="text-gray-400 text-sm mt-1">Learn how to use Vigil effectively</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
@@ -569,8 +616,18 @@ export default function Help() {
             href="/api-docs"
             className="flex items-center gap-3 p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors"
           >
-            <svg className="w-8 h-8 text-cyber-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            <svg
+              className="w-8 h-8 text-cyber-accent"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+              />
             </svg>
             <div>
               <div className="text-white font-medium">API Documentation</div>
@@ -583,8 +640,18 @@ export default function Help() {
             rel="noopener noreferrer"
             className="flex items-center gap-3 p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors"
           >
-            <svg className="w-8 h-8 text-cyber-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            <svg
+              className="w-8 h-8 text-cyber-accent"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
             </svg>
             <div>
               <div className="text-white font-medium">Report an Issue</div>
@@ -595,8 +662,18 @@ export default function Help() {
             href="mailto:support@theintelligence.company"
             className="flex items-center gap-3 p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors"
           >
-            <svg className="w-8 h-8 text-cyber-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            <svg
+              className="w-8 h-8 text-cyber-accent"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
             </svg>
             <div>
               <div className="text-white font-medium">Contact Support</div>

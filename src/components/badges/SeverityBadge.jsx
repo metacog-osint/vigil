@@ -88,11 +88,7 @@ export const SeverityDot = memo(function SeverityDot({ score, severity, classNam
 
   return (
     <span
-      className={clsx(
-        'inline-block w-2 h-2 rounded-full',
-        config.bg.replace('/20', ''),
-        className
-      )}
+      className={clsx('inline-block w-2 h-2 rounded-full', config.bg.replace('/20', ''), className)}
       title={config.label}
     />
   )
@@ -128,7 +124,11 @@ export const EPSSBadge = memo(function EPSSBadge({ score, percentile, className 
           : 'bg-gray-500/20 border-gray-500/50 text-gray-400',
         className
       )}
-      title={percentile ? `EPSS: ${percentage}% (${(percentile * 100).toFixed(0)}th percentile)` : `EPSS: ${percentage}%`}
+      title={
+        percentile
+          ? `EPSS: ${percentage}% (${(percentile * 100).toFixed(0)}th percentile)`
+          : `EPSS: ${percentage}%`
+      }
     >
       <span>EPSS</span>
       <span className="font-mono">{percentage}%</span>

@@ -73,9 +73,7 @@ export const investigations = {
       query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`)
     }
 
-    const { data, error } = await query
-      .order('updated_at', { ascending: false })
-      .limit(100)
+    const { data, error } = await query.order('updated_at', { ascending: false }).limit(100)
 
     if (error) throw error
     return data || []
@@ -146,7 +144,7 @@ export const investigations = {
         .single()
 
       if (template?.default_entries) {
-        const entries = template.default_entries.map(entry => ({
+        const entries = template.default_entries.map((entry) => ({
           investigation_id: investigation.id,
           entry_type: entry.entry_type,
           content: entry.content,
@@ -243,10 +241,7 @@ export const investigations = {
    * Delete an entry
    */
   async deleteEntry(entryId) {
-    const { error } = await supabase
-      .from('investigation_entries')
-      .delete()
-      .eq('id', entryId)
+    const { error } = await supabase.from('investigation_entries').delete().eq('id', entryId)
 
     if (error) throw error
   },
@@ -306,10 +301,7 @@ export const investigations = {
    * Get templates
    */
   async getTemplates() {
-    const { data, error } = await supabase
-      .from('investigation_templates')
-      .select('*')
-      .order('name')
+    const { data, error } = await supabase.from('investigation_templates').select('*').order('name')
 
     if (error) throw error
     return data || []

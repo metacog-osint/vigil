@@ -20,7 +20,9 @@ const CONFIDENCE_COLORS = {
 
 function ConfidenceBadge({ confidence }) {
   return (
-    <span className={`px-2 py-0.5 text-xs rounded border ${CONFIDENCE_COLORS[confidence] || CONFIDENCE_COLORS.low}`}>
+    <span
+      className={`px-2 py-0.5 text-xs rounded border ${CONFIDENCE_COLORS[confidence] || CONFIDENCE_COLORS.low}`}
+    >
       {confidence}
     </span>
   )
@@ -29,10 +31,30 @@ function ConfidenceBadge({ confidence }) {
 function ChainFlow({ chain }) {
   const steps = [
     { label: 'Actor', value: chain.actor_name, icon: '👤', color: 'text-red-400' },
-    { label: 'Techniques', value: chain.techniques?.length || 0, icon: '⚔️', color: 'text-orange-400' },
-    { label: 'CVEs', value: chain.vulnerabilities?.length || 0, icon: '🛡️', color: 'text-yellow-400' },
-    { label: 'Malware', value: chain.malware_families?.length || 0, icon: '🦠', color: 'text-purple-400' },
-    { label: 'Sectors', value: chain.target_sectors?.length || 0, icon: '🏢', color: 'text-blue-400' },
+    {
+      label: 'Techniques',
+      value: chain.techniques?.length || 0,
+      icon: '⚔️',
+      color: 'text-orange-400',
+    },
+    {
+      label: 'CVEs',
+      value: chain.vulnerabilities?.length || 0,
+      icon: '🛡️',
+      color: 'text-yellow-400',
+    },
+    {
+      label: 'Malware',
+      value: chain.malware_families?.length || 0,
+      icon: '🦠',
+      color: 'text-purple-400',
+    },
+    {
+      label: 'Sectors',
+      value: chain.target_sectors?.length || 0,
+      icon: '🏢',
+      color: 'text-blue-400',
+    },
   ]
 
   return (
@@ -47,7 +69,12 @@ function ChainFlow({ chain }) {
             <span className="text-xs text-gray-500">{step.label}</span>
           </div>
           {i < steps.length - 1 && (
-            <svg className="w-4 h-4 text-gray-600 mx-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4 text-gray-600 mx-1 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           )}
@@ -94,12 +121,14 @@ function ChainDetailPanel({ chain, onClose }) {
     <div className="w-96 cyber-card max-h-[80vh] overflow-y-auto">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-medium text-white">{chain.name || 'Attack Chain'}</h3>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-white"
-        >
+        <button onClick={onClose} className="text-gray-400 hover:text-white">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -292,9 +321,7 @@ export default function AttackChains() {
 
     // Apply sector filter
     if (filters.sector) {
-      data = data.filter((chain) =>
-        chain.target_sectors?.includes(filters.sector)
-      )
+      data = data.filter((chain) => chain.target_sectors?.includes(filters.sector))
     }
 
     // Apply confidence filter
@@ -438,17 +465,24 @@ export default function AttackChains() {
       ) : error ? (
         <div className="cyber-card text-center py-12">
           <div className="text-red-400 mb-2">{error}</div>
-          <button
-            onClick={loadChains}
-            className="text-cyber-accent hover:underline text-sm"
-          >
+          <button onClick={loadChains} className="text-cyber-accent hover:underline text-sm">
             Try Again
           </button>
         </div>
       ) : filteredChains.length === 0 ? (
         <div className="cyber-card text-center py-12">
-          <svg className="w-12 h-12 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          <svg
+            className="w-12 h-12 mx-auto text-gray-600 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            />
           </svg>
           <h3 className="text-gray-400 font-medium">No attack chains found</h3>
           <p className="text-gray-500 text-sm mt-1">
@@ -471,10 +505,7 @@ export default function AttackChains() {
           </div>
 
           {selectedChain && (
-            <ChainDetailPanel
-              chain={selectedChain}
-              onClose={() => setSelectedChain(null)}
-            />
+            <ChainDetailPanel chain={selectedChain} onClose={() => setSelectedChain(null)} />
           )}
         </div>
       )}

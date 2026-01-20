@@ -79,9 +79,7 @@ function ConfidenceBadge({ confidence }) {
   else if (percentage >= 40) color = 'text-orange-400 bg-orange-900/50 border-orange-700/50'
 
   return (
-    <span className={`px-2 py-0.5 text-xs rounded border ${color}`}>
-      {percentage}% confidence
-    </span>
+    <span className={`px-2 py-0.5 text-xs rounded border ${color}`}>{percentage}% confidence</span>
   )
 }
 
@@ -120,7 +118,10 @@ function CampaignCard({ pattern }) {
             <div className="text-gray-500 text-xs mb-1">Target Sectors</div>
             <div className="flex flex-wrap gap-1">
               {pattern.targetSectors.slice(0, 4).map((sector) => (
-                <span key={sector} className="px-2 py-0.5 text-xs rounded bg-gray-800 text-gray-300">
+                <span
+                  key={sector}
+                  className="px-2 py-0.5 text-xs rounded bg-gray-800 text-gray-300"
+                >
                   {sector}
                 </span>
               ))}
@@ -131,9 +132,7 @@ function CampaignCard({ pattern }) {
           </div>
         )}
 
-        {pattern.description && (
-          <p className="text-gray-400 text-xs">{pattern.description}</p>
-        )}
+        {pattern.description && <p className="text-gray-400 text-xs">{pattern.description}</p>}
 
         <div className="pt-2 border-t border-gray-800">
           <Link
@@ -177,13 +176,12 @@ function AnomalyCard({ pattern }) {
         <div>
           <div className="text-gray-500 text-xs">Deviation</div>
           <div className="text-yellow-400 font-medium">
-            {pattern.deviation > 0 ? '+' : ''}{pattern.deviation?.toFixed(1)}% from normal
+            {pattern.deviation > 0 ? '+' : ''}
+            {pattern.deviation?.toFixed(1)}% from normal
           </div>
         </div>
 
-        {pattern.description && (
-          <p className="text-gray-400 text-xs mt-2">{pattern.description}</p>
-        )}
+        {pattern.description && <p className="text-gray-400 text-xs mt-2">{pattern.description}</p>}
       </div>
     </div>
   )
@@ -206,7 +204,8 @@ function TemporalClusterCard({ pattern }) {
         <div>
           <div className="text-gray-500 text-xs">Time Window</div>
           <div className="text-white">
-            {pattern.startTime && formatDistanceToNow(new Date(pattern.startTime), { addSuffix: true })}
+            {pattern.startTime &&
+              formatDistanceToNow(new Date(pattern.startTime), { addSuffix: true })}
           </div>
         </div>
 
@@ -226,9 +225,7 @@ function TemporalClusterCard({ pattern }) {
           </div>
         )}
 
-        {pattern.description && (
-          <p className="text-gray-400 text-xs">{pattern.description}</p>
-        )}
+        {pattern.description && <p className="text-gray-400 text-xs">{pattern.description}</p>}
       </div>
     </div>
   )
@@ -273,9 +270,7 @@ function GeographicCard({ pattern }) {
           </div>
         )}
 
-        {pattern.description && (
-          <p className="text-gray-400 text-xs">{pattern.description}</p>
-        )}
+        {pattern.description && <p className="text-gray-400 text-xs">{pattern.description}</p>}
       </div>
     </div>
   )
@@ -287,9 +282,7 @@ function ActorSectorCard({ pattern }) {
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="text-purple-400 font-medium">{pattern.actorName}</h3>
-          <p className="text-sm text-gray-400">
-            Targeting {pattern.sector}
-          </p>
+          <p className="text-sm text-gray-400">Targeting {pattern.sector}</p>
         </div>
         <ConfidenceBadge confidence={pattern.confidence} />
       </div>
@@ -306,9 +299,7 @@ function ActorSectorCard({ pattern }) {
           </div>
         </div>
 
-        {pattern.description && (
-          <p className="text-gray-400 text-xs">{pattern.description}</p>
-        )}
+        {pattern.description && <p className="text-gray-400 text-xs">{pattern.description}</p>}
 
         <div className="pt-2 border-t border-gray-800">
           <Link
@@ -401,7 +392,10 @@ export default function Patterns() {
 
       try {
         // Load incidents for pattern analysis
-        const { data: incidentsData } = await incidentsApi.getRecent({ days: timeRange, limit: 500 })
+        const { data: incidentsData } = await incidentsApi.getRecent({
+          days: timeRange,
+          limit: 500,
+        })
 
         if (!incidentsData || incidentsData.length === 0) {
           setPatterns([])
@@ -427,9 +421,8 @@ export default function Patterns() {
   }, [isDemoMode, timeRange])
 
   // Filter patterns by type
-  const filteredPatterns = selectedType === 'all'
-    ? patterns
-    : patterns.filter((p) => p.type === selectedType)
+  const filteredPatterns =
+    selectedType === 'all' ? patterns : patterns.filter((p) => p.type === selectedType)
 
   // Sort by confidence
   const sortedPatterns = [...filteredPatterns].sort((a, b) => b.confidence - a.confidence)
@@ -462,9 +455,7 @@ export default function Patterns() {
           ))}
         </div>
 
-        <span className="text-gray-500 text-sm">
-          {patterns.length} patterns detected
-        </span>
+        <span className="text-gray-500 text-sm">{patterns.length} patterns detected</span>
       </div>
 
       {loading ? (
@@ -485,8 +476,18 @@ export default function Patterns() {
         </div>
       ) : patterns.length === 0 ? (
         <div className="cyber-card text-center py-12">
-          <svg className="w-12 h-12 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          <svg
+            className="w-12 h-12 mx-auto text-gray-600 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
           </svg>
           <h3 className="text-gray-400 font-medium">No patterns detected</h3>
           <p className="text-gray-500 text-sm mt-1">

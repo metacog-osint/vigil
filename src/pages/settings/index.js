@@ -12,7 +12,7 @@ export {
   SavedSearchesList,
   TagsList,
   CreateTagModal,
-  SyncLogList
+  SyncLogList,
 } from './SettingsComponents.jsx'
 
 // Subscription section

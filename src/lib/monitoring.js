@@ -169,11 +169,21 @@ export const performance = {
 
       const vitals = {}
 
-      onCLS((metric) => { vitals.CLS = metric.value })
-      onFID((metric) => { vitals.FID = metric.value })
-      onFCP((metric) => { vitals.FCP = metric.value })
-      onLCP((metric) => { vitals.LCP = metric.value })
-      onTTFB((metric) => { vitals.TTFB = metric.value })
+      onCLS((metric) => {
+        vitals.CLS = metric.value
+      })
+      onFID((metric) => {
+        vitals.FID = metric.value
+      })
+      onFCP((metric) => {
+        vitals.FCP = metric.value
+      })
+      onLCP((metric) => {
+        vitals.LCP = metric.value
+      })
+      onTTFB((metric) => {
+        vitals.TTFB = metric.value
+      })
 
       return vitals
     } catch (e) {
@@ -243,7 +253,7 @@ export const healthCheck = {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/`, {
         method: 'HEAD',
         headers: {
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
       })
       return {
@@ -259,9 +269,7 @@ export const healthCheck = {
    * Get overall system health
    */
   async getStatus() {
-    const [supabase] = await Promise.all([
-      this.checkSupabase(),
-    ])
+    const [supabase] = await Promise.all([this.checkSupabase()])
 
     const overall = supabase.status === 'healthy' ? 'healthy' : 'degraded'
 

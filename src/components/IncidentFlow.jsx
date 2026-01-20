@@ -16,15 +16,7 @@ function CustomNode({ x, y, width, height, index: _index, payload }) {
 
   return (
     <g>
-      <Rectangle
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        fill={color}
-        fillOpacity={0.9}
-        rx={4}
-      />
+      <Rectangle x={x} y={y} width={width} height={height} fill={color} fillOpacity={0.9} rx={4} />
       {height > 20 && (
         <text
           x={x + width + 6}
@@ -42,7 +34,17 @@ function CustomNode({ x, y, width, height, index: _index, payload }) {
 }
 
 // Custom link for Sankey
-function CustomLink({ sourceX, targetX, sourceY, targetY, sourceControlX, targetControlX, linkWidth, index, payload }) {
+function CustomLink({
+  sourceX,
+  targetX,
+  sourceY,
+  targetY,
+  sourceControlX,
+  targetControlX,
+  linkWidth,
+  index,
+  payload,
+}) {
   const gradientId = `linkGradient${index}`
   const sourceColor = NODE_COLORS[payload.source?.category] || '#6b7280'
   const targetColor = NODE_COLORS[payload.target?.category] || '#6b7280'
@@ -71,10 +73,10 @@ function CustomLink({ sourceX, targetX, sourceY, targetY, sourceControlX, target
 }
 
 export function IncidentFlow({
-  actors = [],      // { name, incidents: number }
-  tactics = [],     // { name, count: number }
-  sectors = [],     // { name, count: number }
-  flows = [],       // { source, target, value } - connections
+  actors = [], // { name, incidents: number }
+  tactics = [], // { name, count: number }
+  sectors = [], // { name, count: number }
+  flows = [], // { source, target, value } - connections
   className = '',
 }) {
   const { nodes, links } = useMemo(() => {
@@ -94,7 +96,7 @@ export function IncidentFlow({
       const nodes = Array.from(nodeMap.values())
       const nodeIndex = new Map(nodes.map((n, i) => [n.name, i]))
 
-      const links = flows.map(f => ({
+      const links = flows.map((f) => ({
         source: nodeIndex.get(f.source),
         target: nodeIndex.get(f.target),
         value: f.value || 1,
@@ -211,10 +213,7 @@ export function IncidentFlow({
       <div className="flex items-center justify-center gap-6 mt-4 text-xs">
         {Object.entries(NODE_COLORS).map(([category, color]) => (
           <div key={category} className="flex items-center gap-1.5">
-            <div
-              className="w-3 h-3 rounded"
-              style={{ backgroundColor: color }}
-            />
+            <div className="w-3 h-3 rounded" style={{ backgroundColor: color }} />
             <span className="text-gray-400 capitalize">{category}s</span>
           </div>
         ))}
@@ -236,7 +235,7 @@ export function IncidentFlowSimple({
     )
   }
 
-  const maxCount = Math.max(...stages.map(s => s.count || s.items?.length || 0), 1)
+  const maxCount = Math.max(...stages.map((s) => s.count || s.items?.length || 0), 1)
 
   return (
     <div className={clsx('flex items-center gap-2', className)}>
@@ -289,28 +288,20 @@ export function AttackChain({
         <div key={i} className="flex items-start gap-3">
           {/* Timeline dot and line */}
           <div className="flex flex-col items-center">
-            <div className={clsx(
-              'w-3 h-3 rounded-full',
-              i === 0 ? 'bg-green-500' : i === chain.length - 1 ? 'bg-red-500' : 'bg-gray-500'
-            )} />
-            {i < chain.length - 1 && (
-              <div className="w-0.5 h-8 bg-gray-700" />
-            )}
+            <div
+              className={clsx(
+                'w-3 h-3 rounded-full',
+                i === 0 ? 'bg-green-500' : i === chain.length - 1 ? 'bg-red-500' : 'bg-gray-500'
+              )}
+            />
+            {i < chain.length - 1 && <div className="w-0.5 h-8 bg-gray-700" />}
           </div>
 
           {/* Step content */}
           <div className="flex-1 pb-4">
-            <div className="text-xs text-gray-500 uppercase tracking-wide">
-              {step.phase}
-            </div>
-            <div className="text-sm text-white font-medium">
-              {step.technique}
-            </div>
-            {step.actor && (
-              <div className="text-xs text-gray-400 mt-0.5">
-                by {step.actor}
-              </div>
-            )}
+            <div className="text-xs text-gray-500 uppercase tracking-wide">{step.phase}</div>
+            <div className="text-sm text-white font-medium">{step.technique}</div>
+            {step.actor && <div className="text-xs text-gray-400 mt-0.5">by {step.actor}</div>}
           </div>
         </div>
       ))}

@@ -73,13 +73,13 @@ export const SHORTCUTS = {
 // Get all shortcuts as a flat list
 export function getAllShortcuts() {
   return Object.entries(SHORTCUTS).flatMap(([category, shortcuts]) =>
-    shortcuts.map(s => ({ ...s, category }))
+    shortcuts.map((s) => ({ ...s, category }))
   )
 }
 
 // Format keys for display
 export function formatKeys(keys) {
-  return keys.map(key => {
+  return keys.map((key) => {
     if (key === MOD_KEY) return key
     if (key === 'Enter') return '↵'
     if (key === 'Escape') return 'Esc'

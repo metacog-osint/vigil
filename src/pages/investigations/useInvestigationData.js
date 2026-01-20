@@ -37,14 +37,17 @@ export function useInvestigationData(userId, hasAccess, filters) {
     }
   }, [userId, hasAccess, filters])
 
-  const loadInvestigation = useCallback(async (id) => {
-    try {
-      const inv = await investigations.getById(id, userId)
-      setSelectedInvestigation(inv)
-    } catch (err) {
-      setError(err.message)
-    }
-  }, [userId])
+  const loadInvestigation = useCallback(
+    async (id) => {
+      try {
+        const inv = await investigations.getById(id, userId)
+        setSelectedInvestigation(inv)
+      } catch (err) {
+        setError(err.message)
+      }
+    },
+    [userId]
+  )
 
   useEffect(() => {
     loadData()
@@ -68,32 +71,55 @@ export function useInvestigationData(userId, hasAccess, filters) {
 /**
  * Hook for investigation actions
  */
-export function useInvestigationActions(userId, investigationList, setInvestigationList, selectedInvestigation, setSelectedInvestigation, loadData, loadInvestigation) {
-  const handleCreate = useCallback(async (data) => {
-    const newInv = await investigations.create(userId, data)
-    setInvestigationList([newInv, ...investigationList])
-    setSelectedInvestigation(newInv)
-    loadInvestigation(newInv.id)
-    return newInv
-  }, [userId, investigationList, setInvestigationList, setSelectedInvestigation, loadInvestigation])
+export function useInvestigationActions(
+  userId,
+  investigationList,
+  setInvestigationList,
+  selectedInvestigation,
+  setSelectedInvestigation,
+  loadData,
+  loadInvestigation
+) {
+  const handleCreate = useCallback(
+    async (data) => {
+      const newInv = await investigations.create(userId, data)
+      setInvestigationList([newInv, ...investigationList])
+      setSelectedInvestigation(newInv)
+      loadInvestigation(newInv.id)
+      return newInv
+    },
+    [userId, investigationList, setInvestigationList, setSelectedInvestigation, loadInvestigation]
+  )
 
-  const handleUpdateStatus = useCallback(async (id, status) => {
-    await investigations.update(id, userId, { status })
-    loadData()
-    if (selectedInvestigation?.id === id) {
-      loadInvestigation(id)
-    }
-  }, [userId, selectedInvestigation, loadData, loadInvestigation])
+  const handleUpdateStatus = useCallback(
+    async (id, status) => {
+      await investigations.update(id, userId, { status })
+      loadData()
+      if (selectedInvestigation?.id === id) {
+        loadInvestigation(id)
+      }
+    },
+    [userId, selectedInvestigation, loadData, loadInvestigation]
+  )
 
-  const handleDelete = useCallback(async (id) => {
-    if (!confirm('Delete this investigation and all its entries?')) return false
-    await investigations.delete(id, userId)
-    setInvestigationList(investigationList.filter(i => i.id !== id))
-    if (selectedInvestigation?.id === id) {
-      setSelectedInvestigation(null)
-    }
-    return true
-  }, [userId, investigationList, setInvestigationList, selectedInvestigation, setSelectedInvestigation])
+  const handleDelete = useCallback(
+    async (id) => {
+      if (!confirm('Delete this investigation and all its entries?')) return false
+      await investigations.delete(id, userId)
+      setInvestigationList(investigationList.filter((i) => i.id !== id))
+      if (selectedInvestigation?.id === id) {
+        setSelectedInvestigation(null)
+      }
+      return true
+    },
+    [
+      userId,
+      investigationList,
+      setInvestigationList,
+      selectedInvestigation,
+      setSelectedInvestigation,
+    ]
+  )
 
   return {
     handleCreate,

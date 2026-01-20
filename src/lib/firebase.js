@@ -5,7 +5,7 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
 } from 'firebase/auth'
 import {
   getFirestore,
@@ -18,7 +18,7 @@ import {
   query,
   where,
   onSnapshot,
-  serverTimestamp
+  serverTimestamp,
 } from 'firebase/firestore'
 
 // Firebase configuration
@@ -108,7 +108,7 @@ export async function updateUserPreferences(userId, preferences) {
   const docRef = doc(db, 'users', userId)
   await updateDoc(docRef, {
     ...preferences,
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
   })
 }
 
@@ -148,10 +148,10 @@ export async function addToWatchlist(userId, type, item) {
   const docRef = doc(db, 'watchlists', userId)
   const watchlist = await getWatchlist(userId)
 
-  if (!watchlist[type].find(i => i.id === item.id)) {
+  if (!watchlist[type].find((i) => i.id === item.id)) {
     watchlist[type].push({
       ...item,
-      addedAt: new Date().toISOString()
+      addedAt: new Date().toISOString(),
     })
     await setDoc(docRef, watchlist)
   }
@@ -163,7 +163,7 @@ export async function removeFromWatchlist(userId, type, itemId) {
   const docRef = doc(db, 'watchlists', userId)
   const watchlist = await getWatchlist(userId)
 
-  watchlist[type] = watchlist[type].filter(i => i.id !== itemId)
+  watchlist[type] = watchlist[type].filter((i) => i.id !== itemId)
   await setDoc(docRef, watchlist)
 }
 
@@ -192,7 +192,7 @@ export async function getShiftNotes(date) {
   const q = query(notesRef, where('date', '==', date))
 
   const snapshot = await getDocs(q)
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
 }
 
 export async function addShiftNote(userId, note) {
@@ -204,6 +204,6 @@ export async function addShiftNote(userId, note) {
   await setDoc(docRef, {
     ...note,
     authorId: userId,
-    createdAt: serverTimestamp()
+    createdAt: serverTimestamp(),
   })
 }

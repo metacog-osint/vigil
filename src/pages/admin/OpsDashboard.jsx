@@ -59,19 +59,33 @@ function DataSourceRow({ source, onViewHistory }) {
   }
 
   const getHealthIcon = (status) => {
-    if (status === 'success') return (
-      <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-      </svg>
-    )
-    if (status === 'error') return (
-      <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-      </svg>
-    )
+    if (status === 'success')
+      return (
+        <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            clipRule="evenodd"
+          />
+        </svg>
+      )
+    if (status === 'error')
+      return (
+        <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clipRule="evenodd"
+          />
+        </svg>
+      )
     return (
       <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+          clipRule="evenodd"
+        />
       </svg>
     )
   }
@@ -114,11 +128,7 @@ function DataSourceRow({ source, onViewHistory }) {
 // Error log component
 function ErrorLog({ errors }) {
   if (!errors?.length) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        No recent errors
-      </div>
-    )
+    return <div className="text-center py-8 text-gray-500">No recent errors</div>
   }
 
   return (
@@ -147,7 +157,12 @@ function SourceHistoryModal({ source, history, onClose }) {
           <h3 className="text-lg font-bold text-white">Sync History: {source}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -238,8 +253,18 @@ export default function OpsDashboard() {
     return (
       <div className="text-center py-12">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-4">
-          <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          <svg
+            className="w-8 h-8 text-red-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            />
           </svg>
         </div>
         <h2 className="text-xl font-semibold text-white mb-2">Access Denied</h2>
@@ -275,7 +300,12 @@ export default function OpsDashboard() {
           </select>
           <button onClick={loadData} className="cyber-button text-sm">
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
             </svg>
             Refresh
           </button>
@@ -297,20 +327,14 @@ export default function OpsDashboard() {
               subtitle={`Last ${timeRange}h`}
               color="white"
             />
-            <StatCard
-              title="Successful"
-              value={summary?.success || 0}
-              color="green"
-            />
-            <StatCard
-              title="Failed"
-              value={summary?.failed || 0}
-              color="red"
-            />
+            <StatCard title="Successful" value={summary?.success || 0} color="green" />
+            <StatCard title="Failed" value={summary?.failed || 0} color="red" />
             <StatCard
               title="Error Rate"
               value={`${errorRate}%`}
-              color={parseFloat(errorRate) > 10 ? 'red' : parseFloat(errorRate) > 5 ? 'yellow' : 'green'}
+              color={
+                parseFloat(errorRate) > 10 ? 'red' : parseFloat(errorRate) > 5 ? 'yellow' : 'green'
+              }
             />
             <StatCard
               title="Healthy Sources"
@@ -403,7 +427,11 @@ export default function OpsDashboard() {
             <div className="cyber-card">
               <div className="p-4 border-b border-gray-700 flex items-center gap-2">
                 <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 <h2 className="font-bold text-yellow-400">Stale Data Sources</h2>
               </div>

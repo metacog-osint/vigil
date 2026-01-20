@@ -15,7 +15,15 @@ export { supabase, subscribeToTable }
 // Threat Actors queries
 export const threatActors = {
   async getAll(options = {}) {
-    const { limit = 100, offset = 0, search = '', sector = '', trendStatus = '', actorType = '', status = '' } = options
+    const {
+      limit = 100,
+      offset = 0,
+      search = '',
+      sector = '',
+      trendStatus = '',
+      actorType = '',
+      status = '',
+    } = options
 
     let query = supabase
       .from('threat_actors')
@@ -51,11 +59,13 @@ export const threatActors = {
   async getById(id) {
     return supabase
       .from('threat_actors')
-      .select(`
+      .select(
+        `
         *,
         incidents:incidents(count),
         iocs:iocs(count)
-      `)
+      `
+      )
       .eq('id', id)
       .single()
   },
@@ -108,10 +118,12 @@ export const threatActors = {
     }
 
     // Add incident counts and sort
-    const actorsWithCounts = actors.map(actor => ({
-      ...actor,
-      incident_count: [{ count: actorCounts[actor.id] || 0 }],
-    })).sort((a, b) => (b.incident_count[0]?.count || 0) - (a.incident_count[0]?.count || 0))
+    const actorsWithCounts = actors
+      .map((actor) => ({
+        ...actor,
+        incident_count: [{ count: actorCounts[actor.id] || 0 }],
+      }))
+      .sort((a, b) => (b.incident_count[0]?.count || 0) - (a.incident_count[0]?.count || 0))
 
     return { data: actorsWithCounts, error: null }
   },
@@ -127,9 +139,18 @@ export const threatActors = {
 
   async getTrendSummary() {
     const [escalating, stable, declining] = await Promise.all([
-      supabase.from('threat_actors').select('*', { count: 'exact', head: true }).eq('trend_status', 'ESCALATING'),
-      supabase.from('threat_actors').select('*', { count: 'exact', head: true }).eq('trend_status', 'STABLE'),
-      supabase.from('threat_actors').select('*', { count: 'exact', head: true }).eq('trend_status', 'DECLINING'),
+      supabase
+        .from('threat_actors')
+        .select('*', { count: 'exact', head: true })
+        .eq('trend_status', 'ESCALATING'),
+      supabase
+        .from('threat_actors')
+        .select('*', { count: 'exact', head: true })
+        .eq('trend_status', 'STABLE'),
+      supabase
+        .from('threat_actors')
+        .select('*', { count: 'exact', head: true })
+        .eq('trend_status', 'DECLINING'),
     ])
 
     return {
@@ -143,14 +164,25 @@ export const threatActors = {
 // Incidents queries
 export const incidents = {
   async getAll(options = {}) {
-    const { limit = 100, offset = 0, search = '', sector = '', status = '', actor_id = '', days = 0 } = options
+    const {
+      limit = 100,
+      offset = 0,
+      search = '',
+      sector = '',
+      status = '',
+      actor_id = '',
+      days = 0,
+    } = options
 
     let query = supabase
       .from('incidents')
-      .select(`
+      .select(
+        `
         *,
         threat_actor:threat_actors(id, name)
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' }
+      )
       .order('discovered_date', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -186,10 +218,13 @@ export const incidents = {
 
     let query = supabase
       .from('incidents')
-      .select(`
+      .select(
+        `
         *,
         threat_actor:threat_actors(id, name)
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' }
+      )
       .order('discovered_date', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -250,10 +285,12 @@ export const incidents = {
   async search(query, limit = 10) {
     return supabase
       .from('incidents')
-      .select(`
+      .select(
+        `
         *,
         threat_actor:threat_actors(id, name)
-      `)
+      `
+      )
       .or(`victim_name.ilike.%${query}%,victim_sector.ilike.%${query}%`)
       .order('discovered_date', { ascending: false })
       .limit(limit)
@@ -288,18 +325,20 @@ export const incidents = {
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - days)
     const prevCutoff = new Date()
-    prevCutoff.setDate(prevCutoff.getDate() - (days * 2))
+    prevCutoff.setDate(prevCutoff.getDate() - days * 2)
 
     // Get current period incidents with actor info
     const { data: currentData, error } = await supabase
       .from('incidents')
-      .select(`
+      .select(
+        `
         id,
         victim_name,
         victim_sector,
         discovered_date,
         threat_actor:threat_actors(id, name)
-      `)
+      `
+      )
       .gte('discovered_date', cutoffDate.toISOString())
       .order('discovered_date', { ascending: false })
 
@@ -327,7 +366,7 @@ export const incidents = {
           name: sector,
           count: 0,
           actorCounts: {},
-          recentIncidents: []
+          recentIncidents: [],
         }
       }
       sectorMap[sector].count++
@@ -344,7 +383,7 @@ export const incidents = {
 
     // Convert to array with top actors and trend
     return Object.values(sectorMap)
-      .map(sector => ({
+      .map((sector) => ({
         name: sector.name,
         count: sector.count,
         recentIncidents: sector.recentIncidents,
@@ -354,7 +393,7 @@ export const incidents = {
           .slice(0, 5),
         trend: prevCounts[sector.name]
           ? Math.round(((sector.count - prevCounts[sector.name]) / prevCounts[sector.name]) * 100)
-          : null
+          : null,
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 12)
@@ -368,10 +407,13 @@ export const iocs = {
 
     let query = supabase
       .from('iocs')
-      .select(`
+      .select(
+        `
         *,
         threat_actor:threat_actors(id, name)
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' }
+      )
       .order('last_seen', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -393,10 +435,12 @@ export const iocs = {
   async search(value, type = null) {
     let query = supabase
       .from('iocs')
-      .select(`
+      .select(
+        `
         *,
         threat_actor:threat_actors(id, name)
-      `)
+      `
+      )
       .ilike('value', `%${value}%`)
       .order('last_seen', { ascending: false })
       .limit(100)
@@ -420,10 +464,12 @@ export const iocs = {
   async getRecent(limit = 100) {
     return supabase
       .from('iocs')
-      .select(`
+      .select(
+        `
         *,
         threat_actor:threat_actors(id, name)
-      `)
+      `
+      )
       .order('created_at', { ascending: false })
       .limit(limit)
   },
@@ -436,10 +482,12 @@ export const iocs = {
       // Search IOCs
       supabase
         .from('iocs')
-        .select(`
+        .select(
+          `
           *,
           threat_actor:threat_actors(id, name, trend_status)
-        `)
+        `
+        )
         .or(`value.eq.${value},value.ilike.%${value}%`)
         .order('last_seen', { ascending: false })
         .limit(10),
@@ -449,18 +497,12 @@ export const iocs = {
         .from('malware_samples')
         .select('*')
         .or(`sha256.eq.${value},md5.eq.${value},sha1.eq.${value}`)
-        .limit(5)
+        .limit(5),
     ]
 
     // If looks like CVE, also search vulnerabilities
     if (/^CVE-\d{4}-\d+$/i.test(value)) {
-      promises.push(
-        supabase
-          .from('vulnerabilities')
-          .select('*')
-          .ilike('cve_id', value)
-          .limit(1)
-      )
+      promises.push(supabase.from('vulnerabilities').select('*').ilike('cve_id', value).limit(1))
     }
 
     const results = await Promise.all(promises)
@@ -470,7 +512,8 @@ export const iocs = {
       malware: results[1].data || [],
       vulnerabilities: results[2]?.data || [],
       type,
-      found: (results[0].data?.length > 0) || (results[1].data?.length > 0) || (results[2]?.data?.length > 0)
+      found:
+        results[0].data?.length > 0 || results[1].data?.length > 0 || results[2]?.data?.length > 0,
     }
   },
 
@@ -481,7 +524,11 @@ export const iocs = {
     switch (type) {
       case 'ip':
         links.push(
-          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/ip-address/${value}`, icon: 'virustotal' },
+          {
+            name: 'VirusTotal',
+            url: `https://www.virustotal.com/gui/ip-address/${value}`,
+            icon: 'virustotal',
+          },
           { name: 'Shodan', url: `https://www.shodan.io/host/${value}`, icon: 'shodan' },
           { name: 'AbuseIPDB', url: `https://www.abuseipdb.com/check/${value}`, icon: 'abuseipdb' },
           { name: 'Censys', url: `https://search.censys.io/hosts/${value}`, icon: 'censys' }
@@ -492,38 +539,80 @@ export const iocs = {
       case 'hash_sha1':
       case 'hash':
         links.push(
-          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/file/${value}`, icon: 'virustotal' },
-          { name: 'MalwareBazaar', url: `https://bazaar.abuse.ch/browse.php?search=${value}`, icon: 'malwarebazaar' },
-          { name: 'Hybrid Analysis', url: `https://www.hybrid-analysis.com/search?query=${value}`, icon: 'hybrid' }
+          {
+            name: 'VirusTotal',
+            url: `https://www.virustotal.com/gui/file/${value}`,
+            icon: 'virustotal',
+          },
+          {
+            name: 'MalwareBazaar',
+            url: `https://bazaar.abuse.ch/browse.php?search=${value}`,
+            icon: 'malwarebazaar',
+          },
+          {
+            name: 'Hybrid Analysis',
+            url: `https://www.hybrid-analysis.com/search?query=${value}`,
+            icon: 'hybrid',
+          }
         )
         break
       case 'domain':
         links.push(
-          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/domain/${value}`, icon: 'virustotal' },
-          { name: 'URLhaus', url: `https://urlhaus.abuse.ch/browse.php?search=${value}`, icon: 'urlhaus' },
-          { name: 'Shodan', url: `https://www.shodan.io/search?query=hostname%3A${value}`, icon: 'shodan' }
+          {
+            name: 'VirusTotal',
+            url: `https://www.virustotal.com/gui/domain/${value}`,
+            icon: 'virustotal',
+          },
+          {
+            name: 'URLhaus',
+            url: `https://urlhaus.abuse.ch/browse.php?search=${value}`,
+            icon: 'urlhaus',
+          },
+          {
+            name: 'Shodan',
+            url: `https://www.shodan.io/search?query=hostname%3A${value}`,
+            icon: 'shodan',
+          }
         )
         break
       case 'url':
         const encoded = encodeURIComponent(value)
         links.push(
-          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/url/${encoded}`, icon: 'virustotal' },
-          { name: 'URLhaus', url: `https://urlhaus.abuse.ch/browse.php?search=${encoded}`, icon: 'urlhaus' }
+          {
+            name: 'VirusTotal',
+            url: `https://www.virustotal.com/gui/url/${encoded}`,
+            icon: 'virustotal',
+          },
+          {
+            name: 'URLhaus',
+            url: `https://urlhaus.abuse.ch/browse.php?search=${encoded}`,
+            icon: 'urlhaus',
+          }
         )
         break
       case 'cve':
         links.push(
           { name: 'NVD', url: `https://nvd.nist.gov/vuln/detail/${value}`, icon: 'nvd' },
-          { name: 'CISA KEV', url: `https://www.cisa.gov/known-exploited-vulnerabilities-catalog`, icon: 'cisa' },
+          {
+            name: 'CISA KEV',
+            url: `https://www.cisa.gov/known-exploited-vulnerabilities-catalog`,
+            icon: 'cisa',
+          },
           { name: 'CVE.org', url: `https://www.cve.org/CVERecord?id=${value}`, icon: 'cve' },
-          { name: 'Exploit-DB', url: `https://www.exploit-db.com/search?cve=${value}`, icon: 'exploitdb' }
+          {
+            name: 'Exploit-DB',
+            url: `https://www.exploit-db.com/search?cve=${value}`,
+            icon: 'exploitdb',
+          }
         )
         break
       default:
         // Generic search
-        links.push(
-          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/search/${encodeURIComponent(value)}`, icon: 'virustotal' }
-        )
+        links.push({
+          name: 'VirusTotal',
+          url: `https://www.virustotal.com/gui/search/${encodeURIComponent(value)}`,
+          icon: 'virustotal',
+        })
     }
 
     return links
@@ -608,11 +697,7 @@ export const vulnerabilities = {
   },
 
   async getByCVE(cveId) {
-    return supabase
-      .from('vulnerabilities')
-      .select('*')
-      .eq('cve_id', cveId)
-      .single()
+    return supabase.from('vulnerabilities').select('*').eq('cve_id', cveId).single()
   },
 
   async getCritical(minCvss = 9.0) {
@@ -653,9 +738,7 @@ export const vulnerabilities = {
 
   async getBySeverity() {
     // Fetch all vulnerabilities with CVSS scores
-    const { data, error } = await supabase
-      .from('vulnerabilities')
-      .select('cvss_score')
+    const { data, error } = await supabase.from('vulnerabilities').select('cvss_score')
 
     if (error || !data || data.length === 0) {
       // Return placeholder data if no vulnerabilities
@@ -723,11 +806,16 @@ export const vulnerabilities = {
     // Get actor-CVE correlations
     const { data: correlations } = await supabase
       .from('actor_vulnerabilities')
-      .select(`
+      .select(
+        `
         cve_id,
         actor:threat_actors(id, name, actor_type)
-      `)
-      .in('cve_id', kevs.map(k => k.cve_id))
+      `
+      )
+      .in(
+        'cve_id',
+        kevs.map((k) => k.cve_id)
+      )
 
     // Build actor map
     const actorMap = {}
@@ -741,12 +829,17 @@ export const vulnerabilities = {
     }
 
     // Enrich KEVs with actor data and sort by relevance
-    const enriched = kevs.map(kev => ({
+    const enriched = kevs.map((kev) => ({
       ...kev,
       actors: actorMap[kev.cve_id] || [],
-      severity: kev.cvss_score >= 9 ? 'critical' :
-                kev.cvss_score >= 7 ? 'high' :
-                kev.cvss_score >= 4 ? 'medium' : 'low'
+      severity:
+        kev.cvss_score >= 9
+          ? 'critical'
+          : kev.cvss_score >= 7
+            ? 'high'
+            : kev.cvss_score >= 4
+              ? 'medium'
+              : 'low',
     }))
 
     // Sort by: has actors > ransomware use > CVSS score > recency
@@ -808,11 +901,7 @@ export const techniques = {
   },
 
   async getById(techniqueId) {
-    return supabase
-      .from('techniques')
-      .select('*')
-      .eq('id', techniqueId)
-      .single()
+    return supabase.from('techniques').select('*').eq('id', techniqueId).single()
   },
 
   async getByTactic(tactic, limit = 50) {
@@ -827,21 +916,21 @@ export const techniques = {
   async getForActor(actorId) {
     return supabase
       .from('actor_techniques')
-      .select(`
+      .select(
+        `
         *,
         technique:techniques(*)
-      `)
+      `
+      )
       .eq('actor_id', actorId)
       .order('created_at', { ascending: false })
   },
 
   async getTacticSummary() {
-    const { data } = await supabase
-      .from('techniques')
-      .select('tactics')
+    const { data } = await supabase.from('techniques').select('tactics')
 
     const counts = {}
-    for (const row of (data || [])) {
+    for (const row of data || []) {
       for (const tactic of row.tactics || []) {
         counts[tactic] = (counts[tactic] || 0) + 1
       }
@@ -855,10 +944,12 @@ export const watchlists = {
   async getAll(userId = 'anonymous') {
     return supabase
       .from('watchlists')
-      .select(`
+      .select(
+        `
         *,
         items:watchlist_items(count)
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
   },
@@ -866,20 +957,18 @@ export const watchlists = {
   async getById(id) {
     return supabase
       .from('watchlists')
-      .select(`
+      .select(
+        `
         *,
         items:watchlist_items(*)
-      `)
+      `
+      )
       .eq('id', id)
       .single()
   },
 
   async create(watchlist) {
-    return supabase
-      .from('watchlists')
-      .insert(watchlist)
-      .select()
-      .single()
+    return supabase.from('watchlists').insert(watchlist).select().single()
   },
 
   async update(id, updates) {
@@ -892,10 +981,7 @@ export const watchlists = {
   },
 
   async delete(id) {
-    return supabase
-      .from('watchlists')
-      .delete()
-      .eq('id', id)
+    return supabase.from('watchlists').delete().eq('id', id)
   },
 
   async addItem(watchlistId, entityId, notes = null) {
@@ -917,10 +1003,12 @@ export const watchlists = {
   async isWatched(entityId, userId = 'anonymous') {
     const { data } = await supabase
       .from('watchlist_items')
-      .select(`
+      .select(
+        `
         *,
         watchlist:watchlists!inner(user_id)
-      `)
+      `
+      )
       .eq('entity_id', entityId)
       .eq('watchlist.user_id', userId)
     return data && data.length > 0
@@ -944,32 +1032,19 @@ export const savedSearches = {
   },
 
   async create(search) {
-    return supabase
-      .from('saved_searches')
-      .insert(search)
-      .select()
-      .single()
+    return supabase.from('saved_searches').insert(search).select().single()
   },
 
   async update(id, updates) {
-    return supabase
-      .from('saved_searches')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
+    return supabase.from('saved_searches').update(updates).eq('id', id).select().single()
   },
 
   async delete(id) {
-    return supabase
-      .from('saved_searches')
-      .delete()
-      .eq('id', id)
+    return supabase.from('saved_searches').delete().eq('id', id)
   },
 
   async incrementUseCount(id) {
-    return supabase
-      .rpc('increment_search_use_count', { search_id: id })
+    return supabase.rpc('increment_search_use_count', { search_id: id })
   },
 }
 
@@ -1035,36 +1110,26 @@ export const tags = {
   async getAll(userId = 'anonymous') {
     return supabase
       .from('tags')
-      .select(`
+      .select(
+        `
         *,
         entity_tags(count)
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('name', { ascending: true })
   },
 
   async create(tag) {
-    return supabase
-      .from('tags')
-      .insert(tag)
-      .select()
-      .single()
+    return supabase.from('tags').insert(tag).select().single()
   },
 
   async update(id, updates) {
-    return supabase
-      .from('tags')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
+    return supabase.from('tags').update(updates).eq('id', id).select().single()
   },
 
   async delete(id) {
-    return supabase
-      .from('tags')
-      .delete()
-      .eq('id', id)
+    return supabase.from('tags').delete().eq('id', id)
   },
 
   async addToEntity(tagId, entityType, entityId) {
@@ -1087,19 +1152,18 @@ export const tags = {
   async getForEntity(entityType, entityId) {
     return supabase
       .from('entity_tags')
-      .select(`
+      .select(
+        `
         *,
         tag:tags(*)
-      `)
+      `
+      )
       .eq('entity_type', entityType)
       .eq('entity_id', entityId)
   },
 
   async getEntitiesByTag(tagId) {
-    return supabase
-      .from('entity_tags')
-      .select('*')
-      .eq('tag_id', tagId)
+    return supabase.from('entity_tags').select('*').eq('tag_id', tagId)
   },
 }
 
@@ -1156,11 +1220,7 @@ export const alerts = {
   },
 
   async getById(id) {
-    return supabase
-      .from('alerts')
-      .select('*')
-      .eq('id', id)
-      .single()
+    return supabase.from('alerts').select('*').eq('id', id).single()
   },
 
   async getByCVE(cveId) {
@@ -1220,7 +1280,7 @@ export const malwareSamples = {
       .not('signature', 'is', null)
 
     const counts = {}
-    for (const row of (data || [])) {
+    for (const row of data || []) {
       if (row.signature) {
         counts[row.signature] = (counts[row.signature] || 0) + 1
       }
@@ -1258,21 +1318,20 @@ export const dashboard = {
     const last365d = new Date(now - 365 * 24 * 60 * 60 * 1000)
 
     // Run queries in parallel
-    const [
-      actorCount,
-      incidentCount30d,
-      incidentCountTotal,
-      kevCount,
-      iocCount,
-    ] = await Promise.all([
-      supabase.from('threat_actors').select('*', { count: 'exact', head: true }),
-      supabase.from('incidents').select('*', { count: 'exact', head: true })
-        .gte('discovered_date', last30d.toISOString()),
-      supabase.from('incidents').select('*', { count: 'exact', head: true }),
-      supabase.from('vulnerabilities').select('*', { count: 'exact', head: true })
-        .not('kev_date', 'is', null),
-      supabase.from('iocs').select('*', { count: 'exact', head: true }),
-    ])
+    const [actorCount, incidentCount30d, incidentCountTotal, kevCount, iocCount] =
+      await Promise.all([
+        supabase.from('threat_actors').select('*', { count: 'exact', head: true }),
+        supabase
+          .from('incidents')
+          .select('*', { count: 'exact', head: true })
+          .gte('discovered_date', last30d.toISOString()),
+        supabase.from('incidents').select('*', { count: 'exact', head: true }),
+        supabase
+          .from('vulnerabilities')
+          .select('*', { count: 'exact', head: true })
+          .not('kev_date', 'is', null),
+        supabase.from('iocs').select('*', { count: 'exact', head: true }),
+      ])
 
     return {
       totalActors: actorCount.count || 0,
@@ -1338,7 +1397,7 @@ export const orgProfile = {
     const { data: current } = await userPreferences.get(userId)
     const preferences = {
       ...(current?.preferences || {}),
-      org_profile: profile
+      org_profile: profile,
     }
     return userPreferences.update(userId, preferences)
   },
@@ -1346,7 +1405,7 @@ export const orgProfile = {
   async hasProfile(userId = 'anonymous') {
     const profile = await this.get(userId)
     return profile && (profile.sector || profile.tech_stack?.length > 0)
-  }
+  },
 }
 
 // Relevance scoring for personalized intelligence
@@ -1378,11 +1437,11 @@ export const relevance = {
 
     // Filter and score by vendor/product match
     const scored = data
-      .map(vuln => ({
+      .map((vuln) => ({
         ...vuln,
-        relevance_score: this.calculateVulnScore(vuln, profile)
+        relevance_score: this.calculateVulnScore(vuln, profile),
       }))
-      .filter(v => v.relevance_score > 0)
+      .filter((v) => v.relevance_score > 0)
       .sort((a, b) => b.relevance_score - a.relevance_score)
       .slice(0, limit)
 
@@ -1397,7 +1456,7 @@ export const relevance = {
     // Sector match (50 points)
     if (profile.sector && actor.target_sectors?.includes(profile.sector)) {
       score += 50
-    } else if (profile.secondary_sectors?.some(s => actor.target_sectors?.includes(s))) {
+    } else if (profile.secondary_sectors?.some((s) => actor.target_sectors?.includes(s))) {
       score += 25
     }
 
@@ -1418,16 +1477,16 @@ export const relevance = {
     if (!profile) return 0
     let score = 0
 
-    const vendors = (profile.tech_vendors || []).map(v => v.toLowerCase())
-    const stack = (profile.tech_stack || []).map(s => s.toLowerCase())
+    const vendors = (profile.tech_vendors || []).map((v) => v.toLowerCase())
+    const stack = (profile.tech_stack || []).map((s) => s.toLowerCase())
 
     // Vendor match (40 points)
-    if (vuln.affected_vendors?.some(v => vendors.includes(v.toLowerCase()))) {
+    if (vuln.affected_vendors?.some((v) => vendors.includes(v.toLowerCase()))) {
       score += 40
     }
 
     // Product match (40 points)
-    if (vuln.affected_products?.some(p => stack.some(s => p.toLowerCase().includes(s)))) {
+    if (vuln.affected_products?.some((p) => stack.some((s) => p.toLowerCase().includes(s)))) {
       score += 40
     }
 
@@ -1447,7 +1506,7 @@ export const relevance = {
     if (score >= 40) return { label: 'Medium', color: 'yellow' }
     if (score >= 20) return { label: 'Low', color: 'blue' }
     return { label: 'Info', color: 'gray' }
-  }
+  },
 }
 
 // Correlations - linking actors, vulnerabilities, TTPs, and IOCs
@@ -1457,19 +1516,23 @@ export const correlations = {
       // Get TTPs
       supabase
         .from('actor_techniques')
-        .select(`
+        .select(
+          `
           *,
           technique:techniques(id, name, tactics, description)
-        `)
+        `
+        )
         .eq('actor_id', actorId),
 
       // Get exploited vulnerabilities
       supabase
         .from('actor_vulnerabilities')
-        .select(`
+        .select(
+          `
           *,
           vulnerability:vulnerabilities(cve_id, cvss_score, description, affected_products)
-        `)
+        `
+        )
         .eq('actor_id', actorId),
 
       // Get IOCs
@@ -1477,13 +1540,13 @@ export const correlations = {
         .from('iocs')
         .select('id, type, value, malware_family, confidence')
         .eq('actor_id', actorId)
-        .limit(50)
+        .limit(50),
     ])
 
     return {
       techniques: techniques.data || [],
       vulnerabilities: vulnerabilities.data || [],
-      iocs: iocData.data || []
+      iocs: iocData.data || [],
     }
   },
 
@@ -1491,9 +1554,7 @@ export const correlations = {
     const correlationData = await this.getActorCorrelations(actorId)
 
     // Build graph structure for visualization
-    const nodes = [
-      { id: 'actor', type: 'actor', label: 'Actor' }
-    ]
+    const nodes = [{ id: 'actor', type: 'actor', label: 'Actor' }]
     const edges = []
 
     // Add technique nodes
@@ -1503,7 +1564,7 @@ export const correlations = {
         id: nodeId,
         type: 'technique',
         label: t.technique?.name || t.technique_id,
-        data: t.technique
+        data: t.technique,
       })
       edges.push({ from: 'actor', to: nodeId, label: 'uses' })
     }
@@ -1515,7 +1576,7 @@ export const correlations = {
         id: nodeId,
         type: 'vulnerability',
         label: v.cve_id,
-        data: v.vulnerability
+        data: v.vulnerability,
       })
       edges.push({ from: 'actor', to: nodeId, label: 'exploits' })
     }
@@ -1527,7 +1588,7 @@ export const correlations = {
         id: nodeId,
         type: 'ioc',
         label: i.value?.substring(0, 20) + (i.value?.length > 20 ? '...' : ''),
-        data: i
+        data: i,
       })
       edges.push({ from: 'actor', to: nodeId, label: 'associated' })
     }
@@ -1538,35 +1599,40 @@ export const correlations = {
   async getVulnActors(cveId) {
     return supabase
       .from('actor_vulnerabilities')
-      .select(`
+      .select(
+        `
         *,
         actor:threat_actors(id, name, trend_status, target_sectors)
-      `)
+      `
+      )
       .eq('cve_id', cveId)
   },
 
   async getTechniqueActors(techniqueId) {
     return supabase
       .from('actor_techniques')
-      .select(`
+      .select(
+        `
         *,
         actor:threat_actors(id, name, trend_status)
-      `)
+      `
+      )
       .eq('technique_id', techniqueId)
   },
 
   // Link an actor to a CVE (for seeding or manual correlation)
   async linkActorVulnerability(actorId, cveId, confidence = 'medium', source = 'manual') {
-    return supabase
-      .from('actor_vulnerabilities')
-      .upsert({
+    return supabase.from('actor_vulnerabilities').upsert(
+      {
         actor_id: actorId,
         cve_id: cveId,
         confidence,
         source,
-        first_seen: new Date().toISOString().split('T')[0]
-      }, { onConflict: 'actor_id,cve_id' })
-  }
+        first_seen: new Date().toISOString().split('T')[0],
+      },
+      { onConflict: 'actor_id,cve_id' }
+    )
+  },
 }
 
 // Trend Analysis - temporal intelligence
@@ -1595,7 +1661,7 @@ export const trendAnalysis = {
       sectorChanges: this.calculateSectorChanges(
         current.incidents_by_sector,
         previous.incidents_by_sector
-      )
+      ),
     }
   },
 
@@ -1617,39 +1683,35 @@ export const trendAnalysis = {
         .from('incidents')
         .select('victim_sector', { count: 'exact' })
         .gte('discovered_date', lastWeekStart.toISOString().split('T')[0])
-        .lt('discovered_date', thisWeekStart.toISOString().split('T')[0])
+        .lt('discovered_date', thisWeekStart.toISOString().split('T')[0]),
     ])
 
     const currentCount = thisWeek.count || 0
     const previousCount = lastWeek.count || 0
-    const changePercent = previousCount > 0
-      ? Math.round(((currentCount - previousCount) / previousCount) * 100)
-      : 0
+    const changePercent =
+      previousCount > 0 ? Math.round(((currentCount - previousCount) / previousCount) * 100) : 0
 
     return {
       currentWeek: { incidents_total: currentCount },
       previousWeek: { incidents_total: previousCount },
-      incidentChange: changePercent
+      incidentChange: changePercent,
     }
   },
 
   calculateSectorChanges(current, previous) {
     const changes = []
-    const allSectors = new Set([
-      ...Object.keys(current || {}),
-      ...Object.keys(previous || {})
-    ])
+    const allSectors = new Set([...Object.keys(current || {}), ...Object.keys(previous || {})])
 
     for (const sector of allSectors) {
       const curr = current?.[sector] || 0
       const prev = previous?.[sector] || 0
-      const change = prev > 0 ? Math.round(((curr - prev) / prev) * 100) : (curr > 0 ? 100 : 0)
+      const change = prev > 0 ? Math.round(((curr - prev) / prev) * 100) : curr > 0 ? 100 : 0
 
       changes.push({
         sector,
         current: curr,
         previous: prev,
-        change
+        change,
       })
     }
 
@@ -1668,7 +1730,7 @@ export const trendAnalysis = {
     // Group by week and sector
     const weeklyBySector = {}
 
-    for (const incident of (data || [])) {
+    for (const incident of data || []) {
       const date = new Date(incident.discovered_date)
       const weekStart = this.getWeekStart(date)
       const sector = incident.victim_sector || 'Unknown'
@@ -1678,13 +1740,13 @@ export const trendAnalysis = {
     }
 
     // Transform into chart-friendly format
-    const weeks = [...new Set(Object.keys(weeklyBySector).map(k => k.split('|')[0]))].sort()
-    const sectors = [...new Set(Object.keys(weeklyBySector).map(k => k.split('|')[1]))]
+    const weeks = [...new Set(Object.keys(weeklyBySector).map((k) => k.split('|')[0]))].sort()
+    const sectors = [...new Set(Object.keys(weeklyBySector).map((k) => k.split('|')[1]))]
 
     return {
       weeks,
       sectors,
-      data: weeklyBySector
+      data: weeklyBySector,
     }
   },
 
@@ -1722,7 +1784,7 @@ export const trendAnalysis = {
         .select('id, name, incidents_7d, trend_status')
         .eq('trend_status', 'ESCALATING')
         .order('incidents_7d', { ascending: false })
-        .limit(10)
+        .limit(10),
     ])
 
     return {
@@ -1730,7 +1792,7 @@ export const trendAnalysis = {
       newActors: newActors.count || 0,
       newKEVs: newKEVs.count || 0,
       escalatingActors: escalatingActors.data || [],
-      sinceDays
+      sinceDays,
     }
   },
 
@@ -1739,28 +1801,79 @@ export const trendAnalysis = {
       .from('actor_trend_history')
       .select('*')
       .in('actor_id', actorIds)
-      .gte('recorded_date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+      .gte(
+        'recorded_date',
+        new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      )
       .order('recorded_date', { ascending: true })
-  }
+  },
 }
 
 // Data Sources management
 export const dataSources = {
   // Data source definitions
   sources: [
-    { id: 'ransomlook', name: 'RansomLook', type: 'ransomware', automated: true, frequency: '6 hours' },
-    { id: 'ransomware_live', name: 'Ransomware.live', type: 'ransomware', automated: true, frequency: '6 hours' },
-    { id: 'mitre_attack', name: 'MITRE ATT&CK', type: 'apt', automated: true, frequency: '6 hours' },
+    {
+      id: 'ransomlook',
+      name: 'RansomLook',
+      type: 'ransomware',
+      automated: true,
+      frequency: '6 hours',
+    },
+    {
+      id: 'ransomware_live',
+      name: 'Ransomware.live',
+      type: 'ransomware',
+      automated: true,
+      frequency: '6 hours',
+    },
+    {
+      id: 'mitre_attack',
+      name: 'MITRE ATT&CK',
+      type: 'apt',
+      automated: true,
+      frequency: '6 hours',
+    },
     { id: 'malpedia', name: 'Malpedia', type: 'malware', automated: true, frequency: '6 hours' },
-    { id: 'misp_galaxy', name: 'MISP Galaxy', type: 'actors', automated: true, frequency: '6 hours' },
-    { id: 'cisa_kev', name: 'CISA KEV', type: 'vulnerabilities', automated: true, frequency: '6 hours' },
+    {
+      id: 'misp_galaxy',
+      name: 'MISP Galaxy',
+      type: 'actors',
+      automated: true,
+      frequency: '6 hours',
+    },
+    {
+      id: 'cisa_kev',
+      name: 'CISA KEV',
+      type: 'vulnerabilities',
+      automated: true,
+      frequency: '6 hours',
+    },
     { id: 'nvd', name: 'NVD', type: 'vulnerabilities', automated: true, frequency: '6 hours' },
     { id: 'threatfox', name: 'ThreatFox', type: 'iocs', automated: true, frequency: '6 hours' },
     { id: 'urlhaus', name: 'URLhaus', type: 'iocs', automated: true, frequency: '6 hours' },
     { id: 'feodo', name: 'Feodo Tracker', type: 'iocs', automated: true, frequency: '6 hours' },
-    { id: 'cisa_alerts', name: 'CISA Alerts', type: 'alerts', automated: true, frequency: '6 hours' },
-    { id: 'actor_types_seed', name: 'Curated Actors', type: 'actors', automated: false, frequency: 'manual' },
-    { id: 'actor_snapshot', name: 'Trend Snapshots', type: 'analytics', automated: true, frequency: '6 hours' },
+    {
+      id: 'cisa_alerts',
+      name: 'CISA Alerts',
+      type: 'alerts',
+      automated: true,
+      frequency: '6 hours',
+    },
+    {
+      id: 'actor_types_seed',
+      name: 'Curated Actors',
+      type: 'actors',
+      automated: false,
+      frequency: 'manual',
+    },
+    {
+      id: 'actor_snapshot',
+      name: 'Trend Snapshots',
+      type: 'analytics',
+      automated: true,
+      frequency: '6 hours',
+    },
   ],
 
   async getSyncStatus() {
@@ -1781,7 +1894,7 @@ export const dataSources = {
     }
 
     // Merge with source definitions
-    const result = this.sources.map(source => ({
+    const result = this.sources.map((source) => ({
       ...source,
       lastSync: latest.get(source.id)?.completed_at || null,
       lastStatus: latest.get(source.id)?.status || 'never',
@@ -1793,9 +1906,7 @@ export const dataSources = {
   },
 
   async getActorTypeCounts() {
-    const { data, error } = await supabase
-      .from('threat_actors')
-      .select('actor_type')
+    const { data, error } = await supabase.from('threat_actors').select('actor_type')
 
     if (error) return { data: {}, error }
 
@@ -1809,7 +1920,7 @@ export const dataSources = {
   },
 
   async triggerManualUpdate(sourceId) {
-    const source = this.sources.find(s => s.id === sourceId)
+    const source = this.sources.find((s) => s.id === sourceId)
     if (!source) {
       return { success: false, message: 'Unknown data source' }
     }
@@ -1817,7 +1928,7 @@ export const dataSources = {
     if (source.automated) {
       return {
         success: false,
-        message: `${source.name} is automated. It updates every ${source.frequency} via GitHub Actions.`
+        message: `${source.name} is automated. It updates every ${source.frequency} via GitHub Actions.`,
       }
     }
 
@@ -1832,36 +1943,211 @@ export const dataSources = {
   // Curated actor data embedded in the app
   curatedActors: {
     cybercrime: [
-      { name: 'FIN6', aliases: ['ITG08', 'Skeleton Spider', 'Magecart Group 6'], description: 'Financially motivated cybercrime group known for targeting POS systems and e-commerce platforms.', target_sectors: ['retail', 'hospitality', 'entertainment'], first_seen: '2015-01-01', ttps: ['T1059', 'T1055', 'T1003', 'T1486'] },
-      { name: 'FIN7', aliases: ['Carbanak', 'Carbon Spider', 'Sangria Tempest'], description: 'Prolific financially motivated group targeting retail, restaurant, and hospitality sectors.', target_sectors: ['retail', 'hospitality', 'finance'], first_seen: '2013-01-01', ttps: ['T1566', 'T1059', 'T1055', 'T1003'] },
-      { name: 'FIN8', aliases: ['Syssphinx'], description: 'Financially motivated group targeting POS environments in hospitality and retail.', target_sectors: ['retail', 'hospitality', 'finance'], first_seen: '2016-01-01', ttps: ['T1059', 'T1053', 'T1003', 'T1055'] },
-      { name: 'FIN11', aliases: ['TA505', 'Lace Tempest'], description: 'High-volume financially motivated group known for Clop ransomware and Dridex banking trojan.', target_sectors: ['finance', 'retail', 'healthcare'], first_seen: '2016-01-01', ttps: ['T1566', 'T1059', 'T1486', 'T1190'] },
-      { name: 'Scattered Spider', aliases: ['UNC3944', 'Roasted 0ktapus', 'Octo Tempest'], description: 'Young English-speaking cybercrime group known for SIM swapping and social engineering.', target_sectors: ['technology', 'telecommunications', 'gaming'], first_seen: '2022-01-01', ttps: ['T1566', 'T1078', 'T1621', 'T1486'] },
-      { name: 'Magecart', aliases: ['Magecart Group', 'Web Skimmers'], description: 'Umbrella term for groups injecting payment card skimmers into e-commerce websites.', target_sectors: ['retail', 'e-commerce'], first_seen: '2015-01-01', ttps: ['T1059', 'T1505', 'T1189'] },
-      { name: 'Cobalt Group', aliases: ['Cobalt Gang', 'Cobalt Spider'], description: 'Eastern European cybercrime syndicate targeting banks via ATM attacks and SWIFT.', target_sectors: ['finance'], first_seen: '2016-01-01', ttps: ['T1566', 'T1059', 'T1021', 'T1055'] },
+      {
+        name: 'FIN6',
+        aliases: ['ITG08', 'Skeleton Spider', 'Magecart Group 6'],
+        description:
+          'Financially motivated cybercrime group known for targeting POS systems and e-commerce platforms.',
+        target_sectors: ['retail', 'hospitality', 'entertainment'],
+        first_seen: '2015-01-01',
+        ttps: ['T1059', 'T1055', 'T1003', 'T1486'],
+      },
+      {
+        name: 'FIN7',
+        aliases: ['Carbanak', 'Carbon Spider', 'Sangria Tempest'],
+        description:
+          'Prolific financially motivated group targeting retail, restaurant, and hospitality sectors.',
+        target_sectors: ['retail', 'hospitality', 'finance'],
+        first_seen: '2013-01-01',
+        ttps: ['T1566', 'T1059', 'T1055', 'T1003'],
+      },
+      {
+        name: 'FIN8',
+        aliases: ['Syssphinx'],
+        description:
+          'Financially motivated group targeting POS environments in hospitality and retail.',
+        target_sectors: ['retail', 'hospitality', 'finance'],
+        first_seen: '2016-01-01',
+        ttps: ['T1059', 'T1053', 'T1003', 'T1055'],
+      },
+      {
+        name: 'FIN11',
+        aliases: ['TA505', 'Lace Tempest'],
+        description:
+          'High-volume financially motivated group known for Clop ransomware and Dridex banking trojan.',
+        target_sectors: ['finance', 'retail', 'healthcare'],
+        first_seen: '2016-01-01',
+        ttps: ['T1566', 'T1059', 'T1486', 'T1190'],
+      },
+      {
+        name: 'Scattered Spider',
+        aliases: ['UNC3944', 'Roasted 0ktapus', 'Octo Tempest'],
+        description:
+          'Young English-speaking cybercrime group known for SIM swapping and social engineering.',
+        target_sectors: ['technology', 'telecommunications', 'gaming'],
+        first_seen: '2022-01-01',
+        ttps: ['T1566', 'T1078', 'T1621', 'T1486'],
+      },
+      {
+        name: 'Magecart',
+        aliases: ['Magecart Group', 'Web Skimmers'],
+        description:
+          'Umbrella term for groups injecting payment card skimmers into e-commerce websites.',
+        target_sectors: ['retail', 'e-commerce'],
+        first_seen: '2015-01-01',
+        ttps: ['T1059', 'T1505', 'T1189'],
+      },
+      {
+        name: 'Cobalt Group',
+        aliases: ['Cobalt Gang', 'Cobalt Spider'],
+        description:
+          'Eastern European cybercrime syndicate targeting banks via ATM attacks and SWIFT.',
+        target_sectors: ['finance'],
+        first_seen: '2016-01-01',
+        ttps: ['T1566', 'T1059', 'T1021', 'T1055'],
+      },
     ],
     hacktivism: [
-      { name: 'Anonymous', aliases: ['Anon', 'Anonymous Collective'], description: 'Decentralized international hacktivist collective known for DDoS attacks and data leaks.', target_sectors: ['government', 'finance', 'media'], first_seen: '2003-01-01', ttps: ['T1498', 'T1491', 'T1530'] },
-      { name: 'Anonymous Sudan', aliases: ['Storm-1359'], description: 'Pro-Russian hacktivist group conducting DDoS attacks against Western targets.', target_sectors: ['government', 'technology', 'healthcare'], first_seen: '2023-01-01', ttps: ['T1498', 'T1499'] },
-      { name: 'Killnet', aliases: ['Killnet Collective'], description: 'Pro-Russian hacktivist group conducting DDoS attacks against NATO countries.', target_sectors: ['government', 'transportation', 'finance'], first_seen: '2022-01-01', ttps: ['T1498', 'T1499'] },
-      { name: 'NoName057(16)', aliases: ['NoName', 'NN057'], description: 'Pro-Russian hacktivist group using DDoSia tool for crowdsourced DDoS attacks.', target_sectors: ['government', 'finance', 'transportation'], first_seen: '2022-03-01', ttps: ['T1498', 'T1499'] },
-      { name: 'IT Army of Ukraine', aliases: ['IT Army UA'], description: 'Pro-Ukrainian hacktivist collective coordinating cyber attacks against Russian infrastructure.', target_sectors: ['government', 'finance', 'energy'], first_seen: '2022-02-01', ttps: ['T1498', 'T1491', 'T1530'] },
-      { name: 'GhostSec', aliases: ['Ghost Security'], description: 'Hacktivist group originally focused on anti-ISIS operations.', target_sectors: ['government', 'energy', 'technology'], first_seen: '2015-01-01', ttps: ['T1498', 'T1491', 'T1530'] },
-      { name: 'SiegedSec', aliases: ['Sieged Security'], description: 'Hacktivist group known for breaching organizations over political/social issues.', target_sectors: ['government', 'education'], first_seen: '2022-01-01', ttps: ['T1530', 'T1491', 'T1190'] },
-      { name: 'Lapsus$', aliases: ['LAPSUS$', 'DEV-0537'], description: 'Data extortion group targeting large tech companies through social engineering.', target_sectors: ['technology', 'gaming', 'telecommunications'], first_seen: '2021-12-01', ttps: ['T1078', 'T1566', 'T1530', 'T1657'] },
+      {
+        name: 'Anonymous',
+        aliases: ['Anon', 'Anonymous Collective'],
+        description:
+          'Decentralized international hacktivist collective known for DDoS attacks and data leaks.',
+        target_sectors: ['government', 'finance', 'media'],
+        first_seen: '2003-01-01',
+        ttps: ['T1498', 'T1491', 'T1530'],
+      },
+      {
+        name: 'Anonymous Sudan',
+        aliases: ['Storm-1359'],
+        description:
+          'Pro-Russian hacktivist group conducting DDoS attacks against Western targets.',
+        target_sectors: ['government', 'technology', 'healthcare'],
+        first_seen: '2023-01-01',
+        ttps: ['T1498', 'T1499'],
+      },
+      {
+        name: 'Killnet',
+        aliases: ['Killnet Collective'],
+        description: 'Pro-Russian hacktivist group conducting DDoS attacks against NATO countries.',
+        target_sectors: ['government', 'transportation', 'finance'],
+        first_seen: '2022-01-01',
+        ttps: ['T1498', 'T1499'],
+      },
+      {
+        name: 'NoName057(16)',
+        aliases: ['NoName', 'NN057'],
+        description:
+          'Pro-Russian hacktivist group using DDoSia tool for crowdsourced DDoS attacks.',
+        target_sectors: ['government', 'finance', 'transportation'],
+        first_seen: '2022-03-01',
+        ttps: ['T1498', 'T1499'],
+      },
+      {
+        name: 'IT Army of Ukraine',
+        aliases: ['IT Army UA'],
+        description:
+          'Pro-Ukrainian hacktivist collective coordinating cyber attacks against Russian infrastructure.',
+        target_sectors: ['government', 'finance', 'energy'],
+        first_seen: '2022-02-01',
+        ttps: ['T1498', 'T1491', 'T1530'],
+      },
+      {
+        name: 'GhostSec',
+        aliases: ['Ghost Security'],
+        description: 'Hacktivist group originally focused on anti-ISIS operations.',
+        target_sectors: ['government', 'energy', 'technology'],
+        first_seen: '2015-01-01',
+        ttps: ['T1498', 'T1491', 'T1530'],
+      },
+      {
+        name: 'SiegedSec',
+        aliases: ['Sieged Security'],
+        description:
+          'Hacktivist group known for breaching organizations over political/social issues.',
+        target_sectors: ['government', 'education'],
+        first_seen: '2022-01-01',
+        ttps: ['T1530', 'T1491', 'T1190'],
+      },
+      {
+        name: 'Lapsus$',
+        aliases: ['LAPSUS$', 'DEV-0537'],
+        description:
+          'Data extortion group targeting large tech companies through social engineering.',
+        target_sectors: ['technology', 'gaming', 'telecommunications'],
+        first_seen: '2021-12-01',
+        ttps: ['T1078', 'T1566', 'T1530', 'T1657'],
+      },
     ],
     initial_access_broker: [
-      { name: 'Exotic Lily', aliases: ['TA580', 'Projector Libra'], description: 'Initial access broker using callback phishing and fake business personas.', target_sectors: ['technology', 'healthcare', 'manufacturing'], first_seen: '2021-01-01', ttps: ['T1566', 'T1204', 'T1078'] },
-      { name: 'Prophet Spider', aliases: ['UNC961'], description: 'Initial access broker exploiting public-facing applications.', target_sectors: ['technology', 'healthcare', 'education'], first_seen: '2020-01-01', ttps: ['T1190', 'T1505', 'T1078'] },
-      { name: 'Qakbot Operators', aliases: ['QBot', 'Quakbot'], description: 'Operators of Qakbot banking trojan, pivoted to initial access brokering.', target_sectors: ['finance', 'manufacturing', 'technology'], first_seen: '2007-01-01', ttps: ['T1566', 'T1055', 'T1059', 'T1021'] },
-      { name: 'Emotet Operators', aliases: ['TA542', 'Mummy Spider'], description: 'Operators of Emotet malware-as-a-service, major initial access provider.', target_sectors: ['manufacturing', 'healthcare', 'government'], first_seen: '2014-01-01', ttps: ['T1566', 'T1059', 'T1055', 'T1021'] },
-      { name: 'TrickBot Gang', aliases: ['Wizard Spider', 'ITG23'], description: 'Operators of TrickBot and BazarLoader, major initial access provider.', target_sectors: ['healthcare', 'finance', 'manufacturing'], first_seen: '2016-01-01', ttps: ['T1566', 'T1055', 'T1021', 'T1486'] },
+      {
+        name: 'Exotic Lily',
+        aliases: ['TA580', 'Projector Libra'],
+        description: 'Initial access broker using callback phishing and fake business personas.',
+        target_sectors: ['technology', 'healthcare', 'manufacturing'],
+        first_seen: '2021-01-01',
+        ttps: ['T1566', 'T1204', 'T1078'],
+      },
+      {
+        name: 'Prophet Spider',
+        aliases: ['UNC961'],
+        description: 'Initial access broker exploiting public-facing applications.',
+        target_sectors: ['technology', 'healthcare', 'education'],
+        first_seen: '2020-01-01',
+        ttps: ['T1190', 'T1505', 'T1078'],
+      },
+      {
+        name: 'Qakbot Operators',
+        aliases: ['QBot', 'Quakbot'],
+        description: 'Operators of Qakbot banking trojan, pivoted to initial access brokering.',
+        target_sectors: ['finance', 'manufacturing', 'technology'],
+        first_seen: '2007-01-01',
+        ttps: ['T1566', 'T1055', 'T1059', 'T1021'],
+      },
+      {
+        name: 'Emotet Operators',
+        aliases: ['TA542', 'Mummy Spider'],
+        description: 'Operators of Emotet malware-as-a-service, major initial access provider.',
+        target_sectors: ['manufacturing', 'healthcare', 'government'],
+        first_seen: '2014-01-01',
+        ttps: ['T1566', 'T1059', 'T1055', 'T1021'],
+      },
+      {
+        name: 'TrickBot Gang',
+        aliases: ['Wizard Spider', 'ITG23'],
+        description: 'Operators of TrickBot and BazarLoader, major initial access provider.',
+        target_sectors: ['healthcare', 'finance', 'manufacturing'],
+        first_seen: '2016-01-01',
+        ttps: ['T1566', 'T1055', 'T1021', 'T1486'],
+      },
     ],
     data_extortion: [
-      { name: 'Karakurt', aliases: ['Karakurt Team', 'Karakurt Lair'], description: 'Data extortion group that steals data without deploying ransomware.', target_sectors: ['healthcare', 'technology', 'manufacturing'], first_seen: '2021-06-01', ttps: ['T1530', 'T1567', 'T1657'] },
-      { name: 'RansomHouse', aliases: ['Ransom House'], description: 'Data extortion group claiming to be "penetration testers" exposing poor security.', target_sectors: ['healthcare', 'technology', 'retail'], first_seen: '2021-12-01', ttps: ['T1530', 'T1567', 'T1657'] },
-      { name: 'Donut Leaks', aliases: ['D0nut', 'Donut'], description: 'Data extortion group known for creative victim shaming.', target_sectors: ['technology', 'manufacturing'], first_seen: '2022-01-01', ttps: ['T1530', 'T1567', 'T1657'] },
-    ]
+      {
+        name: 'Karakurt',
+        aliases: ['Karakurt Team', 'Karakurt Lair'],
+        description: 'Data extortion group that steals data without deploying ransomware.',
+        target_sectors: ['healthcare', 'technology', 'manufacturing'],
+        first_seen: '2021-06-01',
+        ttps: ['T1530', 'T1567', 'T1657'],
+      },
+      {
+        name: 'RansomHouse',
+        aliases: ['Ransom House'],
+        description:
+          'Data extortion group claiming to be "penetration testers" exposing poor security.',
+        target_sectors: ['healthcare', 'technology', 'retail'],
+        first_seen: '2021-12-01',
+        ttps: ['T1530', 'T1567', 'T1657'],
+      },
+      {
+        name: 'Donut Leaks',
+        aliases: ['D0nut', 'Donut'],
+        description: 'Data extortion group known for creative victim shaming.',
+        target_sectors: ['technology', 'manufacturing'],
+        first_seen: '2022-01-01',
+        ttps: ['T1530', 'T1567', 'T1657'],
+      },
+    ],
   },
 
   async seedCuratedActors() {
@@ -1910,9 +2196,9 @@ export const dataSources = {
       success: true,
       message: `Seeded ${totalAdded} curated actors (${totalErrors} errors)`,
       added: totalAdded,
-      errors: totalErrors
+      errors: totalErrors,
     }
-  }
+  },
 }
 
 // Unified Events - aggregates all security events into a single timeline
@@ -1924,42 +2210,42 @@ export const unifiedEvents = {
       color: 'red',
       bgClass: 'bg-red-500/20',
       textClass: 'text-red-400',
-      borderClass: 'border-red-500/50'
+      borderClass: 'border-red-500/50',
     },
     alert: {
       label: 'Alert',
       color: 'yellow',
       bgClass: 'bg-yellow-500/20',
       textClass: 'text-yellow-400',
-      borderClass: 'border-yellow-500/50'
+      borderClass: 'border-yellow-500/50',
     },
     vulnerability: {
       label: 'KEV',
       color: 'orange',
       bgClass: 'bg-orange-500/20',
       textClass: 'text-orange-400',
-      borderClass: 'border-orange-500/50'
+      borderClass: 'border-orange-500/50',
     },
     ioc: {
       label: 'IOC',
       color: 'blue',
       bgClass: 'bg-blue-500/20',
       textClass: 'text-blue-400',
-      borderClass: 'border-blue-500/50'
+      borderClass: 'border-blue-500/50',
     },
     malware: {
       label: 'Malware',
       color: 'cyan',
       bgClass: 'bg-cyan-500/20',
       textClass: 'text-cyan-400',
-      borderClass: 'border-cyan-500/50'
+      borderClass: 'border-cyan-500/50',
     },
     breach: {
       label: 'Breach',
       color: 'purple',
       bgClass: 'bg-purple-500/20',
       textClass: 'text-purple-400',
-      borderClass: 'border-purple-500/50'
+      borderClass: 'border-purple-500/50',
     },
   },
 
@@ -1970,7 +2256,7 @@ export const unifiedEvents = {
       confirmed: 'high',
       claimed: 'medium',
       paid: 'medium',
-      removed: 'low'
+      removed: 'low',
     }
 
     return {
@@ -1987,7 +2273,7 @@ export const unifiedEvents = {
       country: incident.victim_country,
       status: incident.status,
       source_url: incident.source_url,
-      raw: incident
+      raw: incident,
     }
   },
 
@@ -2007,7 +2293,7 @@ export const unifiedEvents = {
       country: null,
       status: null,
       source_url: alert.url,
-      raw: alert
+      raw: alert,
     }
   },
 
@@ -2034,7 +2320,7 @@ export const unifiedEvents = {
       status: vuln.kev_date ? 'KEV' : null,
       source_url: `https://nvd.nist.gov/vuln/detail/${vuln.cve_id}`,
       cvss_score: vuln.cvss_score,
-      raw: vuln
+      raw: vuln,
     }
   },
 
@@ -2043,7 +2329,7 @@ export const unifiedEvents = {
     const severityMap = {
       high: 'high',
       medium: 'medium',
-      low: 'low'
+      low: 'low',
     }
 
     return {
@@ -2060,7 +2346,7 @@ export const unifiedEvents = {
       country: null,
       status: ioc.type,
       source_url: null,
-      raw: ioc
+      raw: ioc,
     }
   },
 
@@ -2080,7 +2366,7 @@ export const unifiedEvents = {
       country: null,
       status: sample.signature,
       source_url: `https://bazaar.abuse.ch/sample/${sample.sha256}`,
-      raw: sample
+      raw: sample,
     }
   },
 
@@ -2107,23 +2393,20 @@ export const unifiedEvents = {
       status: breach.is_verified ? 'Verified' : 'Unverified',
       source_url: null,
       pwn_count: breach.pwn_count,
-      raw: breach
+      raw: breach,
     }
   },
 
   // Get unified timeline with all event types
   async getTimeline(options = {}) {
-    const {
-      days = 30,
-      types = [],
-      severity = '',
-      search = '',
-      limit = 100,
-      offset = 0
-    } = options
+    const { days = 30, types = [], severity = '', search = '', limit = 100, offset = 0 } = options
 
-    const cutoffDate = days > 0 ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null
-    const activeTypes = types.length > 0 ? types : ['ransomware', 'alert', 'vulnerability', 'ioc', 'malware', 'breach']
+    const cutoffDate =
+      days > 0 ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null
+    const activeTypes =
+      types.length > 0
+        ? types
+        : ['ransomware', 'alert', 'vulnerability', 'ioc', 'malware', 'breach']
 
     const queries = []
 
@@ -2136,7 +2419,7 @@ export const unifiedEvents = {
         .limit(limit)
       if (cutoffDate) q = q.gte('discovered_date', cutoffDate.split('T')[0])
       if (search) q = q.or(`victim_name.ilike.%${search}%,victim_sector.ilike.%${search}%`)
-      queries.push(q.then(r => ({ type: 'ransomware', data: r.data || [], error: r.error })))
+      queries.push(q.then((r) => ({ type: 'ransomware', data: r.data || [], error: r.error })))
     }
 
     // Alerts
@@ -2148,7 +2431,7 @@ export const unifiedEvents = {
         .limit(limit)
       if (cutoffDate) q = q.gte('published_date', cutoffDate)
       if (search) q = q.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
-      queries.push(q.then(r => ({ type: 'alert', data: r.data || [], error: r.error })))
+      queries.push(q.then((r) => ({ type: 'alert', data: r.data || [], error: r.error })))
     }
 
     // Vulnerabilities (KEV only for timeline relevance)
@@ -2161,7 +2444,7 @@ export const unifiedEvents = {
         .limit(limit)
       if (cutoffDate) q = q.gte('kev_date', cutoffDate.split('T')[0])
       if (search) q = q.or(`cve_id.ilike.%${search}%,description.ilike.%${search}%`)
-      queries.push(q.then(r => ({ type: 'vulnerability', data: r.data || [], error: r.error })))
+      queries.push(q.then((r) => ({ type: 'vulnerability', data: r.data || [], error: r.error })))
     }
 
     // IOCs
@@ -2173,7 +2456,7 @@ export const unifiedEvents = {
         .limit(limit)
       if (cutoffDate) q = q.gte('created_at', cutoffDate)
       if (search) q = q.ilike('value', `%${search}%`)
-      queries.push(q.then(r => ({ type: 'ioc', data: r.data || [], error: r.error })))
+      queries.push(q.then((r) => ({ type: 'ioc', data: r.data || [], error: r.error })))
     }
 
     // Malware samples
@@ -2185,7 +2468,7 @@ export const unifiedEvents = {
         .limit(limit)
       if (cutoffDate) q = q.gte('first_seen', cutoffDate)
       if (search) q = q.or(`signature.ilike.%${search}%,sha256.ilike.%${search}%`)
-      queries.push(q.then(r => ({ type: 'malware', data: r.data || [], error: r.error })))
+      queries.push(q.then((r) => ({ type: 'malware', data: r.data || [], error: r.error })))
     }
 
     // Breaches
@@ -2197,7 +2480,7 @@ export const unifiedEvents = {
         .limit(limit)
       if (cutoffDate) q = q.gte('breach_date', cutoffDate.split('T')[0])
       if (search) q = q.or(`name.ilike.%${search}%,domain.ilike.%${search}%`)
-      queries.push(q.then(r => ({ type: 'breach', data: r.data || [], error: r.error })))
+      queries.push(q.then((r) => ({ type: 'breach', data: r.data || [], error: r.error })))
     }
 
     // Execute all queries in parallel
@@ -2217,17 +2500,17 @@ export const unifiedEvents = {
         vulnerability: this.normalizeVulnerability,
         ioc: this.normalizeIOC,
         malware: this.normalizeMalware,
-        breach: this.normalizeBreach
+        breach: this.normalizeBreach,
       }[result.type]
 
       if (normalizer) {
-        allEvents = allEvents.concat(result.data.map(item => normalizer.call(this, item)))
+        allEvents = allEvents.concat(result.data.map((item) => normalizer.call(this, item)))
       }
     }
 
     // Filter by severity if specified
     if (severity) {
-      allEvents = allEvents.filter(e => e.severity === severity)
+      allEvents = allEvents.filter((e) => e.severity === severity)
     }
 
     // Sort by timestamp descending
@@ -2243,13 +2526,14 @@ export const unifiedEvents = {
     return {
       data: paginated,
       total: allEvents.length,
-      error: null
+      error: null,
     }
   },
 
   // Get statistics for all event types
   async getStats(days = 30) {
-    const cutoffDate = days > 0 ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null
+    const cutoffDate =
+      days > 0 ? new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString() : null
 
     const queries = [
       // Incidents count
@@ -2299,8 +2583,13 @@ export const unifiedEvents = {
       ioc: iocs.count || 0,
       malware: malware.count || 0,
       breach: breaches.count || 0,
-      total: (incidents.count || 0) + (alerts.count || 0) + (vulns.count || 0) +
-             (iocs.count || 0) + (malware.count || 0) + (breaches.count || 0)
+      total:
+        (incidents.count || 0) +
+        (alerts.count || 0) +
+        (vulns.count || 0) +
+        (iocs.count || 0) +
+        (malware.count || 0) +
+        (breaches.count || 0),
     }
   },
 
@@ -2311,8 +2600,15 @@ export const unifiedEvents = {
 
     const [incidentsData, alertsData, vulnsData] = await Promise.all([
       supabase.from('incidents').select('discovered_date').gte('discovered_date', cutoff),
-      supabase.from('alerts').select('published_date').gte('published_date', cutoffDate.toISOString()),
-      supabase.from('vulnerabilities').select('kev_date').not('kev_date', 'is', null).gte('kev_date', cutoff),
+      supabase
+        .from('alerts')
+        .select('published_date')
+        .gte('published_date', cutoffDate.toISOString()),
+      supabase
+        .from('vulnerabilities')
+        .select('kev_date')
+        .not('kev_date', 'is', null)
+        .gte('kev_date', cutoff),
     ])
 
     // Build daily counts
@@ -2353,7 +2649,7 @@ export const unifiedEvents = {
     }
 
     return Object.values(dailyCounts).sort((a, b) => a.date.localeCompare(b.date))
-  }
+  },
 }
 
 // Notifications - in-app user notifications
@@ -2437,10 +2733,7 @@ export const notifications = {
 
   // Delete old notifications (cleanup)
   async deleteExpired() {
-    return supabase
-      .from('notifications')
-      .delete()
-      .lt('expires_at', new Date().toISOString())
+    return supabase.from('notifications').delete().lt('expires_at', new Date().toISOString())
   },
 
   // Subscribe to new notifications for a user
@@ -2482,11 +2775,7 @@ export const alertRules = {
 
   // Get a single rule by ID
   async getById(ruleId) {
-    return supabase
-      .from('user_alert_rules')
-      .select('*')
-      .eq('id', ruleId)
-      .single()
+    return supabase.from('user_alert_rules').select('*').eq('id', ruleId).single()
   },
 
   // Create a new rule
@@ -2500,43 +2789,34 @@ export const alertRules = {
       notifyInApp = true,
     } = rule
 
-    return supabase.from('user_alert_rules').insert({
-      user_id: userId,
-      rule_name: ruleName,
-      rule_type: ruleType,
-      conditions,
-      notify_email: notifyEmail,
-      notify_in_app: notifyInApp,
-      enabled: true,
-    }).select().single()
+    return supabase
+      .from('user_alert_rules')
+      .insert({
+        user_id: userId,
+        rule_name: ruleName,
+        rule_type: ruleType,
+        conditions,
+        notify_email: notifyEmail,
+        notify_in_app: notifyInApp,
+        enabled: true,
+      })
+      .select()
+      .single()
   },
 
   // Update a rule
   async update(ruleId, updates) {
-    return supabase
-      .from('user_alert_rules')
-      .update(updates)
-      .eq('id', ruleId)
-      .select()
-      .single()
+    return supabase.from('user_alert_rules').update(updates).eq('id', ruleId).select().single()
   },
 
   // Delete a rule
   async delete(ruleId) {
-    return supabase
-      .from('user_alert_rules')
-      .delete()
-      .eq('id', ruleId)
+    return supabase.from('user_alert_rules').delete().eq('id', ruleId)
   },
 
   // Toggle rule enabled status
   async toggle(ruleId, enabled) {
-    return supabase
-      .from('user_alert_rules')
-      .update({ enabled })
-      .eq('id', ruleId)
-      .select()
-      .single()
+    return supabase.from('user_alert_rules').update({ enabled }).eq('id', ruleId).select().single()
   },
 
   // Record a trigger event
@@ -2580,11 +2860,7 @@ export const threatHunts = {
 
   // Get hunt by ID
   async getById(huntId) {
-    return supabase
-      .from('threat_hunts')
-      .select('*')
-      .eq('id', huntId)
-      .single()
+    return supabase.from('threat_hunts').select('*').eq('id', huntId).single()
   },
 
   // Get hunts for a specific actor
@@ -2601,22 +2877,31 @@ export const threatHunts = {
   async getUserProgress(userId = 'anonymous') {
     return supabase
       .from('user_hunt_progress')
-      .select(`
+      .select(
+        `
         *,
         hunt:threat_hunts(id, title, actor_name, confidence)
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('started_at', { ascending: false })
   },
 
   // Start a hunt (record user started)
   async startHunt(userId = 'anonymous', huntId) {
-    return supabase.from('user_hunt_progress').upsert({
-      user_id: userId,
-      hunt_id: huntId,
-      status: 'in_progress',
-      completed_checks: [],
-    }, { onConflict: 'user_id,hunt_id' }).select().single()
+    return supabase
+      .from('user_hunt_progress')
+      .upsert(
+        {
+          user_id: userId,
+          hunt_id: huntId,
+          status: 'in_progress',
+          completed_checks: [],
+        },
+        { onConflict: 'user_id,hunt_id' }
+      )
+      .select()
+      .single()
   },
 
   // Update hunt progress
@@ -2667,7 +2952,8 @@ export const teams = {
   async getUserTeams(userId) {
     const { data, error } = await supabase
       .from('team_members')
-      .select(`
+      .select(
+        `
         team_id,
         role,
         joined_at,
@@ -2680,26 +2966,29 @@ export const teams = {
           settings,
           created_at
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('joined_at', { ascending: false })
 
     if (error) return { data: null, error }
-    return { data: data?.map(m => ({ ...m.teams, role: m.role, joined_at: m.joined_at })), error: null }
+    return {
+      data: data?.map((m) => ({ ...m.teams, role: m.role, joined_at: m.joined_at })),
+      error: null,
+    }
   },
 
   // Get team by ID
   async getTeam(teamId) {
-    return supabase
-      .from('teams')
-      .select('*')
-      .eq('id', teamId)
-      .single()
+    return supabase.from('teams').select('*').eq('id', teamId).single()
   },
 
   // Create a new team
   async createTeam(userId, name, description = '') {
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
 
     // Create team
     const { data: team, error: teamError } = await supabase
@@ -2716,15 +3005,13 @@ export const teams = {
     if (teamError) return { data: null, error: teamError }
 
     // Add owner as member
-    const { error: memberError } = await supabase
-      .from('team_members')
-      .insert({
-        team_id: team.id,
-        user_id: userId,
-        email: '', // Will be updated from Firebase
-        role: 'owner',
-        joined_at: new Date().toISOString(),
-      })
+    const { error: memberError } = await supabase.from('team_members').insert({
+      team_id: team.id,
+      user_id: userId,
+      email: '', // Will be updated from Firebase
+      role: 'owner',
+      joined_at: new Date().toISOString(),
+    })
 
     if (memberError) return { data: null, error: memberError }
 
@@ -2733,20 +3020,12 @@ export const teams = {
 
   // Update team
   async updateTeam(teamId, updates) {
-    return supabase
-      .from('teams')
-      .update(updates)
-      .eq('id', teamId)
-      .select()
-      .single()
+    return supabase.from('teams').update(updates).eq('id', teamId).select().single()
   },
 
   // Delete team
   async deleteTeam(teamId) {
-    return supabase
-      .from('teams')
-      .delete()
-      .eq('id', teamId)
+    return supabase.from('teams').delete().eq('id', teamId)
   },
 
   // Get team members
@@ -2787,11 +3066,7 @@ export const teams = {
 
   // Remove member
   async removeMember(teamId, userId) {
-    return supabase
-      .from('team_members')
-      .delete()
-      .eq('team_id', teamId)
-      .eq('user_id', userId)
+    return supabase.from('team_members').delete().eq('team_id', teamId).eq('user_id', userId)
   },
 
   // Create invitation
@@ -2802,14 +3077,17 @@ export const teams = {
 
     return supabase
       .from('team_invitations')
-      .upsert({
-        team_id: teamId,
-        email,
-        role,
-        token,
-        invited_by: invitedBy,
-        expires_at: expiresAt.toISOString(),
-      }, { onConflict: 'team_id,email' })
+      .upsert(
+        {
+          team_id: teamId,
+          email,
+          role,
+          token,
+          invited_by: invitedBy,
+          expires_at: expiresAt.toISOString(),
+        },
+        { onConflict: 'team_id,email' }
+      )
       .select()
       .single()
   },
@@ -2830,17 +3108,15 @@ export const teams = {
     }
 
     // Add member
-    const { error: memberError } = await supabase
-      .from('team_members')
-      .insert({
-        team_id: invite.team_id,
-        user_id: userId,
-        email: invite.email,
-        display_name: displayName,
-        role: invite.role,
-        invited_by: invite.invited_by,
-        joined_at: new Date().toISOString(),
-      })
+    const { error: memberError } = await supabase.from('team_members').insert({
+      team_id: invite.team_id,
+      user_id: userId,
+      email: invite.email,
+      display_name: displayName,
+      role: invite.role,
+      invited_by: invite.invited_by,
+      joined_at: new Date().toISOString(),
+    })
 
     if (memberError) return { data: null, error: memberError }
 
@@ -2866,24 +3142,19 @@ export const teams = {
 
   // Cancel invitation
   async cancelInvitation(invitationId) {
-    return supabase
-      .from('team_invitations')
-      .delete()
-      .eq('id', invitationId)
+    return supabase.from('team_invitations').delete().eq('id', invitationId)
   },
 
   // Log activity
   async logActivity(teamId, userId, action, entityType = null, entityId = null, details = {}) {
-    return supabase
-      .from('team_activity_log')
-      .insert({
-        team_id: teamId,
-        user_id: userId,
-        action,
-        entity_type: entityType,
-        entity_id: entityId,
-        details,
-      })
+    return supabase.from('team_activity_log').insert({
+      team_id: teamId,
+      user_id: userId,
+      action,
+      entity_type: entityType,
+      entity_id: entityId,
+      details,
+    })
   },
 
   // Get activity log
@@ -2905,21 +3176,19 @@ export const sharedWatchlists = {
   async getTeamWatchlists(teamId) {
     return supabase
       .from('shared_watchlists')
-      .select(`
+      .select(
+        `
         *,
         items:shared_watchlist_items(count)
-      `)
+      `
+      )
       .eq('team_id', teamId)
       .order('created_at', { ascending: false })
   },
 
   // Get watchlist by ID
   async getWatchlist(watchlistId) {
-    return supabase
-      .from('shared_watchlists')
-      .select('*')
-      .eq('id', watchlistId)
-      .single()
+    return supabase.from('shared_watchlists').select('*').eq('id', watchlistId).single()
   },
 
   // Create watchlist
@@ -2948,10 +3217,7 @@ export const sharedWatchlists = {
 
   // Delete watchlist
   async deleteWatchlist(watchlistId) {
-    return supabase
-      .from('shared_watchlists')
-      .delete()
-      .eq('id', watchlistId)
+    return supabase.from('shared_watchlists').delete().eq('id', watchlistId)
   },
 
   // Get watchlist items with entity details
@@ -2977,11 +3243,7 @@ export const sharedWatchlists = {
         }[item.entity_type]
 
         if (table) {
-          const { data } = await supabase
-            .from(table)
-            .select('*')
-            .eq('id', item.entity_id)
-            .single()
+          const { data } = await supabase.from(table).select('*').eq('id', item.entity_id).single()
           entity = data
         }
 
@@ -3009,10 +3271,7 @@ export const sharedWatchlists = {
 
   // Remove item from watchlist
   async removeItem(itemId) {
-    return supabase
-      .from('shared_watchlist_items')
-      .delete()
-      .eq('id', itemId)
+    return supabase.from('shared_watchlist_items').delete().eq('id', itemId)
   },
 
   // Update item notes

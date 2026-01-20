@@ -79,7 +79,7 @@ export function ExportIOCsButton({
           mimeType = 'application/json'
           break
         case 'txt':
-          content = data.map(ioc => ioc.value).join('\n')
+          content = data.map((ioc) => ioc.value).join('\n')
           mimeType = 'text/plain'
           break
         default:
@@ -123,12 +123,28 @@ export function ExportIOCsButton({
       >
         {isLoading ? (
           <svg className={clsx(sizes[size], 'animate-spin')} fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
         ) : (
           <svg className={sizes[size]} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
           </svg>
         )}
         {showLabel && <span className="ml-1.5 text-sm">Export</span>}
@@ -165,7 +181,7 @@ export function ExportIOCsButton({
 // Helper: Convert IOC data to CSV
 function convertToCSV(data) {
   const headers = ['type', 'value', 'confidence', 'first_seen', 'last_seen', 'tags']
-  const rows = data.map(ioc => [
+  const rows = data.map((ioc) => [
     ioc.type,
     ioc.value,
     ioc.confidence || '',
@@ -173,7 +189,7 @@ function convertToCSV(data) {
     ioc.last_seen || '',
     (ioc.tags || []).join(';'),
   ])
-  return [headers.join(','), ...rows.map(r => r.map(v => `"${v}"`).join(','))].join('\n')
+  return [headers.join(','), ...rows.map((r) => r.map((v) => `"${v}"`).join(','))].join('\n')
 }
 
 // Helper: Convert IOC data to STIX 2.1 format
@@ -190,7 +206,7 @@ function convertToSTIX(data) {
     email: 'email-addr',
   }
 
-  const objects = data.map(ioc => {
+  const objects = data.map((ioc) => {
     const stixType = stixTypeMap[ioc.type?.toLowerCase()] || 'indicator'
 
     if (stixType === 'file') {

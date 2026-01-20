@@ -33,11 +33,11 @@ export const relevance = {
 
     // Filter and score by vendor/product match
     const scored = data
-      .map(vuln => ({
+      .map((vuln) => ({
         ...vuln,
-        relevance_score: this.calculateVulnScore(vuln, profile)
+        relevance_score: this.calculateVulnScore(vuln, profile),
       }))
-      .filter(v => v.relevance_score > 0)
+      .filter((v) => v.relevance_score > 0)
       .sort((a, b) => b.relevance_score - a.relevance_score)
       .slice(0, limit)
 
@@ -52,7 +52,7 @@ export const relevance = {
     // Sector match (50 points)
     if (profile.sector && actor.target_sectors?.includes(profile.sector)) {
       score += 50
-    } else if (profile.secondary_sectors?.some(s => actor.target_sectors?.includes(s))) {
+    } else if (profile.secondary_sectors?.some((s) => actor.target_sectors?.includes(s))) {
       score += 25
     }
 
@@ -73,16 +73,16 @@ export const relevance = {
     if (!profile) return 0
     let score = 0
 
-    const vendors = (profile.tech_vendors || []).map(v => v.toLowerCase())
-    const stack = (profile.tech_stack || []).map(s => s.toLowerCase())
+    const vendors = (profile.tech_vendors || []).map((v) => v.toLowerCase())
+    const stack = (profile.tech_stack || []).map((s) => s.toLowerCase())
 
     // Vendor match (40 points)
-    if (vuln.affected_vendors?.some(v => vendors.includes(v.toLowerCase()))) {
+    if (vuln.affected_vendors?.some((v) => vendors.includes(v.toLowerCase()))) {
       score += 40
     }
 
     // Product match (40 points)
-    if (vuln.affected_products?.some(p => stack.some(s => p.toLowerCase().includes(s)))) {
+    if (vuln.affected_products?.some((p) => stack.some((s) => p.toLowerCase().includes(s)))) {
       score += 40
     }
 
@@ -102,7 +102,7 @@ export const relevance = {
     if (score >= 40) return { label: 'Medium', color: 'yellow' }
     if (score >= 20) return { label: 'Low', color: 'blue' }
     return { label: 'Info', color: 'gray' }
-  }
+  },
 }
 
 export default relevance
