@@ -49,12 +49,16 @@ import { ErrorBoundary } from './components'
 import SearchModal from './components/SearchModal'
 import { KeyboardShortcutsModal, OnboardingTour } from './components'
 import PersonalizationWizard, { usePersonalizationWizard } from './components/PersonalizationWizard'
+import TermsUpdateModal from './components/TermsUpdateModal'
+import SessionWarningModal from './components/SessionWarningModal'
 
 // Hooks
 import { useAuth } from './hooks/useAuth'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { usePageTracking } from './hooks/useAnalytics'
+import { useTermsAcceptance } from './hooks/useTermsAcceptance'
+import { useSessionManager } from './hooks/useSessionManager'
 
 // Contexts
 import { SubscriptionProvider } from './contexts/SubscriptionContext'
@@ -119,6 +123,24 @@ function ProtectedApp() {
   const { user } = useAuth()
   const isOnline = useOnlineStatus()
   const location = useLocation()
+
+  // Terms acceptance check
+  const {
+    loading: termsLoading,
+    needsAcceptance: needsTermsAcceptance,
+    termsVersion,
+    accepting: acceptingTerms,
+    error: termsError,
+    acceptTerms: handleAcceptTerms,
+  } = useTermsAcceptance()
+
+  // Session management (idle timeout, absolute timeout)
+  const {
+    showWarning: showSessionWarning,
+    warningInfo,
+    extendSession,
+    dismissWarning: dismissSessionWarning,
+  } = useSessionManager()
 
   // Track page views
   usePageTracking()
@@ -287,6 +309,25 @@ function ProtectedApp() {
               {/* Onboarding Tour - only shows after personalization check completes and wizard is not needed */}
               {!personalizationLoading && !shouldShowPersonalization && !showPersonalization && (
                 <OnboardingTour />
+              )}
+
+              {/* Terms Update Modal - blocks app until terms are accepted */}
+              {!termsLoading && needsTermsAcceptance && (
+                <TermsUpdateModal
+                  termsVersion={termsVersion}
+                  onAccept={handleAcceptTerms}
+                  accepting={acceptingTerms}
+                  error={termsError}
+                />
+              )}
+
+              {/* Session Warning Modal - shows before timeout */}
+              {showSessionWarning && warningInfo && (
+                <SessionWarningModal
+                  minutes={warningInfo.minutes}
+                  onExtend={extendSession}
+                  onDismiss={dismissSessionWarning}
+                />
               )}
             </div>
           </FocusModeProvider>
