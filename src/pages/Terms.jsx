@@ -192,9 +192,9 @@ export default function Terms() {
             <h2 className="text-xl font-semibold text-white mb-4">11. Governing Law</h2>
             <p className="text-gray-300 leading-relaxed">
               These Terms shall be governed by and construed in accordance with the laws of the
-              State of [YOUR STATE], without regard to its conflict of law provisions. Any disputes
+              State of North Dakota, without regard to its conflict of law provisions. Any disputes
               arising from these Terms shall be resolved in the state or federal courts located in
-              [YOUR STATE].
+              North Dakota.
             </p>
           </section>
 
