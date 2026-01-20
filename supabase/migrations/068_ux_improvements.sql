@@ -28,10 +28,11 @@ CREATE TABLE IF NOT EXISTS digest_history (
 );
 
 -- Entity notes for collaboration
+-- Note: team_id reference removed - teams table created separately if needed
 CREATE TABLE IF NOT EXISTS entity_notes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id),
-  team_id UUID REFERENCES teams(id),
+  team_id UUID, -- Optional team reference (no FK constraint for flexibility)
   entity_type TEXT NOT NULL, -- 'actor', 'incident', 'cve', 'ioc'
   entity_id TEXT NOT NULL,
   content TEXT NOT NULL,
@@ -71,9 +72,10 @@ CREATE TABLE IF NOT EXISTS dashboard_layouts (
 CREATE INDEX IF NOT EXISTS idx_dashboard_layouts_user ON dashboard_layouts(user_id);
 
 -- Team watchlists for collaboration
+-- Note: team_id FK constraint removed - teams table created separately if needed
 CREATE TABLE IF NOT EXISTS team_watchlists (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+  team_id UUID, -- Optional team reference (no FK constraint for flexibility)
   name TEXT NOT NULL,
   description TEXT,
   created_by UUID REFERENCES auth.users(id),
