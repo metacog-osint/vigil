@@ -1,17 +1,22 @@
 /**
  * Incident Data Hooks
  * Custom hooks for incident data loading, sorting, filtering, and analytics
+ * Supports demo mode with mock data
  */
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { incidents, subscribeToTable, savedSearches, threatActors } from '../../lib/supabase'
 import { PAGE_SIZE, SECTOR_COLORS } from './IncidentConstants'
+import { useDemo } from '../../contexts/DemoContext'
+import useDemoData from '../../hooks/useDemoData'
 
 /**
  * Main hook for incident data loading and management
  */
 export function useIncidentData(filters) {
   const { search, sectorFilter, statusFilter, countryFilter, timeRange, actorFilter } = filters
+  const { isDemoMode } = useDemo()
+  const demoData = useDemoData()
 
   const [incidentList, setIncidentList] = useState([])
   const [loading, setLoading] = useState(true)
@@ -86,8 +91,41 @@ export function useIncidentData(filters) {
     }
   }, [search, sectorFilter, statusFilter, countryFilter, timeRange, actorFilter, incidentList.length, calculateActorTrends])
 
-  // Initial load + subscriptions
+  // Demo mode: Load mock incidents
   useEffect(() => {
+    if (!isDemoMode) return
+
+    setLoading(true)
+    let data = [...demoData.incidents]
+
+    // Apply filters
+    if (search) {
+      const searchLower = search.toLowerCase()
+      data = data.filter(i =>
+        i.victim_name?.toLowerCase().includes(searchLower) ||
+        i.victim_sector?.toLowerCase().includes(searchLower)
+      )
+    }
+    if (sectorFilter) {
+      data = data.filter(i => i.victim_sector === sectorFilter)
+    }
+    if (actorFilter) {
+      data = data.filter(i => i.actor_id === actorFilter)
+    }
+
+    setIncidentList(data)
+    setTotalCount(data.length)
+    if (data.length > 0) {
+      setLastIncidentDate(data[0].discovered_date)
+    }
+    calculateActorTrends(data)
+    setLoading(false)
+  }, [isDemoMode, demoData, search, sectorFilter, statusFilter, countryFilter, timeRange, actorFilter, calculateActorTrends])
+
+  // Initial load + subscriptions (skip in demo mode)
+  useEffect(() => {
+    if (isDemoMode) return
+
     loadIncidents(true)
 
     const unsubscribe = subscribeToTable('incidents', (payload) => {
@@ -98,7 +136,7 @@ export function useIncidentData(filters) {
     })
 
     return () => unsubscribe()
-  }, [search, sectorFilter, statusFilter, countryFilter, timeRange, actorFilter])
+  }, [isDemoMode, search, sectorFilter, statusFilter, countryFilter, timeRange, actorFilter])
 
   const loadMore = useCallback(() => {
     if (!loadingMore && incidentList.length < totalCount) {

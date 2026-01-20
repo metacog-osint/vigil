@@ -3,11 +3,14 @@
  *
  * Displays attack chains showing the full attack flow:
  * Actor → Techniques → CVEs → IOCs → Targets
+ *
+ * Supports demo mode with mock data
  */
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { correlations } from '../lib/supabase'
-import { SkeletonTable, EmptyState } from '../components'
+import { useDemo } from '../contexts/DemoContext'
+import useDemoData from '../hooks/useDemoData'
 
 const CONFIDENCE_COLORS = {
   high: 'bg-green-900/50 text-green-400 border-green-700/50',
@@ -265,6 +268,9 @@ function ChainDetailPanel({ chain, onClose }) {
 }
 
 export default function AttackChains() {
+  const { isDemoMode } = useDemo()
+  const demoData = useDemoData()
+
   const [chains, setChains] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -275,9 +281,36 @@ export default function AttackChains() {
     search: '',
   })
 
+  // Demo mode: Load mock attack chains
   useEffect(() => {
+    if (!isDemoMode) return
+
+    setLoading(true)
+    setError(null)
+
+    let data = [...(demoData.attackChains || [])]
+
+    // Apply sector filter
+    if (filters.sector) {
+      data = data.filter((chain) =>
+        chain.target_sectors?.includes(filters.sector)
+      )
+    }
+
+    // Apply confidence filter
+    if (filters.confidence) {
+      data = data.filter((chain) => chain.confidence === filters.confidence)
+    }
+
+    setChains(data)
+    setLoading(false)
+  }, [isDemoMode, demoData.attackChains, filters.sector, filters.confidence])
+
+  // Real mode: Load attack chains from API
+  useEffect(() => {
+    if (isDemoMode) return
     loadChains()
-  }, [filters.sector, filters.confidence])
+  }, [isDemoMode, filters.sector, filters.confidence])
 
   async function loadChains() {
     setLoading(true)
