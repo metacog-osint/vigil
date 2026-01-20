@@ -355,15 +355,22 @@ export function DemoProvider({ children }) {
     navigate('/')
   }, [navigate])
 
+  // Exit demo mode and go to registration
   const exitDemoMode = useCallback(() => {
     setIsDemoMode(false)
     navigate('/auth?mode=register')
   }, [navigate])
 
+  // Just clear demo mode state (no navigation)
+  const clearDemoMode = useCallback(() => {
+    setIsDemoMode(false)
+  }, [])
+
   const value = {
     isDemoMode,
     enterDemoMode,
     exitDemoMode,
+    clearDemoMode,
     demoData: DEMO_DATA,
   }
 

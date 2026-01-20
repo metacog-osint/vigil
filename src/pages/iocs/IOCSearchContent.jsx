@@ -1,5 +1,6 @@
 /**
  * IOC Search Content - used within the unified IOCs page
+ * Supports demo mode with mock data
  */
 import { useState, useEffect } from 'react'
 import { iocs } from '../../lib/supabase'
@@ -11,6 +12,8 @@ import {
   EnrichmentPanel,
   EnrichmentBadges,
 } from '../../components'
+import { useDemo } from '../../contexts/DemoContext'
+import useDemoData from '../../hooks/useDemoData'
 
 const IOC_TYPES = [
   { key: '', label: 'All Types' },
@@ -22,6 +25,9 @@ const IOC_TYPES = [
 ]
 
 export default function IOCSearchContent() {
+  const { isDemoMode } = useDemo()
+  const demoData = useDemoData()
+
   const [searchValue, setSearchValue] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [results, setResults] = useState([])
@@ -35,6 +41,22 @@ export default function IOCSearchContent() {
 
     setLoading(true)
     setSearched(true)
+
+    // Demo mode: search mock IOCs
+    if (isDemoMode) {
+      const searchLower = searchValue.trim().toLowerCase()
+      let filtered = demoData.iocs.filter(ioc =>
+        ioc.value.toLowerCase().includes(searchLower) ||
+        ioc.actor_name?.toLowerCase().includes(searchLower)
+      )
+      if (typeFilter) {
+        filtered = filtered.filter(ioc => ioc.type === typeFilter)
+      }
+      setResults(filtered)
+      setLoading(false)
+      return
+    }
+
     try {
       const { data, error } = await iocs.search(searchValue.trim(), typeFilter || null)
       if (error) throw error
@@ -47,6 +69,12 @@ export default function IOCSearchContent() {
   }
 
   async function loadRecentIOCs() {
+    // Demo mode: use mock IOCs
+    if (isDemoMode) {
+      setRecentIOCs(demoData.iocs)
+      return
+    }
+
     try {
       const { data, error } = await iocs.getRecent(50)
       if (error) throw error
@@ -58,7 +86,7 @@ export default function IOCSearchContent() {
 
   useEffect(() => {
     loadRecentIOCs()
-  }, [])
+  }, [isDemoMode])
 
   const getTypeBadge = (type) => {
     switch (type) {

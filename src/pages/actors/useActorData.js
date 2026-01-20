@@ -1,12 +1,17 @@
 /**
  * Custom hook for loading and managing actor data
+ * Supports demo mode with mock data
  */
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { threatActors, subscribeToTable, incidents, savedSearches, orgProfile, relevance, watchlists } from '../../lib/supabase'
 import { PAGE_SIZE, getTypeConfig } from './ActorConstants'
+import { useDemo } from '../../contexts/DemoContext'
+import useDemoData from '../../hooks/useDemoData'
 
 export function useActorData(filters) {
   const { search, sectorFilter, trendFilter, typeFilter, statusFilter } = filters
+  const { isDemoMode } = useDemo()
+  const demoData = useDemoData()
 
   const [actors, setActors] = useState([])
   const [loading, setLoading] = useState(true)
@@ -17,6 +22,44 @@ export function useActorData(filters) {
   // Organization profile for risk scoring
   const [userOrgProfile, setUserOrgProfile] = useState(null)
   const [riskScores, setRiskScores] = useState({})
+
+  // Demo mode: Load mock actors
+  useEffect(() => {
+    if (!isDemoMode) return
+
+    const loadDemoActors = async () => {
+      setLoading(true)
+      try {
+        const result = await demoData.getActors({
+          search,
+          trendStatus: trendFilter,
+          actorType: typeFilter,
+        })
+        const demoActors = result?.data || demoData.actors
+
+        // Apply sector filter manually
+        let filtered = demoActors
+        if (sectorFilter) {
+          filtered = filtered.filter(a =>
+            a.target_sectors?.includes(sectorFilter)
+          )
+        }
+
+        setActors(filtered)
+        setTotalCount(filtered.length)
+
+        // Set trend summary
+        const summary = await demoData.getTrendSummary()
+        setTrendSummary(summary || { escalating: 3, stable: 2, declining: 1 })
+      } catch (err) {
+        console.error('Demo actors error:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadDemoActors()
+  }, [isDemoMode, demoData, search, sectorFilter, trendFilter, typeFilter, statusFilter])
 
   // Load actors
   const loadActors = useCallback(async (reset = false) => {
@@ -75,8 +118,10 @@ export function useActorData(filters) {
     }
   }, [])
 
-  // Initial load + subscriptions
+  // Initial load + subscriptions (skip in demo mode)
   useEffect(() => {
+    if (isDemoMode) return
+
     loadActors(true)
     loadTrendSummary()
     loadOrgProfile()
@@ -94,7 +139,7 @@ export function useActorData(filters) {
     })
 
     return () => unsubscribe()
-  }, [search, sectorFilter, trendFilter, typeFilter, statusFilter])
+  }, [isDemoMode, search, sectorFilter, trendFilter, typeFilter, statusFilter])
 
   // Calculate risk scores when org profile or actors change
   useEffect(() => {
@@ -186,6 +231,8 @@ export function useActorSort(actors, riskScores) {
 }
 
 export function useActorIncidents(selectedActor) {
+  const { isDemoMode } = useDemo()
+  const demoData = useDemoData()
   const [actorIncidents, setActorIncidents] = useState([])
 
   useEffect(() => {
@@ -197,6 +244,13 @@ export function useActorIncidents(selectedActor) {
   }, [selectedActor])
 
   async function loadActorIncidents(actorId) {
+    // Demo mode: use mock incidents
+    if (isDemoMode) {
+      const demoIncidents = demoData.incidents.filter(i => i.actor_id === actorId)
+      setActorIncidents(demoIncidents)
+      return
+    }
+
     try {
       const { data } = await incidents.getRecent({ actor_id: actorId, limit: 20, days: 365 })
       setActorIncidents(data || [])
@@ -219,6 +273,8 @@ export function useActorIncidents(selectedActor) {
 }
 
 export function useRelatedActors(selectedActor) {
+  const { isDemoMode } = useDemo()
+  const demoData = useDemoData()
   const [relatedActors, setRelatedActors] = useState([])
 
   useEffect(() => {
@@ -230,33 +286,42 @@ export function useRelatedActors(selectedActor) {
   }, [selectedActor])
 
   async function loadRelatedActors(actor) {
-    try {
-      const { data } = await threatActors.getAll({ limit: 100 })
-      if (!data) return
-
-      const related = data
-        .filter(a => a.id !== actor.id)
-        .map(a => {
-          let score = 0
-          if (a.actor_type === actor.actor_type) score += 20
-          const sharedSectors = (a.target_sectors || []).filter(s =>
-            (actor.target_sectors || []).includes(s)
-          )
-          score += sharedSectors.length * 15
-          const sharedTTPs = (a.ttps || []).filter(t =>
-            (actor.ttps || []).includes(t)
-          )
-          score += sharedTTPs.length * 10
-          return { ...a, similarityScore: score }
-        })
-        .filter(a => a.similarityScore > 0)
-        .sort((a, b) => b.similarityScore - a.similarityScore)
-        .slice(0, 5)
-
-      setRelatedActors(related)
-    } catch (error) {
-      console.error('Error loading related actors:', error)
+    // Get all actors (demo or real)
+    let allActors
+    if (isDemoMode) {
+      allActors = demoData.actors
+    } else {
+      try {
+        const { data } = await threatActors.getAll({ limit: 100 })
+        allActors = data
+      } catch (error) {
+        console.error('Error loading related actors:', error)
+        return
+      }
     }
+
+    if (!allActors) return
+
+    const related = allActors
+      .filter(a => a.id !== actor.id)
+      .map(a => {
+        let score = 0
+        if (a.actor_type === actor.actor_type) score += 20
+        const sharedSectors = (a.target_sectors || []).filter(s =>
+          (actor.target_sectors || []).includes(s)
+        )
+        score += sharedSectors.length * 15
+        const sharedTTPs = (a.ttps || []).filter(t =>
+          (actor.ttps || []).includes(t)
+        )
+        score += sharedTTPs.length * 10
+        return { ...a, similarityScore: score }
+      })
+      .filter(a => a.similarityScore > 0)
+      .sort((a, b) => b.similarityScore - a.similarityScore)
+      .slice(0, 5)
+
+    setRelatedActors(related)
   }
 
   return relatedActors

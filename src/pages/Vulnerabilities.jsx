@@ -6,8 +6,13 @@ import { EmptyVulnerabilities } from '../components/EmptyState'
 import { SeverityBadge, SeverityBar, EPSSBadge } from '../components/SeverityBadge'
 import { NewBadge } from '../components/NewIndicator'
 import { VulnerabilityActorsPanel } from '../components/panels'
+import { useDemo } from '../contexts/DemoContext'
+import useDemoData from '../hooks/useDemoData'
 
 export default function Vulnerabilities() {
+  const { isDemoMode } = useDemo()
+  const demoData = useDemoData()
+
   const [vulnList, setVulnList] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all') // all, critical, ransomware
@@ -15,10 +20,28 @@ export default function Vulnerabilities() {
 
   useEffect(() => {
     loadVulnerabilities()
-  }, [filter])
+  }, [filter, isDemoMode])
 
   async function loadVulnerabilities() {
     setLoading(true)
+
+    // Demo mode: use mock vulnerabilities
+    if (isDemoMode) {
+      let data = [...demoData.vulnerabilities]
+
+      if (filter === 'critical') {
+        data = data.filter(v => v.cvss_score >= 9.0)
+      } else if (filter === 'ransomware') {
+        data = data.filter(v => v.metadata?.ransomware_campaign)
+      } else if (filter === 'high_epss') {
+        data = data.filter(v => v.epss_score >= 0.1)
+      }
+
+      setVulnList(data)
+      setLoading(false)
+      return
+    }
+
     try {
       let data, error
 
