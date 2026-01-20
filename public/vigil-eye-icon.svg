@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="#0a0f1a" stroke="#00d4ff" stroke-width="2"/>
+
+  <!-- Eye shape (almond) -->
+  <ellipse cx="50" cy="50" rx="32" ry="18" fill="none" stroke="#00d4ff" stroke-width="2.5"/>
+
+  <!-- Iris -->
+  <circle cx="50" cy="50" r="14" fill="none" stroke="#00ff88" stroke-width="2.5"/>
+
+  <!-- Pupil -->
+  <circle cx="50" cy="50" r="7" fill="#00d4ff"/>
+
+  <!-- Highlight -->
+  <circle cx="46" cy="46" r="2.5" fill="#ffffff" opacity="0.8"/>
+</svg>

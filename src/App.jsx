@@ -7,6 +7,8 @@ import Dashboard from './pages/Dashboard'
 // Public pages (for unauthenticated users)
 const Landing = lazy(() => import('./pages/Landing'))
 const Auth = lazy(() => import('./pages/Auth'))
+const Terms = lazy(() => import('./pages/Terms'))
+const Privacy = lazy(() => import('./pages/Privacy'))
 
 // Lazy loaded pages - code split for smaller initial bundle
 const Activity = lazy(() => import('./pages/Activity'))
@@ -97,6 +99,8 @@ function PublicLayout() {
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/register" element={<Navigate to="/auth?mode=register" replace />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           {/* Redirect any other route to landing */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
