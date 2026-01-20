@@ -14,12 +14,14 @@ export function IncidentDetailPanel({ incident, onClose, onGoToActor }) {
         <h3 className="text-lg font-semibold text-white truncate">
           {incident.victim_name || 'Unknown'}
         </h3>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-white"
-        >
+        <button onClick={onClose} className="text-gray-400 hover:text-white">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -45,7 +47,12 @@ export function IncidentDetailModal({ incident, onClose, onGoToActor }) {
             aria-label="Close"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -74,15 +81,11 @@ function IncidentDetails({ incident, onGoToActor, isMobile = false }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <div className="text-gray-500 mb-1">Sector</div>
-          <div className="text-gray-300 capitalize">
-            {incident.victim_sector || 'Unknown'}
-          </div>
+          <div className="text-gray-300 capitalize">{incident.victim_sector || 'Unknown'}</div>
         </div>
         <div>
           <div className="text-gray-500 mb-1">Country</div>
-          <div className="text-gray-300">
-            {incident.victim_country || 'Unknown'}
-          </div>
+          <div className="text-gray-300">{incident.victim_country || 'Unknown'}</div>
         </div>
       </div>
 
@@ -104,9 +107,7 @@ function IncidentDetails({ incident, onGoToActor, isMobile = false }) {
         <div className="p-2 bg-red-900/20 border border-red-800/50 rounded">
           <div className="text-red-400 text-xs font-medium">Data Leaked</div>
           {incident.data_size && (
-            <div className="text-red-300 text-xs">
-              Size: {incident.data_size}
-            </div>
+            <div className="text-red-300 text-xs">Size: {incident.data_size}</div>
           )}
         </div>
       )}
@@ -121,9 +122,7 @@ function IncidentDetails({ incident, onGoToActor, isMobile = false }) {
       )}
 
       <div className="pt-4 border-t border-gray-800">
-        <div className="text-gray-500 text-xs">
-          Source: {incident.source || 'ransomware.live'}
-        </div>
+        <div className="text-gray-500 text-xs">Source: {incident.source || 'ransomware.live'}</div>
       </div>
     </div>
   )

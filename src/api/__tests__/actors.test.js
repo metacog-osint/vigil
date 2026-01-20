@@ -237,28 +237,36 @@ describe('Actors API Endpoint', () => {
 
   describe('error handling', () => {
     it('should return 401 for missing auth', () => {
-      mockAuth.errorResponse.mockReturnValue(new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }))
+      mockAuth.errorResponse.mockReturnValue(
+        new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+      )
 
       const response = mockAuth.errorResponse('Invalid or missing API key', 401)
       expect(response.status).toBe(401)
     })
 
     it('should return 403 for insufficient permissions', () => {
-      mockAuth.errorResponse.mockReturnValue(new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 }))
+      mockAuth.errorResponse.mockReturnValue(
+        new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })
+      )
 
       const response = mockAuth.errorResponse('Insufficient permissions', 403)
       expect(response.status).toBe(403)
     })
 
     it('should return 404 for not found actor', () => {
-      mockAuth.errorResponse.mockReturnValue(new Response(JSON.stringify({ error: 'Not found' }), { status: 404 }))
+      mockAuth.errorResponse.mockReturnValue(
+        new Response(JSON.stringify({ error: 'Not found' }), { status: 404 })
+      )
 
       const response = mockAuth.errorResponse('Actor not found', 404)
       expect(response.status).toBe(404)
     })
 
     it('should return 405 for wrong method', () => {
-      mockAuth.errorResponse.mockReturnValue(new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 }))
+      mockAuth.errorResponse.mockReturnValue(
+        new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 })
+      )
 
       const response = mockAuth.errorResponse('Method not allowed', 405)
       expect(response.status).toBe(405)
@@ -275,7 +283,9 @@ describe('Actors API Endpoint', () => {
     })
 
     it('should return 500 for internal errors without exposing details', async () => {
-      mockAuth.errorResponse.mockReturnValue(new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 }))
+      mockAuth.errorResponse.mockReturnValue(
+        new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 })
+      )
 
       const response = mockAuth.errorResponse('Internal server error', 500)
       const body = await response.json()

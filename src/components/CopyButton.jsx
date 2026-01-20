@@ -12,7 +12,12 @@ import { useToast } from '../contexts/ToastContext'
 // Copy icon
 const CopyIcon = ({ className }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+    />
   </svg>
 )
 
@@ -67,7 +72,8 @@ export default function CopyButton({
 
   const variants = {
     ghost: 'hover:bg-gray-800 text-gray-500 hover:text-gray-300',
-    outline: 'border border-gray-700 hover:border-gray-600 bg-transparent text-gray-400 hover:text-white',
+    outline:
+      'border border-gray-700 hover:border-gray-600 bg-transparent text-gray-400 hover:text-white',
   }
 
   const s = sizes[size]
@@ -86,14 +92,8 @@ export default function CopyButton({
       title={copied ? 'Copied!' : 'Copy to clipboard'}
       aria-label={copied ? 'Copied!' : `Copy ${text} to clipboard`}
     >
-      {copied ? (
-        <CheckIcon className={s.icon} />
-      ) : (
-        <CopyIcon className={s.icon} />
-      )}
-      {showLabel && (
-        <span className="text-xs">{copied ? 'Copied' : 'Copy'}</span>
-      )}
+      {copied ? <CheckIcon className={s.icon} /> : <CopyIcon className={s.icon} />}
+      {showLabel && <span className="text-xs">{copied ? 'Copied' : 'Copy'}</span>}
     </button>
   )
 }
@@ -125,7 +125,9 @@ export function CopyableCode({ children, language, className }) {
   return (
     <div className={clsx('relative group', className)}>
       <pre className="bg-gray-900 border border-gray-800 rounded-lg p-4 pr-12 overflow-x-auto">
-        <code className={clsx('text-sm font-mono text-gray-300', language && `language-${language}`)}>
+        <code
+          className={clsx('text-sm font-mono text-gray-300', language && `language-${language}`)}
+        >
           {children}
         </code>
       </pre>
@@ -152,11 +154,5 @@ export function CopyIOC({ value, type }) {
     default: 'Copied to clipboard',
   }
 
-  return (
-    <CopyButton
-      text={value}
-      label={labels[type] || labels.default}
-      size="sm"
-    />
-  )
+  return <CopyButton text={value} label={labels[type] || labels.default} size="sm" />
 }

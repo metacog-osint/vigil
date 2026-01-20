@@ -26,12 +26,20 @@ import { sanitizeMarkdown } from '../lib/sanitize'
 const ACTIVITY_TYPES = {
   created: { icon: PlusIcon, color: 'text-green-400', label: 'Created' },
   updated: { icon: PencilIcon, color: 'text-blue-400', label: 'Updated' },
-  status_change: { icon: ExclamationTriangleIcon, color: 'text-yellow-400', label: 'Status Changed' },
+  status_change: {
+    icon: ExclamationTriangleIcon,
+    color: 'text-yellow-400',
+    label: 'Status Changed',
+  },
   entity_added: { icon: LinkIcon, color: 'text-cyan-400', label: 'Entity Added' },
   entity_removed: { icon: TrashIcon, color: 'text-red-400', label: 'Entity Removed' },
   note_added: { icon: DocumentTextIcon, color: 'text-purple-400', label: 'Note Added' },
   comment: { icon: ChatBubbleLeftRightIcon, color: 'text-gray-400', label: 'Comment' },
-  priority_change: { icon: ExclamationTriangleIcon, color: 'text-orange-400', label: 'Priority Changed' },
+  priority_change: {
+    icon: ExclamationTriangleIcon,
+    color: 'text-orange-400',
+    label: 'Priority Changed',
+  },
   assignment_change: { icon: UserCircleIcon, color: 'text-indigo-400', label: 'Assigned' },
 }
 
@@ -47,21 +55,23 @@ const PRIORITIES = {
 function renderMarkdown(text) {
   if (!text) return ''
 
-  return text
-    // Headers
-    .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold text-white mt-4 mb-2">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-white mt-6 mb-3">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-white mt-8 mb-4">$1</h1>')
-    // Bold and italic
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold">$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em class="italic">$1</em>')
-    // Code
-    .replace(/`([^`]+)`/g, '<code class="bg-gray-700 px-1 rounded text-cyan-400">$1</code>')
-    // Lists
-    .replace(/^- (.+)$/gm, '<li class="ml-4">• $1</li>')
-    .replace(/^\d+\. (.+)$/gm, '<li class="ml-4">$1</li>')
-    // Line breaks
-    .replace(/\n/g, '<br />')
+  return (
+    text
+      // Headers
+      .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold text-white mt-4 mb-2">$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-white mt-6 mb-3">$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-white mt-8 mb-4">$1</h1>')
+      // Bold and italic
+      .replace(/\*\*(.+?)\*\*/g, '<strong class="font-bold">$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em class="italic">$1</em>')
+      // Code
+      .replace(/`([^`]+)`/g, '<code class="bg-gray-700 px-1 rounded text-cyan-400">$1</code>')
+      // Lists
+      .replace(/^- (.+)$/gm, '<li class="ml-4">• $1</li>')
+      .replace(/^\d+\. (.+)$/gm, '<li class="ml-4">$1</li>')
+      // Line breaks
+      .replace(/\n/g, '<br />')
+  )
 }
 
 // Activity Item Component
@@ -71,13 +81,13 @@ function ActivityItem({ activity }) {
 
   return (
     <div className="flex gap-3 py-2">
-      <div className={`flex-shrink-0 w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center ${config.color}`}>
+      <div
+        className={`flex-shrink-0 w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center ${config.color}`}
+      >
         <Icon className="w-4 h-4" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-300">
-          {activity.description}
-        </p>
+        <p className="text-sm text-gray-300">{activity.description}</p>
         <p className="text-xs text-gray-500 mt-1">
           <TimeAgo date={activity.created_at} />
         </p>
@@ -100,7 +110,9 @@ function ChecklistItem({ item, onToggle, onRemove }) {
           <CheckCircleIcon className="w-5 h-5" />
         )}
       </button>
-      <span className={`flex-1 text-sm ${item.is_completed ? 'text-gray-500 line-through' : 'text-gray-300'}`}>
+      <span
+        className={`flex-1 text-sm ${item.is_completed ? 'text-gray-500 line-through' : 'text-gray-300'}`}
+      >
         {item.content}
       </span>
       <button
@@ -124,13 +136,9 @@ function CommentItem({ comment, onReply }) {
           <span className="text-xs text-gray-500">
             <TimeAgo date={comment.created_at} />
           </span>
-          {comment.is_edited && (
-            <span className="text-xs text-gray-500">(edited)</span>
-          )}
+          {comment.is_edited && <span className="text-xs text-gray-500">(edited)</span>}
         </div>
-        <p className="text-sm text-gray-300 mt-1">
-          {comment.content}
-        </p>
+        <p className="text-sm text-gray-300 mt-1">{comment.content}</p>
         <button
           onClick={() => onReply?.(comment)}
           className="text-xs text-cyan-400 hover:text-cyan-300 mt-1"
@@ -152,14 +160,15 @@ function LinkedEntity({ entity, onRemove }) {
   }
 
   return (
-    <div className={`flex items-center gap-2 px-2 py-1 rounded ${typeColors[entity.entity_type] || 'bg-gray-700 text-gray-300'}`}>
+    <div
+      className={`flex items-center gap-2 px-2 py-1 rounded ${typeColors[entity.entity_type] || 'bg-gray-700 text-gray-300'}`}
+    >
       <LinkIcon className="w-3 h-3" />
-      <span className="text-xs font-medium truncate">{entity.entity_type}: {entity.display_name || entity.entity_id}</span>
+      <span className="text-xs font-medium truncate">
+        {entity.entity_type}: {entity.display_name || entity.entity_id}
+      </span>
       {onRemove && (
-        <button
-          onClick={() => onRemove(entity.id)}
-          className="hover:text-red-400"
-        >
+        <button onClick={() => onRemove(entity.id)} className="hover:text-red-400">
           <TrashIcon className="w-3 h-3" />
         </button>
       )}
@@ -287,21 +296,18 @@ export default function InvestigationNotebook({
       .eq('id', item.id)
 
     if (!error) {
-      setChecklist(checklist.map(c =>
-        c.id === item.id ? { ...c, is_completed: !c.is_completed } : c
-      ))
+      setChecklist(
+        checklist.map((c) => (c.id === item.id ? { ...c, is_completed: !c.is_completed } : c))
+      )
     }
   }
 
   // Remove checklist item
   const removeChecklistItem = async (id) => {
-    const { error } = await supabase
-      .from('investigation_checklist')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from('investigation_checklist').delete().eq('id', id)
 
     if (!error) {
-      setChecklist(checklist.filter(c => c.id !== id))
+      setChecklist(checklist.filter((c) => c.id !== id))
     }
   }
 
@@ -325,7 +331,7 @@ export default function InvestigationNotebook({
     }
   }
 
-  const completedCount = checklist.filter(c => c.is_completed).length
+  const completedCount = checklist.filter((c) => c.is_completed).length
   const totalCount = checklist.length
 
   return (
@@ -337,12 +343,12 @@ export default function InvestigationNotebook({
           <div>
             <h2 className="text-lg font-bold text-white">{investigation?.title}</h2>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`px-2 py-0.5 rounded text-xs font-medium ${PRIORITIES[investigation?.priority]?.color || 'bg-gray-600'} bg-opacity-20`}>
+              <span
+                className={`px-2 py-0.5 rounded text-xs font-medium ${PRIORITIES[investigation?.priority]?.color || 'bg-gray-600'} bg-opacity-20`}
+              >
                 {investigation?.priority || 'Medium'}
               </span>
-              <span className="text-xs text-gray-500">
-                Status: {investigation?.status}
-              </span>
+              <span className="text-xs text-gray-500">Status: {investigation?.status}</span>
             </div>
           </div>
         </div>
@@ -358,10 +364,14 @@ export default function InvestigationNotebook({
         {[
           { id: 'notes', label: 'Notes', icon: DocumentTextIcon },
           { id: 'activity', label: 'Activity', icon: ClockIcon },
-          { id: 'checklist', label: `Checklist (${completedCount}/${totalCount})`, icon: CheckCircleIcon },
+          {
+            id: 'checklist',
+            label: `Checklist (${completedCount}/${totalCount})`,
+            icon: CheckCircleIcon,
+          },
           { id: 'comments', label: `Comments (${comments.length})`, icon: ChatBubbleLeftRightIcon },
           { id: 'entities', label: `Entities (${entities.length})`, icon: LinkIcon },
-        ].map(tab => {
+        ].map((tab) => {
           const Icon = tab.icon
           return (
             <button
@@ -383,9 +393,7 @@ export default function InvestigationNotebook({
       {/* Content */}
       <div className="flex-1 overflow-auto p-4">
         {loading ? (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            Loading...
-          </div>
+          <div className="flex items-center justify-center h-full text-gray-500">Loading...</div>
         ) : (
           <>
             {/* Notes Tab */}
@@ -421,7 +429,11 @@ export default function InvestigationNotebook({
                     )}
                     <div
                       className="prose prose-invert prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: sanitizeMarkdown(renderMarkdown(notes)) || '<p class="text-gray-500">No notes yet. Click Edit to add notes.</p>' }}
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          sanitizeMarkdown(renderMarkdown(notes)) ||
+                          '<p class="text-gray-500">No notes yet. Click Edit to add notes.</p>',
+                      }}
                     />
                   </>
                 )}
@@ -434,7 +446,7 @@ export default function InvestigationNotebook({
                 {activities.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">No activity yet</p>
                 ) : (
-                  activities.map(activity => (
+                  activities.map((activity) => (
                     <ActivityItem key={activity.id} activity={activity} />
                   ))
                 )}
@@ -464,7 +476,7 @@ export default function InvestigationNotebook({
                   <p className="text-gray-500 text-center py-8">No checklist items yet</p>
                 ) : (
                   <div className="space-y-1">
-                    {checklist.map(item => (
+                    {checklist.map((item) => (
                       <ChecklistItem
                         key={item.id}
                         item={item}
@@ -490,7 +502,7 @@ export default function InvestigationNotebook({
                   <p className="text-gray-500 text-center py-8">No comments yet</p>
                 ) : (
                   <div className="space-y-2 divide-y divide-gray-700">
-                    {comments.map(comment => (
+                    {comments.map((comment) => (
                       <CommentItem key={comment.id} comment={comment} />
                     ))}
                   </div>
@@ -521,7 +533,7 @@ export default function InvestigationNotebook({
                   <p className="text-gray-500 text-center py-8">No linked entities</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {entities.map(entity => (
+                    {entities.map((entity) => (
                       <LinkedEntity key={entity.id} entity={entity} />
                     ))}
                   </div>

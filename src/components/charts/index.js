@@ -13,5 +13,8 @@ export { default as ThreatGauge } from './ThreatGauge'
 export { default as VulnerabilityTreemap } from './VulnerabilityTreemap'
 export { default as VulnTreemap } from './VulnTreemap'
 export { default as ActorTrajectoryChart } from './ActorTrajectoryChart'
-export { TechniqueCooccurrenceMatrix, TechniqueCooccurrenceFullMatrix } from './TechniqueCooccurrenceMatrix'
+export {
+  TechniqueCooccurrenceMatrix,
+  TechniqueCooccurrenceFullMatrix,
+} from './TechniqueCooccurrenceMatrix'
 export { TargetingHeatmap, TargetingHeatmapMini } from './TargetingHeatmap'

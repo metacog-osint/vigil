@@ -24,10 +24,12 @@ const CONFIDENCE_COLORS = {
 function TypeBadge({ type }) {
   const displayType = type?.replace('hash_', '').toUpperCase() || 'UNKNOWN'
   return (
-    <span className={clsx(
-      'px-2 py-0.5 text-xs font-mono rounded',
-      TYPE_COLORS[type] || TYPE_COLORS.unknown
-    )}>
+    <span
+      className={clsx(
+        'px-2 py-0.5 text-xs font-mono rounded',
+        TYPE_COLORS[type] || TYPE_COLORS.unknown
+      )}
+    >
       {displayType}
     </span>
   )
@@ -49,7 +51,12 @@ function EnrichmentLinks({ value, type }) {
           className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded transition-colors"
         >
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            />
           </svg>
           {link.name}
         </a>
@@ -74,7 +81,12 @@ function CopyButton({ value }) {
       title="Copy to clipboard"
     >
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+        />
       </svg>
     </button>
   )
@@ -104,10 +116,12 @@ export function IOCQuickLookupCard({ data, type, onNavigate }) {
               <div className="flex items-center gap-2 mb-2">
                 <TypeBadge type={primaryResult.type || type} />
                 {primaryResult.confidence && (
-                  <span className={clsx(
-                    'text-xs',
-                    CONFIDENCE_COLORS[primaryResult.confidence] || 'text-gray-400'
-                  )}>
+                  <span
+                    className={clsx(
+                      'text-xs',
+                      CONFIDENCE_COLORS[primaryResult.confidence] || 'text-gray-400'
+                    )}
+                  >
                     {primaryResult.confidence} confidence
                   </span>
                 )}
@@ -117,7 +131,9 @@ export function IOCQuickLookupCard({ data, type, onNavigate }) {
                 <code className="text-sm font-mono text-white break-all">
                   {primaryResult.value || primaryResult.sha256 || primaryResult.cve_id}
                 </code>
-                <CopyButton value={primaryResult.value || primaryResult.sha256 || primaryResult.cve_id} />
+                <CopyButton
+                  value={primaryResult.value || primaryResult.sha256 || primaryResult.cve_id}
+                />
               </div>
             </div>
           </div>
@@ -148,24 +164,36 @@ export function IOCQuickLookupCard({ data, type, onNavigate }) {
             {primaryResult.first_seen && (
               <div>
                 <span className="text-gray-500">First seen:</span>
-                <span className="ml-1 text-white">{new Date(primaryResult.first_seen).toLocaleDateString()}</span>
+                <span className="ml-1 text-white">
+                  {new Date(primaryResult.first_seen).toLocaleDateString()}
+                </span>
               </div>
             )}
             {primaryResult.last_seen && (
               <div>
                 <span className="text-gray-500">Last seen:</span>
-                <span className="ml-1 text-white">{new Date(primaryResult.last_seen).toLocaleDateString()}</span>
+                <span className="ml-1 text-white">
+                  {new Date(primaryResult.last_seen).toLocaleDateString()}
+                </span>
               </div>
             )}
             {primaryResult.cvss_score && (
               <div>
                 <span className="text-gray-500">CVSS:</span>
-                <span className={clsx(
-                  'ml-1 font-bold',
-                  primaryResult.cvss_score >= 9 ? 'text-red-400' :
-                  primaryResult.cvss_score >= 7 ? 'text-orange-400' :
-                  primaryResult.cvss_score >= 4 ? 'text-yellow-400' : 'text-green-400'
-                )}>{primaryResult.cvss_score}</span>
+                <span
+                  className={clsx(
+                    'ml-1 font-bold',
+                    primaryResult.cvss_score >= 9
+                      ? 'text-red-400'
+                      : primaryResult.cvss_score >= 7
+                        ? 'text-orange-400'
+                        : primaryResult.cvss_score >= 4
+                          ? 'text-yellow-400'
+                          : 'text-green-400'
+                  )}
+                >
+                  {primaryResult.cvss_score}
+                </span>
               </div>
             )}
           </div>
@@ -180,18 +208,14 @@ export function IOCQuickLookupCard({ data, type, onNavigate }) {
 
       {/* Additional Results */}
       {iocResults.length > 1 && (
-        <div className="text-xs text-gray-500">
-          + {iocResults.length - 1} more result(s) found
-        </div>
+        <div className="text-xs text-gray-500">+ {iocResults.length - 1} more result(s) found</div>
       )}
 
       {/* Related Malware Samples */}
       {malware.length > 0 && iocResults.length === 0 && (
         <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded">
           <div className="text-xs text-purple-400 mb-1">Malware Sample Match</div>
-          <div className="text-sm text-white">
-            {malware[0].signature || 'Unknown malware'}
-          </div>
+          <div className="text-sm text-white">{malware[0].signature || 'Unknown malware'}</div>
         </div>
       )}
 

@@ -50,11 +50,12 @@ describe('generateBLUF', () => {
   it('should call API endpoint with correct parameters', async () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({
-        success: true,
-        summary: 'LockBit and ALPHV are driving ransomware activity.',
-        model: 'llama-3.3-70b-versatile',
-      }),
+      json: () =>
+        Promise.resolve({
+          success: true,
+          summary: 'LockBit and ALPHV are driving ransomware activity.',
+          model: 'llama-3.3-70b-versatile',
+        }),
     })
 
     const data = {
@@ -71,7 +72,7 @@ describe('generateBLUF', () => {
       expect.objectContaining({
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer mock-supabase-token',
+          Authorization: 'Bearer mock-supabase-token',
           'Content-Type': 'application/json',
         },
       })
@@ -83,14 +84,16 @@ describe('generateBLUF', () => {
   })
 
   it('should return generated summary on success', async () => {
-    const expectedSummary = 'LockBit and ALPHV are driving ransomware activity targeting healthcare.'
+    const expectedSummary =
+      'LockBit and ALPHV are driving ransomware activity targeting healthcare.'
     global.fetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({
-        success: true,
-        summary: expectedSummary,
-        model: 'llama-3.3-70b-versatile',
-      }),
+      json: () =>
+        Promise.resolve({
+          success: true,
+          summary: expectedSummary,
+          model: 'llama-3.3-70b-versatile',
+        }),
     })
 
     const result = await generateBLUF({ incidents30d: 500 })
@@ -121,17 +124,18 @@ describe('generateBLUF', () => {
   it('should save summary to database when save option is true', async () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({
-        success: true,
-        summary: 'Summary text',
-        model: 'llama-3.3-70b-versatile',
-      }),
+      json: () =>
+        Promise.resolve({
+          success: true,
+          summary: 'Summary text',
+          model: 'llama-3.3-70b-versatile',
+        }),
     })
 
     await generateBLUF({ incidents30d: 500 }, { save: true })
 
     // Wait for async save operation
-    await new Promise(resolve => setTimeout(resolve, 10))
+    await new Promise((resolve) => setTimeout(resolve, 10))
 
     expect(mockSave).toHaveBeenCalled()
   })
@@ -139,17 +143,18 @@ describe('generateBLUF', () => {
   it('should not save summary when save option is false', async () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({
-        success: true,
-        summary: 'Summary text',
-        model: 'llama-3.3-70b-versatile',
-      }),
+      json: () =>
+        Promise.resolve({
+          success: true,
+          summary: 'Summary text',
+          model: 'llama-3.3-70b-versatile',
+        }),
     })
 
     await generateBLUF({ incidents30d: 500 }, { save: false })
 
     // Wait for potential async operation
-    await new Promise(resolve => setTimeout(resolve, 10))
+    await new Promise((resolve) => setTimeout(resolve, 10))
 
     expect(mockSave).not.toHaveBeenCalled()
   })
@@ -162,17 +167,18 @@ describe('generateBLUF', () => {
 
     global.fetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({
-        success: true,
-        summary: 'Summary text',
-        model: 'llama-3.3-70b-versatile',
-      }),
+      json: () =>
+        Promise.resolve({
+          success: true,
+          summary: 'Summary text',
+          model: 'llama-3.3-70b-versatile',
+        }),
     })
 
     await generateBLUF({ incidents30d: 500 }, { save: true })
 
     // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 10))
+    await new Promise((resolve) => setTimeout(resolve, 10))
 
     expect(mockSave).not.toHaveBeenCalled()
   })
@@ -187,10 +193,11 @@ describe('generateActorSummary', () => {
   it('should call API endpoint with actor details', async () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({
-        success: true,
-        summary: 'LockBit is a prolific ransomware group.',
-      }),
+      json: () =>
+        Promise.resolve({
+          success: true,
+          summary: 'LockBit is a prolific ransomware group.',
+        }),
     })
 
     const actor = {
@@ -208,7 +215,7 @@ describe('generateActorSummary', () => {
       expect.objectContaining({
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer mock-supabase-token',
+          Authorization: 'Bearer mock-supabase-token',
           'Content-Type': 'application/json',
         },
       })
@@ -223,10 +230,11 @@ describe('generateActorSummary', () => {
     const expectedSummary = 'LockBit is a prolific ransomware group targeting multiple sectors.'
     global.fetch.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({
-        success: true,
-        summary: expectedSummary,
-      }),
+      json: () =>
+        Promise.resolve({
+          success: true,
+          summary: expectedSummary,
+        }),
     })
 
     const result = await generateActorSummary({ name: 'LockBit' })

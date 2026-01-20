@@ -17,13 +17,15 @@ export const escalationPolicies = {
   async getAll(teamId) {
     const { data, error } = await supabase
       .from('escalation_policies')
-      .select(`
+      .select(
+        `
         *,
         levels:escalation_levels(
           *,
           targets:escalation_targets(*)
         )
-      `)
+      `
+      )
       .eq('team_id', teamId)
       .order('created_at', { ascending: false })
 
@@ -36,13 +38,15 @@ export const escalationPolicies = {
   async getById(id) {
     const { data, error } = await supabase
       .from('escalation_policies')
-      .select(`
+      .select(
+        `
         *,
         levels:escalation_levels(
           *,
           targets:escalation_targets(*)
         )
-      `)
+      `
+      )
       .eq('id', id)
       .single()
 
@@ -55,13 +59,15 @@ export const escalationPolicies = {
   async getDefault(teamId) {
     const { data, error } = await supabase
       .from('escalation_policies')
-      .select(`
+      .select(
+        `
         *,
         levels:escalation_levels(
           *,
           targets:escalation_targets(*)
         )
-      `)
+      `
+      )
       .eq('team_id', teamId)
       .eq('is_default', true)
       .eq('enabled', true)
@@ -101,10 +107,7 @@ export const escalationPolicies = {
    * Delete an escalation policy
    */
   async delete(id) {
-    const { error } = await supabase
-      .from('escalation_policies')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from('escalation_policies').delete().eq('id', id)
 
     return { error }
   },
@@ -114,10 +117,7 @@ export const escalationPolicies = {
    */
   async setDefault(teamId, policyId) {
     // First, unset any existing default
-    await supabase
-      .from('escalation_policies')
-      .update({ is_default: false })
-      .eq('team_id', teamId)
+    await supabase.from('escalation_policies').update({ is_default: false }).eq('team_id', teamId)
 
     // Set the new default
     const { data, error } = await supabase
@@ -140,11 +140,7 @@ export const escalationLevels = {
    * Add a level to a policy
    */
   async create(level) {
-    const { data, error } = await supabase
-      .from('escalation_levels')
-      .insert(level)
-      .select()
-      .single()
+    const { data, error } = await supabase.from('escalation_levels').insert(level).select().single()
 
     return { data, error }
   },
@@ -167,10 +163,7 @@ export const escalationLevels = {
    * Delete a level
    */
   async delete(id) {
-    const { error } = await supabase
-      .from('escalation_levels')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from('escalation_levels').delete().eq('id', id)
 
     return { error }
   },
@@ -216,10 +209,7 @@ export const escalationTargets = {
    * Delete a target
    */
   async delete(id) {
-    const { error } = await supabase
-      .from('escalation_targets')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from('escalation_targets').delete().eq('id', id)
 
     return { error }
   },
@@ -236,7 +226,8 @@ export const oncallSchedules = {
   async getAll(teamId) {
     const { data, error } = await supabase
       .from('oncall_schedules')
-      .select(`
+      .select(
+        `
         *,
         participants:schedule_participants(
           *,
@@ -246,7 +237,8 @@ export const oncallSchedules = {
           *,
           override_user:auth.users!schedule_overrides_override_user_id_fkey(id, email, raw_user_meta_data)
         )
-      `)
+      `
+      )
       .eq('team_id', teamId)
       .order('created_at', { ascending: false })
 
@@ -259,7 +251,8 @@ export const oncallSchedules = {
   async getById(id) {
     const { data, error } = await supabase
       .from('oncall_schedules')
-      .select(`
+      .select(
+        `
         *,
         participants:schedule_participants(
           *,
@@ -269,7 +262,8 @@ export const oncallSchedules = {
           *,
           override_user:auth.users!schedule_overrides_override_user_id_fkey(id, email, raw_user_meta_data)
         )
-      `)
+      `
+      )
       .eq('id', id)
       .single()
 
@@ -401,11 +395,13 @@ export const alertEscalations = {
   async getActive(teamId) {
     const { data, error } = await supabase
       .from('alert_escalations')
-      .select(`
+      .select(
+        `
         *,
         policy:escalation_policies!inner(*),
         alert:alert_queue(*)
-      `)
+      `
+      )
       .eq('policy.team_id', teamId)
       .in('status', ['active', 'acknowledged'])
       .order('created_at', { ascending: false })

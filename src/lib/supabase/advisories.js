@@ -63,11 +63,7 @@ export const advisories = {
    * Get advisory by GHSA ID
    */
   async getByGHSA(ghsaId) {
-    return supabase
-      .from('advisories')
-      .select('*')
-      .eq('ghsa_id', ghsaId)
-      .single()
+    return supabase.from('advisories').select('*').eq('ghsa_id', ghsaId).single()
   },
 
   /**
@@ -125,9 +121,7 @@ export const advisories = {
    * Get counts by ecosystem
    */
   async getCountsByEcosystem() {
-    const { data, error } = await supabase
-      .from('advisories')
-      .select('ecosystem, severity')
+    const { data, error } = await supabase.from('advisories').select('ecosystem, severity')
 
     if (error || !data) {
       return []
@@ -152,9 +146,7 @@ export const advisories = {
    * Get counts by severity
    */
   async getCountsBySeverity() {
-    const { data, error } = await supabase
-      .from('advisories')
-      .select('severity')
+    const { data, error } = await supabase.from('advisories').select('severity')
 
     if (error || !data) {
       return [
@@ -201,14 +193,16 @@ export const advisories = {
   async getLinkedToCVE(cveId) {
     const { data, error } = await supabase
       .from('cve_advisories')
-      .select(`
+      .select(
+        `
         advisory:advisories(*)
-      `)
+      `
+      )
       .eq('cve_id', cveId)
 
     if (error) return { data: [], error }
 
-    return { data: data?.map(r => r.advisory).filter(Boolean) || [], error: null }
+    return { data: data?.map((r) => r.advisory).filter(Boolean) || [], error: null }
   },
 
   /**

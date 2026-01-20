@@ -3,8 +3,20 @@ import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { supabase } from '../lib/supabase'
-import { parseQuery, buildSupabaseQuery, validateQuery, getQuerySuggestions } from '../lib/queryParser'
-import { SkeletonTable, EmptySearch, ErrorMessage, TimeAgo, SeverityBadge, ExportButton } from '../components'
+import {
+  parseQuery,
+  buildSupabaseQuery,
+  validateQuery,
+  getQuerySuggestions,
+} from '../lib/queryParser'
+import {
+  SkeletonTable,
+  EmptySearch,
+  ErrorMessage,
+  TimeAgo,
+  SeverityBadge,
+  ExportButton,
+} from '../components'
 import { FeatureGate } from '../components/UpgradePrompt'
 
 const ENTITY_TYPES = [
@@ -53,7 +65,7 @@ export default function AdvancedSearch() {
 
     try {
       const parsed = parseQuery(query)
-      const config = ENTITY_TYPES.find(t => t.value === entityType)
+      const config = ENTITY_TYPES.find((t) => t.value === entityType)
 
       let dbQuery = supabase
         .from(config.table)
@@ -113,109 +125,126 @@ export default function AdvancedSearch() {
           </p>
         </div>
 
-      {/* Search Form */}
-      <form onSubmit={handleSubmit} className="space-y-4 mb-6">
-        <div className="flex gap-4">
-          <select
-            value={entityType}
-            onChange={(e) => setEntityType(e.target.value)}
-            className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyber-accent"
-          >
-            {ENTITY_TYPES.map((type) => (
-              <option key={type.value} value={type.value}>{type.label}</option>
-            ))}
-          </select>
-
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="type:ip confidence:high first_seen:>2024-01-01"
-              className={clsx(
-                'w-full bg-gray-800 border rounded px-4 py-2 text-white font-mono text-sm focus:outline-none',
-                validation.valid ? 'border-gray-700 focus:border-cyber-accent' : 'border-red-500'
-              )}
-            />
-            {!validation.valid && validation.message && (
-              <div className="absolute top-full mt-1 text-xs text-red-400">
-                {validation.message}
-              </div>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading || !validation.valid}
-            className="px-6 py-2 bg-cyber-accent text-white rounded hover:bg-cyber-accent/80 transition-colors disabled:opacity-50"
-          >
-            {isLoading ? 'Searching...' : 'Search'}
-          </button>
-        </div>
-
-        {/* Query Examples */}
-        <div className="flex flex-wrap gap-2 text-sm">
-          <span className="text-gray-500">Examples:</span>
-          {EXAMPLE_QUERIES.map((ex, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => handleExampleClick(ex.query)}
-              className="text-cyber-accent hover:underline"
-              title={ex.description}
+        {/* Search Form */}
+        <form onSubmit={handleSubmit} className="space-y-4 mb-6">
+          <div className="flex gap-4">
+            <select
+              value={entityType}
+              onChange={(e) => setEntityType(e.target.value)}
+              className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyber-accent"
             >
-              {ex.query}
+              {ENTITY_TYPES.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="type:ip confidence:high first_seen:>2024-01-01"
+                className={clsx(
+                  'w-full bg-gray-800 border rounded px-4 py-2 text-white font-mono text-sm focus:outline-none',
+                  validation.valid ? 'border-gray-700 focus:border-cyber-accent' : 'border-red-500'
+                )}
+              />
+              {!validation.valid && validation.message && (
+                <div className="absolute top-full mt-1 text-xs text-red-400">
+                  {validation.message}
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading || !validation.valid}
+              className="px-6 py-2 bg-cyber-accent text-white rounded hover:bg-cyber-accent/80 transition-colors disabled:opacity-50"
+            >
+              {isLoading ? 'Searching...' : 'Search'}
             </button>
-          ))}
-        </div>
-      </form>
-
-      {/* Query Syntax Help */}
-      <details className="mb-6">
-        <summary className="text-sm text-gray-400 cursor-pointer hover:text-white">
-          Query syntax help
-        </summary>
-        <div className="mt-2 p-4 bg-gray-800/50 rounded text-sm text-gray-400 space-y-2">
-          <p><code className="text-cyber-accent">field:value</code> - Exact match</p>
-          <p><code className="text-cyber-accent">field:&gt;value</code> - Greater than (dates/numbers)</p>
-          <p><code className="text-cyber-accent">field:&gt;=value</code> - Greater than or equal</p>
-          <p><code className="text-cyber-accent">field:*value*</code> - Contains</p>
-          <p><code className="text-cyber-accent">AND / OR</code> - Boolean operators</p>
-          <p><code className="text-cyber-accent">NOT field:value</code> - Negation</p>
-          <p className="pt-2 border-t border-gray-700">
-            <strong>Fields:</strong> type, source, tags, confidence, cvss, severity, kev, sector, trend, country
-          </p>
-        </div>
-      </details>
-
-      {error && <ErrorMessage message={error} className="mb-4" />}
-
-      {/* Results Header */}
-      {results.length > 0 && (
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-sm text-gray-400">
-            Showing {page * pageSize + 1}-{Math.min((page + 1) * pageSize, totalCount)} of {totalCount} results
           </div>
-          <ExportButton
-            data={results}
-            entityType={entityType}
-            filename={`vigil-search-${entityType}`}
-          />
-        </div>
-      )}
 
-      {/* Results */}
-      {isLoading ? (
-        <SkeletonTable rows={5} />
-      ) : results.length === 0 && query ? (
-        <EmptySearch query={query} />
-      ) : (
-        <div className="space-y-2">
-          {results.map((item, i) => (
-            <ResultCard key={item.id || i} item={item} entityType={entityType} />
-          ))}
-        </div>
-      )}
+          {/* Query Examples */}
+          <div className="flex flex-wrap gap-2 text-sm">
+            <span className="text-gray-500">Examples:</span>
+            {EXAMPLE_QUERIES.map((ex, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => handleExampleClick(ex.query)}
+                className="text-cyber-accent hover:underline"
+                title={ex.description}
+              >
+                {ex.query}
+              </button>
+            ))}
+          </div>
+        </form>
+
+        {/* Query Syntax Help */}
+        <details className="mb-6">
+          <summary className="text-sm text-gray-400 cursor-pointer hover:text-white">
+            Query syntax help
+          </summary>
+          <div className="mt-2 p-4 bg-gray-800/50 rounded text-sm text-gray-400 space-y-2">
+            <p>
+              <code className="text-cyber-accent">field:value</code> - Exact match
+            </p>
+            <p>
+              <code className="text-cyber-accent">field:&gt;value</code> - Greater than
+              (dates/numbers)
+            </p>
+            <p>
+              <code className="text-cyber-accent">field:&gt;=value</code> - Greater than or equal
+            </p>
+            <p>
+              <code className="text-cyber-accent">field:*value*</code> - Contains
+            </p>
+            <p>
+              <code className="text-cyber-accent">AND / OR</code> - Boolean operators
+            </p>
+            <p>
+              <code className="text-cyber-accent">NOT field:value</code> - Negation
+            </p>
+            <p className="pt-2 border-t border-gray-700">
+              <strong>Fields:</strong> type, source, tags, confidence, cvss, severity, kev, sector,
+              trend, country
+            </p>
+          </div>
+        </details>
+
+        {error && <ErrorMessage message={error} className="mb-4" />}
+
+        {/* Results Header */}
+        {results.length > 0 && (
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm text-gray-400">
+              Showing {page * pageSize + 1}-{Math.min((page + 1) * pageSize, totalCount)} of{' '}
+              {totalCount} results
+            </div>
+            <ExportButton
+              data={results}
+              entityType={entityType}
+              filename={`vigil-search-${entityType}`}
+            />
+          </div>
+        )}
+
+        {/* Results */}
+        {isLoading ? (
+          <SkeletonTable rows={5} />
+        ) : results.length === 0 && query ? (
+          <EmptySearch query={query} />
+        ) : (
+          <div className="space-y-2">
+            {results.map((item, i) => (
+              <ResultCard key={item.id || i} item={item} entityType={entityType} />
+            ))}
+          </div>
+        )}
 
         {/* Pagination */}
         {totalPages > 1 && (
@@ -251,7 +280,10 @@ function ResultCard({ item, entityType }) {
         <div className="bg-cyber-card border border-gray-800 rounded-lg p-4 hover:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <Link to={`/actors?id=${item.id}`} className="font-medium text-white hover:text-cyber-accent">
+              <Link
+                to={`/actors?id=${item.id}`}
+                className="font-medium text-white hover:text-cyber-accent"
+              >
                 {item.name}
               </Link>
               <div className="text-sm text-gray-400 mt-1">
@@ -259,12 +291,14 @@ function ResultCard({ item, entityType }) {
               </div>
             </div>
             <div className="text-right text-sm">
-              <div className={clsx(
-                'px-2 py-0.5 rounded text-xs',
-                item.trend_status === 'ESCALATING' && 'bg-red-500/20 text-red-400',
-                item.trend_status === 'STABLE' && 'bg-gray-500/20 text-gray-400',
-                item.trend_status === 'DECLINING' && 'bg-green-500/20 text-green-400',
-              )}>
+              <div
+                className={clsx(
+                  'px-2 py-0.5 rounded text-xs',
+                  item.trend_status === 'ESCALATING' && 'bg-red-500/20 text-red-400',
+                  item.trend_status === 'STABLE' && 'bg-gray-500/20 text-gray-400',
+                  item.trend_status === 'DECLINING' && 'bg-green-500/20 text-green-400'
+                )}
+              >
                 {item.trend_status}
               </div>
               {item.last_seen && (

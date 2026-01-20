@@ -38,9 +38,7 @@ export const WIDGETS = {
       autoRefresh: true,
       refreshInterval: 3600, // 1 hour
     },
-    configOptions: [
-      { key: 'autoRefresh', label: 'Auto refresh', type: 'boolean' },
-    ],
+    configOptions: [{ key: 'autoRefresh', label: 'Auto refresh', type: 'boolean' }],
   },
 
   [WIDGET_TYPES.PRIORITIES]: {
@@ -202,9 +200,7 @@ export const WIDGETS = {
     defaultConfig: {
       days: 90,
     },
-    configOptions: [
-      { key: 'days', label: 'Days to show', type: 'number', min: 30, max: 365 },
-    ],
+    configOptions: [{ key: 'days', label: 'Days to show', type: 'number', min: 30, max: 365 }],
   },
 
   [WIDGET_TYPES.MAP]: {

@@ -33,11 +33,7 @@ export const threatHunts = {
 
   // Get hunt by ID
   async getById(huntId) {
-    return supabase
-      .from('threat_hunts')
-      .select('*')
-      .eq('id', huntId)
-      .single()
+    return supabase.from('threat_hunts').select('*').eq('id', huntId).single()
   },
 
   // Get hunts for a specific actor
@@ -54,22 +50,31 @@ export const threatHunts = {
   async getUserProgress(userId = 'anonymous') {
     return supabase
       .from('user_hunt_progress')
-      .select(`
+      .select(
+        `
         *,
         hunt:threat_hunts(id, title, actor_name, confidence)
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('started_at', { ascending: false })
   },
 
   // Start a hunt (record user started)
   async startHunt(userId = 'anonymous', huntId) {
-    return supabase.from('user_hunt_progress').upsert({
-      user_id: userId,
-      hunt_id: huntId,
-      status: 'in_progress',
-      completed_checks: [],
-    }, { onConflict: 'user_id,hunt_id' }).select().single()
+    return supabase
+      .from('user_hunt_progress')
+      .upsert(
+        {
+          user_id: userId,
+          hunt_id: huntId,
+          status: 'in_progress',
+          completed_checks: [],
+        },
+        { onConflict: 'user_id,hunt_id' }
+      )
+      .select()
+      .single()
   },
 
   // Update hunt progress

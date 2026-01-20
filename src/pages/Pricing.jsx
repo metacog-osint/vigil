@@ -19,39 +19,19 @@ const FEATURE_GROUPS = [
   },
   {
     name: 'Personalization',
-    features: [
-      'org_profile',
-      'relevance_scoring',
-      'watchlist',
-      'saved_filters',
-    ],
+    features: ['org_profile', 'relevance_scoring', 'watchlist', 'saved_filters'],
   },
   {
     name: 'Alerts & Notifications',
-    features: [
-      'email_digests',
-      'vendor_alerts',
-      'custom_alert_rules',
-    ],
+    features: ['email_digests', 'vendor_alerts', 'custom_alert_rules'],
   },
   {
     name: 'Analysis & Export',
-    features: [
-      'correlation_panel',
-      'threat_hunts',
-      'csv_export',
-      'stix_export',
-      'bulk_search',
-    ],
+    features: ['correlation_panel', 'threat_hunts', 'csv_export', 'stix_export', 'bulk_search'],
   },
   {
     name: 'API & Integrations',
-    features: [
-      'api_access',
-      'api_keys',
-      'siem_integration',
-      'custom_integrations',
-    ],
+    features: ['api_access', 'api_keys', 'siem_integration', 'custom_integrations'],
   },
   {
     name: 'Team & Enterprise',
@@ -153,9 +133,7 @@ export default function Pricing() {
     <div className="max-w-7xl mx-auto p-6">
       {/* Header */}
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold text-white mb-4">
-          Choose Your Plan
-        </h1>
+        <h1 className="text-3xl font-bold text-white mb-4">Choose Your Plan</h1>
         <p className="text-gray-400 text-lg max-w-2xl mx-auto">
           Get the threat intelligence you need. Start free, upgrade when you're ready.
         </p>
@@ -211,9 +189,7 @@ export default function Pricing() {
             <div
               key={tier}
               className={`relative rounded-xl border p-6 ${
-                isPopular
-                  ? 'border-cyan-500 bg-cyan-500/5'
-                  : 'border-gray-700 bg-gray-800/50'
+                isPopular ? 'border-cyan-500 bg-cyan-500/5' : 'border-gray-700 bg-gray-800/50'
               }`}
             >
               {/* Popular Badge */}
@@ -229,9 +205,7 @@ export default function Pricing() {
               <div className="mb-6">
                 <h3 className="text-xl font-bold text-white mb-1">{info.name}</h3>
                 <p className="text-gray-400 text-sm mb-4">{info.description}</p>
-                <div className="text-3xl font-bold text-white">
-                  {getPriceLabel(tier)}
-                </div>
+                <div className="text-3xl font-bold text-white">{getPriceLabel(tier)}</div>
                 {tier !== 'free' && tier !== 'enterprise' && billingPeriod === 'annual' && (
                   <div className="text-sm text-gray-500 mt-1">
                     ${Math.round(getPrice(tier) / 12)}/mo billed annually
@@ -287,7 +261,9 @@ export default function Pricing() {
                   <div className="flex justify-between">
                     <span className="text-gray-400">Org Profiles</span>
                     <span className="text-white">
-                      {info.limits.orgProfiles === -1 ? 'Unlimited' : info.limits.orgProfiles || 'None'}
+                      {info.limits.orgProfiles === -1
+                        ? 'Unlimited'
+                        : info.limits.orgProfiles || 'None'}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -296,8 +272,8 @@ export default function Pricing() {
                       {info.limits.apiRequests === -1
                         ? 'Unlimited'
                         : info.limits.apiRequests
-                        ? info.limits.apiRequests.toLocaleString()
-                        : 'None'}
+                          ? info.limits.apiRequests.toLocaleString()
+                          : 'None'}
                     </span>
                   </div>
                 </div>
@@ -311,8 +287,18 @@ export default function Pricing() {
                 <ul className="space-y-2">
                   {TIER_FEATURES[tier].slice(0, 5).map((feature) => (
                     <li key={feature} className="flex items-center gap-2 text-sm">
-                      <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <svg
+                        className="w-4 h-4 text-green-400 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       <span className="text-gray-300">
                         {FEATURE_DESCRIPTIONS[feature] || feature}
@@ -373,12 +359,32 @@ export default function Pricing() {
                         {TIERS.map((tier) => (
                           <td key={tier} className="text-center py-3 px-4">
                             {canAccess(tier, feature) ? (
-                              <svg className="w-5 h-5 text-green-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              <svg
+                                className="w-5 h-5 text-green-400 mx-auto"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
                               </svg>
                             ) : (
-                              <svg className="w-5 h-5 text-gray-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              <svg
+                                className="w-5 h-5 text-gray-600 mx-auto"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
                               </svg>
                             )}
                           </td>
@@ -401,29 +407,29 @@ export default function Pricing() {
           <div className="cyber-card p-4">
             <h3 className="text-white font-medium mb-2">Can I upgrade or downgrade anytime?</h3>
             <p className="text-gray-400 text-sm">
-              Yes, you can change your plan at any time. Upgrades take effect immediately,
-              and downgrades take effect at the end of your billing period.
+              Yes, you can change your plan at any time. Upgrades take effect immediately, and
+              downgrades take effect at the end of your billing period.
             </p>
           </div>
           <div className="cyber-card p-4">
             <h3 className="text-white font-medium mb-2">Is there a free trial?</h3>
             <p className="text-gray-400 text-sm">
-              The Free tier gives you access to core features forever.
-              For Professional and Team features, we offer a 14-day trial.
+              The Free tier gives you access to core features forever. For Professional and Team
+              features, we offer a 14-day trial.
             </p>
           </div>
           <div className="cyber-card p-4">
             <h3 className="text-white font-medium mb-2">What payment methods do you accept?</h3>
             <p className="text-gray-400 text-sm">
-              We accept all major credit cards (Visa, Mastercard, Amex) through Stripe.
-              Enterprise customers can pay via invoice.
+              We accept all major credit cards (Visa, Mastercard, Amex) through Stripe. Enterprise
+              customers can pay via invoice.
             </p>
           </div>
           <div className="cyber-card p-4">
             <h3 className="text-white font-medium mb-2">How does the API work?</h3>
             <p className="text-gray-400 text-sm">
-              Team and Enterprise plans include API access. You can generate API keys
-              in your settings and access our REST API with full documentation.
+              Team and Enterprise plans include API access. You can generate API keys in your
+              settings and access our REST API with full documentation.
             </p>
           </div>
         </div>
@@ -433,7 +439,10 @@ export default function Pricing() {
       <div className="mt-12 text-center">
         <p className="text-gray-400 mb-4">
           Questions? Contact us at{' '}
-          <a href="mailto:support@theintelligence.company" className="text-cyan-400 hover:underline">
+          <a
+            href="mailto:support@theintelligence.company"
+            className="text-cyan-400 hover:underline"
+          >
             support@theintelligence.company
           </a>
         </p>

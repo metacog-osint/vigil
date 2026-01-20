@@ -148,7 +148,7 @@ export default function WeeklyTrendsWidget() {
   const weekMap = {}
 
   for (const type of ['iocs', 'incidents', 'cyber_events']) {
-    for (const week of (data[type] || [])) {
+    for (const week of data[type] || []) {
       if (!weekMap[week.week]) {
         weekMap[week.week] = { week: week.week }
       }
@@ -164,7 +164,10 @@ export default function WeeklyTrendsWidget() {
   // Format week labels
   const formattedData = sortedWeeks.map((item) => ({
     ...item,
-    weekLabel: new Date(item.week).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+    weekLabel: new Date(item.week).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    }),
   }))
 
   return (
@@ -183,11 +186,7 @@ export default function WeeklyTrendsWidget() {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={formattedData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis
-              dataKey="weekLabel"
-              stroke="#9ca3af"
-              tick={{ fontSize: 11 }}
-            />
+            <XAxis dataKey="weekLabel" stroke="#9ca3af" tick={{ fontSize: 11 }} />
             <YAxis stroke="#9ca3af" tick={{ fontSize: 11 }} />
             <Tooltip
               contentStyle={{

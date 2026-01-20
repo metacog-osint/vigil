@@ -62,7 +62,12 @@ export function SavedSearchesList({ searches, onDelete }) {
             className="text-gray-500 hover:text-red-400 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -79,14 +84,8 @@ export function TagsList({ tags, onDelete }) {
   return (
     <div className="flex flex-wrap gap-2">
       {tags.map((tag) => (
-        <div
-          key={tag.id}
-          className="flex items-center gap-2 bg-gray-800/50 rounded-full px-3 py-1"
-        >
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: tag.color }}
-          />
+        <div key={tag.id} className="flex items-center gap-2 bg-gray-800/50 rounded-full px-3 py-1">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
           <span className="text-sm text-white">{tag.name}</span>
           <span className="text-xs text-gray-500">({tag.entity_tags?.[0]?.count || 0})</span>
           <button
@@ -94,7 +93,12 @@ export function TagsList({ tags, onDelete }) {
             className="text-gray-500 hover:text-red-400 transition-colors ml-1"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -151,7 +155,11 @@ export function CreateTagModal({ isOpen, onClose, onCreate }) {
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-gray-400 hover:text-white">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-400 hover:text-white"
+            >
               Cancel
             </button>
             <button
@@ -175,10 +183,14 @@ export function SyncLogList({ logs }) {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'success': return 'text-green-400'
-      case 'partial': return 'text-yellow-400'
-      case 'failed': return 'text-red-400'
-      default: return 'text-gray-400'
+      case 'success':
+        return 'text-green-400'
+      case 'partial':
+        return 'text-yellow-400'
+      case 'failed':
+        return 'text-red-400'
+      default:
+        return 'text-gray-400'
     }
   }
 
@@ -192,9 +204,7 @@ export function SyncLogList({ logs }) {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-white text-sm font-medium">{log.source}</span>
-              <span className={`text-xs ${getStatusColor(log.status)}`}>
-                {log.status}
-              </span>
+              <span className={`text-xs ${getStatusColor(log.status)}`}>{log.status}</span>
             </div>
             <div className="text-xs text-gray-500">
               {log.records_added} added, {log.records_updated} updated

@@ -28,9 +28,12 @@ export async function registerServiceWorker() {
     })
 
     // Check for updates periodically (every hour)
-    setInterval(() => {
-      registration.update()
-    }, 60 * 60 * 1000)
+    setInterval(
+      () => {
+        registration.update()
+      },
+      60 * 60 * 1000
+    )
 
     return registration
   } catch (error) {
@@ -63,9 +66,11 @@ export function skipWaitingServiceWorker() {
 
 // Dispatch custom event when update is available
 function dispatchUpdateEvent() {
-  window.dispatchEvent(new CustomEvent('swUpdate', {
-    detail: { updateAvailable: true }
-  }))
+  window.dispatchEvent(
+    new CustomEvent('swUpdate', {
+      detail: { updateAvailable: true },
+    })
+  )
 }
 
 // Check if we're running offline
@@ -89,7 +94,7 @@ export async function getCacheStats() {
   if (!('caches' in window)) return null
 
   const cacheNames = await caches.keys()
-  const vigilCaches = cacheNames.filter(name => name.startsWith('vigil-'))
+  const vigilCaches = cacheNames.filter((name) => name.startsWith('vigil-'))
 
   const stats = await Promise.all(
     vigilCaches.map(async (name) => {

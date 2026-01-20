@@ -18,7 +18,12 @@ import {
 const FIELD_OPTIONS = {
   actors: [
     { value: 'name', label: 'Actor Name', type: 'text' },
-    { value: 'trend_status', label: 'Trend Status', type: 'select', options: ['ESCALATING', 'STABLE', 'DECLINING'] },
+    {
+      value: 'trend_status',
+      label: 'Trend Status',
+      type: 'select',
+      options: ['ESCALATING', 'STABLE', 'DECLINING'],
+    },
     { value: 'incidents_7d', label: 'Incidents (7d)', type: 'number' },
     { value: 'incident_velocity', label: 'Incident Velocity', type: 'number' },
     { value: 'target_sectors', label: 'Target Sector', type: 'text' },
@@ -29,7 +34,12 @@ const FIELD_OPTIONS = {
     { value: 'cvss_score', label: 'CVSS Score', type: 'number' },
     { value: 'epss_score', label: 'EPSS Score', type: 'number' },
     { value: 'kev_date', label: 'In KEV', type: 'boolean' },
-    { value: 'exploit_maturity', label: 'Exploit Maturity', type: 'select', options: ['not_defined', 'unproven', 'poc', 'functional', 'high', 'weaponized'] },
+    {
+      value: 'exploit_maturity',
+      label: 'Exploit Maturity',
+      type: 'select',
+      options: ['not_defined', 'unproven', 'poc', 'functional', 'high', 'weaponized'],
+    },
     { value: 'vendor', label: 'Vendor', type: 'text' },
   ],
   incidents: [
@@ -37,10 +47,20 @@ const FIELD_OPTIONS = {
     { value: 'victim_sector', label: 'Victim Sector', type: 'text' },
     { value: 'victim_country', label: 'Victim Country', type: 'text' },
     { value: 'threat_actor.name', label: 'Actor Name', type: 'text' },
-    { value: 'threat_actor.trend_status', label: 'Actor Trend', type: 'select', options: ['ESCALATING', 'STABLE', 'DECLINING'] },
+    {
+      value: 'threat_actor.trend_status',
+      label: 'Actor Trend',
+      type: 'select',
+      options: ['ESCALATING', 'STABLE', 'DECLINING'],
+    },
   ],
   iocs: [
-    { value: 'type', label: 'IOC Type', type: 'select', options: ['ip', 'domain', 'url', 'hash', 'email'] },
+    {
+      value: 'type',
+      label: 'IOC Type',
+      type: 'select',
+      options: ['ip', 'domain', 'url', 'hash', 'email'],
+    },
     { value: 'value', label: 'IOC Value', type: 'text' },
     { value: 'source', label: 'Source', type: 'text' },
     { value: 'confidence', label: 'Confidence', type: 'number' },
@@ -73,9 +93,7 @@ const OPERATORS = {
     { value: 'in', label: 'is one of' },
     { value: 'not_in', label: 'is not one of' },
   ],
-  boolean: [
-    { value: 'eq', label: 'is' },
-  ],
+  boolean: [{ value: 'eq', label: 'is' }],
 }
 
 // Default empty condition
@@ -97,23 +115,16 @@ const createGroup = (operator = 'AND') => ({
 })
 
 // Condition Row Component
-function ConditionRow({
-  condition,
-  entityType,
-  onUpdate,
-  onRemove,
-  canRemove,
-  depth: _depth = 0
-}) {
+function ConditionRow({ condition, entityType, onUpdate, onRemove, canRemove, depth: _depth = 0 }) {
   const fields = FIELD_OPTIONS[entityType] || []
-  const selectedField = fields.find(f => f.value === condition.field)
+  const selectedField = fields.find((f) => f.value === condition.field)
   const operators = selectedField ? OPERATORS[selectedField.type] : OPERATORS.text
   const needsValue = !['is_null', 'is_not_null'].includes(condition.operator)
   const needsMultiValue = ['in', 'not_in'].includes(condition.operator)
 
   const handleFieldChange = (field) => {
     // Field lookup for future validation
-    const _newField = fields.find(f => f.value === field)
+    const _newField = fields.find((f) => f.value === field)
     onUpdate({
       ...condition,
       field,
@@ -132,8 +143,10 @@ function ConditionRow({
         className="cyber-input text-sm flex-1 min-w-[140px]"
       >
         <option value="">Select field...</option>
-        {fields.map(f => (
-          <option key={f.value} value={f.value}>{f.label}</option>
+        {fields.map((f) => (
+          <option key={f.value} value={f.value}>
+            {f.label}
+          </option>
         ))}
       </select>
 
@@ -144,8 +157,10 @@ function ConditionRow({
         className="cyber-input text-sm w-32"
         disabled={!condition.field}
       >
-        {operators.map(op => (
-          <option key={op.value} value={op.value}>{op.label}</option>
+        {operators.map((op) => (
+          <option key={op.value} value={op.value}>
+            {op.label}
+          </option>
         ))}
       </select>
 
@@ -159,8 +174,10 @@ function ConditionRow({
               className="cyber-input text-sm flex-1"
             >
               <option value="">Select...</option>
-              {selectedField.options?.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
+              {selectedField.options?.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
               ))}
             </select>
           ) : selectedField.type === 'boolean' ? (
@@ -176,10 +193,15 @@ function ConditionRow({
             <input
               type="text"
               value={condition.values?.join(', ') || ''}
-              onChange={(e) => onUpdate({
-                ...condition,
-                values: e.target.value.split(',').map(v => v.trim()).filter(Boolean)
-              })}
+              onChange={(e) =>
+                onUpdate({
+                  ...condition,
+                  values: e.target.value
+                    .split(',')
+                    .map((v) => v.trim())
+                    .filter(Boolean),
+                })
+              }
               placeholder="value1, value2, ..."
               className="cyber-input text-sm flex-1"
             />
@@ -211,14 +233,7 @@ function ConditionRow({
 }
 
 // Condition Group Component
-function ConditionGroup({
-  group,
-  entityType,
-  onUpdate,
-  onRemove,
-  canRemove,
-  depth = 0,
-}) {
+function ConditionGroup({ group, entityType, onUpdate, onRemove, canRemove, depth = 0 }) {
   const [isExpanded, setIsExpanded] = useState(true)
 
   const handleOperatorChange = (operator) => {
@@ -250,11 +265,12 @@ function ConditionGroup({
     })
   }
 
-  const operatorColor = group.operator === 'AND'
-    ? 'text-cyan-400 border-cyan-500/50 bg-cyan-500/10'
-    : group.operator === 'OR'
-    ? 'text-purple-400 border-purple-500/50 bg-purple-500/10'
-    : 'text-red-400 border-red-500/50 bg-red-500/10'
+  const operatorColor =
+    group.operator === 'AND'
+      ? 'text-cyan-400 border-cyan-500/50 bg-cyan-500/10'
+      : group.operator === 'OR'
+        ? 'text-purple-400 border-purple-500/50 bg-purple-500/10'
+        : 'text-red-400 border-red-500/50 bg-red-500/10'
 
   return (
     <div className={`border border-gray-700 rounded-lg ${depth > 0 ? 'ml-4' : ''}`}>
@@ -355,11 +371,11 @@ function TestResult({ result }) {
   if (!result) return null
 
   return (
-    <div className={`p-3 rounded border ${
-      result.matches
-        ? 'bg-green-500/10 border-green-500/30'
-        : 'bg-red-500/10 border-red-500/30'
-    }`}>
+    <div
+      className={`p-3 rounded border ${
+        result.matches ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'
+      }`}
+    >
       <div className="flex items-center gap-2 mb-2">
         {result.matches ? (
           <>
@@ -390,17 +406,18 @@ export default function AlertRuleBuilder({
   onTest,
   showTestPanel = true,
 }) {
-  const [conditions, setConditions] = useState(
-    initialConditions || createGroup('AND')
-  )
+  const [conditions, setConditions] = useState(initialConditions || createGroup('AND'))
   const [testData, setTestData] = useState('')
   const [testResult, setTestResult] = useState(null)
   const [testLoading, setTestLoading] = useState(false)
 
-  const handleConditionsChange = useCallback((updated) => {
-    setConditions(updated)
-    onChange?.(updated)
-  }, [onChange])
+  const handleConditionsChange = useCallback(
+    (updated) => {
+      setConditions(updated)
+      onChange?.(updated)
+    },
+    [onChange]
+  )
 
   const handleTest = async () => {
     if (!testData.trim()) return
@@ -427,7 +444,7 @@ export default function AlertRuleBuilder({
 
   // Simple client-side condition evaluator
   const evaluateConditions = (group, entity) => {
-    const results = group.conditions.map(cond => {
+    const results = group.conditions.map((cond) => {
       if (cond.type === 'group') {
         return evaluateConditions(cond, entity)
       }
@@ -439,13 +456,13 @@ export default function AlertRuleBuilder({
     let matches
     switch (group.operator) {
       case 'AND':
-        matches = results.every(r => r.matches)
+        matches = results.every((r) => r.matches)
         break
       case 'OR':
-        matches = results.some(r => r.matches)
+        matches = results.some((r) => r.matches)
         break
       case 'NOT':
-        matches = !results.some(r => r.matches)
+        matches = !results.some((r) => r.matches)
         break
       default:
         matches = false
@@ -561,9 +578,7 @@ export default function AlertRuleBuilder({
 
       {/* JSON preview */}
       <details className="text-xs">
-        <summary className="text-gray-500 cursor-pointer hover:text-gray-400">
-          View JSON
-        </summary>
+        <summary className="text-gray-500 cursor-pointer hover:text-gray-400">View JSON</summary>
         <pre className="mt-2 p-2 bg-gray-900 rounded text-gray-400 overflow-x-auto">
           {JSON.stringify(conditions, null, 2)}
         </pre>

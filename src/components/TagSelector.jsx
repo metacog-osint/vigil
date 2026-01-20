@@ -3,11 +3,7 @@ import { useState, useEffect } from 'react'
 import { clsx } from 'clsx'
 import { tags as tagsApi } from '../lib/supabase'
 
-export function TagSelector({
-  entityType,
-  entityId,
-  className = '',
-}) {
+export function TagSelector({ entityType, entityId, className = '' }) {
   const [allTags, setAllTags] = useState([])
   const [entityTags, setEntityTags] = useState([])
   const [isOpen, setIsOpen] = useState(false)
@@ -66,7 +62,12 @@ export function TagSelector({
               aria-label={`Remove tag ${tag.name}`}
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </span>
@@ -80,7 +81,12 @@ export function TagSelector({
           aria-label="Add tag"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+            />
           </svg>
         </button>
       </div>
@@ -95,9 +101,7 @@ export function TagSelector({
             aria-label="Available tags"
           >
             {allTags.length === 0 ? (
-              <div className="px-3 py-2 text-sm text-gray-500">
-                No tags created yet
-              </div>
+              <div className="px-3 py-2 text-sm text-gray-500">No tags created yet</div>
             ) : (
               allTags.map((tag) => {
                 const isTagged = entityTags.some((t) => t.id === tag.id)
@@ -108,14 +112,21 @@ export function TagSelector({
                     disabled={isLoading}
                     className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 transition-colors disabled:opacity-50"
                   >
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: tag.color }}
-                    />
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
                     <span className="text-gray-300 flex-1">{tag.name}</span>
                     {isTagged && (
-                      <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <svg
+                        className="w-4 h-4 text-green-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                     )}
                   </button>

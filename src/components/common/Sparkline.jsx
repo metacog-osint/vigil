@@ -15,7 +15,7 @@ export function Sparkline({
       return { points: '', trend: 'neutral', min: 0, max: 0, change: 0 }
     }
 
-    const values = data.map(d => (typeof d === 'number' ? d : d.value))
+    const values = data.map((d) => (typeof d === 'number' ? d : d.value))
     const min = Math.min(...values)
     const max = Math.max(...values)
     const range = max - min || 1
@@ -40,8 +40,8 @@ export function Sparkline({
   }, [data, width, height])
 
   const strokeColor = {
-    up: '#ef4444',    // red
-    down: '#22c55e',  // green
+    up: '#ef4444', // red
+    down: '#22c55e', // green
     neutral: '#6b7280', // gray
   }
 
@@ -81,12 +81,15 @@ export function Sparkline({
         />
       </svg>
       {showTrend && (
-        <span className={clsx('text-xs font-medium', {
-          'text-red-400': trend === 'up',
-          'text-green-400': trend === 'down',
-          'text-gray-500': trend === 'neutral',
-        })}>
-          {change > 0 ? '+' : ''}{change.toFixed(0)}%
+        <span
+          className={clsx('text-xs font-medium', {
+            'text-red-400': trend === 'up',
+            'text-green-400': trend === 'down',
+            'text-gray-500': trend === 'neutral',
+          })}
+        >
+          {change > 0 ? '+' : ''}
+          {change.toFixed(0)}%
         </span>
       )}
     </div>
@@ -106,7 +109,7 @@ export function SparklineBar({
       return { bars: [], max: 0 }
     }
 
-    const values = data.map(d => (typeof d === 'number' ? d : d.value))
+    const values = data.map((d) => (typeof d === 'number' ? d : d.value))
     const max = Math.max(...values, 1)
 
     const bars = values.map((v, i) => ({
@@ -125,11 +128,7 @@ export function SparklineBar({
 
   return (
     <div className={className}>
-      <svg
-        width={totalWidth}
-        height={height}
-        viewBox={`0 0 ${totalWidth} ${height}`}
-      >
+      <svg width={totalWidth} height={height} viewBox={`0 0 ${totalWidth} ${height}`}>
         {bars.map((bar, i) => (
           <rect
             key={i}
@@ -138,9 +137,7 @@ export function SparklineBar({
             width={barWidth}
             height={bar.height}
             rx={1}
-            className={clsx(
-              i === bars.length - 1 ? 'fill-cyber-accent' : 'fill-gray-700'
-            )}
+            className={clsx(i === bars.length - 1 ? 'fill-cyber-accent' : 'fill-gray-700')}
           />
         ))}
       </svg>

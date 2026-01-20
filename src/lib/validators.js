@@ -28,8 +28,7 @@ export function isValidIP(ip) {
  */
 export function isValidDomain(domain) {
   if (!domain) return false
-  const domainRegex =
-    /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
+  const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/
   return domainRegex.test(domain) && domain.length <= 253
 }
 
@@ -152,7 +151,8 @@ export function validateIOCValue(value, type) {
       if (!isValidURL(trimmed)) return { valid: false, error: 'Invalid URL format' }
       break
     case 'cve':
-      if (!isValidCVE(trimmed)) return { valid: false, error: 'Invalid CVE format (e.g., CVE-2024-1234)' }
+      if (!isValidCVE(trimmed))
+        return { valid: false, error: 'Invalid CVE format (e.g., CVE-2024-1234)' }
       break
     default:
       // For unknown types, just check length

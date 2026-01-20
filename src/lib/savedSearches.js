@@ -46,10 +46,7 @@ export const savedSearches = {
    * Get all saved searches for a user
    */
   async getAll(userId, page = null) {
-    let query = supabase
-      .from('saved_searches')
-      .select('*')
-      .eq('user_id', userId)
+    let query = supabase.from('saved_searches').select('*').eq('user_id', userId)
 
     if (page) {
       query = query.eq('page', page)
@@ -288,18 +285,13 @@ export const recentSearches = {
    * Get recent searches for a user
    */
   async getAll(userId, page = null, limit = 20) {
-    let query = supabase
-      .from('recent_searches')
-      .select('*')
-      .eq('user_id', userId)
+    let query = supabase.from('recent_searches').select('*').eq('user_id', userId)
 
     if (page) {
       query = query.eq('page', page)
     }
 
-    const { data, error } = await query
-      .order('searched_at', { ascending: false })
-      .limit(limit)
+    const { data, error } = await query.order('searched_at', { ascending: false }).limit(limit)
 
     if (error) throw error
     return data || []
@@ -330,10 +322,7 @@ export const recentSearches = {
    * Clear search history
    */
   async clear(userId, page = null) {
-    let query = supabase
-      .from('recent_searches')
-      .delete()
-      .eq('user_id', userId)
+    let query = supabase.from('recent_searches').delete().eq('user_id', userId)
 
     if (page) {
       query = query.eq('page', page)

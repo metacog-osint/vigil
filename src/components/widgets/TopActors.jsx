@@ -19,11 +19,7 @@ export default function TopActors({ actors }) {
         const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0
 
         return (
-          <Link
-            key={actor.id}
-            to="/actors"
-            className="block group"
-          >
+          <Link key={actor.id} to="/actors" className="block group">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
                 <span className="text-gray-500 text-xs w-4">{index + 1}.</span>

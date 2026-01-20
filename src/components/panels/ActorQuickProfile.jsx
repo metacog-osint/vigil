@@ -69,31 +69,31 @@ export default function ActorQuickProfile({ actorId, actorName, onClose, onAddTo
     const recommendations = []
 
     // Based on common TTPs
-    if (actor?.ttps?.includes('T1566') || techniques.some(t => t.technique_id === 'T1566')) {
+    if (actor?.ttps?.includes('T1566') || techniques.some((t) => t.technique_id === 'T1566')) {
       recommendations.push({
         ttp: 'T1566 - Phishing',
         action: 'Implement email filtering, enable MFA, conduct phishing awareness training',
       })
     }
-    if (actor?.ttps?.includes('T1486') || techniques.some(t => t.technique_id === 'T1486')) {
+    if (actor?.ttps?.includes('T1486') || techniques.some((t) => t.technique_id === 'T1486')) {
       recommendations.push({
         ttp: 'T1486 - Data Encrypted',
         action: 'Maintain offline backups, implement EDR with ransomware protection',
       })
     }
-    if (actor?.ttps?.includes('T1078') || techniques.some(t => t.technique_id === 'T1078')) {
+    if (actor?.ttps?.includes('T1078') || techniques.some((t) => t.technique_id === 'T1078')) {
       recommendations.push({
         ttp: 'T1078 - Valid Accounts',
         action: 'Enforce strong passwords, implement privileged access management',
       })
     }
-    if (actor?.ttps?.includes('T1133') || techniques.some(t => t.technique_id === 'T1133')) {
+    if (actor?.ttps?.includes('T1133') || techniques.some((t) => t.technique_id === 'T1133')) {
       recommendations.push({
         ttp: 'T1133 - External Remote Services',
         action: 'Audit VPN/RDP access, implement network segmentation',
       })
     }
-    if (actor?.ttps?.includes('T1190') || techniques.some(t => t.technique_id === 'T1190')) {
+    if (actor?.ttps?.includes('T1190') || techniques.some((t) => t.technique_id === 'T1190')) {
       recommendations.push({
         ttp: 'T1190 - Exploit Public-Facing',
         action: 'Patch internet-facing systems immediately, enable WAF',
@@ -156,12 +156,12 @@ export default function ActorQuickProfile({ actorId, actorName, onClose, onAddTo
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-lg font-semibold text-white">{actor.name}</h3>
-              {actor.trend_status && (
-                <TrendBadge status={actor.trend_status} showLabel={false} />
-              )}
+              {actor.trend_status && <TrendBadge status={actor.trend_status} showLabel={false} />}
             </div>
             <div className="flex items-center gap-2">
-              <span className={`text-xs px-2 py-0.5 rounded border capitalize ${getActorTypeBadgeColor(actor.actor_type)}`}>
+              <span
+                className={`text-xs px-2 py-0.5 rounded border capitalize ${getActorTypeBadgeColor(actor.actor_type)}`}
+              >
                 {actor.actor_type}
               </span>
               <span className="text-xs text-gray-500">
@@ -170,12 +170,14 @@ export default function ActorQuickProfile({ actorId, actorName, onClose, onAddTo
             </div>
           </div>
           {onClose && (
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-white p-1"
-            >
+            <button onClick={onClose} className="text-gray-400 hover:text-white p-1">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -194,7 +196,9 @@ export default function ActorQuickProfile({ actorId, actorName, onClose, onAddTo
             <div className="text-xs text-gray-500">Sectors</div>
           </div>
           <div className="bg-gray-800 rounded p-2 text-center">
-            <div className="text-cyan-400 font-semibold">{actor.ttps?.length || techniques.length || 0}</div>
+            <div className="text-cyan-400 font-semibold">
+              {actor.ttps?.length || techniques.length || 0}
+            </div>
             <div className="text-xs text-gray-500">TTPs</div>
           </div>
         </div>
@@ -204,7 +208,7 @@ export default function ActorQuickProfile({ actorId, actorName, onClose, onAddTo
           <div>
             <h4 className="text-xs font-medium text-gray-400 mb-1.5">Target Sectors</h4>
             <div className="flex flex-wrap gap-1">
-              {actor.target_sectors.slice(0, 5).map(sector => (
+              {actor.target_sectors.slice(0, 5).map((sector) => (
                 <span
                   key={sector}
                   className="text-xs px-2 py-0.5 bg-gray-800 text-gray-300 rounded capitalize"
@@ -224,8 +228,14 @@ export default function ActorQuickProfile({ actorId, actorName, onClose, onAddTo
           <div>
             <h4 className="text-xs font-medium text-gray-400 mb-1.5">Known TTPs</h4>
             <div className="space-y-1">
-              {(techniques.length > 0 ? techniques : actor.ttps?.slice(0, 5).map(t => ({ technique_id: t }))).map((tech, i) => (
-                <div key={i} className="text-xs bg-gray-800 rounded px-2 py-1 font-mono text-purple-400">
+              {(techniques.length > 0
+                ? techniques
+                : actor.ttps?.slice(0, 5).map((t) => ({ technique_id: t }))
+              ).map((tech, i) => (
+                <div
+                  key={i}
+                  className="text-xs bg-gray-800 rounded px-2 py-1 font-mono text-purple-400"
+                >
                   {tech.technique_id} {tech.name && `- ${tech.name}`}
                 </div>
               ))}
@@ -238,8 +248,11 @@ export default function ActorQuickProfile({ actorId, actorName, onClose, onAddTo
           <div>
             <h4 className="text-xs font-medium text-gray-400 mb-1.5">Exploited Vulnerabilities</h4>
             <div className="space-y-1">
-              {vulnerabilities.map(vuln => (
-                <div key={vuln.cve_id} className="flex items-center justify-between bg-gray-800 rounded px-2 py-1">
+              {vulnerabilities.map((vuln) => (
+                <div
+                  key={vuln.cve_id}
+                  className="flex items-center justify-between bg-gray-800 rounded px-2 py-1"
+                >
                   <span className="text-xs font-mono text-cyan-400">{vuln.cve_id}</span>
                   <SeverityBadge severity={getSeverityFromCvss(vuln.cvss_score)} />
                 </div>
@@ -253,8 +266,11 @@ export default function ActorQuickProfile({ actorId, actorName, onClose, onAddTo
           <div>
             <h4 className="text-xs font-medium text-gray-400 mb-1.5">Recent Activity (30d)</h4>
             <div className="space-y-1">
-              {recentIncidents.map(inc => (
-                <div key={inc.id} className="text-xs bg-gray-800 rounded px-2 py-1 flex justify-between">
+              {recentIncidents.map((inc) => (
+                <div
+                  key={inc.id}
+                  className="text-xs bg-gray-800 rounded px-2 py-1 flex justify-between"
+                >
                   <span className="text-gray-300 truncate">{inc.victim_name}</span>
                   <span className="text-gray-500 whitespace-nowrap ml-2">
                     {new Date(inc.discovered_date).toLocaleDateString()}

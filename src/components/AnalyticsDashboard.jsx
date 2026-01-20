@@ -84,19 +84,24 @@ export default function AnalyticsDashboard() {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <MetricCard
-          label="Total Users"
-          value={engagement?.total_users || 0}
-        />
+        <MetricCard label="Total Users" value={engagement?.total_users || 0} />
         <MetricCard
           label="Active (7d)"
           value={engagement?.active_7d || 0}
-          subtitle={engagement?.total_users ? `${Math.round((engagement.active_7d / engagement.total_users) * 100)}%` : '0%'}
+          subtitle={
+            engagement?.total_users
+              ? `${Math.round((engagement.active_7d / engagement.total_users) * 100)}%`
+              : '0%'
+          }
         />
         <MetricCard
           label="Active (30d)"
           value={engagement?.active_30d || 0}
-          subtitle={engagement?.total_users ? `${Math.round((engagement.active_30d / engagement.total_users) * 100)}%` : '0%'}
+          subtitle={
+            engagement?.total_users
+              ? `${Math.round((engagement.active_30d / engagement.total_users) * 100)}%`
+              : '0%'
+          }
         />
         <MetricCard
           label="Avg Engagement"
@@ -236,20 +241,32 @@ export default function AnalyticsDashboard() {
               <thead>
                 <tr className="border-b border-gray-700">
                   <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">User ID</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Last Seen</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Days Inactive</th>
-                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Engagement Score</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                    Last Seen
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                    Days Inactive
+                  </th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
+                    Engagement Score
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {atRiskUsers.map((user) => (
                   <tr key={user.user_id} className="border-b border-gray-800">
-                    <td className="py-3 px-4 text-sm text-white font-mono">{user.user_id.slice(0, 20)}...</td>
+                    <td className="py-3 px-4 text-sm text-white font-mono">
+                      {user.user_id.slice(0, 20)}...
+                    </td>
                     <td className="py-3 px-4 text-sm text-gray-400">
                       {user.last_seen_at ? format(new Date(user.last_seen_at), 'MMM d, yyyy') : '-'}
                     </td>
-                    <td className="py-3 px-4 text-sm text-red-400">{user.days_since_last_activity} days</td>
-                    <td className="py-3 px-4 text-sm text-gray-400">{user.engagement_score || 0}</td>
+                    <td className="py-3 px-4 text-sm text-red-400">
+                      {user.days_since_last_activity} days
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-400">
+                      {user.engagement_score || 0}
+                    </td>
                   </tr>
                 ))}
               </tbody>

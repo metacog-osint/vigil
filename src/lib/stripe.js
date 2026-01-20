@@ -139,12 +139,14 @@ export async function getUserSubscription(userId) {
     console.error('Error fetching subscription:', error)
   }
 
-  return data || {
-    tier: 'free',
-    status: 'active',
-    billingPeriod: null,
-    currentPeriodEnd: null,
-  }
+  return (
+    data || {
+      tier: 'free',
+      status: 'active',
+      billingPeriod: null,
+      currentPeriodEnd: null,
+    }
+  )
 }
 
 /**

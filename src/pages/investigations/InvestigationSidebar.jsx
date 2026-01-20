@@ -46,8 +46,10 @@ export function InvestigationFilters({ filters, setFilters }) {
           className="flex-1 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
         >
           <option value="">All Status</option>
-          {STATUSES.map(s => (
-            <option key={s.value} value={s.value}>{s.label}</option>
+          {STATUSES.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
           ))}
         </select>
         <select
@@ -56,8 +58,10 @@ export function InvestigationFilters({ filters, setFilters }) {
           className="flex-1 px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
         >
           <option value="">All Types</option>
-          {CATEGORIES.map(c => (
-            <option key={c.value} value={c.value}>{c.label}</option>
+          {CATEGORIES.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
           ))}
         </select>
       </div>
@@ -70,10 +74,7 @@ export function InvestigationList({ investigations, selectedId, onSelect, onShow
     return (
       <div className="text-center py-8 text-gray-500">
         <p>No investigations yet</p>
-        <button
-          onClick={onShowCreate}
-          className="mt-2 text-cyan-400 hover:text-cyan-300"
-        >
+        <button onClick={onShowCreate} className="mt-2 text-cyan-400 hover:text-cyan-300">
           Create your first investigation
         </button>
       </div>
@@ -82,7 +83,7 @@ export function InvestigationList({ investigations, selectedId, onSelect, onShow
 
   return (
     <div className="space-y-2">
-      {investigations.map(inv => (
+      {investigations.map((inv) => (
         <InvestigationCard
           key={inv.id}
           investigation={inv}
@@ -117,7 +118,12 @@ export function MobileSidebar({
             <h2 className="text-lg font-bold text-white">Investigations</h2>
             <button onClick={onClose} className="text-gray-400 hover:text-white">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -126,7 +132,7 @@ export function MobileSidebar({
             <InvestigationFilters filters={filters} setFilters={setFilters} />
           </div>
           <div className="space-y-2">
-            {investigations.map(inv => (
+            {investigations.map((inv) => (
               <InvestigationCard
                 key={inv.id}
                 investigation={inv}

@@ -45,10 +45,7 @@ function CustomTooltip({ active, payload, label }) {
       <div className="text-sm text-gray-400 mb-2">{formatDate(label)}</div>
       {payload.map((entry, i) => (
         <div key={i} className="flex items-center gap-2 text-sm">
-          <div
-            className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: entry.color }}
-          />
+          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-gray-300">{entry.name}:</span>
           <span className="text-white font-medium">{entry.value}</span>
         </div>
@@ -67,9 +64,7 @@ function ClusterLegend({ clusters }) {
             style={{ backgroundColor: CLUSTER_COLORS[i % CLUSTER_COLORS.length] }}
           />
           <span className="text-sm text-gray-400">{cluster.label}</span>
-          {cluster.count && (
-            <span className="text-xs text-gray-500">({cluster.count})</span>
-          )}
+          {cluster.count && <span className="text-xs text-gray-500">({cluster.count})</span>}
         </div>
       ))}
     </div>
@@ -120,15 +115,13 @@ export function TemporalClusterChart({
       entry[clusterId] = (entry[clusterId] || 0) + (item.count || 1)
     }
 
-    return Array.from(byDate.values()).sort((a, b) =>
-      new Date(a.date) - new Date(b.date)
-    )
+    return Array.from(byDate.values()).sort((a, b) => new Date(a.date) - new Date(b.date))
   }, [data])
 
   // Get unique cluster IDs from data
   const clusterIds = useMemo(() => {
     if (clusters.length > 0) {
-      return clusters.map(c => c.id || c.label)
+      return clusters.map((c) => c.id || c.label)
     }
 
     const ids = new Set()
@@ -154,7 +147,7 @@ export function TemporalClusterChart({
 
   // Find anomaly positions
   const anomalyDates = useMemo(() => {
-    return new Set(anomalies.map(a => a.date?.split('T')[0]))
+    return new Set(anomalies.map((a) => a.date?.split('T')[0]))
   }, [anomalies])
 
   if (!data || data.length === 0) {
@@ -166,23 +159,21 @@ export function TemporalClusterChart({
   }
 
   // Generate cluster objects if not provided
-  const displayClusters = clusters.length > 0
-    ? clusters
-    : clusterIds.map((id, i) => ({
-        id,
-        label: id,
-        color: CLUSTER_COLORS[i % CLUSTER_COLORS.length],
-      }))
+  const displayClusters =
+    clusters.length > 0
+      ? clusters
+      : clusterIds.map((id, i) => ({
+          id,
+          label: id,
+          color: CLUSTER_COLORS[i % CLUSTER_COLORS.length],
+        }))
 
   return (
     <div>
       {showLegend && <ClusterLegend clusters={displayClusters} />}
 
       <ResponsiveContainer width="100%" height={height}>
-        <AreaChart
-          data={chartData}
-          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-        >
+        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             {clusterIds.map((id, i) => (
               <linearGradient key={id} id={`gradient-${id}`} x1="0" y1="0" x2="0" y2="1">
@@ -209,10 +200,7 @@ export function TemporalClusterChart({
             tick={{ fontSize: 12 }}
           />
 
-          <YAxis
-            stroke="#6b7280"
-            tick={{ fontSize: 12 }}
-          />
+          <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} />
 
           <Tooltip content={<CustomTooltip />} />
 
@@ -233,9 +221,9 @@ export function TemporalClusterChart({
 
           {/* Highlight anomaly dates */}
           {chartData
-            .filter(d => anomalyDates.has(d.date))
+            .filter((d) => anomalyDates.has(d.date))
             .map((d, i) => {
-              const idx = chartData.findIndex(c => c.date === d.date)
+              const idx = chartData.findIndex((c) => c.date === d.date)
               if (idx < 0) return null
               return (
                 <ReferenceArea
@@ -273,27 +261,12 @@ export function TemporalClusterChart({
 
 // Compact version for dashboards
 export function TemporalClusterMini({ data, clusters = [], height = 120 }) {
-  return (
-    <TemporalClusterChart
-      data={data}
-      clusters={clusters}
-      showLegend={false}
-      height={height}
-    />
-  )
+  return <TemporalClusterChart data={data} clusters={clusters} showLegend={false} height={height} />
 }
 
 // Cluster summary card
 export function ClusterSummaryCard({ cluster, onClick }) {
-  const {
-    id,
-    label,
-    count = 0,
-    actorCount = 0,
-    dateRange,
-    intensity = 'medium',
-    color,
-  } = cluster
+  const { id, label, count = 0, actorCount = 0, dateRange, intensity = 'medium', color } = cluster
 
   const intensityColors = {
     high: 'border-red-500/30 bg-red-500/10',
@@ -341,9 +314,7 @@ export function ClusterSummaryCard({ cluster, onClick }) {
 export function ClusterSummaryList({ clusters, onClusterClick }) {
   if (!clusters || clusters.length === 0) {
     return (
-      <div className="text-sm text-gray-500 text-center py-4">
-        No activity clusters detected
-      </div>
+      <div className="text-sm text-gray-500 text-center py-4">No activity clusters detected</div>
     )
   }
 

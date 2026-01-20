@@ -13,7 +13,12 @@ export function AssetDetailPanel({ asset, onClose, onDelete, onToggleMonitoring 
         <h3 className="text-lg font-semibold text-white">Asset Details</h3>
         <button onClick={onClose} className="text-gray-400 hover:text-white">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -62,12 +67,16 @@ export function AssetDetailPanel({ asset, onClose, onDelete, onToggleMonitoring 
               <span className={asset.is_monitored ? 'text-green-400' : 'text-gray-400'}>
                 {asset.is_monitored ? 'Active Monitoring' : 'Monitoring Paused'}
               </span>
-              <div className={`w-10 h-6 rounded-full p-1 transition-colors ${
-                asset.is_monitored ? 'bg-green-500' : 'bg-gray-600'
-              }`}>
-                <div className={`w-4 h-4 bg-white rounded-full transition-transform ${
-                  asset.is_monitored ? 'translate-x-4' : 'translate-x-0'
-                }`} />
+              <div
+                className={`w-10 h-6 rounded-full p-1 transition-colors ${
+                  asset.is_monitored ? 'bg-green-500' : 'bg-gray-600'
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 bg-white rounded-full transition-transform ${
+                    asset.is_monitored ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
               </div>
             </div>
           </button>
@@ -90,9 +99,13 @@ export function AssetDetailPanel({ asset, onClose, onDelete, onToggleMonitoring 
 
         {/* Timestamps */}
         <div className="text-sm text-gray-500 space-y-1">
-          <div>Created: <SmartTime date={asset.created_at} /></div>
+          <div>
+            Created: <SmartTime date={asset.created_at} />
+          </div>
           {asset.last_match_at && (
-            <div>Last match: <SmartTime date={asset.last_match_at} /></div>
+            <div>
+              Last match: <SmartTime date={asset.last_match_at} />
+            </div>
           )}
         </div>
 
@@ -103,7 +116,12 @@ export function AssetDetailPanel({ asset, onClose, onDelete, onToggleMonitoring 
             className="w-full cyber-button text-red-400 hover:bg-red-500/10"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
             Delete Asset
           </button>
@@ -120,7 +138,12 @@ export function MatchDetailPanel({ match, onClose, onUpdateStatus }) {
         <h3 className="text-lg font-semibold text-white">Match Details</h3>
         <button onClick={onClose} className="text-gray-400 hover:text-white">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -142,7 +165,9 @@ export function MatchDetailPanel({ match, onClose, onUpdateStatus }) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <div className="text-sm text-gray-400 mb-1">Match Type</div>
-            <span className={`inline-flex px-2 py-1 rounded text-sm bg-${MATCH_TYPES[match.match_type]?.color || 'gray'}-500/20 text-${MATCH_TYPES[match.match_type]?.color || 'gray'}-400`}>
+            <span
+              className={`inline-flex px-2 py-1 rounded text-sm bg-${MATCH_TYPES[match.match_type]?.color || 'gray'}-500/20 text-${MATCH_TYPES[match.match_type]?.color || 'gray'}-400`}
+            >
               {MATCH_TYPES[match.match_type]?.label || match.match_type}
             </span>
           </div>
@@ -184,9 +209,13 @@ export function MatchDetailPanel({ match, onClose, onUpdateStatus }) {
 
         {/* Timestamps */}
         <div className="text-sm text-gray-500 space-y-1">
-          <div>Detected: <SmartTime date={match.matched_at} /></div>
+          <div>
+            Detected: <SmartTime date={match.matched_at} />
+          </div>
           {match.resolved_at && (
-            <div>Resolved: <SmartTime date={match.resolved_at} /></div>
+            <div>
+              Resolved: <SmartTime date={match.resolved_at} />
+            </div>
           )}
         </div>
       </div>

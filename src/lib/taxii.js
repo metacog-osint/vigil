@@ -304,7 +304,11 @@ export async function getManifest(collectionId, options = {}) {
  * Get status of an async operation
  */
 export async function getStatus(statusId) {
-  const { data, error } = await supabase.from('taxii_status').select('*').eq('id', statusId).single()
+  const { data, error } = await supabase
+    .from('taxii_status')
+    .select('*')
+    .eq('id', statusId)
+    .single()
 
   if (error) {
     return { data: null, error }

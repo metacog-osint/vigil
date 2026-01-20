@@ -48,13 +48,20 @@ export function TimeRangeSelector({ value, onChange, className = '' }) {
             onClick={() => handlePresetSelect(preset)}
             className={`
               px-3 py-1.5 text-sm rounded-md transition-colors
-              ${value?.id === preset.id
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              ${
+                value?.id === preset.id
+                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }
             `}
           >
-            {preset.id === 'week' ? 'Week' : preset.id === 'month' ? 'Month' : preset.id === '2weeks' ? '2 Weeks' : 'Quarter'}
+            {preset.id === 'week'
+              ? 'Week'
+              : preset.id === 'month'
+                ? 'Month'
+                : preset.id === '2weeks'
+                  ? '2 Weeks'
+                  : 'Quarter'}
           </button>
         ))}
 
@@ -62,9 +69,10 @@ export function TimeRangeSelector({ value, onChange, className = '' }) {
           onClick={() => setShowCustom(!showCustom)}
           className={`
             px-3 py-1.5 text-sm rounded-md transition-colors
-            ${value?.type === 'custom'
-              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+            ${
+              value?.type === 'custom'
+                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700'
             }
           `}
         >
@@ -97,11 +105,7 @@ export function TimeRangeSelector({ value, onChange, className = '' }) {
       )}
 
       {/* Current selection label */}
-      {value && (
-        <span className="text-sm text-gray-500 ml-2">
-          {value.label}
-        </span>
-      )}
+      {value && <span className="text-sm text-gray-500 ml-2">{value.label}</span>}
     </div>
   )
 }

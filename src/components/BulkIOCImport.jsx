@@ -46,7 +46,10 @@ function detectIOCType(value) {
 
 // Parse input text into IOC objects
 function parseIOCInput(text) {
-  const lines = text.split(/[\n,;]+/).map(l => l.trim()).filter(Boolean)
+  const lines = text
+    .split(/[\n,;]+/)
+    .map((l) => l.trim())
+    .filter(Boolean)
   const iocs = []
   const errors = []
 
@@ -66,9 +69,9 @@ function parseIOCInput(text) {
 
     // Defang common patterns
     value = value
-      .replace(/\[.\]/g, '.')  // example[.]com
-      .replace(/hxxp/gi, 'http')  // hxxp://
-      .replace(/\s+/g, '')  // Remove whitespace
+      .replace(/\[.\]/g, '.') // example[.]com
+      .replace(/hxxp/gi, 'http') // hxxp://
+      .replace(/\s+/g, '') // Remove whitespace
 
     // Detect type
     const detectedType = explicitType || detectIOCType(value)
@@ -120,9 +123,7 @@ function PreviewRow({ ioc, onRemove, onTypeChange }) {
         <option value="email">Email</option>
       </select>
 
-      <span className="flex-1 text-sm text-gray-300 font-mono truncate">
-        {ioc.value}
-      </span>
+      <span className="flex-1 text-sm text-gray-300 font-mono truncate">{ioc.value}</span>
 
       <button
         onClick={() => onRemove(ioc.value)}
@@ -139,12 +140,8 @@ function ErrorRow({ error }) {
   return (
     <div className="flex items-center gap-2 p-2 bg-red-500/10 border border-red-500/20 rounded">
       <XCircleIcon className="w-4 h-4 text-red-400 flex-shrink-0" />
-      <span className="flex-1 text-sm text-gray-400 font-mono truncate">
-        {error.value}
-      </span>
-      <span className="text-xs text-red-400">
-        {error.error}
-      </span>
+      <span className="flex-1 text-sm text-gray-400 font-mono truncate">{error.value}</span>
+      <span className="text-xs text-red-400">{error.error}</span>
     </div>
   )
 }
@@ -157,11 +154,15 @@ function ImportResult({ result }) {
   const hasErrors = result.errors?.length > 0
 
   return (
-    <div className={`p-4 rounded-lg border ${
-      hasErrors ? 'bg-yellow-500/10 border-yellow-500/30' :
-      hasSuccess ? 'bg-green-500/10 border-green-500/30' :
-      'bg-red-500/10 border-red-500/30'
-    }`}>
+    <div
+      className={`p-4 rounded-lg border ${
+        hasErrors
+          ? 'bg-yellow-500/10 border-yellow-500/30'
+          : hasSuccess
+            ? 'bg-green-500/10 border-green-500/30'
+            : 'bg-red-500/10 border-red-500/30'
+      }`}
+    >
       <div className="flex items-center gap-2 mb-2">
         {hasSuccess ? (
           <>
@@ -240,7 +241,7 @@ export default function BulkIOCImport({
   const handlePaste = useCallback(async () => {
     try {
       const text = await navigator.clipboard.readText()
-      setInputText(prev => prev + (prev ? '\n' : '') + text)
+      setInputText((prev) => prev + (prev ? '\n' : '') + text)
     } catch (err) {
       console.error('Failed to read clipboard:', err)
     }
@@ -248,14 +249,14 @@ export default function BulkIOCImport({
 
   // Remove IOC from preview
   const handleRemoveIOC = useCallback((value) => {
-    setParsedIOCs(prev => prev.filter(ioc => ioc.value !== value))
+    setParsedIOCs((prev) => prev.filter((ioc) => ioc.value !== value))
   }, [])
 
   // Change IOC type
   const handleTypeChange = useCallback((value, newType) => {
-    setParsedIOCs(prev => prev.map(ioc =>
-      ioc.value === value ? { ...ioc, type: newType } : ioc
-    ))
+    setParsedIOCs((prev) =>
+      prev.map((ioc) => (ioc.value === value ? { ...ioc, type: newType } : ioc))
+    )
   }, [])
 
   // Perform import
@@ -264,9 +265,12 @@ export default function BulkIOCImport({
     setImportResult(null)
 
     try {
-      const tagArray = tags.split(',').map(t => t.trim()).filter(Boolean)
+      const tagArray = tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
 
-      const iocsToImport = parsedIOCs.map(ioc => ({
+      const iocsToImport = parsedIOCs.map((ioc) => ({
         value: ioc.value,
         type: ioc.type,
         source,
@@ -359,8 +363,8 @@ d41d8cd98f00b204e9800998ecf8427e|md5
             </div>
 
             <p className="text-xs text-gray-500">
-              Supports: IP addresses, domains, URLs, MD5/SHA1/SHA256 hashes, email addresses.
-              Use <code className="text-cyan-400">value|type</code> format to specify type explicitly.
+              Supports: IP addresses, domains, URLs, MD5/SHA1/SHA256 hashes, email addresses. Use{' '}
+              <code className="text-cyan-400">value|type</code> format to specify type explicitly.
               Defanged IOCs are automatically converted.
             </p>
 
@@ -425,9 +429,7 @@ d41d8cd98f00b204e9800998ecf8427e|md5
 
             {/* Preview list */}
             <div className="space-y-2">
-              <div className="text-sm text-gray-400">
-                {parsedIOCs.length} IOCs ready to import
-              </div>
+              <div className="text-sm text-gray-400">{parsedIOCs.length} IOCs ready to import</div>
 
               <div className="max-h-64 overflow-auto space-y-1">
                 {parsedIOCs.map((ioc) => (
@@ -457,10 +459,7 @@ d41d8cd98f00b204e9800998ecf8427e|md5
 
             {/* Actions */}
             <div className="flex gap-2">
-              <button
-                onClick={() => setStep('input')}
-                className="cyber-button"
-              >
+              <button onClick={() => setStep('input')} className="cyber-button">
                 Back
               </button>
               <button

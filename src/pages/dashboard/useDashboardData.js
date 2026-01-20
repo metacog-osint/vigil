@@ -98,11 +98,13 @@ export default function useDashboardData() {
       kevTotal: 1124,
       iocTotal: 1247893,
     })
-    setEscalatingActors(demoData.actors.filter(a => a.trend_status === 'ESCALATING'))
+    setEscalatingActors(demoData.actors.filter((a) => a.trend_status === 'ESCALATING'))
     setTopActors(demoData.actors.slice(0, 5))
     setRecentIncidents(demoData.incidents)
     setRecentKEVs(demoData.vulnerabilities)
-    setAiSummary('LockBit 3.0 and BlackCat continue to dominate ransomware activity with healthcare seeing a 35% increase in targeting. The mass exploitation of ConnectWise ScreenConnect (CVE-2024-1709) has enabled multiple ransomware groups to compromise new victims.')
+    setAiSummary(
+      'LockBit 3.0 and BlackCat continue to dominate ransomware activity with healthcare seeing a 35% increase in targeting. The mass exploitation of ConnectWise ScreenConnect (CVE-2024-1709) has enabled multiple ransomware groups to compromise new victims.'
+    )
 
     // Sector breakdown for charts
     setSectorData([
@@ -159,8 +161,18 @@ export default function useDashboardData() {
 
     // Sector details for widgets
     setSectorDetails([
-      { name: 'Healthcare', count: 156, trend: 35, topActors: [{ name: 'LockBit 3.0', count: 45 }] },
-      { name: 'Manufacturing', count: 98, trend: 12, topActors: [{ name: 'LockBit 3.0', count: 28 }] },
+      {
+        name: 'Healthcare',
+        count: 156,
+        trend: 35,
+        topActors: [{ name: 'LockBit 3.0', count: 45 }],
+      },
+      {
+        name: 'Manufacturing',
+        count: 98,
+        trend: 12,
+        topActors: [{ name: 'LockBit 3.0', count: 28 }],
+      },
       { name: 'Finance', count: 87, trend: -5, topActors: [{ name: 'BlackCat', count: 22 }] },
     ])
 

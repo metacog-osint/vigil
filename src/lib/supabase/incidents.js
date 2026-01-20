@@ -7,14 +7,25 @@ import { supabase } from './client'
 
 export const incidents = {
   async getAll(options = {}) {
-    const { limit = 100, offset = 0, search = '', sector = '', status = '', actor_id = '', days = 0 } = options
+    const {
+      limit = 100,
+      offset = 0,
+      search = '',
+      sector = '',
+      status = '',
+      actor_id = '',
+      days = 0,
+    } = options
 
     let query = supabase
       .from('incidents')
-      .select(`
+      .select(
+        `
         *,
         threat_actor:threat_actors(id, name)
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' }
+      )
       .order('discovered_date', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -48,10 +59,13 @@ export const incidents = {
 
     let query = supabase
       .from('incidents')
-      .select(`
+      .select(
+        `
         *,
         threat_actor:threat_actors(id, name)
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' }
+      )
       .order('discovered_date', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -108,10 +122,12 @@ export const incidents = {
   async search(query, limit = 10) {
     return supabase
       .from('incidents')
-      .select(`
+      .select(
+        `
         *,
         threat_actor:threat_actors(id, name)
-      `)
+      `
+      )
       .or(`victim_name.ilike.%${query}%,victim_sector.ilike.%${query}%`)
       .order('discovered_date', { ascending: false })
       .limit(limit)
@@ -143,17 +159,19 @@ export const incidents = {
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - days)
     const prevCutoff = new Date()
-    prevCutoff.setDate(prevCutoff.getDate() - (days * 2))
+    prevCutoff.setDate(prevCutoff.getDate() - days * 2)
 
     const { data: currentData, error } = await supabase
       .from('incidents')
-      .select(`
+      .select(
+        `
         id,
         victim_name,
         victim_sector,
         discovered_date,
         threat_actor:threat_actors(id, name)
-      `)
+      `
+      )
       .gte('discovered_date', cutoffDate.toISOString())
       .order('discovered_date', { ascending: false })
 
@@ -179,7 +197,7 @@ export const incidents = {
           name: sector,
           count: 0,
           actorCounts: {},
-          recentIncidents: []
+          recentIncidents: [],
         }
       }
       sectorMap[sector].count++
@@ -193,7 +211,7 @@ export const incidents = {
     }
 
     return Object.values(sectorMap)
-      .map(sector => ({
+      .map((sector) => ({
         name: sector.name,
         count: sector.count,
         recentIncidents: sector.recentIncidents,
@@ -203,7 +221,7 @@ export const incidents = {
           .slice(0, 5),
         trend: prevCounts[sector.name]
           ? Math.round(((sector.count - prevCounts[sector.name]) / prevCounts[sector.name]) * 100)
-          : null
+          : null,
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 12)

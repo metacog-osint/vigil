@@ -65,68 +65,71 @@ export function QuickIOCInput({ className = '' }) {
   }, [value])
 
   // Debounced lookup
-  const performLookup = useCallback(async (searchValue) => {
-    if (!searchValue || searchValue.length < 3) {
-      setResult(null)
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      const detected = detectIOCType(searchValue)
-
-      // Handle CVE separately
-      if (detected.type === 'cve') {
-        // Could fetch CVE details here
-        setResult({
-          ioc: searchValue,
-          type: 'cve',
-          status: 'unknown',
-          message: 'View in Vulnerabilities',
-          link: `/vulnerabilities?search=${encodeURIComponent(searchValue)}`,
-        })
-      } else {
-        // Look up in IOC database
-        const lookupResult = await iocs.quickLookup(searchValue)
-
-        if (lookupResult.found) {
-          const iocData = lookupResult.iocs?.[0]
-          setResult({
-            ioc: searchValue,
-            type: detected.type,
-            status: iocData?.malicious ? 'malicious' : 'suspicious',
-            confidence: iocData?.confidence,
-            actor: iocData?.threat_actor,
-            firstSeen: iocData?.first_seen,
-            lastSeen: iocData?.last_seen,
-            sources: lookupResult.sources || [],
-            link: `/iocs?search=${encodeURIComponent(searchValue)}`,
-          })
-        } else {
-          setResult({
-            ioc: searchValue,
-            type: detected.type,
-            status: 'unknown',
-            message: 'Not found in threat intelligence',
-            link: `/iocs?search=${encodeURIComponent(searchValue)}`,
-          })
-        }
+  const performLookup = useCallback(
+    async (searchValue) => {
+      if (!searchValue || searchValue.length < 3) {
+        setResult(null)
+        return
       }
 
-      // Save to recent lookups
-      saveRecentLookup(searchValue, detected.type)
-    } catch (error) {
-      console.error('IOC lookup error:', error)
-      setResult({
-        ioc: searchValue,
-        type: detectedType?.type || 'unknown',
-        status: 'unknown',
-        error: 'Lookup failed',
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [detectedType])
+      setIsLoading(true)
+      try {
+        const detected = detectIOCType(searchValue)
+
+        // Handle CVE separately
+        if (detected.type === 'cve') {
+          // Could fetch CVE details here
+          setResult({
+            ioc: searchValue,
+            type: 'cve',
+            status: 'unknown',
+            message: 'View in Vulnerabilities',
+            link: `/vulnerabilities?search=${encodeURIComponent(searchValue)}`,
+          })
+        } else {
+          // Look up in IOC database
+          const lookupResult = await iocs.quickLookup(searchValue)
+
+          if (lookupResult.found) {
+            const iocData = lookupResult.iocs?.[0]
+            setResult({
+              ioc: searchValue,
+              type: detected.type,
+              status: iocData?.malicious ? 'malicious' : 'suspicious',
+              confidence: iocData?.confidence,
+              actor: iocData?.threat_actor,
+              firstSeen: iocData?.first_seen,
+              lastSeen: iocData?.last_seen,
+              sources: lookupResult.sources || [],
+              link: `/iocs?search=${encodeURIComponent(searchValue)}`,
+            })
+          } else {
+            setResult({
+              ioc: searchValue,
+              type: detected.type,
+              status: 'unknown',
+              message: 'Not found in threat intelligence',
+              link: `/iocs?search=${encodeURIComponent(searchValue)}`,
+            })
+          }
+        }
+
+        // Save to recent lookups
+        saveRecentLookup(searchValue, detected.type)
+      } catch (error) {
+        console.error('IOC lookup error:', error)
+        setResult({
+          ioc: searchValue,
+          type: detectedType?.type || 'unknown',
+          status: 'unknown',
+          error: 'Lookup failed',
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [detectedType]
+  )
 
   // Handle input change with debounce
   const handleChange = (e) => {
@@ -159,7 +162,7 @@ export function QuickIOCInput({ className = '' }) {
     try {
       const updated = [
         { ioc, type, timestamp: Date.now() },
-        ...recentLookups.filter(r => r.ioc !== ioc),
+        ...recentLookups.filter((r) => r.ioc !== ioc),
       ].slice(0, MAX_RECENT)
       setRecentLookups(updated)
       localStorage.setItem(RECENT_LOOKUPS_KEY, JSON.stringify(updated))
@@ -192,12 +195,24 @@ export function QuickIOCInput({ className = '' }) {
           {/* Search icon or type indicator */}
           <div className="absolute left-3 flex items-center">
             {detectedType?.type && detectedType.type !== 'unknown' ? (
-              <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${detectedType.meta?.bgColor} ${detectedType.meta?.color}`}>
+              <span
+                className={`text-xs font-mono px-1.5 py-0.5 rounded ${detectedType.meta?.bgColor} ${detectedType.meta?.color}`}
+              >
                 {detectedType.type.toUpperCase()}
               </span>
             ) : (
-              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="w-4 h-4 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             )}
           </div>
@@ -228,7 +243,12 @@ export function QuickIOCInput({ className = '' }) {
               className="absolute right-2 p-1 text-gray-500 hover:text-gray-300"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
@@ -267,21 +287,22 @@ export function QuickIOCInput({ className = '' }) {
                     )}
                     <span className="text-sm font-medium uppercase">{result.status}</span>
                     {result.confidence && (
-                      <span className="text-xs text-gray-500">({result.confidence}% confidence)</span>
+                      <span className="text-xs text-gray-500">
+                        ({result.confidence}% confidence)
+                      </span>
                     )}
                   </div>
 
                   {/* Actor association */}
                   {result.actor && (
                     <div className="mt-2 text-sm text-gray-400">
-                      Associated with: <span className="text-white">{result.actor.name || result.actor}</span>
+                      Associated with:{' '}
+                      <span className="text-white">{result.actor.name || result.actor}</span>
                     </div>
                   )}
 
                   {/* Message */}
-                  {result.message && (
-                    <p className="text-sm text-gray-400 mt-1">{result.message}</p>
-                  )}
+                  {result.message && <p className="text-sm text-gray-400 mt-1">{result.message}</p>}
                 </div>
               </div>
 
@@ -294,7 +315,12 @@ export function QuickIOCInput({ className = '' }) {
                 >
                   View details
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </Link>
               )}
@@ -312,7 +338,9 @@ export function QuickIOCInput({ className = '' }) {
                   className="w-full px-3 py-2 text-left hover:bg-gray-800 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${IOC_TYPE_META[recent.type]?.bgColor || 'bg-gray-700'} ${IOC_TYPE_META[recent.type]?.color || 'text-gray-400'}`}>
+                    <span
+                      className={`text-xs font-mono px-1.5 py-0.5 rounded ${IOC_TYPE_META[recent.type]?.bgColor || 'bg-gray-700'} ${IOC_TYPE_META[recent.type]?.color || 'text-gray-400'}`}
+                    >
                       {recent.type?.toUpperCase() || '?'}
                     </span>
                     <span className="text-sm text-gray-300 truncate">{recent.ioc}</span>

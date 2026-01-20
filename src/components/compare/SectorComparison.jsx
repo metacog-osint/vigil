@@ -4,7 +4,16 @@
  * Compares user's sector against all sectors or a specific sector.
  */
 import { useMemo } from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts'
 
 const SECTOR_COLORS = {
   healthcare: '#ef4444',
@@ -18,12 +27,7 @@ const SECTOR_COLORS = {
   other: '#6b7280',
 }
 
-export function SectorComparison({
-  userSector,
-  sectorData = [],
-  loading = false,
-  height = 300,
-}) {
+export function SectorComparison({ userSector, sectorData = [], loading = false, height = 300 }) {
   // Prepare chart data
   const chartData = useMemo(() => {
     if (!sectorData.length) return []
@@ -40,10 +44,10 @@ export function SectorComparison({
 
   // Find user's sector stats
   const userSectorStats = useMemo(() => {
-    const sector = chartData.find(s => s.isUserSector)
+    const sector = chartData.find((s) => s.isUserSector)
     if (!sector) return null
 
-    const rank = chartData.findIndex(s => s.isUserSector) + 1
+    const rank = chartData.findIndex((s) => s.isUserSector) + 1
     return { ...sector, rank }
   }, [chartData])
 
@@ -66,9 +70,7 @@ export function SectorComparison({
         <div className="text-sm text-gray-400 mt-1">
           {data.value} incidents ({data.percentage}%)
         </div>
-        {data.isUserSector && (
-          <div className="text-xs text-cyan-400 mt-1">Your sector</div>
-        )}
+        {data.isUserSector && <div className="text-xs text-cyan-400 mt-1">Your sector</div>}
       </div>
     )
   }
@@ -79,8 +81,8 @@ export function SectorComparison({
         <h3 className="text-sm font-medium text-gray-300">Sector Comparison</h3>
         {userSectorStats && (
           <span className="text-xs text-gray-500">
-            Your sector: <span className="text-cyan-400 capitalize">{userSector}</span>
-            {' '}(Rank #{userSectorStats.rank})
+            Your sector: <span className="text-cyan-400 capitalize">{userSector}</span> (Rank #
+            {userSectorStats.rank})
           </span>
         )}
       </div>
@@ -106,11 +108,7 @@ export function SectorComparison({
         <BarChart data={chartData} layout="vertical">
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
 
-          <XAxis
-            type="number"
-            stroke="#6b7280"
-            tick={{ fill: '#9ca3af', fontSize: 12 }}
-          />
+          <XAxis type="number" stroke="#6b7280" tick={{ fill: '#9ca3af', fontSize: 12 }} />
 
           <YAxis
             type="category"
@@ -127,7 +125,9 @@ export function SectorComparison({
             {chartData.map((entry, index) => (
               <Cell
                 key={index}
-                fill={entry.isUserSector ? '#06b6d4' : (SECTOR_COLORS[entry.name] || SECTOR_COLORS.other)}
+                fill={
+                  entry.isUserSector ? '#06b6d4' : SECTOR_COLORS[entry.name] || SECTOR_COLORS.other
+                }
                 opacity={entry.isUserSector ? 1 : 0.7}
               />
             ))}

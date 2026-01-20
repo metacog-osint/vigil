@@ -3,12 +3,7 @@ import { useState, useEffect } from 'react'
 import { clsx } from 'clsx'
 import { watchlists as watchlistsApi } from '../lib/supabase'
 
-export function WatchButton({
-  entityType,
-  entityId,
-  className = '',
-  size = 'md',
-}) {
+export function WatchButton({ entityType, entityId, className = '', size = 'md' }) {
   const [watchlists, setWatchlists] = useState([])
   const [isWatched, setIsWatched] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
@@ -95,9 +90,7 @@ export function WatchButton({
             aria-label="Watchlist options"
           >
             {watchlists.length === 0 ? (
-              <div className="px-3 py-2 text-sm text-gray-500">
-                No watchlists for this type
-              </div>
+              <div className="px-3 py-2 text-sm text-gray-500">No watchlists for this type</div>
             ) : (
               watchlists.map((wl) => {
                 const isInList = wl.items?.some((i) => i.entity_id === entityId)
@@ -108,14 +101,21 @@ export function WatchButton({
                     disabled={isLoading}
                     className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-800 transition-colors disabled:opacity-50"
                   >
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: wl.color }}
-                    />
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: wl.color }} />
                     <span className="text-gray-300 flex-1">{wl.name}</span>
                     {isInList && (
-                      <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      <svg
+                        className="w-4 h-4 text-green-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                     )}
                   </button>

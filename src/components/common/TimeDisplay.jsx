@@ -1,6 +1,13 @@
 // Improved time display components with tooltips and smart formatting
 import { memo } from 'react'
-import { formatDistanceToNow, format, isToday, isYesterday, isThisWeek, differenceInHours } from 'date-fns'
+import {
+  formatDistanceToNow,
+  format,
+  isToday,
+  isYesterday,
+  isThisWeek,
+  differenceInHours,
+} from 'date-fns'
 import { clsx } from 'clsx'
 
 export function smartFormatDate(date) {
@@ -44,10 +51,7 @@ export const TimeAgo = memo(function TimeAgo({ date, className = '' }) {
   const fullDate = format(d, 'PPpp') // "Apr 29, 2023 at 3:45 PM"
 
   return (
-    <span
-      className={clsx('cursor-help', className)}
-      title={fullDate}
-    >
+    <span className={clsx('cursor-help', className)} title={fullDate}>
       {relativeTime}
     </span>
   )
@@ -63,10 +67,7 @@ export const SmartTime = memo(function SmartTime({ date, className = '' }) {
   const fullDate = format(d, 'PPpp')
 
   return (
-    <span
-      className={clsx('cursor-help', className)}
-      title={fullDate}
-    >
+    <span className={clsx('cursor-help', className)} title={fullDate}>
       {smartDate}
     </span>
   )
@@ -84,15 +85,13 @@ export const DateBadge = memo(function DateBadge({ date, className = '' }) {
     colorClass = 'text-green-400'
   } else if (hoursDiff < 24) {
     colorClass = 'text-blue-400'
-  } else if (hoursDiff < 168) { // 7 days
+  } else if (hoursDiff < 168) {
+    // 7 days
     colorClass = 'text-gray-300'
   }
 
   return (
-    <span
-      className={clsx('text-xs font-medium', colorClass, className)}
-      title={format(d, 'PPpp')}
-    >
+    <span className={clsx('text-xs font-medium', colorClass, className)} title={format(d, 'PPpp')}>
       {smartFormatDate(d)}
     </span>
   )
@@ -120,11 +119,7 @@ export const Timestamp = memo(function Timestamp({ date, showTime = true, classN
   const d = new Date(date)
   const formatString = showTime ? 'yyyy-MM-dd HH:mm:ss' : 'yyyy-MM-dd'
 
-  return (
-    <span className={clsx('font-mono text-xs', className)}>
-      {format(d, formatString)}
-    </span>
-  )
+  return <span className={clsx('font-mono text-xs', className)}>{format(d, formatString)}</span>
 })
 
 export default {

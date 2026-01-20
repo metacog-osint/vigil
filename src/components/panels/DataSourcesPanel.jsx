@@ -26,21 +26,31 @@ export default function DataSourcesPanel() {
 
   function getStatusColor(status) {
     switch (status) {
-      case 'success': return 'text-green-400'
-      case 'partial': return 'text-yellow-400'
-      case 'error': return 'text-red-400'
-      case 'never': return 'text-gray-500'
-      default: return 'text-gray-400'
+      case 'success':
+        return 'text-green-400'
+      case 'partial':
+        return 'text-yellow-400'
+      case 'error':
+        return 'text-red-400'
+      case 'never':
+        return 'text-gray-500'
+      default:
+        return 'text-gray-400'
     }
   }
 
   function getStatusIcon(status) {
     switch (status) {
-      case 'success': return '✓'
-      case 'partial': return '⚠'
-      case 'error': return '✗'
-      case 'never': return '○'
-      default: return '?'
+      case 'success':
+        return '✓'
+      case 'partial':
+        return '⚠'
+      case 'error':
+        return '✗'
+      case 'never':
+        return '○'
+      default:
+        return '?'
     }
   }
 
@@ -71,8 +81,8 @@ export default function DataSourcesPanel() {
     setRefreshing(null)
   }
 
-  const automatedSources = sources.filter(s => s.automated)
-  const manualSources = sources.filter(s => !s.automated)
+  const automatedSources = sources.filter((s) => s.automated)
+  const manualSources = sources.filter((s) => !s.automated)
 
   if (loading) {
     return (
@@ -125,7 +135,7 @@ export default function DataSourcesPanel() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700/50">
-              {automatedSources.map(source => (
+              {automatedSources.map((source) => (
                 <tr key={source.id} className="text-gray-300">
                   <td className="py-2 font-medium">{source.name}</td>
                   <td className="py-2">
@@ -171,7 +181,8 @@ export default function DataSourcesPanel() {
             </li>
             <li className="flex items-center gap-2">
               <span className="text-yellow-400">●</span>
-              <span className="font-medium">Initial Access Brokers</span> - Curated from threat reports
+              <span className="font-medium">Initial Access Brokers</span> - Curated from threat
+              reports
             </li>
             <li className="flex items-center gap-2">
               <span className="text-yellow-400">●</span>
@@ -191,7 +202,7 @@ export default function DataSourcesPanel() {
           <div className="mt-4">
             <table className="w-full text-sm">
               <tbody>
-                {manualSources.map(source => (
+                {manualSources.map((source) => (
                   <tr key={source.id} className="text-gray-300 border-t border-gray-700/50">
                     <td className="py-2 font-medium">{source.name}</td>
                     <td className="py-2">
@@ -216,7 +227,12 @@ export default function DataSourcesPanel() {
           className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded transition flex items-center gap-2"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
           Refresh Status
         </button>

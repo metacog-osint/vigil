@@ -101,7 +101,8 @@
 
 /* Pulse animation for live indicators */
 @keyframes live-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -473,8 +474,8 @@
    ============================================ */
 
 /* Better checkbox/radio styles */
-input[type="checkbox"],
-input[type="radio"] {
+input[type='checkbox'],
+input[type='radio'] {
   @apply accent-cyan-500;
 }
 
@@ -492,7 +493,7 @@ input[type="radio"] {
   @apply bg-gray-700 transition-colors;
 }
 
-.toggle-switch[data-checked="true"] {
+.toggle-switch[data-checked='true'] {
   @apply bg-cyan-500;
 }
 
@@ -501,7 +502,7 @@ input[type="radio"] {
   @apply translate-x-1;
 }
 
-.toggle-switch[data-checked="true"] .toggle-switch-thumb {
+.toggle-switch[data-checked='true'] .toggle-switch-thumb {
   @apply translate-x-6;
 }
 
@@ -521,7 +522,9 @@ input[type="radio"] {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  transition: width 0.3s, height 0.3s;
+  transition:
+    width 0.3s,
+    height 0.3s;
 }
 
 .ripple:active::after {

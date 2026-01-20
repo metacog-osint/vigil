@@ -95,19 +95,21 @@ export default function Benchmarks() {
   }
 
   // Prepare chart data
-  const sectorChartData = overview?.sectorBenchmarks?.slice(0, 10).map((s) => ({
-    sector: getSectorLabel(s.sector),
-    sectorKey: s.sector,
-    incidents: s.incident_count,
-    change: s.wow_change || 0,
-    fill: getSectorColor(s.sector),
-  })) || []
+  const sectorChartData =
+    overview?.sectorBenchmarks?.slice(0, 10).map((s) => ({
+      sector: getSectorLabel(s.sector),
+      sectorKey: s.sector,
+      incidents: s.incident_count,
+      change: s.wow_change || 0,
+      fill: getSectorColor(s.sector),
+    })) || []
 
-  const pieData = overview?.sectorBenchmarks?.slice(0, 8).map((s) => ({
-    name: getSectorLabel(s.sector),
-    value: s.incident_count,
-    fill: getSectorColor(s.sector),
-  })) || []
+  const pieData =
+    overview?.sectorBenchmarks?.slice(0, 8).map((s) => ({
+      name: getSectorLabel(s.sector),
+      value: s.incident_count,
+      fill: getSectorColor(s.sector),
+    })) || []
 
   return (
     <FeatureGate feature="benchmarks" requiredTier="pro">
@@ -116,27 +118,27 @@ export default function Benchmarks() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white">Industry Benchmarks</h1>
-            <p className="text-gray-400 text-sm mt-1">
-              Compare threat landscape across industries
-            </p>
+            <p className="text-gray-400 text-sm mt-1">Compare threat landscape across industries</p>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Period selector */}
             <div className="flex rounded-lg overflow-hidden border border-gray-700">
-              {Object.entries(PERIOD_TYPES).slice(0, 3).map(([key, { label }]) => (
-                <button
-                  key={key}
-                  onClick={() => setPeriodType(key)}
-                  className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                    periodType === key
-                      ? 'bg-cyber-accent text-black'
-                      : 'bg-cyber-dark text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+              {Object.entries(PERIOD_TYPES)
+                .slice(0, 3)
+                .map(([key, { label }]) => (
+                  <button
+                    key={key}
+                    onClick={() => setPeriodType(key)}
+                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                      periodType === key
+                        ? 'bg-cyber-accent text-black'
+                        : 'bg-cyber-dark text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
             </div>
 
             {/* View toggle */}
@@ -184,9 +186,11 @@ export default function Benchmarks() {
                   {overview?.metrics?.totalIncidents?.toLocaleString() || 0}
                 </div>
                 {overview?.snapshot?.incident_trend !== undefined && (
-                  <div className={`text-sm mt-1 ${
-                    overview.snapshot.incident_trend > 0 ? 'text-red-400' : 'text-green-400'
-                  }`}>
+                  <div
+                    className={`text-sm mt-1 ${
+                      overview.snapshot.incident_trend > 0 ? 'text-red-400' : 'text-green-400'
+                    }`}
+                  >
                     {formatTrend(overview.snapshot.incident_trend).text} vs prev period
                   </div>
                 )}
@@ -229,9 +233,7 @@ export default function Benchmarks() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Bar Chart - Incidents by Sector */}
               <div className="cyber-card p-4">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                  Incidents by Sector
-                </h3>
+                <h3 className="text-lg font-semibold text-white mb-4">Incidents by Sector</h3>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
@@ -268,9 +270,7 @@ export default function Benchmarks() {
 
               {/* Pie Chart - Distribution */}
               <div className="cyber-card p-4">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                  Incident Distribution
-                </h3>
+                <h3 className="text-lg font-semibold text-white mb-4">Incident Distribution</h3>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -282,9 +282,7 @@ export default function Benchmarks() {
                         outerRadius={100}
                         paddingAngle={2}
                         dataKey="value"
-                        label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
-                        }
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         labelLine={{ stroke: '#6b7280' }}
                       >
                         {pieData.map((entry, index) => (
@@ -307,9 +305,7 @@ export default function Benchmarks() {
             {/* Top Actors */}
             {overview?.snapshot?.top_actors?.length > 0 && (
               <div className="cyber-card p-4">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                  Most Active Threat Actors
-                </h3>
+                <h3 className="text-lg font-semibold text-white mb-4">Most Active Threat Actors</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                   {overview.snapshot.top_actors.slice(0, 10).map((actor, i) => (
                     <div
@@ -317,20 +313,20 @@ export default function Benchmarks() {
                       className="bg-gray-800/50 rounded-lg p-3 border border-gray-700"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-white">
-                          {actor.name}
-                        </span>
+                        <span className="text-sm font-medium text-white">{actor.name}</span>
                         {actor.trend === 'ESCALATING' && (
                           <span className="text-xs text-red-400">
                             <svg className="w-3 h-3 inline" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                              <path
+                                fillRule="evenodd"
+                                d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"
+                                clipRule="evenodd"
+                              />
                             </svg>
                           </span>
                         )}
                       </div>
-                      <div className="text-lg font-bold text-cyber-accent">
-                        {actor.count}
-                      </div>
+                      <div className="text-lg font-bold text-cyber-accent">{actor.count}</div>
                       <div className="text-xs text-gray-500">incidents</div>
                     </div>
                   ))}
@@ -344,9 +340,7 @@ export default function Benchmarks() {
             {/* Sector List */}
             <div className="lg:col-span-1">
               <div className="cyber-card p-4">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                  Sector Rankings
-                </h3>
+                <h3 className="text-lg font-semibold text-white mb-4">Sector Rankings</h3>
                 <div className="space-y-2 max-h-[600px] overflow-y-auto">
                   {overview?.sectorBenchmarks?.map((sector, i) => {
                     const risk = getRiskLevel(sector.risk_score)
@@ -376,12 +370,8 @@ export default function Benchmarks() {
                           <span className="text-sm text-gray-400">#{i + 1}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-400">
-                            {sector.incident_count} incidents
-                          </span>
-                          <span className={`text-${trend.color}-400`}>
-                            {trend.text}
-                          </span>
+                          <span className="text-gray-400">{sector.incident_count} incidents</span>
+                          <span className={`text-${trend.color}-400`}>{trend.text}</span>
                         </div>
                         <div className="mt-2 h-1.5 bg-gray-700 rounded-full overflow-hidden">
                           <div
@@ -392,10 +382,10 @@ export default function Benchmarks() {
                                 risk.level === 'critical'
                                   ? '#ef4444'
                                   : risk.level === 'high'
-                                  ? '#f97316'
-                                  : risk.level === 'medium'
-                                  ? '#eab308'
-                                  : '#22c55e',
+                                    ? '#f97316'
+                                    : risk.level === 'medium'
+                                      ? '#eab308'
+                                      : '#22c55e',
                             }}
                           />
                         </div>
@@ -452,9 +442,7 @@ export default function Benchmarks() {
                           </div>
                           <div>
                             <div className="text-gray-400 text-sm">Risk Level</div>
-                            <div
-                              className={`text-2xl font-bold text-${risk.color}-400`}
-                            >
+                            <div className={`text-2xl font-bold text-${risk.color}-400`}>
                               {risk.label}
                             </div>
                           </div>
@@ -466,9 +454,7 @@ export default function Benchmarks() {
                   {/* Sector trend chart */}
                   {sectorHistory[selectedSector]?.length > 1 && (
                     <div className="cyber-card p-4">
-                      <h4 className="text-lg font-semibold text-white mb-4">
-                        Incident Trend
-                      </h4>
+                      <h4 className="text-lg font-semibold text-white mb-4">Incident Trend</h4>
                       <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={sectorHistory[selectedSector]}>
@@ -525,16 +511,10 @@ export default function Benchmarks() {
                               className="flex items-center justify-between p-2 bg-gray-800/30 rounded"
                             >
                               <div className="flex items-center gap-3">
-                                <span className="text-gray-500 text-sm w-4">
-                                  {i + 1}.
-                                </span>
-                                <span className="text-white font-medium">
-                                  {actor.name}
-                                </span>
+                                <span className="text-gray-500 text-sm w-4">{i + 1}.</span>
+                                <span className="text-white font-medium">{actor.name}</span>
                               </div>
-                              <span className="text-cyber-accent font-bold">
-                                {actor.count}
-                              </span>
+                              <span className="text-cyber-accent font-bold">{actor.count}</span>
                             </div>
                           ))}
                         </div>
@@ -557,9 +537,7 @@ export default function Benchmarks() {
                       d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                     />
                   </svg>
-                  <h3 className="text-lg font-medium text-gray-400 mb-2">
-                    Select a Sector
-                  </h3>
+                  <h3 className="text-lg font-medium text-gray-400 mb-2">Select a Sector</h3>
                   <p className="text-gray-500 text-sm">
                     Click on a sector from the list to view detailed benchmarks
                   </p>

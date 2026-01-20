@@ -28,7 +28,7 @@ const POPULAR_VENDORS = [
 const DIGEST_OPTIONS = [
   { value: 'daily', label: 'Daily', description: 'Get a summary every morning' },
   { value: 'weekly', label: 'Weekly', description: 'Get a summary every Monday' },
-  { value: 'none', label: 'None', description: 'I\'ll check the dashboard myself' },
+  { value: 'none', label: 'None', description: "I'll check the dashboard myself" },
 ]
 
 export default function PersonalizationWizard({ onComplete, onSkip }) {
@@ -77,7 +77,7 @@ export default function PersonalizationWizard({ onComplete, onSkip }) {
 
   const toggleVendor = (vendor) => {
     if (selectedVendors.includes(vendor)) {
-      setSelectedVendors(selectedVendors.filter(v => v !== vendor))
+      setSelectedVendors(selectedVendors.filter((v) => v !== vendor))
     } else {
       setSelectedVendors([...selectedVendors, vendor])
     }
@@ -111,7 +111,7 @@ export default function PersonalizationWizard({ onComplete, onSkip }) {
       if (createAlerts && selectedSector) {
         await alertRules.create({
           userId,
-          ruleName: `${SECTORS.find(s => s.value === selectedSector)?.label || selectedSector} Incidents`,
+          ruleName: `${SECTORS.find((s) => s.value === selectedSector)?.label || selectedSector} Incidents`,
           ruleType: 'sector_incident',
           conditions: {
             sectors: [selectedSector],
@@ -149,10 +149,7 @@ export default function PersonalizationWizard({ onComplete, onSkip }) {
         <div className="p-6 border-b border-gray-800 flex-shrink-0">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xl font-semibold text-white">Personalize Your Feed</h2>
-            <button
-              onClick={onSkip}
-              className="text-sm text-gray-500 hover:text-gray-300"
-            >
+            <button onClick={onSkip} className="text-sm text-gray-500 hover:text-gray-300">
               Skip for now
             </button>
           </div>
@@ -175,12 +172,7 @@ export default function PersonalizationWizard({ onComplete, onSkip }) {
 
         {/* Content */}
         <div className="p-6 min-h-[200px] flex-1 overflow-y-auto">
-          {step === 1 && (
-            <StepSector
-              selected={selectedSector}
-              onSelect={setSelectedSector}
-            />
-          )}
+          {step === 1 && <StepSector selected={selectedSector} onSelect={setSelectedSector} />}
           {step === 2 && (
             <StepVendors
               selected={selectedVendors}
@@ -201,10 +193,7 @@ export default function PersonalizationWizard({ onComplete, onSkip }) {
             />
           )}
           {step === 4 && (
-            <StepDigest
-              frequency={digestFrequency}
-              setFrequency={setDigestFrequency}
-            />
+            <StepDigest frequency={digestFrequency} setFrequency={setDigestFrequency} />
           )}
         </div>
 
@@ -235,12 +224,10 @@ function StepSector({ selected, onSelect }) {
   return (
     <div>
       <h3 className="text-lg font-medium text-white mb-2">What industry are you in?</h3>
-      <p className="text-sm text-gray-400 mb-4">
-        We'll prioritize threats targeting your sector
-      </p>
+      <p className="text-sm text-gray-400 mb-4">We'll prioritize threats targeting your sector</p>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {SECTORS.map(sector => (
+        {SECTORS.map((sector) => (
           <button
             key={sector.value}
             onClick={() => onSelect(sector.value)}
@@ -289,18 +276,20 @@ function StepVendors({ selected, onToggle, customVendor, setCustomVendor, onAddC
       {/* Selected vendors */}
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
-          {selected.map(vendor => (
+          {selected.map((vendor) => (
             <span
               key={vendor}
               className="inline-flex items-center gap-1 px-3 py-1 bg-cyan-500/20 text-cyan-300 rounded-full text-sm"
             >
               {vendor}
-              <button
-                onClick={() => onToggle(vendor)}
-                className="hover:text-white"
-              >
+              <button onClick={() => onToggle(vendor)} className="hover:text-white">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </span>
@@ -311,7 +300,7 @@ function StepVendors({ selected, onToggle, customVendor, setCustomVendor, onAddC
       {/* Popular vendors */}
       <div className="text-xs text-gray-500 mb-2">Popular vendors:</div>
       <div className="flex flex-wrap gap-2">
-        {POPULAR_VENDORS.map(vendor => (
+        {POPULAR_VENDORS.map((vendor) => (
           <button
             key={vendor.name}
             onClick={() => onToggle(vendor.name)}
@@ -330,15 +319,20 @@ function StepVendors({ selected, onToggle, customVendor, setCustomVendor, onAddC
   )
 }
 
-function StepAlerts({ createAlerts, setCreateAlerts, alertSeverity, setAlertSeverity, vendors, sector }) {
-  const sectorLabel = SECTORS.find(s => s.value === sector)?.label || sector
+function StepAlerts({
+  createAlerts,
+  setCreateAlerts,
+  alertSeverity,
+  setAlertSeverity,
+  vendors,
+  sector,
+}) {
+  const sectorLabel = SECTORS.find((s) => s.value === sector)?.label || sector
 
   return (
     <div>
       <h3 className="text-lg font-medium text-white mb-2">Set up automatic alerts?</h3>
-      <p className="text-sm text-gray-400 mb-4">
-        Get notified before threats make the news
-      </p>
+      <p className="text-sm text-gray-400 mb-4">Get notified before threats make the news</p>
 
       <label className="flex items-center gap-3 p-4 rounded-lg border border-gray-700 bg-gray-800/30 cursor-pointer mb-4">
         <input
@@ -363,7 +357,8 @@ function StepAlerts({ createAlerts, setCreateAlerts, alertSeverity, setAlertSeve
               <div>
                 <div className="text-white text-sm">Vendor CVE Alerts</div>
                 <div className="text-xs text-gray-500">
-                  {vendors.slice(0, 3).join(', ')}{vendors.length > 3 ? ` +${vendors.length - 3} more` : ''}
+                  {vendors.slice(0, 3).join(', ')}
+                  {vendors.length > 3 ? ` +${vendors.length - 3} more` : ''}
                 </div>
               </div>
             </div>
@@ -380,7 +375,9 @@ function StepAlerts({ createAlerts, setCreateAlerts, alertSeverity, setAlertSeve
           )}
 
           <div>
-            <label className="block text-sm text-gray-400 mb-2">Minimum severity for CVE alerts:</label>
+            <label className="block text-sm text-gray-400 mb-2">
+              Minimum severity for CVE alerts:
+            </label>
             <select
               value={alertSeverity}
               onChange={(e) => setAlertSeverity(e.target.value)}
@@ -401,12 +398,10 @@ function StepDigest({ frequency, setFrequency }) {
   return (
     <div>
       <h3 className="text-lg font-medium text-white mb-2">How often should we email you?</h3>
-      <p className="text-sm text-gray-400 mb-4">
-        Get a TL;DR summary of threats relevant to you
-      </p>
+      <p className="text-sm text-gray-400 mb-4">Get a TL;DR summary of threats relevant to you</p>
 
       <div className="space-y-3">
-        {DIGEST_OPTIONS.map(option => (
+        {DIGEST_OPTIONS.map((option) => (
           <label
             key={option.value}
             className={`flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-all ${
@@ -436,8 +431,8 @@ function StepDigest({ frequency, setFrequency }) {
           <span className="text-cyan-400 text-lg">💡</span>
           <div className="text-sm text-gray-300">
             <strong className="text-white">Pro tip:</strong> Daily digests include a TL;DR summary
-            of the most critical threats for your industry, so you're always informed before
-            it hits the news.
+            of the most critical threats for your industry, so you're always informed before it hits
+            the news.
           </div>
         </div>
       </div>
@@ -538,15 +533,30 @@ export function PersonalizeButton({ onClick }) {
     >
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
-          <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          <svg
+            className="w-5 h-5 text-cyan-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+            />
           </svg>
         </div>
         <div>
           <div className="text-white font-medium">Personalize Your Feed</div>
           <div className="text-sm text-gray-400">Set up alerts for your vendors and sector</div>
         </div>
-        <svg className="w-5 h-5 text-gray-500 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-5 h-5 text-gray-500 ml-auto"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </div>

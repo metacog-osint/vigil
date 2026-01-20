@@ -1,13 +1,6 @@
 import { useState, useEffect } from 'react'
 import { incidents } from '../../lib/supabase'
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { format, subDays, startOfDay } from 'date-fns'
 
 export default function ActivityChart() {
@@ -54,9 +47,7 @@ export default function ActivityChart() {
 
   if (loading) {
     return (
-      <div className="h-64 flex items-center justify-center text-gray-400">
-        Loading chart...
-      </div>
+      <div className="h-64 flex items-center justify-center text-gray-400">Loading chart...</div>
     )
   }
 

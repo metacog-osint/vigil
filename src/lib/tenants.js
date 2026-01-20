@@ -23,7 +23,11 @@ export const DEFAULT_BRANDING = {
 // Tenant roles
 export const TENANT_ROLES = {
   owner: { label: 'Owner', level: 100, permissions: ['*'] },
-  admin: { label: 'Admin', level: 75, permissions: ['manage_members', 'manage_branding', 'manage_settings'] },
+  admin: {
+    label: 'Admin',
+    level: 75,
+    permissions: ['manage_members', 'manage_branding', 'manage_settings'],
+  },
   member: { label: 'Member', level: 50, permissions: ['view', 'edit'] },
   viewer: { label: 'Viewer', level: 25, permissions: ['view'] },
 }
@@ -33,8 +37,7 @@ export const tenants = {
    * Get tenant by slug or custom domain
    */
   async getByIdentifier(identifier) {
-    const { data, error } = await supabase
-      .rpc('get_tenant', { p_identifier: identifier })
+    const { data, error } = await supabase.rpc('get_tenant', { p_identifier: identifier })
 
     if (error) throw error
     return data?.[0] || null
@@ -44,11 +47,7 @@ export const tenants = {
    * Get tenant by ID
    */
   async getById(tenantId) {
-    const { data, error } = await supabase
-      .from('tenants')
-      .select('*')
-      .eq('id', tenantId)
-      .single()
+    const { data, error } = await supabase.from('tenants').select('*').eq('id', tenantId).single()
 
     if (error && error.code !== 'PGRST116') throw error
     return data
@@ -58,8 +57,7 @@ export const tenants = {
    * Get current user's tenants
    */
   async getUserTenants(userId) {
-    const { data, error } = await supabase
-      .rpc('get_user_tenants', { p_user_id: userId })
+    const { data, error } = await supabase.rpc('get_user_tenants', { p_user_id: userId })
 
     if (error) throw error
     return data || []
@@ -348,8 +346,10 @@ export const tenantMembers = {
    * Check if user is admin of tenant
    */
   async isAdmin(tenantId, userId) {
-    const { data } = await supabase
-      .rpc('is_tenant_admin', { p_user_id: userId, p_tenant_id: tenantId })
+    const { data } = await supabase.rpc('is_tenant_admin', {
+      p_user_id: userId,
+      p_tenant_id: tenantId,
+    })
 
     return data === true
   },
@@ -358,8 +358,10 @@ export const tenantMembers = {
    * Check if user can access tenant
    */
   async canAccess(tenantId, userId) {
-    const { data } = await supabase
-      .rpc('can_access_tenant', { p_user_id: userId, p_tenant_id: tenantId })
+    const { data } = await supabase.rpc('can_access_tenant', {
+      p_user_id: userId,
+      p_tenant_id: tenantId,
+    })
 
     return data === true
   },
@@ -437,12 +439,7 @@ export const tenantInvitations = {
     }
 
     // Add user to tenant
-    await tenantMembers.add(
-      invitation.tenant_id,
-      userId,
-      invitation.role,
-      invitation.invited_by
-    )
+    await tenantMembers.add(invitation.tenant_id, userId, invitation.role, invitation.invited_by)
 
     // Mark invitation as accepted
     await supabase
@@ -457,10 +454,7 @@ export const tenantInvitations = {
    * Cancel invitation
    */
   async cancel(invitationId) {
-    const { error } = await supabase
-      .from('tenant_invitations')
-      .delete()
-      .eq('id', invitationId)
+    const { error } = await supabase.from('tenant_invitations').delete().eq('id', invitationId)
 
     if (error) throw error
   },
@@ -506,9 +500,24 @@ export function isValidDomain(domain) {
 // Utility: Check if slug is reserved
 export function isReservedSlug(slug) {
   const reserved = [
-    'admin', 'api', 'app', 'auth', 'billing', 'blog', 'dashboard',
-    'docs', 'help', 'login', 'logout', 'mail', 'pricing', 'settings',
-    'status', 'support', 'vigil', 'www',
+    'admin',
+    'api',
+    'app',
+    'auth',
+    'billing',
+    'blog',
+    'dashboard',
+    'docs',
+    'help',
+    'login',
+    'logout',
+    'mail',
+    'pricing',
+    'settings',
+    'status',
+    'support',
+    'vigil',
+    'www',
   ]
   return reserved.includes(slug.toLowerCase())
 }

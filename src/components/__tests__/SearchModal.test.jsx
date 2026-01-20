@@ -79,7 +79,8 @@ describe('SearchModal', () => {
       renderWithRouter(<SearchModal isOpen={true} onClose={onClose} />)
 
       // Find and click the backdrop
-      const backdrop = document.querySelector('[data-backdrop]') || document.querySelector('.fixed.inset-0')
+      const backdrop =
+        document.querySelector('[data-backdrop]') || document.querySelector('.fixed.inset-0')
       if (backdrop) {
         fireEvent.click(backdrop)
         // Note: depending on implementation, onClose may or may not be called

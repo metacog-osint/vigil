@@ -75,7 +75,7 @@ export default function ApiKeysSection({ userId }) {
 
     try {
       await apiKeys.revoke(keyId, userId)
-      setKeys(keys.map(k => k.id === keyId ? { ...k, is_active: false } : k))
+      setKeys(keys.map((k) => (k.id === keyId ? { ...k, is_active: false } : k)))
     } catch (err) {
       console.error('Error revoking key:', err)
     }
@@ -88,7 +88,7 @@ export default function ApiKeysSection({ userId }) {
 
     try {
       await apiKeys.delete(keyId, userId)
-      setKeys(keys.filter(k => k.id !== keyId))
+      setKeys(keys.filter((k) => k.id !== keyId))
     } catch (err) {
       console.error('Error deleting key:', err)
     }
@@ -111,8 +111,18 @@ export default function ApiKeysSection({ userId }) {
           </div>
         </div>
         <div className="bg-gray-800/50 rounded-lg p-6 text-center">
-          <svg className="w-12 h-12 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          <svg
+            className="w-12 h-12 text-gray-600 mx-auto mb-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            />
           </svg>
           <h4 className="text-white font-medium mb-2">API Access Available on Team Plan</h4>
           <p className="text-gray-400 text-sm mb-4">
@@ -149,11 +159,15 @@ export default function ApiKeysSection({ userId }) {
       {usageStats && (
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-gray-800/50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-white">{usageStats.totalRequests.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-white">
+              {usageStats.totalRequests.toLocaleString()}
+            </div>
             <div className="text-sm text-gray-400">Requests (30d)</div>
           </div>
           <div className="bg-gray-800/50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-white">{usageStats.requestsToday.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-white">
+              {usageStats.requestsToday.toLocaleString()}
+            </div>
             <div className="text-sm text-gray-400">Today</div>
           </div>
           <div className="bg-gray-800/50 rounded-lg p-4">
@@ -170,8 +184,18 @@ export default function ApiKeysSection({ userId }) {
         </div>
       ) : keys.length === 0 ? (
         <div className="bg-gray-800/50 rounded-lg p-8 text-center">
-          <svg className="w-12 h-12 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          <svg
+            className="w-12 h-12 text-gray-600 mx-auto mb-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+            />
           </svg>
           <p className="text-gray-400 mb-4">No API keys yet</p>
           <button
@@ -241,8 +265,18 @@ export default function ApiKeysSection({ userId }) {
               <div className="space-y-4">
                 <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-5 h-5 text-green-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     <span className="text-green-400 font-medium">API Key Created</span>
                   </div>
@@ -294,7 +328,7 @@ export default function ApiKeysSection({ userId }) {
                           if (e.target.checked) {
                             setNewKeyScopes([...newKeyScopes, 'read'])
                           } else {
-                            setNewKeyScopes(newKeyScopes.filter(s => s !== 'read'))
+                            setNewKeyScopes(newKeyScopes.filter((s) => s !== 'read'))
                           }
                         }}
                         className="rounded"
@@ -310,7 +344,7 @@ export default function ApiKeysSection({ userId }) {
                           if (e.target.checked) {
                             setNewKeyScopes([...newKeyScopes, 'write'])
                           } else {
-                            setNewKeyScopes(newKeyScopes.filter(s => s !== 'write'))
+                            setNewKeyScopes(newKeyScopes.filter((s) => s !== 'write'))
                           }
                         }}
                         className="rounded"
@@ -321,9 +355,7 @@ export default function ApiKeysSection({ userId }) {
                   </div>
                 </div>
 
-                {error && (
-                  <div className="text-red-400 text-sm">{error}</div>
-                )}
+                {error && <div className="text-red-400 text-sm">{error}</div>}
 
                 <div className="flex gap-3">
                   <button

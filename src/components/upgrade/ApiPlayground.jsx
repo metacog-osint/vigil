@@ -56,9 +56,7 @@ const SAMPLE_ENDPOINTS = [
     method: 'GET',
     path: '/api/v1/actors/:id',
     description: 'Get threat actor details',
-    params: [
-      { name: 'id', value: 'lockbit', description: 'Actor ID or name' },
-    ],
+    params: [{ name: 'id', value: 'lockbit', description: 'Actor ID or name' }],
     sampleResponse: {
       id: 'ta-001',
       name: 'LockBit',
@@ -162,12 +160,16 @@ function EndpointCard({ endpoint, isSelected, onSelect }) {
       )}
     >
       <div className="flex items-center gap-2 mb-1">
-        <span className={clsx(
-          'text-xs font-mono px-1.5 py-0.5 rounded',
-          endpoint.method === 'GET' ? 'bg-green-500/20 text-green-400' :
-          endpoint.method === 'POST' ? 'bg-blue-500/20 text-blue-400' :
-          'bg-gray-500/20 text-gray-400'
-        )}>
+        <span
+          className={clsx(
+            'text-xs font-mono px-1.5 py-0.5 rounded',
+            endpoint.method === 'GET'
+              ? 'bg-green-500/20 text-green-400'
+              : endpoint.method === 'POST'
+                ? 'bg-blue-500/20 text-blue-400'
+                : 'bg-gray-500/20 text-gray-400'
+          )}
+        >
           {endpoint.method}
         </span>
         <span className="text-sm text-white font-mono">{endpoint.path}</span>
@@ -189,9 +191,7 @@ function ApiPlayground() {
       <div className="text-center py-12">
         <div className="text-4xl mb-4">🔌</div>
         <h3 className="text-xl font-semibold text-white mb-2">You have API access!</h3>
-        <p className="text-gray-400 mb-6">
-          View the full API documentation to start integrating.
-        </p>
+        <p className="text-gray-400 mb-6">View the full API documentation to start integrating.</p>
         <Link
           to="/api-docs"
           className="inline-flex items-center gap-2 px-6 py-3 bg-cyber-accent text-black font-medium rounded-lg hover:bg-cyber-accent/90"
@@ -208,7 +208,7 @@ function ApiPlayground() {
   const curlExample = `curl -X ${selectedEndpoint.method} \\
   "https://api.vigil.theintelligence.company${selectedEndpoint.path}${
     selectedEndpoint.params.length > 0
-      ? '?' + selectedEndpoint.params.map(p => `${p.name}=${p.value}`).join('&')
+      ? '?' + selectedEndpoint.params.map((p) => `${p.name}=${p.value}`).join('&')
       : ''
   }" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
@@ -240,7 +240,7 @@ function ApiPlayground() {
         {/* Endpoint list */}
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-gray-400 mb-3">Endpoints</h3>
-          {SAMPLE_ENDPOINTS.map(endpoint => (
+          {SAMPLE_ENDPOINTS.map((endpoint) => (
             <EndpointCard
               key={endpoint.id}
               endpoint={endpoint}
@@ -257,15 +257,15 @@ function ApiPlayground() {
             <h3 className="text-sm font-medium text-gray-400 mb-3">Request</h3>
 
             <div className="flex items-center gap-2 mb-4">
-              <span className={clsx(
-                'text-sm font-mono px-2 py-1 rounded',
-                'bg-green-500/20 text-green-400'
-              )}>
+              <span
+                className={clsx(
+                  'text-sm font-mono px-2 py-1 rounded',
+                  'bg-green-500/20 text-green-400'
+                )}
+              >
                 {selectedEndpoint.method}
               </span>
-              <code className="text-white font-mono text-sm">
-                {selectedEndpoint.path}
-              </code>
+              <code className="text-white font-mono text-sm">{selectedEndpoint.path}</code>
             </div>
 
             {/* Parameters */}
@@ -273,7 +273,7 @@ function ApiPlayground() {
               <div className="mb-4">
                 <div className="text-xs text-gray-500 mb-2">Parameters</div>
                 <div className="space-y-2">
-                  {selectedEndpoint.params.map(param => (
+                  {selectedEndpoint.params.map((param) => (
                     <div key={param.name} className="flex items-center gap-3 text-sm">
                       <code className="text-cyan-400 font-mono">{param.name}</code>
                       <span className="text-gray-600">=</span>
@@ -358,12 +358,10 @@ function ApiPlayground() {
           <div className="text-3xl">💬</div>
           <div>
             <p className="text-gray-300 italic mb-2">
-              "Vigil's API saved us 10+ hours per week. We automated our IOC ingestion and
-              our SIEM now gets fresh indicators every hour without manual work."
+              "Vigil's API saved us 10+ hours per week. We automated our IOC ingestion and our SIEM
+              now gets fresh indicators every hour without manual work."
             </p>
-            <p className="text-sm text-gray-500">
-              — Security Engineer, Mid-size MSSP
-            </p>
+            <p className="text-sm text-gray-500">— Security Engineer, Mid-size MSSP</p>
           </div>
         </div>
       </div>

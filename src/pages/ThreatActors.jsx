@@ -57,16 +57,17 @@ export default function ThreatActors() {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (viewMode === 'overview' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return
+      if (viewMode === 'overview' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')
+        return
 
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
-          setFocusedRowIndex(i => Math.min(i + 1, sortedActors.length - 1))
+          setFocusedRowIndex((i) => Math.min(i + 1, sortedActors.length - 1))
           break
         case 'ArrowUp':
           e.preventDefault()
-          setFocusedRowIndex(i => Math.max(i - 1, 0))
+          setFocusedRowIndex((i) => Math.max(i - 1, 0))
           break
         case 'Enter':
           if (focusedRowIndex >= 0 && sortedActors[focusedRowIndex]) {
@@ -91,7 +92,7 @@ export default function ThreatActors() {
   // Row click handler
   function handleRowClick(actor, event) {
     if (event.shiftKey) {
-      setSelectedRows(prev => {
+      setSelectedRows((prev) => {
         const next = new Set(prev)
         if (next.has(actor.id)) {
           next.delete(actor.id)
@@ -112,7 +113,7 @@ export default function ThreatActors() {
 
     try {
       const { data: lists } = await watchlists.getAll()
-      const actorList = lists?.find(w => w.entity_type === 'threat_actor')
+      const actorList = lists?.find((w) => w.entity_type === 'threat_actor')
 
       if (!actorList) {
         alert('No watchlist found for threat actors. Create one first.')
@@ -132,8 +133,19 @@ export default function ThreatActors() {
 
   // Export to CSV
   function exportToCSV() {
-    const headers = ['Name', 'Type', 'Trend', 'Incidents 7d', 'Incidents Prev 7d', 'Last Seen', 'Status', 'Risk Score', 'Aliases', 'Target Sectors']
-    const rows = sortedActors.map(actor => [
+    const headers = [
+      'Name',
+      'Type',
+      'Trend',
+      'Incidents 7d',
+      'Incidents Prev 7d',
+      'Last Seen',
+      'Status',
+      'Risk Score',
+      'Aliases',
+      'Target Sectors',
+    ]
+    const rows = sortedActors.map((actor) => [
       actor.name,
       actor.actor_type || 'unknown',
       actor.trend_status || 'STABLE',
@@ -143,12 +155,12 @@ export default function ThreatActors() {
       actor.status || 'active',
       riskScores[actor.id] || 0,
       (actor.aliases || []).join('; '),
-      (actor.target_sectors || []).join('; ')
+      (actor.target_sectors || []).join('; '),
     ])
 
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
@@ -202,17 +214,27 @@ export default function ThreatActors() {
           {/* Saved Filters dropdown */}
           <div className="relative">
             <button
-              onClick={() => savedFiltersHook.setSavedFiltersOpen(!savedFiltersHook.savedFiltersOpen)}
+              onClick={() =>
+                savedFiltersHook.setSavedFiltersOpen(!savedFiltersHook.savedFiltersOpen)
+              }
               className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded flex items-center gap-1.5"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                />
               </svg>
               Saved Filters
             </button>
             {savedFiltersHook.savedFiltersOpen && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => savedFiltersHook.setSavedFiltersOpen(false)} />
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => savedFiltersHook.setSavedFiltersOpen(false)}
+                />
                 <div className="absolute right-0 top-full mt-1 z-50 bg-gray-900 border border-gray-700 rounded-lg shadow-xl py-2 min-w-[250px]">
                   <div className="px-3 pb-2 border-b border-gray-700">
                     <div className="flex gap-2">
@@ -224,9 +246,16 @@ export default function ThreatActors() {
                         className="flex-1 px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded text-gray-300"
                       />
                       <button
-                        onClick={() => savedFiltersHook.saveCurrentFilter({
-                          search, sectorFilter, trendFilter, typeFilter, statusFilter, sortConfig
-                        })}
+                        onClick={() =>
+                          savedFiltersHook.saveCurrentFilter({
+                            search,
+                            sectorFilter,
+                            trendFilter,
+                            typeFilter,
+                            statusFilter,
+                            sortConfig,
+                          })
+                        }
                         disabled={!savedFiltersHook.saveFilterName.trim()}
                         className="px-2 py-1 text-sm bg-cyan-600 hover:bg-cyan-500 text-white rounded disabled:opacity-50"
                       >
@@ -237,8 +266,11 @@ export default function ThreatActors() {
                   {savedFiltersHook.savedFiltersList.length === 0 ? (
                     <div className="px-3 py-2 text-sm text-gray-500">No saved filters</div>
                   ) : (
-                    savedFiltersHook.savedFiltersList.map(filter => (
-                      <div key={filter.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-800">
+                    savedFiltersHook.savedFiltersList.map((filter) => (
+                      <div
+                        key={filter.id}
+                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-800"
+                      >
                         <button
                           onClick={() => {
                             const q = filter.query || {}
@@ -258,8 +290,18 @@ export default function ThreatActors() {
                           onClick={() => savedFiltersHook.deleteSavedFilter(filter.id)}
                           className="text-gray-500 hover:text-red-400"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
                           </svg>
                         </button>
                       </div>
@@ -277,7 +319,12 @@ export default function ThreatActors() {
             title="Export to CSV"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
             Export
           </button>
@@ -289,7 +336,12 @@ export default function ThreatActors() {
               className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'table' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                />
               </svg>
               Table
             </button>
@@ -298,7 +350,12 @@ export default function ThreatActors() {
               className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'overview' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
+                />
               </svg>
               Overview
             </button>
@@ -308,15 +365,28 @@ export default function ThreatActors() {
 
       {/* Keyboard shortcuts hint */}
       <div className="hidden md:flex text-xs text-gray-600 gap-4">
-        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">↑↓</kbd> Navigate</span>
-        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Enter</kbd> View details</span>
-        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">/</kbd> Search</span>
-        <span><kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Shift+Click</kbd> Select multiple</span>
+        <span>
+          <kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">↑↓</kbd> Navigate
+        </span>
+        <span>
+          <kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Enter</kbd> View details
+        </span>
+        <span>
+          <kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">/</kbd> Search
+        </span>
+        <span>
+          <kbd className="px-1 py-0.5 bg-gray-800 rounded text-gray-400">Shift+Click</kbd> Select
+          multiple
+        </span>
       </div>
 
       {/* Trend Summary Cards */}
       <div className="grid grid-cols-3 gap-2 sm:gap-4">
-        <Tooltip content={FIELD_TOOLTIPS.escalating_summary.content} source={FIELD_TOOLTIPS.escalating_summary.source} position="bottom">
+        <Tooltip
+          content={FIELD_TOOLTIPS.escalating_summary.content}
+          source={FIELD_TOOLTIPS.escalating_summary.source}
+          position="bottom"
+        >
           <button
             onClick={() => setTrendFilter(trendFilter === 'ESCALATING' ? '' : 'ESCALATING')}
             className={`cyber-card text-center cursor-pointer transition-all w-full ${trendFilter === 'ESCALATING' ? 'ring-2 ring-red-500' : ''}`}
@@ -325,7 +395,11 @@ export default function ThreatActors() {
             <div className="text-sm text-gray-400">Escalating</div>
           </button>
         </Tooltip>
-        <Tooltip content={FIELD_TOOLTIPS.stable_summary.content} source={FIELD_TOOLTIPS.stable_summary.source} position="bottom">
+        <Tooltip
+          content={FIELD_TOOLTIPS.stable_summary.content}
+          source={FIELD_TOOLTIPS.stable_summary.source}
+          position="bottom"
+        >
           <button
             onClick={() => setTrendFilter(trendFilter === 'STABLE' ? '' : 'STABLE')}
             className={`cyber-card text-center cursor-pointer transition-all w-full ${trendFilter === 'STABLE' ? 'ring-2 ring-gray-500' : ''}`}
@@ -334,7 +408,11 @@ export default function ThreatActors() {
             <div className="text-sm text-gray-400">Stable</div>
           </button>
         </Tooltip>
-        <Tooltip content={FIELD_TOOLTIPS.declining_summary.content} source={FIELD_TOOLTIPS.declining_summary.source} position="bottom">
+        <Tooltip
+          content={FIELD_TOOLTIPS.declining_summary.content}
+          source={FIELD_TOOLTIPS.declining_summary.source}
+          position="bottom"
+        >
           <button
             onClick={() => setTrendFilter(trendFilter === 'DECLINING' ? '' : 'DECLINING')}
             className={`cyber-card text-center cursor-pointer transition-all w-full ${trendFilter === 'DECLINING' ? 'ring-2 ring-green-500' : ''}`}
@@ -375,7 +453,12 @@ export default function ThreatActors() {
             className="text-sm text-gray-400 hover:text-cyan-400 flex items-center gap-1.5 px-3 py-2 rounded border border-gray-700 hover:border-gray-600 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
             Clear all filters
           </button>

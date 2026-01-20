@@ -199,10 +199,7 @@ describe('incidents module', () => {
     })
 
     it('should handle null sector as "Unknown"', async () => {
-      const mockData = [
-        { victim_sector: null },
-        { victim_sector: 'healthcare' },
-      ]
+      const mockData = [{ victim_sector: null }, { victim_sector: 'healthcare' }]
 
       vi.mocked(supabase.from).mockReturnValue({
         select: vi.fn().mockReturnThis(),
@@ -211,7 +208,7 @@ describe('incidents module', () => {
 
       const result = await incidents.getBySector(365)
 
-      const unknownSector = result.find(s => s.name === 'Unknown')
+      const unknownSector = result.find((s) => s.name === 'Unknown')
       expect(unknownSector).toBeDefined()
       expect(unknownSector.value).toBe(1)
     })
@@ -297,10 +294,7 @@ describe('incidents module', () => {
     })
 
     it('should handle null discovered_date', async () => {
-      const mockData = [
-        { discovered_date: '2024-01-15T10:00:00Z' },
-        { discovered_date: null },
-      ]
+      const mockData = [{ discovered_date: '2024-01-15T10:00:00Z' }, { discovered_date: null }]
 
       vi.mocked(supabase.from).mockReturnValue({
         select: vi.fn().mockReturnThis(),
@@ -317,19 +311,29 @@ describe('incidents module', () => {
   describe('getSectorDetails', () => {
     it('should aggregate detailed sector data with trends', async () => {
       const currentData = [
-        { id: '1', victim_name: 'Hospital A', victim_sector: 'healthcare', discovered_date: '2024-01-15', threat_actor: { id: '1', name: 'LockBit' } },
-        { id: '2', victim_name: 'Hospital B', victim_sector: 'healthcare', discovered_date: '2024-01-14', threat_actor: { id: '1', name: 'LockBit' } },
+        {
+          id: '1',
+          victim_name: 'Hospital A',
+          victim_sector: 'healthcare',
+          discovered_date: '2024-01-15',
+          threat_actor: { id: '1', name: 'LockBit' },
+        },
+        {
+          id: '2',
+          victim_name: 'Hospital B',
+          victim_sector: 'healthcare',
+          discovered_date: '2024-01-14',
+          threat_actor: { id: '1', name: 'LockBit' },
+        },
       ]
 
-      const prevData = [
-        { victim_sector: 'healthcare' },
-      ]
+      const prevData = [{ victim_sector: 'healthcare' }]
 
       let callCount = 0
       vi.mocked(supabase.from).mockImplementation(() => ({
         select: vi.fn().mockReturnThis(),
         gte: vi.fn().mockReturnThis(),
-        lt: vi.fn().mockImplementation(function() {
+        lt: vi.fn().mockImplementation(function () {
           callCount++
           if (callCount === 1) {
             // First call is current data (no lt)
@@ -461,7 +465,7 @@ describe('incidents date calculations', () => {
     await incidents.getRecent({ days: 30 })
 
     // Check that gte was called with a date 30 days ago
-    const gteCall = mockQuery.gte.mock.calls.find(call => call[0] === 'discovered_date')
+    const gteCall = mockQuery.gte.mock.calls.find((call) => call[0] === 'discovered_date')
     expect(gteCall).toBeDefined()
 
     const cutoffDate = new Date(gteCall[1])

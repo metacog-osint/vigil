@@ -11,37 +11,42 @@ import { clsx } from 'clsx'
 // Route to label mapping
 const routeLabels = {
   '': 'Dashboard',
-  'events': 'Activity',
-  'actors': 'Threat Actors',
-  'vulnerabilities': 'Vulnerabilities',
-  'advisories': 'Advisories',
-  'iocs': 'IOC Search',
-  'techniques': 'ATT&CK Matrix',
+  events: 'Activity',
+  actors: 'Threat Actors',
+  vulnerabilities: 'Vulnerabilities',
+  advisories: 'Advisories',
+  iocs: 'IOC Search',
+  techniques: 'ATT&CK Matrix',
   'threat-hunts': 'Threat Hunts',
-  'trends': 'Trends',
-  'reports': 'Reports',
-  'investigations': 'Investigations',
-  'watchlists': 'Watchlists',
-  'alerts': 'Alerts',
-  'assets': 'Assets',
-  'settings': 'Settings',
-  'help': 'Help',
-  'pricing': 'Pricing',
+  trends: 'Trends',
+  reports: 'Reports',
+  investigations: 'Investigations',
+  watchlists: 'Watchlists',
+  alerts: 'Alerts',
+  assets: 'Assets',
+  settings: 'Settings',
+  help: 'Help',
+  pricing: 'Pricing',
   'api-docs': 'API Docs',
   'audit-logs': 'Audit Logs',
-  'status': 'Status',
-  'webhooks': 'Webhooks',
-  'vendors': 'Vendors',
-  'benchmarks': 'Benchmarks',
-  'chat': 'Chat Integrations',
-  'ops': 'Operations',
+  status: 'Status',
+  webhooks: 'Webhooks',
+  vendors: 'Vendors',
+  benchmarks: 'Benchmarks',
+  chat: 'Chat Integrations',
+  ops: 'Operations',
   'advanced-search': 'Advanced Search',
 }
 
 // Icons
 const HomeIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+    />
   </svg>
 )
 
@@ -71,10 +76,7 @@ export default function Breadcrumbs({ items, showHome = true, className }) {
   }
 
   return (
-    <nav
-      className={clsx('flex items-center text-sm', className)}
-      aria-label="Breadcrumb"
-    >
+    <nav className={clsx('flex items-center text-sm', className)} aria-label="Breadcrumb">
       <ol className="flex items-center gap-2">
         {/* Home link */}
         {showHome && (
@@ -157,7 +159,7 @@ function generateBreadcrumbs(pathname) {
 function formatSegment(segment) {
   return segment
     .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
 }
 
@@ -185,7 +187,12 @@ export function BreadcrumbsCompact({ items, className }) {
             className="text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             <span className="hidden sm:inline">{parent.label}</span>
           </Link>

@@ -31,7 +31,11 @@ function CreateTeamModal({ isOpen, onClose, onCreated, userId }) {
     setLoading(true)
     setError(null)
 
-    const { data, error: createError } = await teams.createTeam(userId, name.trim(), description.trim())
+    const { data, error: createError } = await teams.createTeam(
+      userId,
+      name.trim(),
+      description.trim()
+    )
 
     if (createError) {
       setError(createError.message)
@@ -71,15 +75,9 @@ function CreateTeamModal({ isOpen, onClose, onCreated, userId }) {
               placeholder="What does this team do?"
             />
           </div>
-          {error && (
-            <p className="text-red-400 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
           <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="cyber-button flex-1"
-            >
+            <button type="button" onClick={onClose} className="cyber-button flex-1">
               Cancel
             </button>
             <button
@@ -111,7 +109,12 @@ function InviteMemberModal({ isOpen, onClose, onInvited, teamId, userId }) {
     setLoading(true)
     setError(null)
 
-    const { data, error: inviteError } = await teams.createInvitation(teamId, email.trim(), role, userId)
+    const { data, error: inviteError } = await teams.createInvitation(
+      teamId,
+      email.trim(),
+      role,
+      userId
+    )
 
     if (inviteError) {
       setError(inviteError.message)
@@ -154,15 +157,9 @@ function InviteMemberModal({ isOpen, onClose, onInvited, teamId, userId }) {
               <option value="viewer">Viewer - Read-only access</option>
             </select>
           </div>
-          {error && (
-            <p className="text-red-400 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
           <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="cyber-button flex-1"
-            >
+            <button type="button" onClick={onClose} className="cyber-button flex-1">
               Cancel
             </button>
             <button
@@ -229,7 +226,10 @@ function TeamMemberList({ teamId, userRole, currentUserId }) {
         <h4 className="text-sm font-medium text-gray-400 mb-2">Members ({members.length})</h4>
         <div className="space-y-2">
           {members.map((member) => (
-            <div key={member.id} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+            <div
+              key={member.id}
+              className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
+            >
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-cyber-accent/20 flex items-center justify-center text-cyber-accent text-sm font-medium">
                   {(member.display_name || member.email || '?')[0].toUpperCase()}
@@ -281,10 +281,15 @@ function TeamMemberList({ teamId, userRole, currentUserId }) {
       {/* Pending Invitations */}
       {invitations.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-gray-400 mb-2">Pending Invitations ({invitations.length})</h4>
+          <h4 className="text-sm font-medium text-gray-400 mb-2">
+            Pending Invitations ({invitations.length})
+          </h4>
           <div className="space-y-2">
             {invitations.map((invite) => (
-              <div key={invite.id} className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg border border-dashed border-gray-700">
+              <div
+                key={invite.id}
+                className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg border border-dashed border-gray-700"
+              >
                 <div>
                   <div className="text-gray-300 text-sm">{invite.email}</div>
                   <div className="text-gray-500 text-xs">
@@ -366,10 +371,7 @@ export default function TeamManagement({ user }) {
     <div className="cyber-card">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">Team Collaboration</h3>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="cyber-button text-sm"
-        >
+        <button onClick={() => setShowCreateModal(true)} className="cyber-button text-sm">
           + Create Team
         </button>
       </div>
@@ -377,18 +379,25 @@ export default function TeamManagement({ user }) {
       {userTeams.length === 0 ? (
         <div className="text-center py-8">
           <div className="text-gray-400 mb-4">
-            <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            <svg
+              className="w-12 h-12 mx-auto mb-2 opacity-50"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
             </svg>
             <p>No teams yet</p>
           </div>
           <p className="text-gray-500 text-sm mb-4">
             Create a team to collaborate with colleagues on threat intelligence.
           </p>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="cyber-button-primary"
-          >
+          <button onClick={() => setShowCreateModal(true)} className="cyber-button-primary">
             Create Your First Team
           </button>
         </div>
@@ -401,7 +410,7 @@ export default function TeamManagement({ user }) {
               <select
                 value={selectedTeam?.id || ''}
                 onChange={(e) => {
-                  const team = userTeams.find(t => t.id === e.target.value)
+                  const team = userTeams.find((t) => t.id === e.target.value)
                   setSelectedTeam(team)
                 }}
                 className="cyber-input w-full"
@@ -426,10 +435,7 @@ export default function TeamManagement({ user }) {
                   )}
                 </div>
                 {(selectedTeam.role === 'owner' || selectedTeam.role === 'admin') && (
-                  <button
-                    onClick={() => setShowInviteModal(true)}
-                    className="cyber-button text-sm"
-                  >
+                  <button onClick={() => setShowInviteModal(true)} className="cyber-button text-sm">
                     + Invite Member
                   </button>
                 )}

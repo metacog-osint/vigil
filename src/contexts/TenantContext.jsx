@@ -139,22 +139,25 @@ export function TenantProvider({ children }) {
   }, [user?.uid, detectTenant, loadBranding, loadUserTenants, loadMembership])
 
   // Switch to a different tenant
-  const switchTenant = useCallback(async (tenantId) => {
-    setLoading(true)
-    try {
-      const tenant = await tenants.getById(tenantId)
-      if (tenant) {
-        setCurrentTenant(tenant)
-        await loadBranding(tenant.id)
-        await loadMembership(tenant.id, user?.uid)
+  const switchTenant = useCallback(
+    async (tenantId) => {
+      setLoading(true)
+      try {
+        const tenant = await tenants.getById(tenantId)
+        if (tenant) {
+          setCurrentTenant(tenant)
+          await loadBranding(tenant.id)
+          await loadMembership(tenant.id, user?.uid)
+        }
+      } catch (err) {
+        console.error('Failed to switch tenant:', err)
+        setError(err)
+      } finally {
+        setLoading(false)
       }
-    } catch (err) {
-      console.error('Failed to switch tenant:', err)
-      setError(err)
-    } finally {
-      setLoading(false)
-    }
-  }, [user?.uid, loadBranding, loadMembership])
+    },
+    [user?.uid, loadBranding, loadMembership]
+  )
 
   // Clear tenant (go back to default)
   const clearTenant = useCallback(() => {
@@ -164,13 +167,16 @@ export function TenantProvider({ children }) {
   }, [])
 
   // Check permissions
-  const hasPermission = useCallback((permission) => {
-    if (!membership) return false
-    if (membership.role === 'owner') return true
+  const hasPermission = useCallback(
+    (permission) => {
+      if (!membership) return false
+      if (membership.role === 'owner') return true
 
-    const rolePermissions = membership.permissions || []
-    return rolePermissions.includes('*') || rolePermissions.includes(permission)
-  }, [membership])
+      const rolePermissions = membership.permissions || []
+      return rolePermissions.includes('*') || rolePermissions.includes(permission)
+    },
+    [membership]
+  )
 
   // Check if user is admin
   const isAdmin = membership?.role === 'owner' || membership?.role === 'admin'
@@ -198,11 +204,7 @@ export function TenantProvider({ children }) {
     refreshBranding: () => loadBranding(currentTenant?.id),
   }
 
-  return (
-    <TenantContext.Provider value={value}>
-      {children}
-    </TenantContext.Provider>
-  )
+  return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>
 }
 
 export function useTenant() {

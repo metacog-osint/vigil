@@ -164,10 +164,7 @@ export const ssoConfig = {
    * Delete SSO configuration
    */
   async delete(tenantId) {
-    const { error } = await supabase
-      .from('sso_configurations')
-      .delete()
-      .eq('tenant_id', tenantId)
+    const { error } = await supabase.from('sso_configurations').delete().eq('tenant_id', tenantId)
 
     if (error) throw error
   },
@@ -207,7 +204,9 @@ export const ssoConfig = {
 
       // SSO URL validation (must be HTTPS)
       if (config.saml_sso_url) {
-        const ssoUrlValidation = validateUrl(config.saml_sso_url, 'SAML SSO URL', { requireHttps: true })
+        const ssoUrlValidation = validateUrl(config.saml_sso_url, 'SAML SSO URL', {
+          requireHttps: true,
+        })
         if (!ssoUrlValidation.valid) {
           errors.push(ssoUrlValidation.error)
         }
@@ -217,7 +216,9 @@ export const ssoConfig = {
 
       // SLO URL validation (optional but must be valid if provided)
       if (config.saml_slo_url) {
-        const sloUrlValidation = validateUrl(config.saml_slo_url, 'SAML SLO URL', { requireHttps: true })
+        const sloUrlValidation = validateUrl(config.saml_slo_url, 'SAML SLO URL', {
+          requireHttps: true,
+        })
         if (!sloUrlValidation.valid) {
           warnings.push(sloUrlValidation.error)
         }
@@ -238,13 +239,17 @@ export const ssoConfig = {
     if (hasOidc) {
       // Discovery URL validation
       if (config.oidc_discovery_url) {
-        const discoveryValidation = validateUrl(config.oidc_discovery_url, 'OIDC Discovery URL', { requireHttps: true })
+        const discoveryValidation = validateUrl(config.oidc_discovery_url, 'OIDC Discovery URL', {
+          requireHttps: true,
+        })
         if (!discoveryValidation.valid) {
           errors.push(discoveryValidation.error)
         }
         // Check it ends with well-known path
         if (!config.oidc_discovery_url.includes('.well-known')) {
-          warnings.push('OIDC Discovery URL should typically end with /.well-known/openid-configuration')
+          warnings.push(
+            'OIDC Discovery URL should typically end with /.well-known/openid-configuration'
+          )
         }
       } else {
         errors.push('OIDC Discovery URL is required')
@@ -292,10 +297,12 @@ export const ssoSessions = {
   async getUserSessions(userId) {
     const { data, error } = await supabase
       .from('sso_sessions')
-      .select(`
+      .select(
+        `
         *,
         sso_config:sso_configurations(provider, provider_name)
-      `)
+      `
+      )
       .eq('user_id', userId)
       .is('logged_out_at', null)
       .order('created_at', { ascending: false })
@@ -499,13 +506,22 @@ export function validateDomain(domain) {
   if (!domainRegex.test(trimmed)) {
     // Check common issues
     if (trimmed.includes('@')) {
-      return { valid: false, error: 'Domain should not include @ symbol (use "example.com" not "@example.com")' }
+      return {
+        valid: false,
+        error: 'Domain should not include @ symbol (use "example.com" not "@example.com")',
+      }
     }
     if (trimmed.includes('://')) {
-      return { valid: false, error: 'Domain should not include protocol (use "example.com" not "https://example.com")' }
+      return {
+        valid: false,
+        error: 'Domain should not include protocol (use "example.com" not "https://example.com")',
+      }
     }
     if (trimmed.includes('/')) {
-      return { valid: false, error: 'Domain should not include path (use "example.com" not "example.com/path")' }
+      return {
+        valid: false,
+        error: 'Domain should not include path (use "example.com" not "example.com/path")',
+      }
     }
     if (!trimmed.includes('.')) {
       return { valid: false, error: 'Domain must include at least one dot (e.g., "example.com")' }

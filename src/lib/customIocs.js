@@ -8,8 +8,18 @@ import { supabase } from './supabase'
 // IOC types
 export const IOC_TYPES = {
   ip: { label: 'IP Address', icon: 'server', color: 'blue', pattern: /^(\d{1,3}\.){3}\d{1,3}$/ },
-  ipv6: { label: 'IPv6 Address', icon: 'server', color: 'blue', pattern: /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/ },
-  domain: { label: 'Domain', icon: 'globe', color: 'green', pattern: /^[a-z0-9]+([-.]{1}[a-z0-9]+)*\.[a-z]{2,}$/ },
+  ipv6: {
+    label: 'IPv6 Address',
+    icon: 'server',
+    color: 'blue',
+    pattern: /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/,
+  },
+  domain: {
+    label: 'Domain',
+    icon: 'globe',
+    color: 'green',
+    pattern: /^[a-z0-9]+([-.]{1}[a-z0-9]+)*\.[a-z]{2,}$/,
+  },
   url: { label: 'URL', icon: 'link', color: 'purple', pattern: /^https?:\/\/.+/ },
   email: { label: 'Email', icon: 'mail', color: 'yellow', pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
   md5: { label: 'MD5 Hash', icon: 'fingerprint', color: 'red', pattern: /^[a-fA-F0-9]{32}$/ },
@@ -20,9 +30,24 @@ export const IOC_TYPES = {
   registry_key: { label: 'Registry Key', icon: 'key', color: 'orange', pattern: /^.+$/ },
   user_agent: { label: 'User Agent', icon: 'globe', color: 'cyan', pattern: /^.+$/ },
   asn: { label: 'ASN', icon: 'server', color: 'indigo', pattern: /^AS\d+$/ },
-  cidr: { label: 'CIDR Range', icon: 'cube', color: 'blue', pattern: /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/ },
-  bitcoin_address: { label: 'Bitcoin Address', icon: 'currency-dollar', color: 'yellow', pattern: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/ },
-  cve: { label: 'CVE ID', icon: 'shield-exclamation', color: 'orange', pattern: /^CVE-\d{4}-\d+$/i },
+  cidr: {
+    label: 'CIDR Range',
+    icon: 'cube',
+    color: 'blue',
+    pattern: /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/,
+  },
+  bitcoin_address: {
+    label: 'Bitcoin Address',
+    icon: 'currency-dollar',
+    color: 'yellow',
+    pattern: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
+  },
+  cve: {
+    label: 'CVE ID',
+    icon: 'shield-exclamation',
+    color: 'orange',
+    pattern: /^CVE-\d{4}-\d+$/i,
+  },
   other: { label: 'Other', icon: 'dots-horizontal', color: 'gray', pattern: /^.+$/ },
 }
 
@@ -202,10 +227,7 @@ export const customIocs = {
    * Get all IOCs for a user (across all lists)
    */
   async getAll(userId, filters = {}) {
-    let query = supabase
-      .from('v_custom_iocs_summary')
-      .select('*')
-      .eq('user_id', userId)
+    let query = supabase.from('v_custom_iocs_summary').select('*').eq('user_id', userId)
 
     if (filters.iocType) {
       query = query.eq('ioc_type', filters.iocType)
@@ -257,7 +279,7 @@ export const customIocs = {
    * Add multiple IOCs at once
    */
   async addBulk(listId, userId, iocsData) {
-    const records = iocsData.map(ioc => ({
+    const records = iocsData.map((ioc) => ({
       list_id: listId,
       user_id: userId,
       ioc_type: ioc.iocType,
@@ -295,7 +317,8 @@ export const customIocs = {
     if (updates.description !== undefined) updateData.description = updates.description
     if (updates.tags !== undefined) updateData.tags = updates.tags
     if (updates.isActive !== undefined) updateData.is_active = updates.isActive
-    if (updates.isFalsePositive !== undefined) updateData.is_false_positive = updates.isFalsePositive
+    if (updates.isFalsePositive !== undefined)
+      updateData.is_false_positive = updates.isFalsePositive
 
     const { data, error } = await supabase
       .from('custom_iocs')
@@ -463,22 +486,29 @@ export function parseIocsFromCsv(csvText, columnMap = {}) {
   const lines = csvText.split(/[\n\r]+/).filter(Boolean)
   if (lines.length < 2) return []
 
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
+  const headers = lines[0].split(',').map((h) => h.trim().toLowerCase())
   const iocs = []
 
   // Default column mapping
-  const valueCol = columnMap.value || headers.findIndex(h => ['value', 'ioc', 'indicator', 'observable'].includes(h))
-  const typeCol = columnMap.type || headers.findIndex(h => ['type', 'ioc_type', 'indicator_type'].includes(h))
-  const threatCol = columnMap.threat || headers.findIndex(h => ['threat', 'threat_type', 'category'].includes(h))
-  const descCol = columnMap.description || headers.findIndex(h => ['description', 'notes', 'comment'].includes(h))
+  const valueCol =
+    columnMap.value ||
+    headers.findIndex((h) => ['value', 'ioc', 'indicator', 'observable'].includes(h))
+  const typeCol =
+    columnMap.type || headers.findIndex((h) => ['type', 'ioc_type', 'indicator_type'].includes(h))
+  const threatCol =
+    columnMap.threat || headers.findIndex((h) => ['threat', 'threat_type', 'category'].includes(h))
+  const descCol =
+    columnMap.description ||
+    headers.findIndex((h) => ['description', 'notes', 'comment'].includes(h))
 
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map(c => c.trim())
+    const cols = lines[i].split(',').map((c) => c.trim())
     const value = cols[valueCol >= 0 ? valueCol : 0]
 
     if (!value) continue
 
-    const iocType = typeCol >= 0 && cols[typeCol] ? cols[typeCol].toLowerCase() : detectIocType(value)
+    const iocType =
+      typeCol >= 0 && cols[typeCol] ? cols[typeCol].toLowerCase() : detectIocType(value)
 
     iocs.push({
       value,
@@ -492,7 +522,16 @@ export function parseIocsFromCsv(csvText, columnMap = {}) {
 }
 
 export function exportIocsToCsv(iocs) {
-  const headers = ['value', 'type', 'threat_type', 'severity', 'confidence', 'tags', 'description', 'created_at']
+  const headers = [
+    'value',
+    'type',
+    'threat_type',
+    'severity',
+    'confidence',
+    'tags',
+    'description',
+    'created_at',
+  ]
   const rows = [headers.join(',')]
 
   for (const ioc of iocs) {

@@ -33,7 +33,7 @@ export default function IOCs() {
   // Sync with URL on mount
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab')
-    if (tabFromUrl && TABS.find(t => t.id === tabFromUrl)) {
+    if (tabFromUrl && TABS.find((t) => t.id === tabFromUrl)) {
       setActiveTab(tabFromUrl)
     }
   }, [])
@@ -43,9 +43,7 @@ export default function IOCs() {
       {/* Header */}
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-white">IOC Intelligence</h1>
-        <p className="text-gray-400 text-sm mt-1">
-          Search and manage indicators of compromise
-        </p>
+        <p className="text-gray-400 text-sm mt-1">Search and manage indicators of compromise</p>
       </div>
 
       {/* Tabs */}
@@ -57,9 +55,10 @@ export default function IOCs() {
               onClick={() => setActiveTab(tab.id)}
               className={`
                 px-1 py-3 text-sm font-medium border-b-2 transition-colors
-                ${activeTab === tab.id
-                  ? 'border-cyan-500 text-cyan-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
+                ${
+                  activeTab === tab.id
+                    ? 'border-cyan-500 text-cyan-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
                 }
               `}
               title={tab.description}

@@ -49,10 +49,7 @@ export function useLastVisit() {
       const historyStr = localStorage.getItem(VISIT_HISTORY_KEY)
       const history = historyStr ? JSON.parse(historyStr) : []
       history.unshift(now.toISOString())
-      localStorage.setItem(
-        VISIT_HISTORY_KEY,
-        JSON.stringify(history.slice(0, MAX_HISTORY))
-      )
+      localStorage.setItem(VISIT_HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)))
 
       setLastVisit(now)
     } catch (error) {
@@ -82,7 +79,7 @@ export function useLastVisit() {
   const getVisitHistory = useCallback(() => {
     try {
       const historyStr = localStorage.getItem(VISIT_HISTORY_KEY)
-      return historyStr ? JSON.parse(historyStr).map(d => new Date(d)) : []
+      return historyStr ? JSON.parse(historyStr).map((d) => new Date(d)) : []
     } catch {
       return []
     }

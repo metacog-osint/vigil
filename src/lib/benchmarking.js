@@ -394,17 +394,22 @@ export async function compareSectors(sector1, sector2) {
       incidentAvg: {
         [sector1]: b1.incident_avg_per_org,
         [sector2]: b2.incident_avg_per_org,
-        difference: ((b1.incident_avg_per_org - b2.incident_avg_per_org) / b2.incident_avg_per_org) * 100,
+        difference:
+          ((b1.incident_avg_per_org - b2.incident_avg_per_org) / b2.incident_avg_per_org) * 100,
       },
       responseTime: {
         [sector1]: b1.response_time_avg_minutes,
         [sector2]: b2.response_time_avg_minutes,
-        difference: ((b1.response_time_avg_minutes - b2.response_time_avg_minutes) / b2.response_time_avg_minutes) * 100,
+        difference:
+          ((b1.response_time_avg_minutes - b2.response_time_avg_minutes) /
+            b2.response_time_avg_minutes) *
+          100,
       },
       patchTime: {
         [sector1]: b1.patch_time_avg_days,
         [sector2]: b2.patch_time_avg_days,
-        difference: ((b1.patch_time_avg_days - b2.patch_time_avg_days) / b2.patch_time_avg_days) * 100,
+        difference:
+          ((b1.patch_time_avg_days - b2.patch_time_avg_days) / b2.patch_time_avg_days) * 100,
       },
     },
   }

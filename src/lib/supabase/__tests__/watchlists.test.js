@@ -152,9 +152,7 @@ describe('watchlists module', () => {
         single: vi.fn().mockResolvedValue({ data: { id: 'item-1' }, error: null }),
       }
 
-      supabase.from
-        .mockReturnValueOnce(verifyQuery)
-        .mockReturnValueOnce(insertQuery)
+      supabase.from.mockReturnValueOnce(verifyQuery).mockReturnValueOnce(insertQuery)
 
       await watchlists.addItem('wl-123', 'entity-456', 'user-123')
 
@@ -179,9 +177,7 @@ describe('watchlists module', () => {
         single: vi.fn().mockResolvedValue({ data: { id: 'item-1' }, error: null }),
       }
 
-      supabase.from
-        .mockReturnValueOnce(verifyQuery)
-        .mockReturnValueOnce(insertQuery)
+      supabase.from.mockReturnValueOnce(verifyQuery).mockReturnValueOnce(insertQuery)
 
       await watchlists.addItem('wl-123', 'entity-456', 'user-123', 'Important actor')
 
@@ -229,9 +225,7 @@ describe('watchlists module', () => {
         eq: vi.fn().mockReturnThis(),
       }
 
-      supabase.from
-        .mockReturnValueOnce(verifyQuery)
-        .mockReturnValueOnce(deleteQuery)
+      supabase.from.mockReturnValueOnce(verifyQuery).mockReturnValueOnce(deleteQuery)
 
       await watchlists.removeItem('wl-123', 'entity-456', 'user-123')
 

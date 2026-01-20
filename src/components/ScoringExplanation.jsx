@@ -50,8 +50,8 @@ const FACTOR_DESCRIPTIONS = {
   incident_velocity: 'Number of incidents per day attributed to this actor',
   incidents_7d: 'Total incidents in the past 7 days',
   trend_status: 'Whether activity is escalating, stable, or declining',
-  sector_relevance: 'Match with your organization\'s sector profile',
-  geographic_relevance: 'Match with your organization\'s geographic region',
+  sector_relevance: "Match with your organization's sector profile",
+  geographic_relevance: "Match with your organization's geographic region",
   cvss_score: 'Common Vulnerability Scoring System score (0-10)',
   epss_score: 'Exploit Prediction Scoring System probability',
   kev_status: 'Listed in CISA Known Exploited Vulnerabilities catalog',
@@ -84,11 +84,7 @@ function ScoreGauge({ score, size = 'medium' }) {
 
   return (
     <div className="relative inline-flex items-center justify-center">
-      <svg
-        width={center * 2}
-        height={center * 2}
-        viewBox={`0 0 ${center * 2} ${center * 2}`}
-      >
+      <svg width={center * 2} height={center * 2} viewBox={`0 0 ${center * 2} ${center * 2}`}>
         {/* Background circle */}
         <circle
           cx={center}
@@ -115,7 +111,9 @@ function ScoreGauge({ score, size = 'medium' }) {
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className={`${size === 'small' ? 'text-lg' : size === 'large' ? 'text-3xl' : 'text-2xl'} font-bold ${colors.text}`}>
+        <span
+          className={`${size === 'small' ? 'text-lg' : size === 'large' ? 'text-3xl' : 'text-2xl'} font-bold ${colors.text}`}
+        >
           {score}
         </span>
       </div>
@@ -154,9 +152,7 @@ function FactorBar({ factor, score, weight, showWeight = false }) {
         </div>
         <div className="flex items-center gap-2">
           <span className={colors.text}>{Math.round(score)}</span>
-          {showWeight && (
-            <span className="text-gray-500 text-xs">({Math.round(weight)}%)</span>
-          )}
+          {showWeight && <span className="text-gray-500 text-xs">({Math.round(weight)}%)</span>}
         </div>
       </div>
       <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
@@ -171,7 +167,7 @@ function FactorBar({ factor, score, weight, showWeight = false }) {
 
 // Contribution Chart Component
 function ContributionChart({ factors }) {
-  const sortedFactors = [...factors].sort((a, b) => (b.score * b.weight) - (a.score * a.weight))
+  const sortedFactors = [...factors].sort((a, b) => b.score * b.weight - a.score * a.weight)
 
   return (
     <div className="space-y-3">
@@ -253,9 +249,7 @@ function WeightEditor({ weights, onChange }) {
           </div>
         ))}
       </div>
-      <p className="text-xs text-gray-500">
-        Weights are automatically normalized to sum to 100%.
-      </p>
+      <p className="text-xs text-gray-500">Weights are automatically normalized to sum to 100%.</p>
     </div>
   )
 }
@@ -325,12 +319,7 @@ export default function ScoringExplanation({
           ) : (
             <div className="space-y-2">
               {factors.slice(0, 3).map((f) => (
-                <FactorBar
-                  key={f.factor}
-                  factor={f.factor}
-                  score={f.score}
-                  weight={f.weight}
-                />
+                <FactorBar key={f.factor} factor={f.factor} score={f.score} weight={f.weight} />
               ))}
               {factors.length > 3 && (
                 <button

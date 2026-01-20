@@ -15,18 +15,14 @@ import { SkeletonTable } from '../components'
 
 const ACTOR_TYPE_COLORS = {
   'Nation-State': 'bg-red-500/20 text-red-400 border-red-500/30',
-  'Criminal': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  'Hacktivist': 'bg-green-500/20 text-green-400 border-green-500/30',
-  'Unknown': 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+  Criminal: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  Hacktivist: 'bg-green-500/20 text-green-400 border-green-500/30',
+  Unknown: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
 }
 
 function ActorTypeBadge({ type }) {
   const colorClass = ACTOR_TYPE_COLORS[type] || ACTOR_TYPE_COLORS.Unknown
-  return (
-    <span className={`px-2 py-0.5 text-xs rounded border ${colorClass}`}>
-      {type}
-    </span>
-  )
+  return <span className={`px-2 py-0.5 text-xs rounded border ${colorClass}`}>{type}</span>
 }
 
 function StatCard({ label, value, subtext, trend }) {
@@ -47,7 +43,7 @@ function StatCard({ label, value, subtext, trend }) {
 function CountryDetailPanel({ country, data, onClose }) {
   if (!country) return null
 
-  const countryData = data?.find(d => d.country === country) || {}
+  const countryData = data?.find((d) => d.country === country) || {}
 
   return (
     <div className="cyber-card w-96">
@@ -55,7 +51,12 @@ function CountryDetailPanel({ country, data, onClose }) {
         <h3 className="text-lg font-medium text-white">{country}</h3>
         <button onClick={onClose} className="text-gray-400 hover:text-white">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -175,9 +176,11 @@ export default function GeographicAnalysis() {
 
   // Calculate stats
   const stats = useMemo(() => {
-    const uniqueCountries = new Set(countryProfiles.map(c => c.country)).size
+    const uniqueCountries = new Set(countryProfiles.map((c) => c.country)).size
     const totalEvents = countryProfiles.reduce((sum, c) => sum + (c.total_events || 0), 0)
-    const nationStateTargeted = countryProfiles.filter(c => c.primary_actor_type === 'Nation-State').length
+    const nationStateTargeted = countryProfiles.filter(
+      (c) => c.primary_actor_type === 'Nation-State'
+    ).length
 
     return { uniqueCountries, totalEvents, nationStateTargeted }
   }, [countryProfiles])
@@ -196,7 +199,7 @@ export default function GeographicAnalysis() {
       <div className="flex flex-wrap gap-4">
         <select
           value={filters.actorType}
-          onChange={e => setFilters(f => ({ ...f, actorType: e.target.value }))}
+          onChange={(e) => setFilters((f) => ({ ...f, actorType: e.target.value }))}
           className="cyber-input"
         >
           <option value="">All Actor Types</option>
@@ -207,12 +210,14 @@ export default function GeographicAnalysis() {
 
         <select
           value={filters.sector}
-          onChange={e => setFilters(f => ({ ...f, sector: e.target.value }))}
+          onChange={(e) => setFilters((f) => ({ ...f, sector: e.target.value }))}
           className="cyber-input"
         >
           <option value="">All Sectors</option>
-          {sectors.map(sector => (
-            <option key={sector} value={sector}>{sector}</option>
+          {sectors.map((sector) => (
+            <option key={sector} value={sector}>
+              {sector}
+            </option>
           ))}
         </select>
       </div>
@@ -299,7 +304,10 @@ export default function GeographicAnalysis() {
                     <td className="py-3">
                       <div className="flex flex-wrap gap-1">
                         {(profile.top_sectors || []).slice(0, 3).map((sector, j) => (
-                          <span key={j} className="px-1.5 py-0.5 bg-gray-800 text-gray-400 text-xs rounded">
+                          <span
+                            key={j}
+                            className="px-1.5 py-0.5 bg-gray-800 text-gray-400 text-xs rounded"
+                          >
                             {sector}
                           </span>
                         ))}

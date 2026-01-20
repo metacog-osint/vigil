@@ -12,7 +12,13 @@ export function useAssetData(userId) {
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [stats, setStats] = useState({ total: 0, monitored: 0, withMatches: 0, byType: {}, byCriticality: {} })
+  const [stats, setStats] = useState({
+    total: 0,
+    monitored: 0,
+    withMatches: 0,
+    byType: {},
+    byCriticality: {},
+  })
   const [matchStats, setMatchStats] = useState({ total: 0, byStatus: {}, bySeverity: {} })
 
   const loadData = useCallback(async () => {
@@ -67,7 +73,7 @@ export function useAssetFilters(assetList, matches) {
   const [searchQuery, setSearchQuery] = useState('')
 
   const filteredAssets = useMemo(() => {
-    return assetList.filter(asset => {
+    return assetList.filter((asset) => {
       if (assetTypeFilter && asset.asset_type !== assetTypeFilter) return false
       if (criticalityFilter && asset.criticality !== criticalityFilter) return false
       if (searchQuery) {
@@ -79,11 +85,12 @@ export function useAssetFilters(assetList, matches) {
   }, [assetList, assetTypeFilter, criticalityFilter, searchQuery])
 
   const filteredMatches = useMemo(() => {
-    return matches.filter(match => {
+    return matches.filter((match) => {
       if (statusFilter && match.status !== statusFilter) return false
       if (searchQuery) {
         const q = searchQuery.toLowerCase()
-        if (!match.matched_value.includes(q) && !(match.asset_name || '').toLowerCase().includes(q)) return false
+        if (!match.matched_value.includes(q) && !(match.asset_name || '').toLowerCase().includes(q))
+          return false
       }
       return true
     })
@@ -107,49 +114,66 @@ export function useAssetFilters(assetList, matches) {
  * Hook for asset actions
  */
 export function useAssetActions(userId, setAssetList, setMatches, refresh) {
-  const handleDeleteAsset = useCallback(async (assetId) => {
-    if (!confirm('Delete this asset? This cannot be undone.')) return false
-    try {
-      await assets.delete(assetId, userId)
-      setAssetList(prev => prev.filter(a => a.id !== assetId))
-      return true
-    } catch (err) {
-      alert('Failed to delete asset: ' + err.message)
-      return false
-    }
-  }, [userId, setAssetList])
+  const handleDeleteAsset = useCallback(
+    async (assetId) => {
+      if (!confirm('Delete this asset? This cannot be undone.')) return false
+      try {
+        await assets.delete(assetId, userId)
+        setAssetList((prev) => prev.filter((a) => a.id !== assetId))
+        return true
+      } catch (err) {
+        alert('Failed to delete asset: ' + err.message)
+        return false
+      }
+    },
+    [userId, setAssetList]
+  )
 
-  const handleToggleMonitoring = useCallback(async (assetId, enabled) => {
-    try {
-      await assets.toggleMonitoring(assetId, userId, enabled)
-      setAssetList(prev => prev.map(a => a.id === assetId ? { ...a, is_monitored: enabled } : a))
-      return true
-    } catch (err) {
-      alert('Failed to update asset: ' + err.message)
-      return false
-    }
-  }, [userId, setAssetList])
+  const handleToggleMonitoring = useCallback(
+    async (assetId, enabled) => {
+      try {
+        await assets.toggleMonitoring(assetId, userId, enabled)
+        setAssetList((prev) =>
+          prev.map((a) => (a.id === assetId ? { ...a, is_monitored: enabled } : a))
+        )
+        return true
+      } catch (err) {
+        alert('Failed to update asset: ' + err.message)
+        return false
+      }
+    },
+    [userId, setAssetList]
+  )
 
-  const handleUpdateMatchStatus = useCallback(async (matchId, status) => {
-    try {
-      await assetMatches.updateStatus(matchId, userId, status)
-      setMatches(prev => prev.map(m => m.id === matchId ? { ...m, status } : m))
-      return true
-    } catch (err) {
-      alert('Failed to update match: ' + err.message)
-      return false
-    }
-  }, [userId, setMatches])
+  const handleUpdateMatchStatus = useCallback(
+    async (matchId, status) => {
+      try {
+        await assetMatches.updateStatus(matchId, userId, status)
+        setMatches((prev) => prev.map((m) => (m.id === matchId ? { ...m, status } : m)))
+        return true
+      } catch (err) {
+        alert('Failed to update match: ' + err.message)
+        return false
+      }
+    },
+    [userId, setMatches]
+  )
 
-  const handleCreateAsset = useCallback(async (data) => {
-    await assets.create(userId, data)
-    await refresh()
-  }, [userId, refresh])
+  const handleCreateAsset = useCallback(
+    async (data) => {
+      await assets.create(userId, data)
+      await refresh()
+    },
+    [userId, refresh]
+  )
 
-  const handleBulkImport = useCallback(async (assetsData) => {
-    await assets.createBulk(userId, assetsData)
-    await refresh()
-  }, [userId, refresh])
+  const handleBulkImport = useCallback(
+    async (assetsData) => {
+      await assets.createBulk(userId, assetsData)
+      await refresh()
+    },
+    [userId, refresh]
+  )
 
   return {
     handleDeleteAsset,

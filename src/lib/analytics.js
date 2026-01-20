@@ -31,7 +31,7 @@ function getSessionId() {
     // Use cryptographically secure random generation
     const randomBytes = new Uint8Array(16)
     crypto.getRandomValues(randomBytes)
-    const randomHex = Array.from(randomBytes, b => b.toString(16).padStart(2, '0')).join('')
+    const randomHex = Array.from(randomBytes, (b) => b.toString(16).padStart(2, '0')).join('')
     sessionId = `sess_${Date.now()}_${randomHex}`
     sessionStorage.setItem('vigil_session_id', sessionId)
   }
@@ -73,11 +73,14 @@ export async function trackEvent(eventType, eventName, eventData = {}) {
     }
 
     // Fire and forget - don't block on analytics
-    supabase.from('analytics_events').insert(event).then(({ error }) => {
-      if (error) {
-        console.debug('Analytics error:', error.message)
-      }
-    })
+    supabase
+      .from('analytics_events')
+      .insert(event)
+      .then(({ error }) => {
+        if (error) {
+          console.debug('Analytics error:', error.message)
+        }
+      })
   } catch (error) {
     // Silently fail - analytics shouldn't break the app
     console.debug('Analytics tracking failed:', error)
@@ -164,10 +167,7 @@ export const analyticsQueries = {
    * Get engagement summary
    */
   async getEngagementSummary() {
-    const { data, error } = await supabase
-      .from('v_engagement_summary')
-      .select('*')
-      .single()
+    const { data, error } = await supabase.from('v_engagement_summary').select('*').single()
 
     if (error) throw error
     return data
@@ -177,10 +177,7 @@ export const analyticsQueries = {
    * Get feature adoption stats
    */
   async getFeatureAdoption() {
-    const { data, error } = await supabase
-      .from('v_feature_adoption')
-      .select('*')
-      .limit(20)
+    const { data, error } = await supabase.from('v_feature_adoption').select('*').limit(20)
 
     if (error) throw error
     return data || []

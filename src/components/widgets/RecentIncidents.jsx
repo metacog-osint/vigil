@@ -3,11 +3,7 @@ import { Link } from 'react-router-dom'
 
 export default function RecentIncidents({ incidents }) {
   if (!incidents || incidents.length === 0) {
-    return (
-      <div className="text-gray-500 text-sm text-center py-4">
-        No recent incidents
-      </div>
-    )
+    return <div className="text-gray-500 text-sm text-center py-4">No recent incidents</div>
   }
 
   return (

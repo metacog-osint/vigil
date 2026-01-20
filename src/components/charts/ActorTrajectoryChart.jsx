@@ -198,21 +198,13 @@ export function ActorTrajectoryMini({ actorId, days = 14, height = 80 }) {
   }
 
   if (loading || data.length === 0) {
-    return (
-      <div className="h-20 bg-gray-800/30 rounded animate-pulse" />
-    )
+    return <div className="h-20 bg-gray-800/30 rounded animate-pulse" />
   }
 
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-        <Line
-          type="monotone"
-          dataKey="value"
-          stroke="#00ff88"
-          strokeWidth={2}
-          dot={false}
-        />
+        <Line type="monotone" dataKey="value" stroke="#00ff88" strokeWidth={2} dot={false} />
         <Tooltip
           contentStyle={{
             backgroundColor: '#1f2937',
@@ -250,9 +242,7 @@ export function ActorSelector({ selectedIds, onChange, maxSelections = 5 }) {
     setActors(data || [])
   }
 
-  const filteredActors = actors.filter((a) =>
-    a.name.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredActors = actors.filter((a) => a.name.toLowerCase().includes(search.toLowerCase()))
 
   const selectedActors = actors.filter((a) => selectedIds.includes(a.id))
 
@@ -284,7 +274,12 @@ export function ActorSelector({ selectedIds, onChange, maxSelections = 5 }) {
             >
               {actor.name}
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </span>
           ))
@@ -333,9 +328,7 @@ export function ActorSelector({ selectedIds, onChange, maxSelections = 5 }) {
         </div>
       )}
 
-      {isOpen && (
-        <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-      )}
+      {isOpen && <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />}
     </div>
   )
 }

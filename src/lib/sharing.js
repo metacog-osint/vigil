@@ -36,7 +36,9 @@ export async function createShareLink(entityType, entityId, options = {}) {
     ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString()
     : null
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   const { data, error } = await supabase
     .from('share_links')
@@ -95,11 +97,7 @@ export async function getShareLinks(entityType, entityId) {
  * @returns {Object|null} Share link data or null
  */
 export async function getShareLinkByToken(token) {
-  const { data, error } = await supabase
-    .from('share_links')
-    .select('*')
-    .eq('token', token)
-    .single()
+  const { data, error } = await supabase.from('share_links').select('*').eq('token', token).single()
 
   if (error) {
     console.error('Error fetching share link:', error)
@@ -125,10 +123,7 @@ export async function getShareLinkByToken(token) {
  * @param {string} linkId - Share link ID
  */
 export async function deleteShareLink(linkId) {
-  const { error } = await supabase
-    .from('share_links')
-    .delete()
-    .eq('id', linkId)
+  const { error } = await supabase.from('share_links').delete().eq('id', linkId)
 
   if (error) {
     console.error('Error deleting share link:', error)

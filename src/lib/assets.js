@@ -36,7 +36,11 @@ export const CATEGORY_OPTIONS = [
 export const MATCH_TYPES = {
   ioc: { label: 'IOC Match', color: 'red', description: 'Asset found in IOC feed' },
   breach: { label: 'Breach', color: 'purple', description: 'Asset found in breach data' },
-  certificate: { label: 'Certificate', color: 'blue', description: 'Certificate transparency match' },
+  certificate: {
+    label: 'Certificate',
+    color: 'blue',
+    description: 'Certificate transparency match',
+  },
   mention: { label: 'Mention', color: 'yellow', description: 'Asset mentioned in incident' },
 }
 
@@ -54,10 +58,7 @@ export const assets = {
    * Get all assets for a user
    */
   async getAll(userId, filters = {}) {
-    let query = supabase
-      .from('v_asset_summary')
-      .select('*')
-      .eq('user_id', userId)
+    let query = supabase.from('v_asset_summary').select('*').eq('user_id', userId)
 
     if (filters.assetType) {
       query = query.eq('asset_type', filters.assetType)
@@ -133,7 +134,7 @@ export const assets = {
    * Create multiple assets at once
    */
   async createBulk(userId, assetsData) {
-    const records = assetsData.map(asset => ({
+    const records = assetsData.map((asset) => ({
       user_id: userId,
       asset_type: asset.assetType,
       value: asset.value.toLowerCase().trim(),
@@ -151,7 +152,7 @@ export const assets = {
       .from('assets')
       .upsert(records, {
         onConflict: 'user_id,asset_type,value',
-        ignoreDuplicates: false
+        ignoreDuplicates: false,
       })
       .select()
 
@@ -189,11 +190,7 @@ export const assets = {
    * Delete an asset
    */
   async delete(assetId, userId) {
-    const { error } = await supabase
-      .from('assets')
-      .delete()
-      .eq('id', assetId)
-      .eq('user_id', userId)
+    const { error } = await supabase.from('assets').delete().eq('id', assetId).eq('user_id', userId)
 
     if (error) throw error
   },
@@ -263,10 +260,7 @@ export const assetMatches = {
    * Get all matches for a user
    */
   async getAll(userId, filters = {}) {
-    let query = supabase
-      .from('v_recent_matches')
-      .select('*')
-      .eq('user_id', userId)
+    let query = supabase.from('v_recent_matches').select('*').eq('user_id', userId)
 
     if (filters.assetId) {
       query = query.eq('asset_id', filters.assetId)
@@ -401,18 +395,20 @@ export const assetGroups = {
   async getAll(userId) {
     const { data, error } = await supabase
       .from('asset_groups')
-      .select(`
+      .select(
+        `
         *,
         asset_group_members (
           asset_id
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('name')
 
     if (error) throw error
 
-    return (data || []).map(group => ({
+    return (data || []).map((group) => ({
       ...group,
       assetCount: group.asset_group_members?.length || 0,
     }))
@@ -487,11 +483,15 @@ export function validateAssetValue(type, value) {
 
     case 'ip':
       // IPv4 validation
-      return /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(v)
+      return /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
+        v
+      )
 
     case 'ip_range':
       // CIDR validation
-      return /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/([0-9]|[1-2][0-9]|3[0-2])$/.test(v)
+      return /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/([0-9]|[1-2][0-9]|3[0-2])$/.test(
+        v
+      )
 
     case 'keyword':
     case 'executive':
@@ -513,9 +513,17 @@ export function parseAssetsFromText(text, defaultType = 'domain') {
 
     // Try to detect type
     let type = defaultType
-    if (/^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(value)) {
+    if (
+      /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
+        value
+      )
+    ) {
       type = 'ip'
-    } else if (/^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/\d+$/.test(value)) {
+    } else if (
+      /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/\d+$/.test(
+        value
+      )
+    ) {
       type = 'ip_range'
     } else if (/^[a-z0-9]+([-.]{1}[a-z0-9]+)*\.[a-z]{2,}$/.test(value)) {
       type = 'domain'

@@ -49,10 +49,13 @@ export const iocs = {
 
     let query = supabase
       .from('iocs')
-      .select(`
+      .select(
+        `
         *,
         threat_actor:threat_actors(id, name)
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' }
+      )
       .order('last_seen', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -74,10 +77,12 @@ export const iocs = {
   async search(value, type = null) {
     let query = supabase
       .from('iocs')
-      .select(`
+      .select(
+        `
         *,
         threat_actor:threat_actors(id, name)
-      `)
+      `
+      )
       .ilike('value', `%${value}%`)
       .order('last_seen', { ascending: false })
       .limit(100)
@@ -101,10 +106,12 @@ export const iocs = {
   async getRecent(limit = 100) {
     return supabase
       .from('iocs')
-      .select(`
+      .select(
+        `
         *,
         threat_actor:threat_actors(id, name)
-      `)
+      `
+      )
       .order('created_at', { ascending: false })
       .limit(limit)
   },
@@ -115,10 +122,12 @@ export const iocs = {
     const promises = [
       supabase
         .from('iocs')
-        .select(`
+        .select(
+          `
           *,
           threat_actor:threat_actors(id, name, trend_status)
-        `)
+        `
+        )
         .or(`value.eq.${value},value.ilike.%${value}%`)
         .order('last_seen', { ascending: false })
         .limit(10),
@@ -127,17 +136,11 @@ export const iocs = {
         .from('malware_samples')
         .select('*')
         .or(`sha256.eq.${value},md5.eq.${value},sha1.eq.${value}`)
-        .limit(5)
+        .limit(5),
     ]
 
     if (/^CVE-\d{4}-\d+$/i.test(value)) {
-      promises.push(
-        supabase
-          .from('vulnerabilities')
-          .select('*')
-          .ilike('cve_id', value)
-          .limit(1)
-      )
+      promises.push(supabase.from('vulnerabilities').select('*').ilike('cve_id', value).limit(1))
     }
 
     const results = await Promise.all(promises)
@@ -147,7 +150,8 @@ export const iocs = {
       malware: results[1].data || [],
       vulnerabilities: results[2]?.data || [],
       type,
-      found: (results[0].data?.length > 0) || (results[1].data?.length > 0) || (results[2]?.data?.length > 0)
+      found:
+        results[0].data?.length > 0 || results[1].data?.length > 0 || results[2]?.data?.length > 0,
     }
   },
 
@@ -157,7 +161,11 @@ export const iocs = {
     switch (type) {
       case 'ip':
         links.push(
-          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/ip-address/${value}`, icon: 'virustotal' },
+          {
+            name: 'VirusTotal',
+            url: `https://www.virustotal.com/gui/ip-address/${value}`,
+            icon: 'virustotal',
+          },
           { name: 'Shodan', url: `https://www.shodan.io/host/${value}`, icon: 'shodan' },
           { name: 'AbuseIPDB', url: `https://www.abuseipdb.com/check/${value}`, icon: 'abuseipdb' },
           { name: 'Censys', url: `https://search.censys.io/hosts/${value}`, icon: 'censys' }
@@ -168,37 +176,79 @@ export const iocs = {
       case 'hash_sha1':
       case 'hash':
         links.push(
-          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/file/${value}`, icon: 'virustotal' },
-          { name: 'MalwareBazaar', url: `https://bazaar.abuse.ch/browse.php?search=${value}`, icon: 'malwarebazaar' },
-          { name: 'Hybrid Analysis', url: `https://www.hybrid-analysis.com/search?query=${value}`, icon: 'hybrid' }
+          {
+            name: 'VirusTotal',
+            url: `https://www.virustotal.com/gui/file/${value}`,
+            icon: 'virustotal',
+          },
+          {
+            name: 'MalwareBazaar',
+            url: `https://bazaar.abuse.ch/browse.php?search=${value}`,
+            icon: 'malwarebazaar',
+          },
+          {
+            name: 'Hybrid Analysis',
+            url: `https://www.hybrid-analysis.com/search?query=${value}`,
+            icon: 'hybrid',
+          }
         )
         break
       case 'domain':
         links.push(
-          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/domain/${value}`, icon: 'virustotal' },
-          { name: 'URLhaus', url: `https://urlhaus.abuse.ch/browse.php?search=${value}`, icon: 'urlhaus' },
-          { name: 'Shodan', url: `https://www.shodan.io/search?query=hostname%3A${value}`, icon: 'shodan' }
+          {
+            name: 'VirusTotal',
+            url: `https://www.virustotal.com/gui/domain/${value}`,
+            icon: 'virustotal',
+          },
+          {
+            name: 'URLhaus',
+            url: `https://urlhaus.abuse.ch/browse.php?search=${value}`,
+            icon: 'urlhaus',
+          },
+          {
+            name: 'Shodan',
+            url: `https://www.shodan.io/search?query=hostname%3A${value}`,
+            icon: 'shodan',
+          }
         )
         break
       case 'url':
         const encoded = encodeURIComponent(value)
         links.push(
-          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/url/${encoded}`, icon: 'virustotal' },
-          { name: 'URLhaus', url: `https://urlhaus.abuse.ch/browse.php?search=${encoded}`, icon: 'urlhaus' }
+          {
+            name: 'VirusTotal',
+            url: `https://www.virustotal.com/gui/url/${encoded}`,
+            icon: 'virustotal',
+          },
+          {
+            name: 'URLhaus',
+            url: `https://urlhaus.abuse.ch/browse.php?search=${encoded}`,
+            icon: 'urlhaus',
+          }
         )
         break
       case 'cve':
         links.push(
           { name: 'NVD', url: `https://nvd.nist.gov/vuln/detail/${value}`, icon: 'nvd' },
-          { name: 'CISA KEV', url: `https://www.cisa.gov/known-exploited-vulnerabilities-catalog`, icon: 'cisa' },
+          {
+            name: 'CISA KEV',
+            url: `https://www.cisa.gov/known-exploited-vulnerabilities-catalog`,
+            icon: 'cisa',
+          },
           { name: 'CVE.org', url: `https://www.cve.org/CVERecord?id=${value}`, icon: 'cve' },
-          { name: 'Exploit-DB', url: `https://www.exploit-db.com/search?cve=${value}`, icon: 'exploitdb' }
+          {
+            name: 'Exploit-DB',
+            url: `https://www.exploit-db.com/search?cve=${value}`,
+            icon: 'exploitdb',
+          }
         )
         break
       default:
-        links.push(
-          { name: 'VirusTotal', url: `https://www.virustotal.com/gui/search/${encodeURIComponent(value)}`, icon: 'virustotal' }
-        )
+        links.push({
+          name: 'VirusTotal',
+          url: `https://www.virustotal.com/gui/search/${encodeURIComponent(value)}`,
+          icon: 'virustotal',
+        })
     }
 
     return links

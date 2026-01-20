@@ -25,17 +25,32 @@ const icons = {
   ),
   warning: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+      />
     </svg>
   ),
   info: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
     </svg>
   ),
   copy: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+      />
     </svg>
   ),
 }
@@ -82,9 +97,7 @@ function Toast({ toast, onDismiss }) {
     >
       <span className={styles.icon}>{icon}</span>
       <div className="flex-1 min-w-0">
-        {toast.title && (
-          <div className="font-medium text-white text-sm">{toast.title}</div>
-        )}
+        {toast.title && <div className="font-medium text-white text-sm">{toast.title}</div>}
         <div className={clsx('text-sm', toast.title ? 'text-gray-300' : 'text-white')}>
           {toast.message}
         </div>
@@ -95,7 +108,12 @@ function Toast({ toast, onDismiss }) {
         aria-label="Dismiss"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </button>
     </div>
@@ -155,25 +173,40 @@ export function ToastProvider({ children }) {
   }, [])
 
   // Convenience methods
-  const success = useCallback((message, options = {}) => {
-    return addToast({ type: 'success', message, ...options })
-  }, [addToast])
+  const success = useCallback(
+    (message, options = {}) => {
+      return addToast({ type: 'success', message, ...options })
+    },
+    [addToast]
+  )
 
-  const error = useCallback((message, options = {}) => {
-    return addToast({ type: 'error', message, duration: 6000, ...options })
-  }, [addToast])
+  const error = useCallback(
+    (message, options = {}) => {
+      return addToast({ type: 'error', message, duration: 6000, ...options })
+    },
+    [addToast]
+  )
 
-  const warning = useCallback((message, options = {}) => {
-    return addToast({ type: 'warning', message, ...options })
-  }, [addToast])
+  const warning = useCallback(
+    (message, options = {}) => {
+      return addToast({ type: 'warning', message, ...options })
+    },
+    [addToast]
+  )
 
-  const info = useCallback((message, options = {}) => {
-    return addToast({ type: 'info', message, ...options })
-  }, [addToast])
+  const info = useCallback(
+    (message, options = {}) => {
+      return addToast({ type: 'info', message, ...options })
+    },
+    [addToast]
+  )
 
-  const copy = useCallback((message = 'Copied to clipboard', options = {}) => {
-    return addToast({ type: 'copy', message, duration: 2000, ...options })
-  }, [addToast])
+  const copy = useCallback(
+    (message = 'Copied to clipboard', options = {}) => {
+      return addToast({ type: 'copy', message, duration: 2000, ...options })
+    },
+    [addToast]
+  )
 
   const value = {
     toasts,

@@ -30,7 +30,7 @@ export function useIncidentData(filters) {
     const trends = {}
     const now = new Date()
 
-    data.forEach(inc => {
+    data.forEach((inc) => {
       const actorId = inc.actor_id
       if (!actorId) return
 
@@ -50,46 +50,58 @@ export function useIncidentData(filters) {
     setActorTrends(trends)
   }, [])
 
-  const loadIncidents = useCallback(async (reset = false) => {
-    if (reset) {
-      setLoading(true)
-      setIncidentList([])
-    } else {
-      setLoadingMore(true)
-    }
-
-    try {
-      const offset = reset ? 0 : incidentList.length
-      const { data, error, count } = await incidents.getAll({
-        search,
-        sector: sectorFilter,
-        status: statusFilter,
-        country: countryFilter,
-        actor_id: actorFilter,
-        days: timeRange,
-        limit: PAGE_SIZE,
-        offset,
-      })
-
-      if (error) throw error
-
+  const loadIncidents = useCallback(
+    async (reset = false) => {
       if (reset) {
-        setIncidentList(data || [])
-        if (data && data.length > 0) {
-          setLastIncidentDate(data[0].discovered_date)
-        }
-        calculateActorTrends(data || [])
+        setLoading(true)
+        setIncidentList([])
       } else {
-        setIncidentList(prev => [...prev, ...(data || [])])
+        setLoadingMore(true)
       }
-      setTotalCount(count || 0)
-    } catch (error) {
-      console.error('Error loading incidents:', error)
-    } finally {
-      setLoading(false)
-      setLoadingMore(false)
-    }
-  }, [search, sectorFilter, statusFilter, countryFilter, timeRange, actorFilter, incidentList.length, calculateActorTrends])
+
+      try {
+        const offset = reset ? 0 : incidentList.length
+        const { data, error, count } = await incidents.getAll({
+          search,
+          sector: sectorFilter,
+          status: statusFilter,
+          country: countryFilter,
+          actor_id: actorFilter,
+          days: timeRange,
+          limit: PAGE_SIZE,
+          offset,
+        })
+
+        if (error) throw error
+
+        if (reset) {
+          setIncidentList(data || [])
+          if (data && data.length > 0) {
+            setLastIncidentDate(data[0].discovered_date)
+          }
+          calculateActorTrends(data || [])
+        } else {
+          setIncidentList((prev) => [...prev, ...(data || [])])
+        }
+        setTotalCount(count || 0)
+      } catch (error) {
+        console.error('Error loading incidents:', error)
+      } finally {
+        setLoading(false)
+        setLoadingMore(false)
+      }
+    },
+    [
+      search,
+      sectorFilter,
+      statusFilter,
+      countryFilter,
+      timeRange,
+      actorFilter,
+      incidentList.length,
+      calculateActorTrends,
+    ]
+  )
 
   // Demo mode: Load mock incidents
   useEffect(() => {
@@ -101,16 +113,17 @@ export function useIncidentData(filters) {
     // Apply filters
     if (search) {
       const searchLower = search.toLowerCase()
-      data = data.filter(i =>
-        i.victim_name?.toLowerCase().includes(searchLower) ||
-        i.victim_sector?.toLowerCase().includes(searchLower)
+      data = data.filter(
+        (i) =>
+          i.victim_name?.toLowerCase().includes(searchLower) ||
+          i.victim_sector?.toLowerCase().includes(searchLower)
       )
     }
     if (sectorFilter) {
-      data = data.filter(i => i.victim_sector === sectorFilter)
+      data = data.filter((i) => i.victim_sector === sectorFilter)
     }
     if (actorFilter) {
-      data = data.filter(i => i.actor_id === actorFilter)
+      data = data.filter((i) => i.actor_id === actorFilter)
     }
 
     setIncidentList(data)
@@ -120,7 +133,17 @@ export function useIncidentData(filters) {
     }
     calculateActorTrends(data)
     setLoading(false)
-  }, [isDemoMode, demoData, search, sectorFilter, statusFilter, countryFilter, timeRange, actorFilter, calculateActorTrends])
+  }, [
+    isDemoMode,
+    demoData,
+    search,
+    sectorFilter,
+    statusFilter,
+    countryFilter,
+    timeRange,
+    actorFilter,
+    calculateActorTrends,
+  ])
 
   // Initial load + subscriptions (skip in demo mode)
   useEffect(() => {
@@ -131,7 +154,7 @@ export function useIncidentData(filters) {
     const unsubscribe = subscribeToTable('incidents', (payload) => {
       if (payload.eventType === 'INSERT') {
         setIncidentList((prev) => [payload.new, ...prev])
-        setTotalCount(c => c + 1)
+        setTotalCount((c) => c + 1)
       }
     })
 
@@ -154,7 +177,8 @@ export function useIncidentData(filters) {
     const hoursAgo = Math.floor((now - date) / (1000 * 60 * 60))
 
     if (hoursAgo < 24) return { text: `${hoursAgo}h ago`, color: 'text-green-400' }
-    if (hoursAgo < 72) return { text: `${Math.floor(hoursAgo / 24)}d ago`, color: 'text-yellow-400' }
+    if (hoursAgo < 72)
+      return { text: `${Math.floor(hoursAgo / 24)}d ago`, color: 'text-yellow-400' }
     return { text: `${Math.floor(hoursAgo / 24)}d ago`, color: 'text-red-400' }
   }, [lastIncidentDate])
 
@@ -280,28 +304,34 @@ export function useSavedFilters(applyFilter) {
     }
   }
 
-  const saveCurrentFilter = useCallback(async (filterConfig) => {
-    if (!saveFilterName.trim()) return
+  const saveCurrentFilter = useCallback(
+    async (filterConfig) => {
+      if (!saveFilterName.trim()) return
 
-    try {
-      await savedSearches.create({
-        user_id: 'anonymous',
-        name: saveFilterName,
-        search_type: 'incidents',
-        query: filterConfig,
-      })
-      setSaveFilterName('')
+      try {
+        await savedSearches.create({
+          user_id: 'anonymous',
+          name: saveFilterName,
+          search_type: 'incidents',
+          query: filterConfig,
+        })
+        setSaveFilterName('')
+        setSavedFiltersOpen(false)
+        loadSavedFilters()
+      } catch (error) {
+        console.error('Error saving filter:', error)
+      }
+    },
+    [saveFilterName]
+  )
+
+  const applySavedFilter = useCallback(
+    (filter) => {
+      applyFilter(filter.query || {})
       setSavedFiltersOpen(false)
-      loadSavedFilters()
-    } catch (error) {
-      console.error('Error saving filter:', error)
-    }
-  }, [saveFilterName])
-
-  const applySavedFilter = useCallback((filter) => {
-    applyFilter(filter.query || {})
-    setSavedFiltersOpen(false)
-  }, [applyFilter])
+    },
+    [applyFilter]
+  )
 
   const deleteSavedFilter = useCallback(async (id) => {
     try {
@@ -372,10 +402,10 @@ export function useIncidentAnalytics(incidentList, timeRange) {
       .slice(0, 10)
 
     // Sector data for pie chart (with colors)
-    const sectorPieData = topSectors.slice(0, 8).map(s => ({
+    const sectorPieData = topSectors.slice(0, 8).map((s) => ({
       name: s.name.charAt(0).toUpperCase() + s.name.slice(1),
       value: s.count,
-      color: SECTOR_COLORS[s.name.toLowerCase()] || SECTOR_COLORS.other
+      color: SECTOR_COLORS[s.name.toLowerCase()] || SECTOR_COLORS.other,
     }))
 
     const topCountries = Object.entries(countryCounts)
@@ -408,7 +438,7 @@ export function useIncidentAnalytics(incidentList, timeRange) {
       timelineData.push({
         date: dateKey,
         label: i % labelInterval === 0 ? monthDay : '',
-        incidents: dailyCounts[dateKey] || 0
+        incidents: dailyCounts[dateKey] || 0,
       })
     }
 

@@ -138,9 +138,7 @@ export default function IOCSearch() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">
-            {searched
-              ? `Search Results (${results.length})`
-              : `Recent IOCs (${recentIOCs.length})`}
+            {searched ? `Search Results (${results.length})` : `Recent IOCs (${recentIOCs.length})`}
           </h2>
           <ExportButton
             data={displayList}
@@ -162,39 +160,33 @@ export default function IOCSearch() {
                     <span className={getTypeBadge(ioc.type)}>
                       {ioc.type.replace('hash_', '').toUpperCase()}
                     </span>
-                    <span className={getConfidenceBadge(ioc.confidence)}>
-                      {ioc.confidence}
-                    </span>
+                    <span className={getConfidenceBadge(ioc.confidence)}>{ioc.confidence}</span>
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="font-mono text-sm text-white break-all">
-                      {ioc.value}
-                    </div>
+                    <div className="font-mono text-sm text-white break-all">{ioc.value}</div>
                     <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
                       {ioc.malware_family && (
                         <span className="text-orange-400">{ioc.malware_family}</span>
                       )}
                       {ioc.threat_actor?.name && (
-                        <span className="text-cyber-accent">
-                          {ioc.threat_actor.name}
-                        </span>
+                        <span className="text-cyber-accent">{ioc.threat_actor.name}</span>
                       )}
-                      {ioc.tags?.length > 0 && (
-                        <span>{ioc.tags.slice(0, 3).join(', ')}</span>
-                      )}
+                      {ioc.tags?.length > 0 && <span>{ioc.tags.slice(0, 3).join(', ')}</span>}
                     </div>
                     <EnrichmentBadges metadata={ioc.metadata} ioc={ioc} />
                   </div>
 
                   <div className="text-right text-xs text-gray-500">
                     <div>
-                      First: {ioc.first_seen
+                      First:{' '}
+                      {ioc.first_seen
                         ? formatDistanceToNow(new Date(ioc.first_seen), { addSuffix: true })
                         : 'Unknown'}
                     </div>
                     <div>
-                      Last: {ioc.last_seen
+                      Last:{' '}
+                      {ioc.last_seen
                         ? formatDistanceToNow(new Date(ioc.last_seen), { addSuffix: true })
                         : 'Unknown'}
                     </div>

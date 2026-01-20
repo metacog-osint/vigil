@@ -7,7 +7,13 @@ import { investigations, ENTRY_TYPES, CATEGORIES, STATUSES } from '../../lib/inv
 import { StatusBadge, TlpBadge } from './InvestigationConstants.jsx'
 import EntryCard from './EntryCard.jsx'
 
-export default function InvestigationDetail({ investigation, userId, onUpdate, onStatusChange, onDelete }) {
+export default function InvestigationDetail({
+  investigation,
+  userId,
+  onUpdate,
+  onStatusChange,
+  onDelete,
+}) {
   const [newEntryType, setNewEntryType] = useState('note')
   const [newEntryContent, setNewEntryContent] = useState('')
   const [isEditing, setIsEditing] = useState(false)
@@ -25,11 +31,12 @@ export default function InvestigationDetail({ investigation, userId, onUpdate, o
       status: investigation.status,
       tlp: investigation.tlp,
       created_at: investigation.created_at,
-      entries: investigation.entries?.map(e => ({
-        type: e.entry_type,
-        content: e.content,
-        created_at: e.created_at,
-      })) || [],
+      entries:
+        investigation.entries?.map((e) => ({
+          type: e.entry_type,
+          content: e.content,
+          created_at: e.created_at,
+        })) || [],
     }
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
     downloadBlob(blob, `investigation-${investigation.id.slice(0, 8)}.json`)
@@ -124,8 +131,10 @@ export default function InvestigationDetail({ investigation, userId, onUpdate, o
               onChange={(e) => onStatusChange(e.target.value)}
               className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
             >
-              {STATUSES.map(s => (
-                <option key={s.value} value={s.value}>{s.label}</option>
+              {STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
               ))}
             </select>
           </div>
@@ -172,7 +181,12 @@ export default function InvestigationDetail({ investigation, userId, onUpdate, o
                 >
                   Export
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
                 {showExportMenu && (
@@ -192,10 +206,7 @@ export default function InvestigationDetail({ investigation, userId, onUpdate, o
                   </div>
                 )}
               </div>
-              <button
-                onClick={onDelete}
-                className="text-gray-400 hover:text-red-400 text-sm"
-              >
+              <button onClick={onDelete} className="text-gray-400 hover:text-red-400 text-sm">
                 Delete
               </button>
             </div>
@@ -205,11 +216,9 @@ export default function InvestigationDetail({ investigation, userId, onUpdate, o
         <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
           <span>Created {format(new Date(investigation.created_at), 'MMM d, yyyy')}</span>
           {investigation.category && (
-            <span>{CATEGORIES.find(c => c.value === investigation.category)?.label}</span>
+            <span>{CATEGORIES.find((c) => c.value === investigation.category)?.label}</span>
           )}
-          {investigation.tlp && (
-            <TlpBadge tlp={investigation.tlp} />
-          )}
+          {investigation.tlp && <TlpBadge tlp={investigation.tlp} />}
         </div>
       </div>
 
@@ -221,12 +230,8 @@ export default function InvestigationDetail({ investigation, userId, onUpdate, o
             <p className="text-sm">Add notes, findings, or link entities below</p>
           </div>
         ) : (
-          investigation.entries?.map(entry => (
-            <EntryCard
-              key={entry.id}
-              entry={entry}
-              onDelete={() => handleDeleteEntry(entry.id)}
-            />
+          investigation.entries?.map((entry) => (
+            <EntryCard key={entry.id} entry={entry} onDelete={() => handleDeleteEntry(entry.id)} />
           ))
         )}
       </div>

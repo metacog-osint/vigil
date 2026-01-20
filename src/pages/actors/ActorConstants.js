@@ -7,38 +7,38 @@ export const ACTOR_TYPE_CONFIG = {
   ransomware: {
     tooltip: 'Ransomware operators encrypt victim data and demand payment for decryption keys.',
     color: 'bg-red-900/50 text-red-400 border-red-800',
-    sortOrder: 1
+    sortOrder: 1,
   },
   apt: {
     tooltip: 'Advanced Persistent Threat - state-sponsored groups conducting espionage operations.',
     color: 'bg-purple-900/50 text-purple-400 border-purple-800',
-    sortOrder: 2
+    sortOrder: 2,
   },
   cybercrime: {
     tooltip: 'Financially motivated criminals (fraud, theft, carding, etc.).',
     color: 'bg-orange-900/50 text-orange-400 border-orange-800',
-    sortOrder: 3
+    sortOrder: 3,
   },
   hacktivism: {
     tooltip: 'Politically or ideologically motivated hackers (Anonymous, Killnet, etc.).',
     color: 'bg-green-900/50 text-green-400 border-green-800',
-    sortOrder: 4
+    sortOrder: 4,
   },
   initial_access_broker: {
     tooltip: 'Actors who sell initial network access to other criminals.',
     color: 'bg-yellow-900/50 text-yellow-400 border-yellow-800',
-    sortOrder: 5
+    sortOrder: 5,
   },
   data_extortion: {
     tooltip: 'Groups that steal data without encryption and extort victims with leak threats.',
     color: 'bg-pink-900/50 text-pink-400 border-pink-800',
-    sortOrder: 6
+    sortOrder: 6,
   },
   unknown: {
     tooltip: 'Actor type not yet classified.',
     color: 'bg-gray-800/50 text-gray-400 border-gray-700',
-    sortOrder: 99
-  }
+    sortOrder: 99,
+  },
 }
 
 // Helper to get type config with fallback

@@ -13,9 +13,7 @@ const ENTITY_TYPES = [
   { value: 'incident', label: 'Incidents', icon: '⚡', color: 'bg-purple-500' },
 ]
 
-const COLORS = [
-  '#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#6b7280',
-]
+const COLORS = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#6b7280']
 
 function CreateWatchlistModal({ isOpen, onClose, onCreate }) {
   const [name, setName] = useState('')
@@ -140,10 +138,7 @@ function WatchlistCard({ watchlist, onDelete }) {
     <div className="bg-cyber-card border border-gray-800 rounded-lg p-4 hover:border-gray-700 transition-colors">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div
-            className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: watchlist.color }}
-          />
+          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: watchlist.color }} />
           <div>
             <Link
               to={`/watchlists/${watchlist.id}`}
@@ -162,7 +157,12 @@ function WatchlistCard({ watchlist, onDelete }) {
           title="Delete watchlist"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
           </svg>
         </button>
       </div>
@@ -173,7 +173,9 @@ function WatchlistCard({ watchlist, onDelete }) {
           <span>{entityType?.label}</span>
         </div>
         <div className="flex items-center gap-4 text-gray-500">
-          <span>{itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+          <span>
+            {itemCount} item{itemCount !== 1 ? 's' : ''}
+          </span>
           <TimeAgo date={watchlist.created_at} />
         </div>
       </div>
@@ -233,53 +235,54 @@ export default function Watchlists() {
             <h1 className="text-xl sm:text-2xl font-bold text-white">Watchlists</h1>
             <p className="text-gray-400 mt-1">Track entities of interest</p>
           </div>
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-cyber-accent text-white rounded-lg hover:bg-cyber-accent/80 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          New Watchlist
-        </button>
-      </div>
-
-      {error && <ErrorMessage message={error} className="mb-4" />}
-
-      {/* Content */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <SkeletonCard key={i} />
-          ))}
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-cyber-accent text-white rounded-lg hover:bg-cyber-accent/80 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            New Watchlist
+          </button>
         </div>
-      ) : watchlists.length === 0 ? (
-        <EmptyState
-          title="No watchlists yet"
-          description="Create a watchlist to start tracking threat actors, vulnerabilities, or IOCs"
-          action={{
-            label: 'Create Watchlist',
-            onClick: () => setIsCreateModalOpen(true),
-          }}
+
+        {error && <ErrorMessage message={error} className="mb-4" />}
+
+        {/* Content */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        ) : watchlists.length === 0 ? (
+          <EmptyState
+            title="No watchlists yet"
+            description="Create a watchlist to start tracking threat actors, vulnerabilities, or IOCs"
+            action={{
+              label: 'Create Watchlist',
+              onClick: () => setIsCreateModalOpen(true),
+            }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {watchlists.map((watchlist) => (
+              <WatchlistCard key={watchlist.id} watchlist={watchlist} onDelete={handleDelete} />
+            ))}
+          </div>
+        )}
+
+        {/* Create Modal */}
+        <CreateWatchlistModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreate={handleCreate}
         />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {watchlists.map((watchlist) => (
-            <WatchlistCard
-              key={watchlist.id}
-              watchlist={watchlist}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Create Modal */}
-      <CreateWatchlistModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onCreate={handleCreate}
-      />
       </div>
     </FeatureGate>
   )

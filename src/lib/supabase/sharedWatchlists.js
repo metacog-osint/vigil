@@ -10,21 +10,19 @@ export const sharedWatchlists = {
   async getTeamWatchlists(teamId) {
     return supabase
       .from('shared_watchlists')
-      .select(`
+      .select(
+        `
         *,
         items:shared_watchlist_items(count)
-      `)
+      `
+      )
       .eq('team_id', teamId)
       .order('created_at', { ascending: false })
   },
 
   // Get watchlist by ID
   async getWatchlist(watchlistId) {
-    return supabase
-      .from('shared_watchlists')
-      .select('*')
-      .eq('id', watchlistId)
-      .single()
+    return supabase.from('shared_watchlists').select('*').eq('id', watchlistId).single()
   },
 
   // Create watchlist
@@ -53,10 +51,7 @@ export const sharedWatchlists = {
 
   // Delete watchlist
   async deleteWatchlist(watchlistId) {
-    return supabase
-      .from('shared_watchlists')
-      .delete()
-      .eq('id', watchlistId)
+    return supabase.from('shared_watchlists').delete().eq('id', watchlistId)
   },
 
   // Get watchlist items with entity details
@@ -82,11 +77,7 @@ export const sharedWatchlists = {
         }[item.entity_type]
 
         if (table) {
-          const { data } = await supabase
-            .from(table)
-            .select('*')
-            .eq('id', item.entity_id)
-            .single()
+          const { data } = await supabase.from(table).select('*').eq('id', item.entity_id).single()
           entity = data
         }
 
@@ -114,10 +105,7 @@ export const sharedWatchlists = {
 
   // Remove item from watchlist
   async removeItem(itemId) {
-    return supabase
-      .from('shared_watchlist_items')
-      .delete()
-      .eq('id', itemId)
+    return supabase.from('shared_watchlist_items').delete().eq('id', itemId)
   },
 
   // Update item notes

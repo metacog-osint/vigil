@@ -51,20 +51,27 @@ export function BlurredContent({
       <div className="absolute inset-0 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm rounded-lg">
         <div className="text-center p-6 max-w-sm">
           <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-cyber-accent/20 flex items-center justify-center">
-            <svg className="w-6 h-6 text-cyber-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            <svg
+              className="w-6 h-6 text-cyber-accent"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
             </svg>
           </div>
 
           <p className="text-white font-medium mb-2">
-            {overlayMessage || `Unlock with ${effectiveTier.charAt(0).toUpperCase() + effectiveTier.slice(1)}`}
+            {overlayMessage ||
+              `Unlock with ${effectiveTier.charAt(0).toUpperCase() + effectiveTier.slice(1)}`}
           </p>
 
-          {showPrice && (
-            <p className="text-gray-400 text-sm mb-4">
-              Starting at ${price}/month
-            </p>
-          )}
+          {showPrice && <p className="text-gray-400 text-sm mb-4">Starting at ${price}/month</p>}
 
           <Link
             to="/pricing"
@@ -84,12 +91,7 @@ export function BlurredContent({
 /**
  * Blurred historical data with date restriction message
  */
-export function BlurredHistoricalData({
-  children,
-  daysAvailable = 30,
-  totalDays,
-  className,
-}) {
+export function BlurredHistoricalData({ children, daysAvailable = 30, totalDays, className }) {
   const { tier } = useSubscription()
 
   if (tier !== 'free') {
@@ -100,23 +102,18 @@ export function BlurredHistoricalData({
 
   return (
     <div className={clsx('relative', className)}>
-      <div className="blur-[4px] select-none pointer-events-none">
-        {children}
-      </div>
+      <div className="blur-[4px] select-none pointer-events-none">{children}</div>
 
       <div className="absolute inset-0 flex items-center justify-center bg-gray-900/70 backdrop-blur-sm rounded-lg">
         <div className="text-center p-6 max-w-md">
           <div className="text-4xl mb-4">📅</div>
 
-          <h4 className="text-white font-medium mb-2">
-            Viewing Last {daysAvailable} Days Only
-          </h4>
+          <h4 className="text-white font-medium mb-2">Viewing Last {daysAvailable} Days Only</h4>
 
           <p className="text-gray-400 text-sm mb-4">
             {hiddenDays
               ? `${hiddenDays}+ days of historical data available with Professional`
-              : 'Full historical data available with Professional'
-            }
+              : 'Full historical data available with Professional'}
           </p>
 
           <div className="flex items-center justify-center gap-3">
@@ -153,11 +150,7 @@ export function BlurredListTeaser({
   }
 
   if (hasAccess) {
-    return (
-      <div className={className}>
-        {items.map((item, i) => renderItem(item, i))}
-      </div>
-    )
+    return <div className={className}>{items.map((item, i) => renderItem(item, i))}</div>
   }
 
   const visibleItems = items.slice(0, visibleCount)
@@ -172,7 +165,9 @@ export function BlurredListTeaser({
       {hiddenCount > 0 && (
         <div className="relative mt-2">
           <div className="blur-[6px] opacity-50 pointer-events-none">
-            {items.slice(visibleCount, visibleCount + 2).map((item, i) => renderItem(item, i + visibleCount))}
+            {items
+              .slice(visibleCount, visibleCount + 2)
+              .map((item, i) => renderItem(item, i + visibleCount))}
           </div>
 
           <div className="absolute inset-0 flex items-center justify-center">
@@ -180,7 +175,8 @@ export function BlurredListTeaser({
               to="/pricing"
               className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-300 hover:border-cyber-accent/50 hover:text-white transition-colors"
             >
-              +{hiddenCount} more with {requiredTier.charAt(0).toUpperCase() + requiredTier.slice(1)}
+              +{hiddenCount} more with{' '}
+              {requiredTier.charAt(0).toUpperCase() + requiredTier.slice(1)}
             </Link>
           </div>
         </div>
@@ -204,11 +200,7 @@ export function BlurredSearchResults({
   const hasFullAccess = tier !== 'free'
 
   if (hasFullAccess) {
-    return (
-      <div className={className}>
-        {results.map((result, i) => renderResult(result, i))}
-      </div>
-    )
+    return <div className={className}>{results.map((result, i) => renderResult(result, i))}</div>
   }
 
   return (
@@ -239,7 +231,12 @@ export function BlurredSearchResults({
               >
                 Unlock Full History
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </Link>
             </div>
@@ -253,11 +250,7 @@ export function BlurredSearchResults({
 /**
  * Correlation preview with blurred details
  */
-export function BlurredCorrelationPreview({
-  actorName,
-  correlations,
-  className,
-}) {
+export function BlurredCorrelationPreview({ actorName, correlations, className }) {
   const { tier, canAccess } = useSubscription()
   const hasAccess = canAccess('correlation_panel')
 
@@ -265,14 +258,16 @@ export function BlurredCorrelationPreview({
     { label: 'Related CVEs', value: correlations?.vulnerabilities?.length || 0, locked: false },
     { label: 'Associated IOCs', value: correlations?.iocs?.length || 0, locked: !hasAccess },
     { label: 'Attack Chains', value: correlations?.attackChains?.length || 0, locked: !hasAccess },
-    { label: 'Similar Actors', value: correlations?.similarActors?.length || 0, locked: tier !== 'team' && tier !== 'enterprise' },
+    {
+      label: 'Similar Actors',
+      value: correlations?.similarActors?.length || 0,
+      locked: tier !== 'team' && tier !== 'enterprise',
+    },
   ]
 
   return (
     <div className={clsx('cyber-card', className)}>
-      <h4 className="text-white font-medium mb-4">
-        Correlations for "{actorName}"
-      </h4>
+      <h4 className="text-white font-medium mb-4">Correlations for "{actorName}"</h4>
 
       <div className="space-y-3">
         {stats.map((stat, i) => (
@@ -285,7 +280,12 @@ export function BlurredCorrelationPreview({
               >
                 <span className="blur-[4px]">{stat.value || '??'}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
                 </svg>
               </Link>
             ) : (

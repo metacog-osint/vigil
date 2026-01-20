@@ -59,7 +59,9 @@ export default function TrendAnalysis() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Trend Analysis</h1>
-          <p className="text-gray-400 text-sm mt-1">Temporal intelligence and week-over-week comparisons</p>
+          <p className="text-gray-400 text-sm mt-1">
+            Temporal intelligence and week-over-week comparisons
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -113,11 +115,7 @@ export default function TrendAnalysis() {
             maxSelections={5}
           />
         </div>
-        <ActorTrajectoryChart
-          actorIds={selectedActorIds}
-          days={timeRange}
-          height={280}
-        />
+        <ActorTrajectoryChart actorIds={selectedActorIds} days={timeRange} height={280} />
       </div>
 
       {/* Sector Breakdown Table */}
@@ -125,7 +123,7 @@ export default function TrendAnalysis() {
         <div className="cyber-card p-6 mt-6">
           <h3 className="text-sm text-gray-400 mb-4">Sector Distribution</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {sectorTrends.sectors.slice(0, 12).map(sector => {
+            {sectorTrends.sectors.slice(0, 12).map((sector) => {
               const total = Object.entries(sectorTrends.data)
                 .filter(([k]) => k.endsWith(`|${sector}`))
                 .reduce((sum, [, v]) => sum + v, 0)
@@ -133,7 +131,9 @@ export default function TrendAnalysis() {
               return (
                 <div key={sector} className="p-3 bg-gray-800/50 rounded">
                   <div className="text-lg font-semibold text-white">{total}</div>
-                  <div className="text-xs text-gray-500 truncate" title={sector}>{sector}</div>
+                  <div className="text-xs text-gray-500 truncate" title={sector}>
+                    {sector}
+                  </div>
                 </div>
               )
             })}
@@ -166,7 +166,8 @@ export default function TrendAnalysis() {
       <div className="cyber-card p-6 mt-6">
         <h3 className="text-sm text-gray-400 mb-4">Actor Relationships</h3>
         <p className="text-xs text-gray-500 mb-4">
-          Network visualization of threat actor connections based on shared TTPs, sectors, and infrastructure
+          Network visualization of threat actor connections based on shared TTPs, sectors, and
+          infrastructure
         </p>
         <ActorRelationshipGraph
           limit={25}

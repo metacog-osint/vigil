@@ -78,7 +78,12 @@ export function TierBadge({
     >
       {showLock && (
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          />
         </svg>
       )}
       {showIcon && style.icon && <span>{style.icon}</span>}
@@ -90,48 +95,28 @@ export function TierBadge({
 /**
  * Badge that only shows if user doesn't have access
  */
-export function LockedBadge({
-  feature,
-  requiredTier,
-  size = 'sm',
-  className,
-}) {
+export function LockedBadge({ feature, requiredTier, size = 'sm', className }) {
   const { tier } = useSubscription()
   const effectiveTier = requiredTier || (feature ? getRequiredTier(feature) : 'professional')
   const hasAccess = getTierIndex(tier) >= getTierIndex(effectiveTier)
 
   if (hasAccess) return null
 
-  return (
-    <TierBadge
-      tier={effectiveTier}
-      size={size}
-      className={className}
-    />
-  )
+  return <TierBadge tier={effectiveTier} size={size} className={className} />
 }
 
 /**
  * Feature label with optional tier badge
  */
-export function FeatureLabel({
-  children,
-  feature,
-  requiredTier,
-  className,
-}) {
+export function FeatureLabel({ children, feature, requiredTier, className }) {
   const { tier } = useSubscription()
   const effectiveTier = requiredTier || (feature ? getRequiredTier(feature) : null)
   const hasAccess = effectiveTier ? getTierIndex(tier) >= getTierIndex(effectiveTier) : true
 
   return (
     <span className={clsx('inline-flex items-center gap-2', className)}>
-      <span className={hasAccess ? 'text-white' : 'text-gray-400'}>
-        {children}
-      </span>
-      {!hasAccess && effectiveTier && (
-        <TierBadge tier={effectiveTier} size="xs" showLock={false} />
-      )}
+      <span className={hasAccess ? 'text-white' : 'text-gray-400'}>{children}</span>
+      {!hasAccess && effectiveTier && <TierBadge tier={effectiveTier} size="xs" showLock={false} />}
     </span>
   )
 }
@@ -139,12 +124,7 @@ export function FeatureLabel({
 /**
  * Locked icon indicator (smaller than full badge)
  */
-export function LockedIcon({
-  feature,
-  requiredTier,
-  size = 16,
-  className,
-}) {
+export function LockedIcon({ feature, requiredTier, size = 16, className }) {
   const { tier } = useSubscription()
   const effectiveTier = requiredTier || (feature ? getRequiredTier(feature) : 'professional')
   const hasAccess = getTierIndex(tier) >= getTierIndex(effectiveTier)
@@ -200,9 +180,7 @@ export function NavItemWithTier({
             : 'text-gray-500 hover:bg-gray-800/50'
       )}
     >
-      <span className={clsx('w-5 h-5', !hasAccess && 'opacity-50')}>
-        {icon}
-      </span>
+      <span className={clsx('w-5 h-5', !hasAccess && 'opacity-50')}>{icon}</span>
       {!collapsed && (
         <>
           <span className="flex-1">{label}</span>
@@ -247,7 +225,9 @@ export function ButtonWithTier({
   const { tier, canAccess: checkAccess } = useSubscription()
   const effectiveTier = requiredTier || (feature ? getRequiredTier(feature) : null)
   const hasAccess = effectiveTier
-    ? (feature ? checkAccess(feature) : getTierIndex(tier) >= getTierIndex(effectiveTier))
+    ? feature
+      ? checkAccess(feature)
+      : getTierIndex(tier) >= getTierIndex(effectiveTier)
     : true
   const style = effectiveTier ? TIER_STYLES[effectiveTier] : null
 
@@ -292,12 +272,7 @@ export function ButtonWithTier({
 /**
  * Upgrade prompt inline with feature
  */
-export function UpgradeInline({
-  feature,
-  requiredTier,
-  message,
-  className,
-}) {
+export function UpgradeInline({ feature, requiredTier, message, className }) {
   const { tier } = useSubscription()
   const effectiveTier = requiredTier || (feature ? getRequiredTier(feature) : 'professional')
   const hasAccess = getTierIndex(tier) >= getTierIndex(effectiveTier)
@@ -320,7 +295,12 @@ export function UpgradeInline({
       <span className={clsx('text-sm', style.text)}>
         {message || `Upgrade to ${effectiveTier.charAt(0).toUpperCase() + effectiveTier.slice(1)}`}
       </span>
-      <svg className={clsx('w-4 h-4 ml-auto', style.text)} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg
+        className={clsx('w-4 h-4 ml-auto', style.text)}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
       </svg>
     </Link>
@@ -330,10 +310,7 @@ export function UpgradeInline({
 /**
  * "New" + Tier combo badge for premium features
  */
-export function NewFeatureBadge({
-  tier,
-  className,
-}) {
+export function NewFeatureBadge({ tier, className }) {
   const style = TIER_STYLES[tier] || TIER_STYLES.professional
 
   return (

@@ -111,10 +111,18 @@ const NAV_PAGES = [
   { label: 'Activity', path: '/events', keywords: ['events', 'timeline', 'activity'] },
   { label: 'Ransomware', path: '/events?view=ransomware', keywords: ['ransomware', 'incidents'] },
   { label: 'Threat Actors', path: '/actors', keywords: ['actors', 'groups', 'apt'] },
-  { label: 'Vulnerabilities', path: '/vulnerabilities', keywords: ['cve', 'vulnerabilities', 'vulns'] },
+  {
+    label: 'Vulnerabilities',
+    path: '/vulnerabilities',
+    keywords: ['cve', 'vulnerabilities', 'vulns'],
+  },
   { label: 'Advisories', path: '/advisories', keywords: ['advisories', 'bulletins'] },
   { label: 'IOC Search', path: '/iocs', keywords: ['ioc', 'indicators', 'search'] },
-  { label: 'ATT&CK Matrix', path: '/techniques', keywords: ['mitre', 'attack', 'techniques', 'ttps'] },
+  {
+    label: 'ATT&CK Matrix',
+    path: '/techniques',
+    keywords: ['mitre', 'attack', 'techniques', 'ttps'],
+  },
   { label: 'Threat Hunts', path: '/threat-hunts', keywords: ['hunt', 'hunting'] },
   { label: 'Trends', path: '/trends', keywords: ['trends', 'analysis'] },
   { label: 'Reports', path: '/reports', keywords: ['reports', 'export'] },
@@ -194,9 +202,9 @@ export function filterNavPages(query) {
   if (!query) return NAV_PAGES.slice(0, 6)
 
   const lower = query.toLowerCase()
-  return NAV_PAGES.filter(page =>
-    page.label.toLowerCase().includes(lower) ||
-    page.keywords.some(kw => kw.includes(lower))
+  return NAV_PAGES.filter(
+    (page) =>
+      page.label.toLowerCase().includes(lower) || page.keywords.some((kw) => kw.includes(lower))
   )
 }
 

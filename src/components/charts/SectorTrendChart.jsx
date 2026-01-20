@@ -1,15 +1,32 @@
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  AreaChart,
+  Area,
+} from 'recharts'
 
-const SECTOR_COLORS = ['#00ff88', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#eab308']
+const SECTOR_COLORS = [
+  '#00ff88',
+  '#3b82f6',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
+  '#ec4899',
+  '#14b8a6',
+  '#eab308',
+]
 
 /**
  * SectorTrendChart - Multi-line chart showing sector targeting trends over time
  */
 export function SectorTrendChart({ data, loading, height = 280, showLegend = true }) {
   if (loading) {
-    return (
-      <div className="bg-gray-800/50 rounded animate-pulse" style={{ height }} />
-    )
+    return <div className="bg-gray-800/50 rounded animate-pulse" style={{ height }} />
   }
 
   if (!data?.weeks?.length) {
@@ -21,7 +38,7 @@ export function SectorTrendChart({ data, loading, height = 280, showLegend = tru
   }
 
   // Transform data for recharts
-  const chartData = data.weeks.map(week => {
+  const chartData = data.weeks.map((week) => {
     const point = { week }
     for (const sector of data.sectors.slice(0, 6)) {
       point[sector] = data.data[`${week}|${sector}`] || 0
@@ -36,7 +53,9 @@ export function SectorTrendChart({ data, loading, height = 280, showLegend = tru
           dataKey="week"
           stroke="#6b7280"
           tick={{ fill: '#9ca3af', fontSize: 10 }}
-          tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          tickFormatter={(v) =>
+            new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          }
         />
         <YAxis stroke="#6b7280" tick={{ fill: '#9ca3af', fontSize: 10 }} />
         <Tooltip
@@ -68,9 +87,7 @@ export function SectorTrendChart({ data, loading, height = 280, showLegend = tru
  */
 export function SectorTrendMini({ data, loading, height = 120 }) {
   if (loading) {
-    return (
-      <div className="bg-gray-800/50 rounded animate-pulse" style={{ height }} />
-    )
+    return <div className="bg-gray-800/50 rounded animate-pulse" style={{ height }} />
   }
 
   if (!data?.weeks?.length) {
@@ -83,7 +100,7 @@ export function SectorTrendMini({ data, loading, height = 120 }) {
 
   // Get top 3 sectors only
   const topSectors = data.sectors.slice(0, 3)
-  const chartData = data.weeks.map(week => {
+  const chartData = data.weeks.map((week) => {
     const point = { week }
     for (const sector of topSectors) {
       point[sector] = data.data[`${week}|${sector}`] || 0
@@ -103,7 +120,9 @@ export function SectorTrendMini({ data, loading, height = 120 }) {
             borderRadius: '4px',
             fontSize: '11px',
           }}
-          labelFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          labelFormatter={(v) =>
+            new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          }
         />
         {topSectors.map((sector, i) => (
           <Line
@@ -125,9 +144,7 @@ export function SectorTrendMini({ data, loading, height = 120 }) {
  */
 export function ActivityTrendChart({ data, loading, height = 200 }) {
   if (loading) {
-    return (
-      <div className="bg-gray-800/50 rounded animate-pulse" style={{ height }} />
-    )
+    return <div className="bg-gray-800/50 rounded animate-pulse" style={{ height }} />
   }
 
   if (!data?.length) {
@@ -141,7 +158,7 @@ export function ActivityTrendChart({ data, loading, height = 200 }) {
   // Sort and format for chart
   const chartData = [...data]
     .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .map(d => ({
+    .map((d) => ({
       date: d.date,
       count: d.count,
     }))
@@ -159,7 +176,9 @@ export function ActivityTrendChart({ data, loading, height = 200 }) {
           dataKey="date"
           stroke="#6b7280"
           tick={{ fill: '#9ca3af', fontSize: 10 }}
-          tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          tickFormatter={(v) =>
+            new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          }
         />
         <YAxis stroke="#6b7280" tick={{ fill: '#9ca3af', fontSize: 10 }} />
         <Tooltip
@@ -171,12 +190,7 @@ export function ActivityTrendChart({ data, loading, height = 200 }) {
           labelFormatter={(v) => new Date(v).toLocaleDateString()}
           formatter={(value) => [value, 'Incidents']}
         />
-        <Area
-          type="monotone"
-          dataKey="count"
-          stroke="#00ff88"
-          fill="url(#activityGradient)"
-        />
+        <Area type="monotone" dataKey="count" stroke="#00ff88" fill="url(#activityGradient)" />
       </AreaChart>
     </ResponsiveContainer>
   )
@@ -192,7 +206,7 @@ export function ActivityTrendMini({ data, loading, height = 80 }) {
 
   const chartData = [...data]
     .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .map(d => ({ date: d.date, count: d.count }))
+    .map((d) => ({ date: d.date, count: d.count }))
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -217,7 +231,9 @@ export function ActivityTrendMini({ data, loading, height = 80 }) {
             borderRadius: '4px',
             fontSize: '11px',
           }}
-          labelFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          labelFormatter={(v) =>
+            new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          }
           formatter={(value) => [value, 'Incidents']}
         />
       </AreaChart>

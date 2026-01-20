@@ -16,7 +16,9 @@ import { supabase } from './supabase/client'
 export async function createNote(entityType, entityId, content, options = {}) {
   const { teamId = null, isTeamVisible = true } = options
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     throw new Error('Must be logged in to create notes')
@@ -50,7 +52,9 @@ export async function createNote(entityType, entityId, content, options = {}) {
  * @returns {Array} Notes
  */
 export async function getNotes(entityType, entityId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   // Build query - user can see their own notes and team visible notes
   let query = supabase
@@ -105,10 +109,7 @@ export async function updateNote(noteId, content) {
  * @param {string} noteId - Note ID
  */
 export async function deleteNote(noteId) {
-  const { error } = await supabase
-    .from('entity_notes')
-    .delete()
-    .eq('id', noteId)
+  const { error } = await supabase.from('entity_notes').delete().eq('id', noteId)
 
   if (error) {
     console.error('Error deleting note:', error)
@@ -122,7 +123,9 @@ export async function deleteNote(noteId) {
  * @returns {Array} User's notes
  */
 export async function getMyNotes(limit = 50) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) return []
 
@@ -171,7 +174,9 @@ export async function getTeamNotes(teamId, limit = 50) {
  * @returns {Array} Matching notes
  */
 export async function searchNotes(query, limit = 20) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) return []
 

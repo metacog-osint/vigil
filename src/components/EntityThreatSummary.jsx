@@ -16,7 +16,8 @@ import {
 
 // Summary templates for different entity types
 const SUMMARY_PROMPTS = {
-  actor: (actor, incidents) => `
+  actor: (actor, incidents) =>
+    `
 Provide a 2-3 sentence threat intelligence summary for the threat actor "${actor.name}".
 
 Actor data:
@@ -26,7 +27,12 @@ Actor data:
 - Target sectors: ${actor.target_sectors?.join(', ') || 'Unknown'}
 - Target countries: ${actor.target_countries?.join(', ') || 'Unknown'}
 - First seen: ${actor.first_observed || 'Unknown'}
-- Recent victims: ${incidents?.slice(0, 5).map(i => i.victim_name).join(', ') || 'None recent'}
+- Recent victims: ${
+      incidents
+        ?.slice(0, 5)
+        .map((i) => i.victim_name)
+        .join(', ') || 'None recent'
+    }
 
 Focus on:
 1. Current threat level and activity trend
@@ -36,7 +42,8 @@ Focus on:
 Be specific and actionable. Start with the most important finding.
 `.trim(),
 
-  vulnerability: (vuln) => `
+  vulnerability: (vuln) =>
+    `
 Provide a 2-3 sentence threat intelligence summary for ${vuln.cve_id}.
 
 Vulnerability data:
@@ -57,7 +64,8 @@ Focus on:
 Be specific and actionable.
 `.trim(),
 
-  ioc: (ioc) => `
+  ioc: (ioc) =>
+    `
 Provide a brief threat intelligence assessment for this IOC:
 
 IOC data:
@@ -77,7 +85,8 @@ Focus on:
 Be concise (2-3 sentences).
 `.trim(),
 
-  incident: (incident) => `
+  incident: (incident) =>
+    `
 Provide a threat intelligence summary for this incident:
 
 Incident data:
@@ -119,14 +128,15 @@ async function generateSummary(entityType, entity, additionalData = {}) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         messages: [
           {
             role: 'system',
-            content: 'You are a threat intelligence analyst. Provide concise, actionable summaries. Never use markdown formatting. Use plain text only.',
+            content:
+              'You are a threat intelligence analyst. Provide concise, actionable summaries. Never use markdown formatting. Use plain text only.',
           },
           { role: 'user', content: prompt },
         ],
@@ -151,29 +161,45 @@ async function generateSummary(entityType, entity, additionalData = {}) {
 function generateTemplateSummary(entityType, entity, _additionalData = {}) {
   switch (entityType) {
     case 'actor': {
-      const trend = entity.trend_status === 'ESCALATING' ? 'increasing activity' :
-                    entity.trend_status === 'DECLINING' ? 'decreasing activity' : 'stable activity'
+      const trend =
+        entity.trend_status === 'ESCALATING'
+          ? 'increasing activity'
+          : entity.trend_status === 'DECLINING'
+            ? 'decreasing activity'
+            : 'stable activity'
       const sectors = entity.target_sectors?.slice(0, 3).join(', ') || 'various sectors'
       return `${entity.name} is showing ${trend} with ${entity.incidents_7d || 0} incidents in the past week. Primary targets include ${sectors}. ${
-        entity.trend_status === 'ESCALATING' ? 'Elevated monitoring recommended.' : 'Standard monitoring advised.'
+        entity.trend_status === 'ESCALATING'
+          ? 'Elevated monitoring recommended.'
+          : 'Standard monitoring advised.'
       }`
     }
     case 'vulnerability': {
-      const risk = entity.cvss_score >= 9 ? 'critical' : entity.cvss_score >= 7 ? 'high' : 'moderate'
+      const risk =
+        entity.cvss_score >= 9 ? 'critical' : entity.cvss_score >= 7 ? 'high' : 'moderate'
       const kevNote = entity.kev_date ? ' Listed in CISA KEV, indicating active exploitation.' : ''
       return `${entity.cve_id} is a ${risk} severity vulnerability (CVSS ${entity.cvss_score}).${kevNote} Affects ${entity.vendor || 'multiple vendors'}. ${
-        entity.epss_score > 0.1 ? 'High exploitation probability - prioritize patching.' : 'Standard remediation timeline appropriate.'
+        entity.epss_score > 0.1
+          ? 'High exploitation probability - prioritize patching.'
+          : 'Standard remediation timeline appropriate.'
       }`
     }
     case 'ioc': {
-      const conf = entity.confidence >= 80 ? 'high confidence' : entity.confidence >= 50 ? 'medium confidence' : 'low confidence'
+      const conf =
+        entity.confidence >= 80
+          ? 'high confidence'
+          : entity.confidence >= 50
+            ? 'medium confidence'
+            : 'low confidence'
       return `${entity.type.toUpperCase()} indicator with ${conf} from ${entity.source || 'open source'}. ${
         entity.malware_family ? `Associated with ${entity.malware_family} malware family.` : ''
       } First observed ${entity.first_seen ? new Date(entity.first_seen).toLocaleDateString() : 'recently'}.`
     }
     case 'incident': {
       return `${entity.victim_name} (${entity.victim_sector || 'Unknown sector'}) was targeted by ${entity.threat_actor?.name || 'unknown actor'}. ${
-        entity.threat_actor?.trend_status === 'ESCALATING' ? 'Actor showing increased activity.' : ''
+        entity.threat_actor?.trend_status === 'ESCALATING'
+          ? 'Actor showing increased activity.'
+          : ''
       } Discovered ${entity.discovered_date ? new Date(entity.discovered_date).toLocaleDateString() : 'recently'}.`
     }
     default:
@@ -290,9 +316,11 @@ function RiskIndicators({ entityType, entity }) {
         <span
           key={i}
           className={`px-2 py-0.5 text-xs rounded font-medium ${
-            ind.level === 'critical' ? 'bg-red-500/20 text-red-400' :
-            ind.level === 'high' ? 'bg-orange-500/20 text-orange-400' :
-            'bg-yellow-500/20 text-yellow-400'
+            ind.level === 'critical'
+              ? 'bg-red-500/20 text-red-400'
+              : ind.level === 'high'
+                ? 'bg-orange-500/20 text-orange-400'
+                : 'bg-yellow-500/20 text-yellow-400'
           }`}
         >
           {ind.label}

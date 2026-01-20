@@ -3,11 +3,27 @@ import { alertRules } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 
 const RULE_TYPES = [
-  { value: 'vendor_cve', label: 'Vendor CVE', description: 'Alert when CVEs affect specific vendors' },
-  { value: 'actor_activity', label: 'Actor Activity', description: 'Alert when threat actors become active' },
-  { value: 'sector_incident', label: 'Sector Incident', description: 'Alert on incidents in your sector' },
+  {
+    value: 'vendor_cve',
+    label: 'Vendor CVE',
+    description: 'Alert when CVEs affect specific vendors',
+  },
+  {
+    value: 'actor_activity',
+    label: 'Actor Activity',
+    description: 'Alert when threat actors become active',
+  },
+  {
+    value: 'sector_incident',
+    label: 'Sector Incident',
+    description: 'Alert on incidents in your sector',
+  },
   { value: 'kev_added', label: 'New KEV', description: 'Alert when CVEs are added to KEV catalog' },
-  { value: 'severity_threshold', label: 'Severity Threshold', description: 'Alert on high severity events' },
+  {
+    value: 'severity_threshold',
+    label: 'Severity Threshold',
+    description: 'Alert on high severity events',
+  },
 ]
 
 const SEVERITY_OPTIONS = ['critical', 'high', 'medium', 'low']
@@ -42,7 +58,7 @@ export default function AlertRulesSection() {
     try {
       const { data, error } = await alertRules.toggle(rule.id, !rule.enabled)
       if (error) throw error
-      setRules(rules.map(r => r.id === rule.id ? data : r))
+      setRules(rules.map((r) => (r.id === rule.id ? data : r)))
     } catch (error) {
       console.error('Error toggling rule:', error)
     }
@@ -53,7 +69,7 @@ export default function AlertRulesSection() {
     try {
       const { error } = await alertRules.delete(ruleId)
       if (error) throw error
-      setRules(rules.filter(r => r.id !== ruleId))
+      setRules(rules.filter((r) => r.id !== ruleId))
     } catch (error) {
       console.error('Error deleting rule:', error)
     }
@@ -77,7 +93,7 @@ export default function AlertRulesSection() {
     try {
       const { data, error } = await alertRules.update(ruleId, updates)
       if (error) throw error
-      setRules(rules.map(r => r.id === ruleId ? data : r))
+      setRules(rules.map((r) => (r.id === ruleId ? data : r)))
       setEditingRule(null)
     } catch (error) {
       console.error('Error updating rule:', error)
@@ -100,11 +116,13 @@ export default function AlertRulesSection() {
         <div className="text-center py-6 bg-gray-800/30 rounded-lg border border-gray-700">
           <div className="text-2xl mb-2">🔔</div>
           <p className="text-sm text-gray-400">No alert rules configured</p>
-          <p className="text-xs text-gray-500 mt-1">Create rules to get notified about relevant threats</p>
+          <p className="text-xs text-gray-500 mt-1">
+            Create rules to get notified about relevant threats
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {rules.map(rule => (
+          {rules.map((rule) => (
             <RuleCard
               key={rule.id}
               rule={rule}
@@ -126,10 +144,7 @@ export default function AlertRulesSection() {
 
       {/* Create Modal */}
       {showCreateModal && (
-        <RuleModal
-          onClose={() => setShowCreateModal(false)}
-          onSave={handleCreate}
-        />
+        <RuleModal onClose={() => setShowCreateModal(false)} onSave={handleCreate} />
       )}
 
       {/* Edit Modal */}
@@ -145,14 +160,16 @@ export default function AlertRulesSection() {
 }
 
 function RuleCard({ rule, onToggle, onEdit, onDelete }) {
-  const ruleType = RULE_TYPES.find(t => t.value === rule.rule_type)
+  const ruleType = RULE_TYPES.find((t) => t.value === rule.rule_type)
 
   return (
-    <div className={`p-3 rounded-lg border transition-colors ${
-      rule.enabled
-        ? 'bg-gray-800/30 border-gray-700'
-        : 'bg-gray-900/30 border-gray-800 opacity-60'
-    }`}>
+    <div
+      className={`p-3 rounded-lg border transition-colors ${
+        rule.enabled
+          ? 'bg-gray-800/30 border-gray-700'
+          : 'bg-gray-900/30 border-gray-800 opacity-60'
+      }`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -167,9 +184,7 @@ function RuleCard({ rule, onToggle, onEdit, onDelete }) {
           <div className="flex items-center gap-3 mt-2 text-xs text-gray-600">
             {rule.notify_email && <span>📧 Email</span>}
             {rule.notify_in_app && <span>🔔 In-app</span>}
-            {rule.trigger_count > 0 && (
-              <span>Triggered {rule.trigger_count} times</span>
-            )}
+            {rule.trigger_count > 0 && <span>Triggered {rule.trigger_count} times</span>}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -180,9 +195,11 @@ function RuleCard({ rule, onToggle, onEdit, onDelete }) {
               rule.enabled ? 'bg-cyan-500' : 'bg-gray-700'
             }`}
           >
-            <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
-              rule.enabled ? 'left-5' : 'left-0.5'
-            }`} />
+            <span
+              className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                rule.enabled ? 'left-5' : 'left-0.5'
+              }`}
+            />
           </button>
           {/* Edit */}
           <button
@@ -191,7 +208,12 @@ function RuleCard({ rule, onToggle, onEdit, onDelete }) {
             title="Edit"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
             </svg>
           </button>
           {/* Delete */}
@@ -201,7 +223,12 @@ function RuleCard({ rule, onToggle, onEdit, onDelete }) {
             title="Delete"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
           </button>
         </div>
@@ -291,23 +318,19 @@ function RuleModal({ rule, onClose, onSave }) {
               }}
               className="w-full cyber-input"
             >
-              {RULE_TYPES.map(type => (
+              {RULE_TYPES.map((type) => (
                 <option key={type.value} value={type.value}>
                   {type.label}
                 </option>
               ))}
             </select>
             <p className="text-xs text-gray-500 mt-1">
-              {RULE_TYPES.find(t => t.value === ruleType)?.description}
+              {RULE_TYPES.find((t) => t.value === ruleType)?.description}
             </p>
           </div>
 
           {/* Conditions based on type */}
-          <ConditionsEditor
-            ruleType={ruleType}
-            conditions={conditions}
-            onChange={setConditions}
-          />
+          <ConditionsEditor ruleType={ruleType} conditions={conditions} onChange={setConditions} />
 
           {/* Notification Options */}
           <div className="space-y-2">
@@ -347,7 +370,7 @@ function RuleModal({ rule, onClose, onSave }) {
               disabled={saving || !ruleName.trim()}
               className="px-4 py-2 bg-cyan-500 text-white rounded hover:bg-cyan-600 disabled:opacity-50"
             >
-              {saving ? 'Saving...' : (rule ? 'Save Changes' : 'Create Rule')}
+              {saving ? 'Saving...' : rule ? 'Save Changes' : 'Create Rule'}
             </button>
           </div>
         </form>
@@ -370,7 +393,15 @@ function ConditionsEditor({ ruleType, conditions, onChange }) {
             <input
               type="text"
               value={conditions.vendors?.join(', ') || ''}
-              onChange={(e) => updateCondition('vendors', e.target.value.split(',').map(v => v.trim()).filter(Boolean))}
+              onChange={(e) =>
+                updateCondition(
+                  'vendors',
+                  e.target.value
+                    .split(',')
+                    .map((v) => v.trim())
+                    .filter(Boolean)
+                )
+              }
               className="w-full cyber-input"
               placeholder="e.g., Cisco, Microsoft, Palo Alto"
             />
@@ -383,8 +414,10 @@ function ConditionsEditor({ ruleType, conditions, onChange }) {
               className="w-full cyber-input"
             >
               <option value="">Any</option>
-              {SEVERITY_OPTIONS.map(sev => (
-                <option key={sev} value={sev}>{sev.charAt(0).toUpperCase() + sev.slice(1)}</option>
+              {SEVERITY_OPTIONS.map((sev) => (
+                <option key={sev} value={sev}>
+                  {sev.charAt(0).toUpperCase() + sev.slice(1)}
+                </option>
               ))}
             </select>
           </div>
@@ -404,30 +437,41 @@ function ConditionsEditor({ ruleType, conditions, onChange }) {
       return (
         <div className="space-y-3">
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Actor Names (comma-separated)</label>
+            <label className="block text-sm text-gray-400 mb-1">
+              Actor Names (comma-separated)
+            </label>
             <input
               type="text"
               value={conditions.actor_names?.join(', ') || ''}
-              onChange={(e) => updateCondition('actor_names', e.target.value.split(',').map(v => v.trim()).filter(Boolean))}
+              onChange={(e) =>
+                updateCondition(
+                  'actor_names',
+                  e.target.value
+                    .split(',')
+                    .map((v) => v.trim())
+                    .filter(Boolean)
+                )
+              }
               className="w-full cyber-input"
               placeholder="e.g., LockBit, ALPHV, Clop"
             />
-            <p className="text-xs text-gray-500 mt-1">Leave empty to monitor all escalating actors</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Leave empty to monitor all escalating actors
+            </p>
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-1">Event Types</label>
             <div className="flex flex-wrap gap-2">
-              {['escalating', 'new_incident', 'new_actor'].map(type => (
+              {['escalating', 'new_incident', 'new_actor'].map((type) => (
                 <label key={type} className="flex items-center gap-1">
                   <input
                     type="checkbox"
                     checked={(conditions.event_types || []).includes(type)}
                     onChange={(e) => {
                       const current = conditions.event_types || []
-                      updateCondition('event_types',
-                        e.target.checked
-                          ? [...current, type]
-                          : current.filter(t => t !== type)
+                      updateCondition(
+                        'event_types',
+                        e.target.checked ? [...current, type] : current.filter((t) => t !== type)
                       )
                     }}
                     className="rounded border-gray-600 bg-gray-800 text-cyan-500"
@@ -448,11 +492,21 @@ function ConditionsEditor({ ruleType, conditions, onChange }) {
             <input
               type="text"
               value={conditions.sectors?.join(', ') || ''}
-              onChange={(e) => updateCondition('sectors', e.target.value.split(',').map(v => v.trim()).filter(Boolean))}
+              onChange={(e) =>
+                updateCondition(
+                  'sectors',
+                  e.target.value
+                    .split(',')
+                    .map((v) => v.trim())
+                    .filter(Boolean)
+                )
+              }
               className="w-full cyber-input"
               placeholder="e.g., healthcare, finance, education"
             />
-            <p className="text-xs text-gray-500 mt-1">Leave empty to use your organization's sector</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Leave empty to use your organization's sector
+            </p>
           </div>
         </div>
       )
@@ -468,7 +522,9 @@ function ConditionsEditor({ ruleType, conditions, onChange }) {
               max="10"
               step="0.1"
               value={conditions.min_cvss || ''}
-              onChange={(e) => updateCondition('min_cvss', e.target.value ? parseFloat(e.target.value) : null)}
+              onChange={(e) =>
+                updateCondition('min_cvss', e.target.value ? parseFloat(e.target.value) : null)
+              }
               className="w-full cyber-input"
               placeholder="e.g., 7.0"
             />
@@ -495,8 +551,10 @@ function ConditionsEditor({ ruleType, conditions, onChange }) {
               onChange={(e) => updateCondition('min_severity', e.target.value)}
               className="w-full cyber-input"
             >
-              {SEVERITY_OPTIONS.map(sev => (
-                <option key={sev} value={sev}>{sev.charAt(0).toUpperCase() + sev.slice(1)}</option>
+              {SEVERITY_OPTIONS.map((sev) => (
+                <option key={sev} value={sev}>
+                  {sev.charAt(0).toUpperCase() + sev.slice(1)}
+                </option>
               ))}
             </select>
           </div>

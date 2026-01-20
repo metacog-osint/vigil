@@ -56,13 +56,7 @@ export {
 } from './common/Skeleton'
 
 // Additional exports from TimeDisplay
-export {
-  SmartTime,
-  DateBadge,
-  FullDate,
-  Timestamp,
-  smartFormatDate,
-} from './common/TimeDisplay'
+export { SmartTime, DateBadge, FullDate, Timestamp, smartFormatDate } from './common/TimeDisplay'
 
 // Additional exports from Sparkline
 export { SparklineBar } from './common/Sparkline'
@@ -70,31 +64,16 @@ export { SparklineBar } from './common/Sparkline'
 // ============================================
 // BADGE COMPONENTS
 // ============================================
-export {
-  TrendBadge,
-  SeverityBadge,
-  EventTypeBadge,
-  NewIndicator,
-  RelevanceBadge,
-} from './badges'
+export { TrendBadge, SeverityBadge, EventTypeBadge, NewIndicator, RelevanceBadge } from './badges'
 
 // Additional exports from TrendBadge
 export { TrendIndicator } from './badges/TrendBadge'
 
 // Additional exports from SeverityBadge
-export {
-  SeverityDot,
-  SeverityBar,
-  EPSSBadge,
-  classifyBySeverity,
-} from './badges/SeverityBadge'
+export { SeverityDot, SeverityBar, EPSSBadge, classifyBySeverity } from './badges/SeverityBadge'
 
 // Additional exports from NewIndicator
-export {
-  NewBadge,
-  NewDot,
-  isNew,
-} from './badges/NewIndicator'
+export { NewBadge, NewDot, isNew } from './badges/NewIndicator'
 
 // Additional exports from RelevanceBadge
 export { RelevanceIndicator, RelevancePanel } from './badges/RelevanceBadge'
@@ -134,11 +113,7 @@ export { VulnTreemapMini } from './charts/VulnTreemap'
 export { ActorTrajectoryMini, ActorSelector } from './charts/ActorTrajectoryChart'
 
 // Additional exports from SectorTrendChart
-export {
-  SectorTrendMini,
-  ActivityTrendChart,
-  ActivityTrendMini,
-} from './charts/SectorTrendChart'
+export { SectorTrendMini, ActivityTrendChart, ActivityTrendMini } from './charts/SectorTrendChart'
 
 // ============================================
 // PANEL COMPONENTS
@@ -245,11 +220,21 @@ export { ExportIOCsButton, CreateAlertButton, BulkActionBar } from './actions'
 export { KeyboardShortcutsModal, useKeyboardShortcutsModal } from './KeyboardShortcutsModal'
 
 // Alert and Report builders
-export { default as AlertRuleBuilder, createCondition, createGroup, FIELD_OPTIONS, OPERATORS } from './AlertRuleBuilder'
+export {
+  default as AlertRuleBuilder,
+  createCondition,
+  createGroup,
+  FIELD_OPTIONS,
+  OPERATORS,
+} from './AlertRuleBuilder'
 export { default as ReportBuilder, SECTION_TYPES, DATA_SOURCES, CHART_TYPES } from './ReportBuilder'
 
 // Entity analysis
-export { default as EntityThreatSummary, generateSummary, generateRecommendations } from './EntityThreatSummary'
+export {
+  default as EntityThreatSummary,
+  generateSummary,
+  generateRecommendations,
+} from './EntityThreatSummary'
 export {
   default as ScoringExplanation,
   ScoreGauge,
@@ -315,11 +300,7 @@ export { default as WidgetPicker } from './dashboard/WidgetPicker'
 export { default as WeeklyTrendsWidget } from './dashboard/WeeklyTrendsWidget'
 
 // Additional panel exports
-export {
-  VulnerabilityActorsPanel,
-  TechniqueActorsPanel,
-  SimilarIncidentsPanel,
-} from './panels'
+export { VulnerabilityActorsPanel, TechniqueActorsPanel, SimilarIncidentsPanel } from './panels'
 
 // ============================================
 // PATTERN COMPONENTS

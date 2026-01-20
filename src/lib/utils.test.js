@@ -126,7 +126,9 @@ describe('detectIOCType', () => {
   })
 
   it('detects SHA256 hashes', () => {
-    expect(detectIOCType('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')).toBe('hash_sha256')
+    expect(detectIOCType('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')).toBe(
+      'hash_sha256'
+    )
   })
 
   it('detects domains', () => {

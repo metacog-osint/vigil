@@ -73,15 +73,7 @@ export function RiskIndicator({
             const y2 = config.gauge / 2 - (radius + 2) * Math.sin(angle)
 
             return (
-              <line
-                key={tick}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke="#6b7280"
-                strokeWidth={1}
-              />
+              <line key={tick} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#6b7280" strokeWidth={1} />
             )
           })}
         </svg>
@@ -94,12 +86,12 @@ export function RiskIndicator({
       </div>
 
       {/* Risk label */}
-      <div className={`mt-2 px-3 py-1 rounded-full text-sm font-medium uppercase ${colors.bg} ${colors.text}`}>
+      <div
+        className={`mt-2 px-3 py-1 rounded-full text-sm font-medium uppercase ${colors.bg} ${colors.text}`}
+      >
         {risk} Risk
         {trend && trend !== 'stable' && (
-          <span className="ml-1">
-            {trend === 'increasing' ? '↑' : '↓'}
-          </span>
+          <span className="ml-1">{trend === 'increasing' ? '↑' : '↓'}</span>
         )}
       </div>
 

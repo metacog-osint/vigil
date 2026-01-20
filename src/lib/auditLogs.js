@@ -120,9 +120,7 @@ export const auditLogs = {
    * Get audit logs with filtering
    */
   async getAll(filters = {}) {
-    let query = supabase
-      .from('audit_logs')
-      .select('*')
+    let query = supabase.from('audit_logs').select('*')
 
     if (filters.userId) {
       query = query.eq('user_id', filters.userId)
@@ -161,7 +159,9 @@ export const auditLogs = {
     }
 
     if (filters.search) {
-      query = query.or(`description.ilike.%${filters.search}%,resource_name.ilike.%${filters.search}%,user_email.ilike.%${filters.search}%`)
+      query = query.or(
+        `description.ilike.%${filters.search}%,resource_name.ilike.%${filters.search}%,user_email.ilike.%${filters.search}%`
+      )
     }
 
     const { data, error } = await query
@@ -260,8 +260,16 @@ export const auditLogs = {
     const logs = await this.getAll({ ...filters, limit: 10000 })
 
     const headers = [
-      'timestamp', 'user_email', 'event_type', 'category', 'action',
-      'resource_type', 'resource_name', 'description', 'status', 'ip_address'
+      'timestamp',
+      'user_email',
+      'event_type',
+      'category',
+      'action',
+      'resource_type',
+      'resource_name',
+      'description',
+      'status',
+      'ip_address',
     ]
 
     const rows = [headers.join(',')]

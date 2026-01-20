@@ -28,7 +28,7 @@ async function hashKey(key) {
   const data = encoder.encode(key)
   const hashBuffer = await crypto.subtle.digest('SHA-256', data)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
 /**
@@ -116,7 +116,14 @@ export const apiKeys = {
    * @param {object} updates - Fields to update
    */
   async update(keyId, userId, updates) {
-    const allowedFields = ['name', 'scopes', 'is_active', 'expires_at', 'rate_limit_per_minute', 'rate_limit_per_day']
+    const allowedFields = [
+      'name',
+      'scopes',
+      'is_active',
+      'expires_at',
+      'rate_limit_per_minute',
+      'rate_limit_per_day',
+    ]
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([key]) => allowedFields.includes(key))
     )
@@ -148,11 +155,7 @@ export const apiKeys = {
    * @param {string} userId - User ID
    */
   async delete(keyId, userId) {
-    const { error } = await supabase
-      .from('api_keys')
-      .delete()
-      .eq('id', keyId)
-      .eq('user_id', userId)
+    const { error } = await supabase.from('api_keys').delete().eq('id', keyId).eq('user_id', userId)
 
     if (error) throw error
     return true
@@ -178,16 +181,17 @@ export const apiKeys = {
     // Calculate stats
     const requests = data || []
     const totalRequests = requests.length
-    const requestsToday = requests.filter(r =>
-      new Date(r.created_at).toDateString() === new Date().toDateString()
+    const requestsToday = requests.filter(
+      (r) => new Date(r.created_at).toDateString() === new Date().toDateString()
     ).length
-    const avgResponseTime = requests.length > 0
-      ? requests.reduce((sum, r) => sum + (r.response_time_ms || 0), 0) / requests.length
-      : 0
+    const avgResponseTime =
+      requests.length > 0
+        ? requests.reduce((sum, r) => sum + (r.response_time_ms || 0), 0) / requests.length
+        : 0
 
     // Top endpoints
     const endpointCounts = {}
-    requests.forEach(r => {
+    requests.forEach((r) => {
       endpointCounts[r.endpoint] = (endpointCounts[r.endpoint] || 0) + 1
     })
     const topEndpoints = Object.entries(endpointCounts)
@@ -197,7 +201,7 @@ export const apiKeys = {
 
     // Daily requests chart data
     const dailyData = {}
-    requests.forEach(r => {
+    requests.forEach((r) => {
       const date = new Date(r.created_at).toISOString().split('T')[0]
       dailyData[date] = (dailyData[date] || 0) + 1
     })

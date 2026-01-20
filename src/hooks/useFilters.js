@@ -48,7 +48,12 @@ export function useFilters(initialFilters = {}, options = {}) {
     const newParams = new URLSearchParams(searchParams)
 
     Object.entries(filters).forEach(([key, value]) => {
-      if (value === '' || value === null || value === undefined || (Array.isArray(value) && value.length === 0)) {
+      if (
+        value === '' ||
+        value === null ||
+        value === undefined ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
         newParams.delete(key)
       } else if (Array.isArray(value)) {
         newParams.set(key, value.join(','))
@@ -61,22 +66,28 @@ export function useFilters(initialFilters = {}, options = {}) {
   }, [filters, syncWithUrl, searchParams, setSearchParams])
 
   // Set a single filter
-  const setFilter = useCallback((key, value) => {
-    setFiltersState((prev) => {
-      const next = { ...prev, [key]: value }
-      onFilterChange?.(next)
-      return next
-    })
-  }, [onFilterChange])
+  const setFilter = useCallback(
+    (key, value) => {
+      setFiltersState((prev) => {
+        const next = { ...prev, [key]: value }
+        onFilterChange?.(next)
+        return next
+      })
+    },
+    [onFilterChange]
+  )
 
   // Set multiple filters at once
-  const setFilters = useCallback((updates) => {
-    setFiltersState((prev) => {
-      const next = { ...prev, ...updates }
-      onFilterChange?.(next)
-      return next
-    })
-  }, [onFilterChange])
+  const setFilters = useCallback(
+    (updates) => {
+      setFiltersState((prev) => {
+        const next = { ...prev, ...updates }
+        onFilterChange?.(next)
+        return next
+      })
+    },
+    [onFilterChange]
+  )
 
   // Reset all filters to initial values
   const resetFilters = useCallback(() => {
@@ -91,8 +102,9 @@ export function useFilters(initialFilters = {}, options = {}) {
       const initial = initialFilters[key]
 
       if (Array.isArray(current)) {
-        return current.length !== (initial?.length || 0) ||
-          current.some((v, i) => v !== initial?.[i])
+        return (
+          current.length !== (initial?.length || 0) || current.some((v, i) => v !== initial?.[i])
+        )
       }
       return current !== initial
     })
@@ -194,16 +206,19 @@ export function useTab(defaultTab, paramName = 'tab') {
   const [searchParams, setSearchParams] = useSearchParams()
   const [tab, setTabState] = useState(searchParams.get(paramName) || defaultTab)
 
-  const setTab = useCallback((newTab) => {
-    setTabState(newTab)
-    const params = new URLSearchParams(searchParams)
-    if (newTab === defaultTab) {
-      params.delete(paramName)
-    } else {
-      params.set(paramName, newTab)
-    }
-    setSearchParams(params, { replace: true })
-  }, [defaultTab, paramName, searchParams, setSearchParams])
+  const setTab = useCallback(
+    (newTab) => {
+      setTabState(newTab)
+      const params = new URLSearchParams(searchParams)
+      if (newTab === defaultTab) {
+        params.delete(paramName)
+      } else {
+        params.set(paramName, newTab)
+      }
+      setSearchParams(params, { replace: true })
+    },
+    [defaultTab, paramName, searchParams, setSearchParams]
+  )
 
   // Sync from URL on mount
   useEffect(() => {
@@ -225,22 +240,28 @@ export function usePagination(defaultPage = 1, defaultPerPage = 25) {
   const page = parseInt(searchParams.get('page') || String(defaultPage), 10)
   const perPage = parseInt(searchParams.get('perPage') || String(defaultPerPage), 10)
 
-  const setPage = useCallback((newPage) => {
-    const params = new URLSearchParams(searchParams)
-    if (newPage === defaultPage) {
-      params.delete('page')
-    } else {
-      params.set('page', String(newPage))
-    }
-    setSearchParams(params, { replace: true })
-  }, [defaultPage, searchParams, setSearchParams])
+  const setPage = useCallback(
+    (newPage) => {
+      const params = new URLSearchParams(searchParams)
+      if (newPage === defaultPage) {
+        params.delete('page')
+      } else {
+        params.set('page', String(newPage))
+      }
+      setSearchParams(params, { replace: true })
+    },
+    [defaultPage, searchParams, setSearchParams]
+  )
 
-  const setPerPage = useCallback((newPerPage) => {
-    const params = new URLSearchParams(searchParams)
-    params.set('perPage', String(newPerPage))
-    params.delete('page') // Reset to page 1 when changing page size
-    setSearchParams(params, { replace: true })
-  }, [searchParams, setSearchParams])
+  const setPerPage = useCallback(
+    (newPerPage) => {
+      const params = new URLSearchParams(searchParams)
+      params.set('perPage', String(newPerPage))
+      params.delete('page') // Reset to page 1 when changing page size
+      setSearchParams(params, { replace: true })
+    },
+    [searchParams, setSearchParams]
+  )
 
   const nextPage = useCallback(() => setPage(page + 1), [page, setPage])
   const prevPage = useCallback(() => setPage(Math.max(1, page - 1)), [page, setPage])
@@ -264,31 +285,37 @@ export function useSort(defaultSortBy = 'date', defaultSortOrder = 'desc') {
   const sortBy = searchParams.get('sortBy') || defaultSortBy
   const sortOrder = searchParams.get('sortOrder') || defaultSortOrder
 
-  const setSort = useCallback((newSortBy, newSortOrder) => {
-    const params = new URLSearchParams(searchParams)
+  const setSort = useCallback(
+    (newSortBy, newSortOrder) => {
+      const params = new URLSearchParams(searchParams)
 
-    if (newSortBy === defaultSortBy) {
-      params.delete('sortBy')
-    } else {
-      params.set('sortBy', newSortBy)
-    }
+      if (newSortBy === defaultSortBy) {
+        params.delete('sortBy')
+      } else {
+        params.set('sortBy', newSortBy)
+      }
 
-    if (newSortOrder === defaultSortOrder) {
-      params.delete('sortOrder')
-    } else {
-      params.set('sortOrder', newSortOrder)
-    }
+      if (newSortOrder === defaultSortOrder) {
+        params.delete('sortOrder')
+      } else {
+        params.set('sortOrder', newSortOrder)
+      }
 
-    setSearchParams(params, { replace: true })
-  }, [defaultSortBy, defaultSortOrder, searchParams, setSearchParams])
+      setSearchParams(params, { replace: true })
+    },
+    [defaultSortBy, defaultSortOrder, searchParams, setSearchParams]
+  )
 
-  const toggleSort = useCallback((field) => {
-    if (sortBy === field) {
-      setSort(field, sortOrder === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSort(field, 'desc')
-    }
-  }, [sortBy, sortOrder, setSort])
+  const toggleSort = useCallback(
+    (field) => {
+      if (sortBy === field) {
+        setSort(field, sortOrder === 'asc' ? 'desc' : 'asc')
+      } else {
+        setSort(field, 'desc')
+      }
+    },
+    [sortBy, sortOrder, setSort]
+  )
 
   return {
     sortBy,

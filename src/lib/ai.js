@@ -32,7 +32,9 @@ async function shouldSaveSummary() {
  * @returns {Promise<string>} - The generated summary
  */
 export async function generateBLUF(data, options = { save: true }) {
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   if (!session) {
     logger.warn('No authenticated user - AI summary disabled')
     return null
@@ -46,12 +48,12 @@ export async function generateBLUF(data, options = { save: true }) {
     const response = await fetch('/api/generate-summary', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         type: 'bluf',
-        data: data
+        data: data,
       }),
     })
 
@@ -68,21 +70,23 @@ export async function generateBLUF(data, options = { save: true }) {
     // Save to database for historical tracking (throttled to once per 6 hours)
     if (summary && options.save) {
       const metadata = buildMetadata(data)
-      shouldSaveSummary().then(shouldSave => {
+      shouldSaveSummary().then((shouldSave) => {
         if (shouldSave) {
-          aiSummaries.save(summary, {
-            type: 'dashboard_bluf',
-            model: result.model || 'llama-3.3-70b-versatile',
-            incidents30d: metadata.incidents30d,
-            actors: metadata.actors,
-            sectors: metadata.sectors,
-            rawData: {
+          aiSummaries
+            .save(summary, {
+              type: 'dashboard_bluf',
+              model: result.model || 'llama-3.3-70b-versatile',
               incidents30d: metadata.incidents30d,
-              activeGroups: metadata.actors,
+              actors: metadata.actors,
               sectors: metadata.sectors,
-              victims: metadata.victims,
-            },
-          }).catch(err => logger.error('Failed to save AI summary:', err))
+              rawData: {
+                incidents30d: metadata.incidents30d,
+                activeGroups: metadata.actors,
+                sectors: metadata.sectors,
+                victims: metadata.victims,
+              },
+            })
+            .catch((err) => logger.error('Failed to save AI summary:', err))
         }
       })
     }
@@ -98,27 +102,33 @@ export async function generateBLUF(data, options = { save: true }) {
  * Build metadata from data for saving
  */
 function buildMetadata(data) {
-  const {
-    incidents30d = 0,
-    topActors = [],
-    topSectors = [],
-    recentIncidents = [],
-  } = data
+  const { incidents30d = 0, topActors = [], topSectors = [], recentIncidents = [] } = data
 
-  const topActorNames = topActors.slice(0, 5).map(a => a.name).filter(Boolean)
+  const topActorNames = topActors
+    .slice(0, 5)
+    .map((a) => a.name)
+    .filter(Boolean)
   const realSectors = topSectors
-    .filter(s => !['Other', 'Unknown', 'Not Found', 'other'].includes(s.name))
+    .filter((s) => !['Other', 'Unknown', 'Not Found', 'other'].includes(s.name))
     .slice(0, 3)
-  const recentActorNames = [...new Set(recentIncidents.slice(0, 20).map(i =>
-    i.threat_actor?.name
-  ).filter(Boolean))].slice(0, 5)
-  const victims = recentIncidents.slice(0, 5).map(i => i.victim_name).filter(Boolean)
+  const recentActorNames = [
+    ...new Set(
+      recentIncidents
+        .slice(0, 20)
+        .map((i) => i.threat_actor?.name)
+        .filter(Boolean)
+    ),
+  ].slice(0, 5)
+  const victims = recentIncidents
+    .slice(0, 5)
+    .map((i) => i.victim_name)
+    .filter(Boolean)
   const activeGroups = recentActorNames.length > 0 ? recentActorNames : topActorNames
 
   return {
     incidents30d,
     actors: activeGroups.slice(0, 4),
-    sectors: realSectors.map(s => s.name),
+    sectors: realSectors.map((s) => s.name),
     victims: victims.slice(0, 5),
   }
 }
@@ -127,7 +137,9 @@ function buildMetadata(data) {
  * Uses backend API to securely call AI service
  */
 export async function generateActorSummary(actor, recentIncidents = []) {
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   if (!session) return null
 
   try {
@@ -136,15 +148,15 @@ export async function generateActorSummary(actor, recentIncidents = []) {
     const response = await fetch('/api/generate-summary', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         type: 'actor',
         data: {
           actor: actor,
-          incidents: recentIncidents
-        }
+          incidents: recentIncidents,
+        },
       }),
     })
 
@@ -178,13 +190,24 @@ function parseQueryKeywords(query) {
   const result = { parsed: true, aiParsed: false }
 
   // Detect entity type
-  if (q.includes('actor') || q.includes('group') || q.includes('gang') || q.includes('ransomware')) {
+  if (
+    q.includes('actor') ||
+    q.includes('group') ||
+    q.includes('gang') ||
+    q.includes('ransomware')
+  ) {
     result.type = 'actors'
   } else if (q.includes('victim') || q.includes('incident') || q.includes('attack')) {
     result.type = 'incidents'
   } else if (q.includes('cve') || q.includes('vulnerability') || q.includes('vuln')) {
     result.type = 'vulnerabilities'
-  } else if (q.includes('ioc') || q.includes('ip') || q.includes('domain') || q.includes('hash') || q.includes('indicator')) {
+  } else if (
+    q.includes('ioc') ||
+    q.includes('ip') ||
+    q.includes('domain') ||
+    q.includes('hash') ||
+    q.includes('indicator')
+  ) {
     result.type = 'iocs'
   } else if (q.includes('malware') || q.includes('sample')) {
     result.type = 'malware'
@@ -192,13 +215,17 @@ function parseQueryKeywords(query) {
 
   // Detect sectors
   const sectors = []
-  if (q.includes('healthcare') || q.includes('hospital') || q.includes('medical')) sectors.push('healthcare')
-  if (q.includes('finance') || q.includes('bank') || q.includes('financial')) sectors.push('finance')
-  if (q.includes('education') || q.includes('school') || q.includes('university')) sectors.push('education')
+  if (q.includes('healthcare') || q.includes('hospital') || q.includes('medical'))
+    sectors.push('healthcare')
+  if (q.includes('finance') || q.includes('bank') || q.includes('financial'))
+    sectors.push('finance')
+  if (q.includes('education') || q.includes('school') || q.includes('university'))
+    sectors.push('education')
   if (q.includes('government') || q.includes('gov')) sectors.push('government')
   if (q.includes('manufacturing') || q.includes('industrial')) sectors.push('manufacturing')
   if (q.includes('retail') || q.includes('store')) sectors.push('retail')
-  if (q.includes('technology') || q.includes('tech') || q.includes('software')) sectors.push('technology')
+  if (q.includes('technology') || q.includes('tech') || q.includes('software'))
+    sectors.push('technology')
   if (sectors.length > 0) result.sectors = sectors
 
   // Detect severity
@@ -208,7 +235,8 @@ function parseQueryKeywords(query) {
   else if (q.includes('low')) result.severity = 'low'
 
   // Detect trend status
-  if (q.includes('escalating') || q.includes('rising') || q.includes('increasing')) result.trendStatus = 'ESCALATING'
+  if (q.includes('escalating') || q.includes('rising') || q.includes('increasing'))
+    result.trendStatus = 'ESCALATING'
   else if (q.includes('declining') || q.includes('decreasing')) result.trendStatus = 'DECLINING'
 
   // Detect IOC type
@@ -228,9 +256,24 @@ function parseQueryKeywords(query) {
 
   // Extract potential actor names (common ones)
   const actorPatterns = [
-    'lockbit', 'blackcat', 'alphv', 'cl0p', 'clop', 'play', 'akira',
-    'rhysida', 'blackbasta', 'black basta', 'bianlian', 'royal',
-    'medusa', 'hunters', '8base', 'cactus', 'qilin', 'ransomhub'
+    'lockbit',
+    'blackcat',
+    'alphv',
+    'cl0p',
+    'clop',
+    'play',
+    'akira',
+    'rhysida',
+    'blackbasta',
+    'black basta',
+    'bianlian',
+    'royal',
+    'medusa',
+    'hunters',
+    '8base',
+    'cactus',
+    'qilin',
+    'ransomhub',
   ]
   for (const actor of actorPatterns) {
     if (q.includes(actor)) {
@@ -240,9 +283,7 @@ function parseQueryKeywords(query) {
   }
 
   // Extract remaining as search term
-  let searchTerm = query
-    .replace(/show|me|find|search|for|all|the|with|from|in|and|or/gi, '')
-    .trim()
+  let searchTerm = query.replace(/show|me|find|search|for|all|the|with|from|in|and|or/gi, '').trim()
   if (searchTerm.length > 2 && !result.actor) {
     result.search = searchTerm
   }

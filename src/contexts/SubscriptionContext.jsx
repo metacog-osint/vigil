@@ -52,11 +52,7 @@ export function SubscriptionProvider({ children }) {
     },
   }
 
-  return (
-    <SubscriptionContext.Provider value={value}>
-      {children}
-    </SubscriptionContext.Provider>
-  )
+  return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>
 }
 
 export function useSubscription() {

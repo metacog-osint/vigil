@@ -57,11 +57,7 @@ export const alerts = {
   },
 
   async getById(id) {
-    return supabase
-      .from('alerts')
-      .select('*')
-      .eq('id', id)
-      .single()
+    return supabase.from('alerts').select('*').eq('id', id).single()
   },
 
   async getByCVE(cveId) {

@@ -20,8 +20,18 @@ function PersonalizationPrompt() {
     <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-4">
       <div className="flex items-start gap-4">
         <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
-          <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          <svg
+            className="w-5 h-5 text-cyan-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+            />
           </svg>
         </div>
         <div className="flex-1">
@@ -45,12 +55,14 @@ function PersonalizationPrompt() {
             </button>
           </div>
         </div>
-        <button
-          onClick={() => setDismissed(true)}
-          className="text-gray-500 hover:text-gray-300"
-        >
+        <button onClick={() => setDismissed(true)} className="text-gray-500 hover:text-gray-300">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -58,11 +70,7 @@ function PersonalizationPrompt() {
   )
 }
 
-export default function PrioritiesSection({
-  userProfile,
-  relevantActors,
-  relevantVulns,
-}) {
+export default function PrioritiesSection({ userProfile, relevantActors, relevantVulns }) {
   // Show personalization prompt if no profile
   if (!userProfile?.sector) {
     return <PersonalizationPrompt />
@@ -77,8 +85,18 @@ export default function PrioritiesSection({
     <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <svg className="w-5 h-5 text-cyber-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          <svg
+            className="w-5 h-5 text-cyber-accent"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+            />
           </svg>
           <h2 className="text-base font-semibold text-white">Priorities for You</h2>
         </div>
@@ -96,7 +114,9 @@ export default function PrioritiesSection({
         {/* Relevant Actors */}
         {relevantActors.length > 0 && (
           <div>
-            <h3 className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Priority Actors</h3>
+            <h3 className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+              Priority Actors
+            </h3>
             <div className="space-y-1.5">
               {relevantActors.slice(0, 3).map((actor) => (
                 <Link
@@ -122,7 +142,9 @@ export default function PrioritiesSection({
         {/* Relevant Vulnerabilities */}
         {relevantVulns.length > 0 && (
           <div>
-            <h3 className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Priority CVEs</h3>
+            <h3 className="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+              Priority CVEs
+            </h3>
             <div className="space-y-1.5">
               {relevantVulns.slice(0, 3).map((vuln) => (
                 <Link

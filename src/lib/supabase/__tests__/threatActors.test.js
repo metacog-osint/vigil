@@ -157,7 +157,8 @@ describe('threatActors module', () => {
     it('should return object with escalating, stable, declining counts', async () => {
       // Setup mock to return specific counts
       const mockSelect = vi.fn().mockReturnThis()
-      const mockEq = vi.fn()
+      const mockEq = vi
+        .fn()
         .mockResolvedValueOnce({ count: 15, error: null }) // ESCALATING
         .mockResolvedValueOnce({ count: 50, error: null }) // STABLE
         .mockResolvedValueOnce({ count: 10, error: null }) // DECLINING

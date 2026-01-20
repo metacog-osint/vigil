@@ -126,7 +126,7 @@ export const EXPORT_FORMATS = [
  * @returns {object|undefined} Time range object
  */
 export function getTimeRangeByValue(value) {
-  return TIME_RANGES.find(tr => tr.value === value)
+  return TIME_RANGES.find((tr) => tr.value === value)
 }
 
 /**
@@ -134,5 +134,5 @@ export function getTimeRangeByValue(value) {
  * @returns {object} Default time range (30 days)
  */
 export function getDefaultTimeRange() {
-  return TIME_RANGES.find(tr => tr.value === 30)
+  return TIME_RANGES.find((tr) => tr.value === 30)
 }

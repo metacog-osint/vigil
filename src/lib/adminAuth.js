@@ -4,7 +4,10 @@
  */
 
 // Get admin emails from environment variable (comma-separated)
-const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '')
+  .split(',')
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean)
 
 /**
  * Check if a user is a system admin
@@ -32,10 +35,7 @@ export function checkAdminStatus(user) {
 /**
  * Admin routes that should be restricted
  */
-export const ADMIN_ROUTES = [
-  '/ops',
-  '/admin',
-]
+export const ADMIN_ROUTES = ['/ops', '/admin']
 
 /**
  * Check if a path requires admin access
@@ -43,7 +43,7 @@ export const ADMIN_ROUTES = [
  * @returns {boolean}
  */
 export function isAdminRoute(path) {
-  return ADMIN_ROUTES.some(route => path.startsWith(route))
+  return ADMIN_ROUTES.some((route) => path.startsWith(route))
 }
 
 /**

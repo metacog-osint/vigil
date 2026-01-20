@@ -10,7 +10,12 @@ import { NewBadge } from '../../components/NewIndicator'
 import { WatchButton } from '../../components/WatchButton'
 import { Sparkline } from '../../components/Sparkline'
 import { Tooltip, ColumnMenu, FIELD_TOOLTIPS } from '../../components/Tooltip'
-import { getTypeConfig, TYPE_FILTER_OPTIONS, TREND_FILTER_OPTIONS, STATUS_FILTER_OPTIONS } from './ActorConstants'
+import {
+  getTypeConfig,
+  TYPE_FILTER_OPTIONS,
+  TREND_FILTER_OPTIONS,
+  STATUS_FILTER_OPTIONS,
+} from './ActorConstants'
 
 export function ActorTableView({
   actors,
@@ -92,8 +97,9 @@ export function ActorTableView({
                 currentFilter={null}
                 onFilter={() => {}}
                 tooltip={{
-                  content: 'Current week incidents / previous week incidents. Velocity shows incidents per day.',
-                  source: 'ransomware.live'
+                  content:
+                    'Current week incidents / previous week incidents. Velocity shows incidents per day.',
+                  source: 'ransomware.live',
                 }}
               >
                 7d / Prev
@@ -133,8 +139,9 @@ export function ActorTableView({
                   currentFilter={null}
                   onFilter={() => {}}
                   tooltip={{
-                    content: 'Relevance to your organization based on your sector and tech stack profile.',
-                    source: 'Calculated from org profile'
+                    content:
+                      'Relevance to your organization based on your sector and tech stack profile.',
+                    source: 'Calculated from org profile',
                   }}
                 >
                   Risk
@@ -150,9 +157,7 @@ export function ActorTableView({
               onClick={(e) => onRowClick(actor, e)}
               className={`cursor-pointer transition-colors ${
                 selectedRows.has(actor.id) ? 'bg-cyan-900/30' : ''
-              } ${
-                focusedRowIndex === index ? 'ring-1 ring-inset ring-cyan-500' : ''
-              }`}
+              } ${focusedRowIndex === index ? 'ring-1 ring-inset ring-cyan-500' : ''}`}
             >
               {/* Actor Name Cell */}
               <td>
@@ -192,7 +197,9 @@ export function ActorTableView({
                   source={FIELD_TOOLTIPS.actor_type.source}
                   position="right"
                 >
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium border ${getTypeConfig(actor.actor_type).color}`}>
+                  <span
+                    className={`px-2 py-0.5 rounded text-xs font-medium border ${getTypeConfig(actor.actor_type).color}`}
+                  >
                     {(actor.actor_type || 'unknown').replace(/_/g, ' ')}
                   </span>
                 </Tooltip>
@@ -205,8 +212,8 @@ export function ActorTableView({
                     actor.trend_status === 'ESCALATING'
                       ? `Activity increased ${actor.incidents_7d > 0 && actor.incidents_prev_7d > 0 ? Math.round(((actor.incidents_7d - actor.incidents_prev_7d) / actor.incidents_prev_7d) * 100) : ''}% vs previous week.`
                       : actor.trend_status === 'DECLINING'
-                      ? `Activity decreased vs previous week.`
-                      : 'Activity is stable compared to previous week.'
+                        ? `Activity decreased vs previous week.`
+                        : 'Activity is stable compared to previous week.'
                   }
                   source={FIELD_TOOLTIPS.trend_status.source}
                   position="right"
@@ -233,10 +240,16 @@ export function ActorTableView({
                       <Sparkline
                         data={[
                           actor.incidents_prev_7d || 0,
-                          Math.round((actor.incidents_prev_7d || 0) * 0.8 + (actor.incidents_7d || 0) * 0.2),
-                          Math.round((actor.incidents_prev_7d || 0) * 0.5 + (actor.incidents_7d || 0) * 0.5),
-                          Math.round((actor.incidents_prev_7d || 0) * 0.2 + (actor.incidents_7d || 0) * 0.8),
-                          actor.incidents_7d || 0
+                          Math.round(
+                            (actor.incidents_prev_7d || 0) * 0.8 + (actor.incidents_7d || 0) * 0.2
+                          ),
+                          Math.round(
+                            (actor.incidents_prev_7d || 0) * 0.5 + (actor.incidents_7d || 0) * 0.5
+                          ),
+                          Math.round(
+                            (actor.incidents_prev_7d || 0) * 0.2 + (actor.incidents_7d || 0) * 0.8
+                          ),
+                          actor.incidents_7d || 0,
                         ]}
                         width={40}
                         height={16}
@@ -272,11 +285,7 @@ export function ActorTableView({
                   source={FIELD_TOOLTIPS.status.source}
                   position="left"
                 >
-                  <span
-                    className={`badge-${
-                      actor.status === 'active' ? 'high' : 'low'
-                    }`}
-                  >
+                  <span className={`badge-${actor.status === 'active' ? 'high' : 'low'}`}>
                     {actor.status || 'active'}
                   </span>
                 </Tooltip>
@@ -288,19 +297,27 @@ export function ActorTableView({
                   {riskScores[actor.id] > 0 ? (
                     <Tooltip
                       content={`Relevance score based on your org profile: ${
-                        riskScores[actor.id] >= 80 ? 'Critical - high relevance to your sector/region' :
-                        riskScores[actor.id] >= 60 ? 'High - significant overlap with your profile' :
-                        riskScores[actor.id] >= 40 ? 'Medium - some relevance to your organization' :
-                        'Low - limited relevance'
+                        riskScores[actor.id] >= 80
+                          ? 'Critical - high relevance to your sector/region'
+                          : riskScores[actor.id] >= 60
+                            ? 'High - significant overlap with your profile'
+                            : riskScores[actor.id] >= 40
+                              ? 'Medium - some relevance to your organization'
+                              : 'Low - limited relevance'
                       }`}
                       position="left"
                     >
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        riskScores[actor.id] >= 80 ? 'bg-red-900/50 text-red-400' :
-                        riskScores[actor.id] >= 60 ? 'bg-orange-900/50 text-orange-400' :
-                        riskScores[actor.id] >= 40 ? 'bg-yellow-900/50 text-yellow-400' :
-                        'bg-blue-900/50 text-blue-400'
-                      }`}>
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          riskScores[actor.id] >= 80
+                            ? 'bg-red-900/50 text-red-400'
+                            : riskScores[actor.id] >= 60
+                              ? 'bg-orange-900/50 text-orange-400'
+                              : riskScores[actor.id] >= 40
+                                ? 'bg-yellow-900/50 text-yellow-400'
+                                : 'bg-blue-900/50 text-blue-400'
+                        }`}
+                      >
                         {riskScores[actor.id]}
                       </span>
                     </Tooltip>
@@ -325,8 +342,19 @@ export function ActorTableView({
             {loadingMore ? (
               <span className="flex items-center gap-2">
                 <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
                 </svg>
                 Loading...
               </span>

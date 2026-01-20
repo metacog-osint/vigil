@@ -30,10 +30,7 @@ export default function ThreatsTab({
       {/* Threat Level + Sectors Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Threat Level Gauge */}
-        <ThreatGauge
-          score={threatLevel}
-          trend={threatLevel > 60 ? 'up' : 'stable'}
-        />
+        <ThreatGauge score={threatLevel} trend={threatLevel > 60 ? 'up' : 'stable'} />
 
         {/* Sector Distribution */}
         <div className="cyber-card sm:col-span-2">

@@ -67,7 +67,7 @@ export default function Vendors() {
   async function handleCreate(data) {
     try {
       const newVendor = await vendors.create(user.uid, data)
-      setVendorList(prev => [newVendor, ...prev])
+      setVendorList((prev) => [newVendor, ...prev])
       setShowCreate(false)
     } catch (err) {
       alert('Failed to create vendor: ' + err.message)
@@ -78,14 +78,14 @@ export default function Vendors() {
     if (!confirm('Remove this vendor from monitoring?')) return
     try {
       await vendors.delete(vendorId)
-      setVendorList(prev => prev.filter(v => v.id !== vendorId))
+      setVendorList((prev) => prev.filter((v) => v.id !== vendorId))
       if (selectedVendor?.id === vendorId) setSelectedVendor(null)
     } catch (err) {
       alert('Failed to delete vendor: ' + err.message)
     }
   }
 
-  const filteredVendors = vendorList.filter(v => {
+  const filteredVendors = vendorList.filter((v) => {
     if (filter.risk && v.risk_level !== filter.risk) return false
     if (filter.category && v.category !== filter.category) return false
     return true
@@ -96,12 +96,24 @@ export default function Vendors() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            <svg
+              className="w-8 h-8 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
             </svg>
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Professional Feature</h2>
-          <p className="text-gray-400 mb-4">Vendor Risk Monitoring is available on Professional and above.</p>
+          <p className="text-gray-400 mb-4">
+            Vendor Risk Monitoring is available on Professional and above.
+          </p>
         </div>
       </div>
     )
@@ -156,22 +168,26 @@ export default function Vendors() {
         <div className="flex items-center gap-3">
           <select
             value={filter.risk}
-            onChange={(e) => setFilter(prev => ({ ...prev, risk: e.target.value }))}
+            onChange={(e) => setFilter((prev) => ({ ...prev, risk: e.target.value }))}
             className="cyber-input text-sm"
           >
             <option value="">All Risk Levels</option>
             {Object.entries(RISK_LEVELS).map(([key, level]) => (
-              <option key={key} value={key}>{level.label}</option>
+              <option key={key} value={key}>
+                {level.label}
+              </option>
             ))}
           </select>
           <select
             value={filter.category}
-            onChange={(e) => setFilter(prev => ({ ...prev, category: e.target.value }))}
+            onChange={(e) => setFilter((prev) => ({ ...prev, category: e.target.value }))}
             className="cyber-input text-sm"
           >
             <option value="">All Categories</option>
             {Object.entries(VENDOR_CATEGORIES).map(([key, cat]) => (
-              <option key={key} value={key}>{cat.label}</option>
+              <option key={key} value={key}>
+                {cat.label}
+              </option>
             ))}
           </select>
         </div>
@@ -205,12 +221,10 @@ export default function Vendors() {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-white">Open Risk Events</h2>
           {openEvents.length === 0 ? (
-            <div className="cyber-card p-6 text-center text-gray-500">
-              No open risk events
-            </div>
+            <div className="cyber-card p-6 text-center text-gray-500">No open risk events</div>
           ) : (
             <div className="space-y-2">
-              {openEvents.map(event => (
+              {openEvents.map((event) => (
                 <RiskEventRow key={event.id} event={event} />
               ))}
             </div>
@@ -219,12 +233,8 @@ export default function Vendors() {
       ) : view === 'grid' ? (
         /* Grid View */
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredVendors.map(vendor => (
-            <VendorCard
-              key={vendor.id}
-              vendor={vendor}
-              onClick={() => setSelectedVendor(vendor)}
-            />
+          {filteredVendors.map((vendor) => (
+            <VendorCard key={vendor.id} vendor={vendor} onClick={() => setSelectedVendor(vendor)} />
           ))}
           {filteredVendors.length === 0 && (
             <div className="col-span-full text-center text-gray-500 py-8">
@@ -247,7 +257,7 @@ export default function Vendors() {
               </tr>
             </thead>
             <tbody>
-              {filteredVendors.map(vendor => (
+              {filteredVendors.map((vendor) => (
                 <tr
                   key={vendor.id}
                   onClick={() => setSelectedVendor(vendor)}
@@ -270,9 +280,13 @@ export default function Vendors() {
                   </td>
                   <td className="text-gray-400">-</td>
                   <td>
-                    <span className={`text-xs px-2 py-0.5 rounded ${
-                      vendor.is_monitored ? 'bg-green-500/20 text-green-400' : 'bg-gray-700 text-gray-400'
-                    }`}>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded ${
+                        vendor.is_monitored
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-gray-700 text-gray-400'
+                      }`}
+                    >
                       {vendor.is_monitored ? 'Monitored' : 'Not Monitored'}
                     </span>
                   </td>
@@ -289,7 +303,7 @@ export default function Vendors() {
           vendor={selectedVendor}
           onClose={() => setSelectedVendor(null)}
           onUpdate={(updated) => {
-            setVendorList(prev => prev.map(v => v.id === updated.id ? updated : v))
+            setVendorList((prev) => prev.map((v) => (v.id === updated.id ? updated : v)))
             setSelectedVendor(updated)
           }}
           onDelete={() => handleDelete(selectedVendor.id)}
@@ -298,10 +312,7 @@ export default function Vendors() {
 
       {/* Create Modal */}
       {showCreate && (
-        <CreateVendorModal
-          onClose={() => setShowCreate(false)}
-          onCreate={handleCreate}
-        />
+        <CreateVendorModal onClose={() => setShowCreate(false)} onCreate={handleCreate} />
       )}
     </div>
   )
@@ -312,7 +323,10 @@ export default function Vendors() {
  */
 function VendorCard({ vendor, onClick }) {
   return (
-    <div onClick={onClick} className="cyber-card p-4 cursor-pointer hover:border-gray-700 transition-colors">
+    <div
+      onClick={onClick}
+      className="cyber-card p-4 cursor-pointer hover:border-gray-700 transition-colors"
+    >
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-medium text-white">{vendor.name}</h3>
@@ -332,9 +346,12 @@ function VendorCard({ vendor, onClick }) {
 
       {vendor.data_types?.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
-          {vendor.data_types.slice(0, 3).map(dt => (
-            <span key={dt} className="text-xs bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">
-              {DATA_TYPES.find(d => d.value === dt)?.label || dt}
+          {vendor.data_types.slice(0, 3).map((dt) => (
+            <span
+              key={dt}
+              className="text-xs bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded"
+            >
+              {DATA_TYPES.find((d) => d.value === dt)?.label || dt}
             </span>
           ))}
           {vendor.data_types.length > 3 && (
@@ -373,7 +390,9 @@ function RiskEventRow({ event }) {
   return (
     <div className="cyber-card p-4 flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <span className={`px-2 py-0.5 rounded text-xs bg-${eventType.color}-500/20 text-${eventType.color}-400`}>
+        <span
+          className={`px-2 py-0.5 rounded text-xs bg-${eventType.color}-500/20 text-${eventType.color}-400`}
+        >
           {eventType.label}
         </span>
         <div>
@@ -383,7 +402,9 @@ function RiskEventRow({ event }) {
           </div>
         </div>
       </div>
-      <span className={`px-2 py-0.5 rounded text-xs ${RISK_COLORS[event.severity].replace('bg-', 'bg-') + '/20'} ${RISK_TEXT_COLORS[event.severity]}`}>
+      <span
+        className={`px-2 py-0.5 rounded text-xs ${RISK_COLORS[event.severity].replace('bg-', 'bg-') + '/20'} ${RISK_TEXT_COLORS[event.severity]}`}
+      >
         {event.severity}
       </span>
     </div>
@@ -425,7 +446,12 @@ function VendorDetailModal({ vendor, onClose, onUpdate, onDelete }) {
             <RiskScoreBadge score={vendor.risk_score} level={vendor.risk_level} />
             <button onClick={onClose} className="text-gray-400 hover:text-white ml-4">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -436,7 +462,9 @@ function VendorDetailModal({ vendor, onClose, onUpdate, onDelete }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-xs text-gray-500 mb-1">Category</div>
-              <div className="text-gray-300">{VENDOR_CATEGORIES[vendor.category]?.label || vendor.category}</div>
+              <div className="text-gray-300">
+                {VENDOR_CATEGORIES[vendor.category]?.label || vendor.category}
+              </div>
             </div>
             <div>
               <div className="text-xs text-gray-500 mb-1">Criticality</div>
@@ -463,9 +491,12 @@ function VendorDetailModal({ vendor, onClose, onUpdate, onDelete }) {
             <div>
               <div className="text-xs text-gray-500 mb-2">Data Access</div>
               <div className="flex flex-wrap gap-2">
-                {vendor.data_types.map(dt => (
-                  <span key={dt} className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">
-                    {DATA_TYPES.find(d => d.value === dt)?.label || dt}
+                {vendor.data_types.map((dt) => (
+                  <span
+                    key={dt}
+                    className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded"
+                  >
+                    {DATA_TYPES.find((d) => d.value === dt)?.label || dt}
                   </span>
                 ))}
               </div>
@@ -477,8 +508,11 @@ function VendorDetailModal({ vendor, onClose, onUpdate, onDelete }) {
             <div>
               <div className="text-xs text-gray-500 mb-2">Technologies</div>
               <div className="flex flex-wrap gap-2">
-                {vendor.technologies.map(tech => (
-                  <span key={tech} className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
+                {vendor.technologies.map((tech) => (
+                  <span
+                    key={tech}
+                    className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded"
+                  >
                     {tech}
                   </span>
                 ))}
@@ -495,8 +529,11 @@ function VendorDetailModal({ vendor, onClose, onUpdate, onDelete }) {
               <div className="text-gray-500 text-sm">No events recorded</div>
             ) : (
               <div className="space-y-2 max-h-48 overflow-y-auto">
-                {events.map(event => (
-                  <div key={event.id} className="flex items-center justify-between text-sm p-2 bg-gray-800/50 rounded">
+                {events.map((event) => (
+                  <div
+                    key={event.id}
+                    className="flex items-center justify-between text-sm p-2 bg-gray-800/50 rounded"
+                  >
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${RISK_COLORS[event.severity]}`} />
                       <span className="text-gray-300">{event.title}</span>
@@ -513,7 +550,9 @@ function VendorDetailModal({ vendor, onClose, onUpdate, onDelete }) {
           <button onClick={onDelete} className="text-red-400 hover:text-red-300 text-sm">
             Remove Vendor
           </button>
-          <button onClick={onClose} className="cyber-button">Close</button>
+          <button onClick={onClose} className="cyber-button">
+            Close
+          </button>
         </div>
       </div>
     </div>
@@ -532,9 +571,7 @@ function CreateVendorModal({ onClose, onCreate }) {
   const [saving, setSaving] = useState(false)
 
   function toggleDataType(dt) {
-    setDataTypes(prev =>
-      prev.includes(dt) ? prev.filter(d => d !== dt) : [...prev, dt]
-    )
+    setDataTypes((prev) => (prev.includes(dt) ? prev.filter((d) => d !== dt) : [...prev, dt]))
   }
 
   async function handleSubmit(e) {
@@ -559,7 +596,12 @@ function CreateVendorModal({ onClose, onCreate }) {
           <h3 className="text-lg font-semibold text-white">Add Vendor</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -598,7 +640,9 @@ function CreateVendorModal({ onClose, onCreate }) {
               >
                 <option value="">Select...</option>
                 {Object.entries(VENDOR_CATEGORIES).map(([key, cat]) => (
-                  <option key={key} value={key}>{cat.label}</option>
+                  <option key={key} value={key}>
+                    {cat.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -610,7 +654,9 @@ function CreateVendorModal({ onClose, onCreate }) {
                 className="cyber-input w-full"
               >
                 {Object.entries(CRITICALITY_LEVELS).map(([key, level]) => (
-                  <option key={key} value={key}>{level.label}</option>
+                  <option key={key} value={key}>
+                    {level.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -619,7 +665,7 @@ function CreateVendorModal({ onClose, onCreate }) {
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-2">Data Access</label>
             <div className="flex flex-wrap gap-2">
-              {DATA_TYPES.map(dt => (
+              {DATA_TYPES.map((dt) => (
                 <button
                   key={dt.value}
                   type="button"
@@ -637,7 +683,9 @@ function CreateVendorModal({ onClose, onCreate }) {
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="cyber-button">Cancel</button>
+            <button type="button" onClick={onClose} className="cyber-button">
+              Cancel
+            </button>
             <button type="submit" disabled={saving || !name} className="cyber-button-primary">
               {saving ? 'Adding...' : 'Add Vendor'}
             </button>

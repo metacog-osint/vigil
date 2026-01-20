@@ -18,11 +18,11 @@ function getIntensity(count, maxCount) {
 }
 
 const INTENSITY_COLORS = [
-  'bg-gray-800',         // 0 - no activity
-  'bg-red-900/50',       // 1 - low
-  'bg-red-700/60',       // 2 - medium
-  'bg-red-500/70',       // 3 - high
-  'bg-red-400',          // 4 - very high
+  'bg-gray-800', // 0 - no activity
+  'bg-red-900/50', // 1 - low
+  'bg-red-700/60', // 2 - medium
+  'bg-red-500/70', // 3 - high
+  'bg-red-400', // 4 - very high
 ]
 
 export function ActivityCalendar({
@@ -74,7 +74,7 @@ export function ActivityCalendar({
     const months = []
     let lastMonth = -1
     for (let w = 0; w < grid.length; w++) {
-      const firstDayOfWeek = grid[w].find(d => d !== null)
+      const firstDayOfWeek = grid[w].find((d) => d !== null)
       if (firstDayOfWeek) {
         const month = firstDayOfWeek.date.getMonth()
         if (month !== lastMonth) {
@@ -86,7 +86,7 @@ export function ActivityCalendar({
 
     // Calculate stats
     const totalCount = Array.from(dateMap.values()).reduce((a, b) => a + b, 0)
-    const activeDays = Array.from(dateMap.values()).filter(v => v > 0).length
+    const activeDays = Array.from(dateMap.values()).filter((v) => v > 0).length
 
     return { grid, maxCount, months, stats: { total: totalCount, activeDays } }
   }, [data, days])
@@ -168,11 +168,7 @@ export function ActivityCalendar({
   )
 }
 
-export function ActivityCalendarMini({
-  data = [],
-  days = 30,
-  className = '',
-}) {
+export function ActivityCalendarMini({ data = [], days = 30, className = '' }) {
   const { cells, maxCount } = useMemo(() => {
     const today = new Date()
     const dateMap = new Map()

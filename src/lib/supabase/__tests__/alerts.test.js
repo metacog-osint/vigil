@@ -44,7 +44,9 @@ describe('alerts module', () => {
     it('applies search filter', async () => {
       await alerts.getAll({ search: 'ransomware' })
 
-      expect(mockQuery.or).toHaveBeenCalledWith('title.ilike.%ransomware%,description.ilike.%ransomware%')
+      expect(mockQuery.or).toHaveBeenCalledWith(
+        'title.ilike.%ransomware%,description.ilike.%ransomware%'
+      )
     })
 
     it('applies category filter', async () => {

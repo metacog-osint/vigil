@@ -20,7 +20,11 @@ const ENDPOINTS = [
     params: [
       { name: 'id', type: 'uuid', description: 'Get a specific actor by ID' },
       { name: 'search', type: 'string', description: 'Search by name or alias' },
-      { name: 'trend_status', type: 'string', description: 'Filter by trend: ESCALATING, STABLE, DECLINING' },
+      {
+        name: 'trend_status',
+        type: 'string',
+        description: 'Filter by trend: ESCALATING, STABLE, DECLINING',
+      },
       { name: 'country', type: 'string', description: 'Filter by attributed country' },
       { name: 'sector', type: 'string', description: 'Filter by target sector' },
       { name: 'page', type: 'integer', description: 'Page number (default: 1)' },
@@ -49,7 +53,7 @@ const ENDPOINTS = [
     "total": 234,
     "pages": 5
   }
-}`
+}`,
   },
   {
     id: 'incidents',
@@ -63,7 +67,11 @@ const ENDPOINTS = [
       { name: 'search', type: 'string', description: 'Search by victim name' },
       { name: 'sector', type: 'string', description: 'Filter by victim sector' },
       { name: 'country', type: 'string', description: 'Filter by victim country' },
-      { name: 'status', type: 'string', description: 'Filter by status: claimed, confirmed, leaked' },
+      {
+        name: 'status',
+        type: 'string',
+        description: 'Filter by status: claimed, confirmed, leaked',
+      },
       { name: 'date_from', type: 'date', description: 'Filter incidents after date (YYYY-MM-DD)' },
       { name: 'date_to', type: 'date', description: 'Filter incidents before date (YYYY-MM-DD)' },
       { name: 'page', type: 'integer', description: 'Page number (default: 1)' },
@@ -85,7 +93,7 @@ const ENDPOINTS = [
     }
   ],
   "pagination": { ... }
-}`
+}`,
   },
   {
     id: 'iocs',
@@ -123,7 +131,7 @@ const ENDPOINTS = [
     }
   ],
   "pagination": { ... }
-}`
+}`,
   },
   {
     id: 'vulnerabilities',
@@ -138,10 +146,18 @@ const ENDPOINTS = [
       { name: 'kev_only', type: 'boolean', description: 'Only return CISA KEV entries' },
       { name: 'min_cvss', type: 'number', description: 'Minimum CVSS score' },
       { name: 'max_cvss', type: 'number', description: 'Maximum CVSS score' },
-      { name: 'severity', type: 'string', description: 'Filter by severity: critical, high, medium, low' },
+      {
+        name: 'severity',
+        type: 'string',
+        description: 'Filter by severity: critical, high, medium, low',
+      },
       { name: 'vendor', type: 'string', description: 'Filter by vendor name' },
       { name: 'product', type: 'string', description: 'Filter by product name' },
-      { name: 'has_exploit', type: 'boolean', description: 'Only vulnerabilities with public exploits' },
+      {
+        name: 'has_exploit',
+        type: 'boolean',
+        description: 'Only vulnerabilities with public exploits',
+      },
       { name: 'date_from', type: 'date', description: 'Published after date' },
       { name: 'date_to', type: 'date', description: 'Published before date' },
     ],
@@ -160,8 +176,8 @@ const ENDPOINTS = [
     }
   ],
   "pagination": { ... }
-}`
-  }
+}`,
+  },
 ]
 
 function CodeBlock({ children, language = 'json' }) {
@@ -238,7 +254,7 @@ function EndpointCard({ endpoint }) {
           <div>
             <h4 className="text-sm font-medium text-gray-300 mb-3">Example Request</h4>
             <CodeBlock language="bash">
-{`curl -X GET "${API_BASE}${endpoint.path}?limit=10" \\
+              {`curl -X GET "${API_BASE}${endpoint.path}?limit=10" \\
   -H "Authorization: Bearer vgl_your_api_key"`}
             </CodeBlock>
           </div>
@@ -264,17 +280,25 @@ export default function ApiDocs() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white">API Documentation</h1>
-        <p className="text-gray-400 mt-1">
-          Programmatic access to Vigil threat intelligence data
-        </p>
+        <p className="text-gray-400 mt-1">Programmatic access to Vigil threat intelligence data</p>
       </div>
 
       {/* Access Notice */}
       {!hasApiAccess && (
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-yellow-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <svg
+              className="w-5 h-5 text-yellow-400 mt-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
             </svg>
             <div>
               <h3 className="text-yellow-400 font-medium">API Access Required</h3>
@@ -308,7 +332,7 @@ export default function ApiDocs() {
           <div>
             <h3 className="text-sm font-medium text-gray-300 mb-2">2. Make your first request</h3>
             <CodeBlock language="bash">
-{`curl -X GET "${API_BASE}/actors?limit=5" \\
+              {`curl -X GET "${API_BASE}/actors?limit=5" \\
   -H "Authorization: Bearer vgl_your_api_key"`}
             </CodeBlock>
           </div>
@@ -316,8 +340,8 @@ export default function ApiDocs() {
           <div>
             <h3 className="text-sm font-medium text-gray-300 mb-2">3. Handle the response</h3>
             <p className="text-gray-400 text-sm">
-              All responses are JSON with a consistent structure. List endpoints include
-              pagination metadata.
+              All responses are JSON with a consistent structure. List endpoints include pagination
+              metadata.
             </p>
           </div>
         </div>
@@ -329,9 +353,7 @@ export default function ApiDocs() {
         <p className="text-gray-400 text-sm mb-4">
           All API requests require authentication using a Bearer token in the Authorization header.
         </p>
-        <CodeBlock language="bash">
-{`Authorization: Bearer vgl_your_api_key_here`}
-        </CodeBlock>
+        <CodeBlock language="bash">{`Authorization: Bearer vgl_your_api_key_here`}</CodeBlock>
 
         <div className="mt-4 grid grid-cols-2 gap-4">
           <div className="bg-gray-900 rounded p-4">
@@ -344,10 +366,18 @@ export default function ApiDocs() {
           <div className="bg-gray-900 rounded p-4">
             <h4 className="text-sm font-medium text-gray-300 mb-2">Response Codes</h4>
             <ul className="text-sm text-gray-400 space-y-1">
-              <li><code className="text-green-400">200</code> - Success</li>
-              <li><code className="text-yellow-400">401</code> - Invalid API key</li>
-              <li><code className="text-yellow-400">403</code> - Insufficient permissions</li>
-              <li><code className="text-yellow-400">429</code> - Rate limited</li>
+              <li>
+                <code className="text-green-400">200</code> - Success
+              </li>
+              <li>
+                <code className="text-yellow-400">401</code> - Invalid API key
+              </li>
+              <li>
+                <code className="text-yellow-400">403</code> - Insufficient permissions
+              </li>
+              <li>
+                <code className="text-yellow-400">429</code> - Rate limited
+              </li>
             </ul>
           </div>
         </div>
@@ -370,7 +400,7 @@ export default function ApiDocs() {
           <div>
             <h3 className="text-sm font-medium text-gray-300 mb-3">Python</h3>
             <CodeBlock language="python">
-{`import requests
+              {`import requests
 
 API_KEY = "vgl_your_api_key"
 BASE_URL = "${API_BASE}"
@@ -393,7 +423,7 @@ for actor in actors:
           <div>
             <h3 className="text-sm font-medium text-gray-300 mb-3">JavaScript</h3>
             <CodeBlock language="javascript">
-{`const API_KEY = "vgl_your_api_key";
+              {`const API_KEY = "vgl_your_api_key";
 const BASE_URL = "${API_BASE}";
 
 async function getActors() {
@@ -422,7 +452,10 @@ getActors().then(actors => {
       <section className="text-center py-8">
         <p className="text-gray-400">
           Need help with the API?{' '}
-          <a href="mailto:support@theintelligence.company" className="text-cyan-400 hover:underline">
+          <a
+            href="mailto:support@theintelligence.company"
+            className="text-cyan-400 hover:underline"
+          >
             Contact support
           </a>
         </p>

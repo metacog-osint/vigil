@@ -1,6 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { LoadingState, EmptyState, ErrorState, InlineSpinner, FullPageLoader } from '../LoadingState'
+import {
+  LoadingState,
+  EmptyState,
+  ErrorState,
+  InlineSpinner,
+  FullPageLoader,
+} from '../LoadingState'
 
 describe('LoadingState', () => {
   describe('loading state', () => {
@@ -13,7 +19,11 @@ describe('LoadingState', () => {
 
     it('shows custom skeleton when provided', () => {
       render(
-        <LoadingState loading={true} data={null} skeleton={<div data-testid="custom-skeleton">Loading...</div>} />
+        <LoadingState
+          loading={true}
+          data={null}
+          skeleton={<div data-testid="custom-skeleton">Loading...</div>}
+        />
       )
 
       expect(screen.getByTestId('custom-skeleton')).toBeInTheDocument()
@@ -28,9 +38,7 @@ describe('LoadingState', () => {
     })
 
     it('shows full page loader when skeletonType is full', () => {
-      render(
-        <LoadingState loading={true} data={null} skeletonType="full" />
-      )
+      render(<LoadingState loading={true} data={null} skeletonType="full" />)
 
       expect(screen.getByText('Loading...')).toBeInTheDocument()
     })
@@ -90,13 +98,7 @@ describe('LoadingState', () => {
     })
 
     it('shows custom empty action', () => {
-      render(
-        <LoadingState
-          loading={false}
-          data={[]}
-          emptyAction={<button>Add Item</button>}
-        />
-      )
+      render(<LoadingState loading={false} data={[]} emptyAction={<button>Add Item</button>} />)
 
       expect(screen.getByRole('button', { name: 'Add Item' })).toBeInTheDocument()
     })
@@ -138,9 +140,7 @@ describe('LoadingState', () => {
 
   describe('minHeight prop', () => {
     it('applies min-height when minHeight is true and in error state', () => {
-      const { container } = render(
-        <LoadingState error={new Error('Test')} data={null} minHeight />
-      )
+      const { container } = render(<LoadingState error={new Error('Test')} data={null} minHeight />)
 
       expect(container.firstChild.className).toContain('min-h-')
     })

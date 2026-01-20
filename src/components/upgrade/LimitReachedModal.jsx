@@ -42,11 +42,7 @@ const LIMIT_CONFIGS = {
     singular: 'search',
     plural: 'searches',
     description: 'Unlimited threat intelligence searches',
-    benefits: [
-      'Unlimited daily searches',
-      'Full historical data access',
-      'Advanced query syntax',
-    ],
+    benefits: ['Unlimited daily searches', 'Full historical data access', 'Advanced query syntax'],
     isDaily: true,
   },
   apiRequests: {
@@ -55,11 +51,7 @@ const LIMIT_CONFIGS = {
     singular: 'request',
     plural: 'requests',
     description: 'Higher API throughput',
-    benefits: [
-      'Automate IOC lookups',
-      'SIEM/SOAR integration',
-      'Bulk data exports',
-    ],
+    benefits: ['Automate IOC lookups', 'SIEM/SOAR integration', 'Bulk data exports'],
     isMonthly: true,
   },
   orgProfiles: {
@@ -115,20 +107,22 @@ function TierComparison({ limitType, currentTier }) {
             key={tier}
             className={clsx(
               'p-2 rounded',
-              isCurrent ? 'bg-cyber-accent/20 border border-cyber-accent/30' :
-              isUpgrade ? 'bg-gray-800' : 'bg-gray-800/50'
+              isCurrent
+                ? 'bg-cyber-accent/20 border border-cyber-accent/30'
+                : isUpgrade
+                  ? 'bg-gray-800'
+                  : 'bg-gray-800/50'
             )}
           >
-            <div className={clsx(
-              'font-medium mb-1',
-              isCurrent ? 'text-cyber-accent' : isUpgrade ? 'text-white' : 'text-gray-500'
-            )}>
+            <div
+              className={clsx(
+                'font-medium mb-1',
+                isCurrent ? 'text-cyber-accent' : isUpgrade ? 'text-white' : 'text-gray-500'
+              )}
+            >
               {limit === Infinity || limit === -1 ? '∞' : limit.toLocaleString()}
             </div>
-            <div className={clsx(
-              'capitalize',
-              isCurrent ? 'text-cyber-accent' : 'text-gray-500'
-            )}>
+            <div className={clsx('capitalize', isCurrent ? 'text-cyber-accent' : 'text-gray-500')}>
               {tier === 'professional' ? 'Pro' : tier}
             </div>
           </div>
@@ -153,16 +147,16 @@ export function LimitReachedModal({
 
   if (!isOpen) return null
 
-  const resetText = config.isDaily ? 'Resets daily at midnight UTC' :
-                    config.isMonthly ? 'Resets monthly' : null
+  const resetText = config.isDaily
+    ? 'Resets daily at midnight UTC'
+    : config.isMonthly
+      ? 'Resets monthly'
+      : null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative w-full max-w-md mx-4 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden">
@@ -170,17 +164,13 @@ export function LimitReachedModal({
         <div className="bg-gradient-to-b from-red-500/10 to-transparent p-6 text-center">
           <div className="text-5xl mb-3">{config.icon}</div>
           <h3 className="text-xl font-semibold text-white">{config.title}</h3>
-          <p className="text-gray-400 text-sm mt-1">
-            You've reached your {tier} plan limit
-          </p>
+          <p className="text-gray-400 text-sm mt-1">You've reached your {tier} plan limit</p>
         </div>
 
         {/* Usage progress */}
         <div className="px-6 pb-4">
           <ProgressBar current={currentCount} max={limit} />
-          {resetText && (
-            <p className="text-xs text-gray-500 mt-2 text-center">{resetText}</p>
-          )}
+          {resetText && <p className="text-xs text-gray-500 mt-2 text-center">{resetText}</p>}
         </div>
 
         {/* Tier comparison */}
@@ -201,20 +191,39 @@ export function LimitReachedModal({
               <ul className="space-y-2">
                 {config.benefits.map((benefit, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
-                    <svg className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     {benefit}
                   </li>
                 ))}
                 <li className="flex items-start gap-2 text-sm text-white font-medium">
-                  <svg className="w-4 h-4 text-cyber-accent mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-4 h-4 text-cyber-accent mt-0.5 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                   {nextLimit === Infinity || nextLimit === -1
                     ? `Unlimited ${config.plural}`
-                    : `${nextLimit.toLocaleString()} ${config.plural}`
-                  }
+                    : `${nextLimit.toLocaleString()} ${config.plural}`}
                 </li>
               </ul>
             </div>
@@ -245,7 +254,12 @@ export function LimitReachedModal({
           className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -256,12 +270,7 @@ export function LimitReachedModal({
 /**
  * Toast notification for approaching limits
  */
-export function LimitWarningToast({
-  limitType,
-  currentCount,
-  onDismiss,
-  className,
-}) {
+export function LimitWarningToast({ limitType, currentCount, onDismiss, className }) {
   const { tier } = useSubscription()
   const config = LIMIT_CONFIGS[limitType] || LIMIT_CONFIGS.watchlistItems
   const limit = getLimit(tier, limitType)
@@ -272,17 +281,18 @@ export function LimitWarningToast({
   if (percentage < 80) return null
 
   return (
-    <div className={clsx(
-      'flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg',
-      className
-    )}>
+    <div
+      className={clsx(
+        'flex items-center gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg',
+        className
+      )}
+    >
       <span className="text-xl">{config.icon}</span>
       <div className="flex-1">
         <div className="text-sm text-yellow-400">
           {remaining === 0
             ? `${config.title} - limit reached`
-            : `${remaining} ${remaining === 1 ? config.singular : config.plural} remaining`
-          }
+            : `${remaining} ${remaining === 1 ? config.singular : config.plural} remaining`}
         </div>
         <Link to="/pricing" className="text-xs text-yellow-500/70 hover:text-yellow-400">
           Upgrade for more →
@@ -291,7 +301,12 @@ export function LimitWarningToast({
       {onDismiss && (
         <button onClick={onDismiss} className="p-1 text-yellow-500/50 hover:text-yellow-400">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       )}

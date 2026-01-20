@@ -2,7 +2,13 @@
  * Asset Modal Components
  */
 import { useState, useEffect } from 'react'
-import { ASSET_TYPES, CRITICALITY_OPTIONS, CATEGORY_OPTIONS, validateAssetValue, parseAssetsFromText } from '../../lib/assets'
+import {
+  ASSET_TYPES,
+  CRITICALITY_OPTIONS,
+  CATEGORY_OPTIONS,
+  validateAssetValue,
+  parseAssetsFromText,
+} from '../../lib/assets'
 
 export function AddAssetModal({ onClose, onSave }) {
   const [assetType, setAssetType] = useState('domain')
@@ -38,7 +44,12 @@ export function AddAssetModal({ onClose, onSave }) {
           <h3 className="text-lg font-semibold text-white">Add Asset</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -52,7 +63,9 @@ export function AddAssetModal({ onClose, onSave }) {
               className="cyber-input w-full"
             >
               {Object.entries(ASSET_TYPES).map(([key, { label }]) => (
-                <option key={key} value={key}>{label}</option>
+                <option key={key} value={key}>
+                  {label}
+                </option>
               ))}
             </select>
           </div>
@@ -89,7 +102,9 @@ export function AddAssetModal({ onClose, onSave }) {
                 className="cyber-input w-full"
               >
                 {CRITICALITY_OPTIONS.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -103,15 +118,15 @@ export function AddAssetModal({ onClose, onSave }) {
               >
                 <option value="">Select...</option>
                 {CATEGORY_OPTIONS.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
 
-          {error && (
-            <div className="text-red-400 text-sm">{error}</div>
-          )}
+          {error && <div className="text-red-400 text-sm">{error}</div>}
 
           <div className="flex justify-end gap-3 pt-4">
             <button type="button" onClick={onClose} className="cyber-button">
@@ -145,7 +160,7 @@ export function BulkImportModal({ onClose, onSave }) {
 
     setSaving(true)
     try {
-      await onSave(parsed.map(p => ({ assetType: p.type, value: p.value, criticality })))
+      await onSave(parsed.map((p) => ({ assetType: p.type, value: p.value, criticality })))
     } catch (err) {
       alert('Import failed: ' + err.message)
       setSaving(false)
@@ -159,7 +174,12 @@ export function BulkImportModal({ onClose, onSave }) {
           <h3 className="text-lg font-semibold text-white">Bulk Import Assets</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -186,7 +206,9 @@ export function BulkImportModal({ onClose, onSave }) {
                 className="cyber-input w-full"
               >
                 {Object.entries(ASSET_TYPES).map(([key, { label }]) => (
-                  <option key={key} value={key}>{label}</option>
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -199,7 +221,9 @@ export function BulkImportModal({ onClose, onSave }) {
                 className="cyber-input w-full"
               >
                 {CRITICALITY_OPTIONS.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -207,7 +231,8 @@ export function BulkImportModal({ onClose, onSave }) {
 
           {parsed.length > 0 && (
             <div className="text-sm text-gray-400">
-              <span className="text-green-400 font-medium">{parsed.length}</span> valid assets detected
+              <span className="text-green-400 font-medium">{parsed.length}</span> valid assets
+              detected
             </div>
           )}
 
@@ -215,7 +240,11 @@ export function BulkImportModal({ onClose, onSave }) {
             <button type="button" onClick={onClose} className="cyber-button">
               Cancel
             </button>
-            <button type="submit" disabled={saving || parsed.length === 0} className="cyber-button-primary">
+            <button
+              type="submit"
+              disabled={saving || parsed.length === 0}
+              className="cyber-button-primary"
+            >
               {saving ? 'Importing...' : `Import ${parsed.length} Assets`}
             </button>
           </div>

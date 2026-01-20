@@ -45,13 +45,8 @@ export default function CustomIOCs() {
   } = useIocFilters(iocs)
 
   // Actions
-  const {
-    handleCreateList,
-    handleDeleteList,
-    handleAddIoc,
-    handleImport,
-    handleDeleteIocs,
-  } = useIocActions(user?.uid, lists, setLists, selectedList, setSelectedList, loadLists, loadIocs)
+  const { handleCreateList, handleDeleteList, handleAddIoc, handleImport, handleDeleteIocs } =
+    useIocActions(user?.uid, lists, setLists, selectedList, setSelectedList, loadLists, loadIocs)
 
   // UI state
   const [showCreateListModal, setShowCreateListModal] = useState(false)
@@ -61,9 +56,8 @@ export default function CustomIOCs() {
   const [selectedIocs, setSelectedIocs] = useState([])
 
   function handleExport(format) {
-    const iocsToExport = selectedIocs.length > 0
-      ? iocs.filter(i => selectedIocs.includes(i.id))
-      : iocs
+    const iocsToExport =
+      selectedIocs.length > 0 ? iocs.filter((i) => selectedIocs.includes(i.id)) : iocs
 
     let content, filename, mimeType
 
@@ -76,7 +70,7 @@ export default function CustomIOCs() {
       filename = `${selectedList.name.replace(/\s+/g, '_')}_iocs.stix.json`
       mimeType = 'application/json'
     } else {
-      content = iocsToExport.map(i => i.value).join('\n')
+      content = iocsToExport.map((i) => i.value).join('\n')
       filename = `${selectedList.name.replace(/\s+/g, '_')}_iocs.txt`
       mimeType = 'text/plain'
     }
@@ -100,20 +94,30 @@ export default function CustomIOCs() {
   }
 
   return (
-    <FeatureGate feature="custom_ioc_lists" fallbackMessage="Custom IOC Lists is a Professional feature.">
+    <FeatureGate
+      feature="custom_ioc_lists"
+      fallbackMessage="Custom IOC Lists is a Professional feature."
+    >
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-white">Custom IOC Lists</h1>
-            <p className="text-gray-400 text-sm mt-1">Import and manage your private IOC collections</p>
+            <p className="text-gray-400 text-sm mt-1">
+              Import and manage your private IOC collections
+            </p>
           </div>
           <button
             onClick={() => setShowCreateListModal(true)}
             className="cyber-button-primary text-sm"
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             New List
           </button>
@@ -138,11 +142,24 @@ export default function CustomIOCs() {
           <div className="flex-1 min-w-0">
             {!selectedList ? (
               <div className="cyber-card p-8 text-center">
-                <svg className="w-12 h-12 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                <svg
+                  className="w-12 h-12 text-gray-600 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
                 </svg>
                 <p className="text-gray-400 mb-4">Select a list or create a new one</p>
-                <button onClick={() => setShowCreateListModal(true)} className="cyber-button-primary text-sm">
+                <button
+                  onClick={() => setShowCreateListModal(true)}
+                  className="cyber-button-primary text-sm"
+                >
                   Create Your First List
                 </button>
               </div>
@@ -161,8 +178,18 @@ export default function CustomIOCs() {
                       onClick={() => setShowImportModal(true)}
                       className="cyber-button text-sm"
                     >
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                        />
                       </svg>
                       Import
                     </button>
@@ -171,8 +198,18 @@ export default function CustomIOCs() {
                       className="cyber-button text-sm"
                       disabled={iocs.length === 0}
                     >
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
                       </svg>
                       Export
                     </button>
@@ -180,8 +217,18 @@ export default function CustomIOCs() {
                       onClick={() => setShowAddIocModal(true)}
                       className="cyber-button-primary text-sm"
                     >
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4v16m8-8H4"
+                        />
                       </svg>
                       Add IOC
                     </button>
@@ -205,7 +252,9 @@ export default function CustomIOCs() {
                   >
                     <option value="">All Types</option>
                     {Object.entries(IOC_TYPES).map(([key, { label }]) => (
-                      <option key={key} value={key}>{label}</option>
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
                     ))}
                   </select>
 

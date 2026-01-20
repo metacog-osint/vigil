@@ -70,12 +70,13 @@ function TechniqueItem({ technique }) {
 }
 
 function VulnerabilityItem({ vuln }) {
-  const severityColor = {
-    critical: 'text-red-400 bg-red-500/10',
-    high: 'text-orange-400 bg-orange-500/10',
-    medium: 'text-yellow-400 bg-yellow-500/10',
-    low: 'text-blue-400 bg-blue-500/10',
-  }[vuln.severity?.toLowerCase()] || 'text-gray-400 bg-gray-500/10'
+  const severityColor =
+    {
+      critical: 'text-red-400 bg-red-500/10',
+      high: 'text-orange-400 bg-orange-500/10',
+      medium: 'text-yellow-400 bg-yellow-500/10',
+      low: 'text-blue-400 bg-blue-500/10',
+    }[vuln.severity?.toLowerCase()] || 'text-gray-400 bg-gray-500/10'
 
   return (
     <Link
@@ -87,7 +88,9 @@ function VulnerabilityItem({ vuln }) {
         <div>
           <span className="text-xs text-cyber-accent font-mono">{vuln.cve_id}</span>
           {vuln.is_kev && (
-            <span className="ml-2 text-xs text-red-400 px-1.5 py-0.5 bg-red-500/10 rounded">KEV</span>
+            <span className="ml-2 text-xs text-red-400 px-1.5 py-0.5 bg-red-500/10 rounded">
+              KEV
+            </span>
           )}
         </div>
         {vuln.cvss_score && (
@@ -114,12 +117,15 @@ function IOCItem({ ioc }) {
   return (
     <div className="p-2 bg-gray-800/50 rounded">
       <div className="flex items-center justify-between">
-        <span className={clsx('text-xs px-1.5 py-0.5 rounded', typeColors[ioc.type] || 'text-gray-400 bg-gray-500/10')}>
+        <span
+          className={clsx(
+            'text-xs px-1.5 py-0.5 rounded',
+            typeColors[ioc.type] || 'text-gray-400 bg-gray-500/10'
+          )}
+        >
           {ioc.type?.toUpperCase()}
         </span>
-        {ioc.confidence && (
-          <span className="text-xs text-gray-500">{ioc.confidence}% conf</span>
-        )}
+        {ioc.confidence && <span className="text-xs text-gray-500">{ioc.confidence}% conf</span>}
       </div>
       <div className="text-sm text-white font-mono mt-1 truncate" title={ioc.value}>
         {ioc.value}
@@ -135,7 +141,9 @@ function MalwareItem({ sample }) {
   return (
     <div className="p-2 bg-gray-800/50 rounded">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-white">{sample.signature || sample.malware_family || 'Unknown'}</span>
+        <span className="text-sm text-white">
+          {sample.signature || sample.malware_family || 'Unknown'}
+        </span>
         {sample.file_type && (
           <span className="text-xs text-gray-500 px-1.5 py-0.5 bg-gray-700 rounded">
             {sample.file_type}
@@ -158,15 +166,15 @@ function MalwareItem({ sample }) {
 
 // IOC Analytics Component - pie chart, confidence breakdown, source grouping
 const IOC_TYPE_COLORS = {
-  ip: '#3B82F6',      // blue
-  domain: '#A855F7',  // purple
-  hash: '#22C55E',    // green
-  url: '#F97316',     // orange
-  md5: '#10B981',     // emerald
-  sha1: '#14B8A6',    // teal
-  sha256: '#059669',  // green
-  email: '#EC4899',   // pink
-  other: '#6B7280',   // gray
+  ip: '#3B82F6', // blue
+  domain: '#A855F7', // purple
+  hash: '#22C55E', // green
+  url: '#F97316', // orange
+  md5: '#10B981', // emerald
+  sha1: '#14B8A6', // teal
+  sha256: '#059669', // green
+  email: '#EC4899', // pink
+  other: '#6B7280', // gray
 }
 
 const CONFIDENCE_COLORS = {
@@ -179,19 +187,23 @@ function IOCAnalytics({ iocs, actorName, onExport }) {
   // Calculate IOC type distribution
   const typeDistribution = useMemo(() => {
     const counts = {}
-    iocs.forEach(ioc => {
+    iocs.forEach((ioc) => {
       const type = (ioc.type || 'other').toLowerCase()
       counts[type] = (counts[type] || 0) + 1
     })
     return Object.entries(counts)
-      .map(([name, value]) => ({ name: name.toUpperCase(), value, color: IOC_TYPE_COLORS[name] || IOC_TYPE_COLORS.other }))
+      .map(([name, value]) => ({
+        name: name.toUpperCase(),
+        value,
+        color: IOC_TYPE_COLORS[name] || IOC_TYPE_COLORS.other,
+      }))
       .sort((a, b) => b.value - a.value)
   }, [iocs])
 
   // Calculate confidence breakdown
   const confidenceBreakdown = useMemo(() => {
     const counts = { high: 0, medium: 0, low: 0 }
-    iocs.forEach(ioc => {
+    iocs.forEach((ioc) => {
       const conf = ioc.confidence
       if (conf >= 80) counts.high++
       else if (conf >= 50) counts.medium++
@@ -203,7 +215,7 @@ function IOCAnalytics({ iocs, actorName, onExport }) {
   // Group by source
   const sourceGroups = useMemo(() => {
     const groups = {}
-    iocs.forEach(ioc => {
+    iocs.forEach((ioc) => {
       const source = ioc.source || ioc.feed_name || 'Unknown'
       if (!groups[source]) groups[source] = []
       groups[source].push(ioc)
@@ -237,7 +249,11 @@ function IOCAnalytics({ iocs, actorName, onExport }) {
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                contentStyle={{
+                  backgroundColor: '#1f2937',
+                  border: '1px solid #374151',
+                  borderRadius: '8px',
+                }}
                 labelStyle={{ color: '#9ca3af' }}
               />
             </PieChart>
@@ -304,7 +320,12 @@ function IOCAnalytics({ iocs, actorName, onExport }) {
         className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-cyber-accent/20 text-cyber-accent rounded hover:bg-cyber-accent/30 transition-colors text-sm"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          />
         </svg>
         Export {totalIOCs} IOCs
       </button>
@@ -320,20 +341,28 @@ function handleExportIOCs(iocs, actorName) {
   const filename = `${actorName?.replace(/\s+/g, '_') || 'actor'}_iocs_${timestamp}`
 
   // Prepare CSV content
-  const headers = ['Type', 'Value', 'Confidence', 'Source', 'Malware Family', 'First Seen', 'Last Seen']
-  const rows = iocs.map(ioc => [
+  const headers = [
+    'Type',
+    'Value',
+    'Confidence',
+    'Source',
+    'Malware Family',
+    'First Seen',
+    'Last Seen',
+  ]
+  const rows = iocs.map((ioc) => [
     ioc.type || '',
     ioc.value || '',
     ioc.confidence || '',
     ioc.source || ioc.feed_name || '',
     ioc.malware_family || '',
     ioc.first_seen || '',
-    ioc.last_seen || ''
+    ioc.last_seen || '',
   ])
 
   const csvContent = [
     headers.join(','),
-    ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
   ].join('\n')
 
   // Download CSV
@@ -390,15 +419,14 @@ export function CorrelationPanel({ actorId, actorName }) {
 
   if (!data) {
     return (
-      <div className="text-sm text-gray-500 text-center py-4">
-        No correlation data available
-      </div>
+      <div className="text-sm text-gray-500 text-center py-4">No correlation data available</div>
     )
   }
 
   const { techniques = [], vulnerabilities = [], iocs = [], malware = [] } = data
 
-  const totalCorrelations = techniques.length + vulnerabilities.length + iocs.length + malware.length
+  const totalCorrelations =
+    techniques.length + vulnerabilities.length + iocs.length + malware.length
 
   if (totalCorrelations === 0) {
     return (
@@ -554,9 +582,7 @@ export function CorrelationSummary({ techniques = 0, vulnerabilities = 0, iocs =
         </span>
       )}
       {iocs > 0 && (
-        <span className="px-1.5 py-0.5 bg-green-500/10 text-green-400 rounded">
-          {iocs} IOCs
-        </span>
+        <span className="px-1.5 py-0.5 bg-green-500/10 text-green-400 rounded">{iocs} IOCs</span>
       )}
     </div>
   )

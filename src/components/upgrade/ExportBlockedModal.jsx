@@ -83,12 +83,16 @@ function ExportOption({ option, currentTier, onExport, selectedCount }) {
             {option.name}
           </span>
           {!hasAccess && (
-            <span className={clsx(
-              'px-2 py-0.5 text-xs rounded',
-              option.tier === 'professional' ? 'bg-blue-500/20 text-blue-400' :
-              option.tier === 'team' ? 'bg-purple-500/20 text-purple-400' :
-              'bg-gray-500/20 text-gray-400'
-            )}>
+            <span
+              className={clsx(
+                'px-2 py-0.5 text-xs rounded',
+                option.tier === 'professional'
+                  ? 'bg-blue-500/20 text-blue-400'
+                  : option.tier === 'team'
+                    ? 'bg-purple-500/20 text-purple-400'
+                    : 'bg-gray-500/20 text-gray-400'
+              )}
+            >
               {option.tier.charAt(0).toUpperCase() + option.tier.slice(1)}
             </span>
           )}
@@ -97,12 +101,32 @@ function ExportOption({ option, currentTier, onExport, selectedCount }) {
       </div>
 
       {hasAccess ? (
-        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <svg
+          className="w-5 h-5 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          />
         </svg>
       ) : (
-        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        <svg
+          className="w-5 h-5 text-gray-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          />
         </svg>
       )}
     </button>
@@ -121,17 +145,14 @@ export function ExportBlockedModal({
 
   if (!isOpen) return null
 
-  const filteredOptions = EXPORT_OPTIONS.filter(opt => availableFormats.includes(opt.id))
-  const lockedOptions = filteredOptions.filter(opt => getTierIndex(tier) < getTierIndex(opt.tier))
+  const filteredOptions = EXPORT_OPTIONS.filter((opt) => availableFormats.includes(opt.id))
+  const lockedOptions = filteredOptions.filter((opt) => getTierIndex(tier) < getTierIndex(opt.tier))
   const nextTier = lockedOptions.length > 0 ? lockedOptions[0].tier : null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative w-full max-w-md mx-4 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl">
@@ -140,7 +161,9 @@ export function ExportBlockedModal({
           <div>
             <h3 className="text-lg font-semibold text-white">Export Data</h3>
             <p className="text-sm text-gray-400">
-              {selectedCount > 0 ? `${selectedCount} ${entityType} selected` : `Export ${entityType}`}
+              {selectedCount > 0
+                ? `${selectedCount} ${entityType} selected`
+                : `Export ${entityType}`}
             </p>
           </div>
           <button
@@ -148,14 +171,19 @@ export function ExportBlockedModal({
             className="p-2 text-gray-400 hover:text-white transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
         {/* Export options */}
         <div className="p-4 space-y-2">
-          {filteredOptions.map(option => (
+          {filteredOptions.map((option) => (
             <ExportOption
               key={option.id}
               option={option}
@@ -172,7 +200,8 @@ export function ExportBlockedModal({
             <div className="flex items-center gap-3">
               <div className="flex-1">
                 <p className="text-sm text-gray-300">
-                  Unlock {lockedOptions.length} more export format{lockedOptions.length > 1 ? 's' : ''}
+                  Unlock {lockedOptions.length} more export format
+                  {lockedOptions.length > 1 ? 's' : ''}
                 </p>
                 <p className="text-xs text-gray-500">
                   Starting at ${TIER_INFO[nextTier]?.price || 39}/month
@@ -214,7 +243,12 @@ export function ExportButton({
         )}
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          />
         </svg>
         Export
       </button>

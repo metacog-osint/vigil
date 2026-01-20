@@ -12,11 +12,7 @@ import { vi } from 'vitest'
  * Custom render with common providers
  */
 export function renderWithProviders(ui, options = {}) {
-  const Wrapper = ({ children }) => (
-    <BrowserRouter>
-      {children}
-    </BrowserRouter>
-  )
+  const Wrapper = ({ children }) => <BrowserRouter>{children}</BrowserRouter>
 
   return render(ui, { wrapper: Wrapper, ...options })
 }
@@ -112,12 +108,17 @@ export function createMockIOC(overrides = {}) {
 export async function waitForLoadingToComplete(screen) {
   const { findByText } = screen
   // Wait for any loading indicators to disappear
-  await vi.waitFor(() => {
-    const loadingElements = document.querySelectorAll('[data-testid="loading"], .animate-pulse, .animate-spin')
-    if (loadingElements.length > 0) {
-      throw new Error('Still loading')
-    }
-  }, { timeout: 5000 })
+  await vi.waitFor(
+    () => {
+      const loadingElements = document.querySelectorAll(
+        '[data-testid="loading"], .animate-pulse, .animate-spin'
+      )
+      if (loadingElements.length > 0) {
+        throw new Error('Still loading')
+      }
+    },
+    { timeout: 5000 }
+  )
 }
 
 /**

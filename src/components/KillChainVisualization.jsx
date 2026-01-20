@@ -117,8 +117,8 @@ export default function KillChainVisualization({
 
         if (actors) {
           const ttpCounts = {}
-          actors.forEach(a => {
-            a.ttps?.forEach(t => {
+          actors.forEach((a) => {
+            a.ttps?.forEach((t) => {
               ttpCounts[t] = (ttpCounts[t] || 0) + 1
             })
           })
@@ -128,7 +128,7 @@ export default function KillChainVisualization({
 
       // Map techniques to phases
       const phaseData = {}
-      KILL_CHAIN_PHASES.forEach(phase => {
+      KILL_CHAIN_PHASES.forEach((phase) => {
         phaseData[phase.id] = {
           ...phase,
           techniques: [],
@@ -138,11 +138,11 @@ export default function KillChainVisualization({
       })
 
       if (techniques) {
-        techniques.forEach(tech => {
+        techniques.forEach((tech) => {
           const tactic = tech.tactic?.toLowerCase().replace(/ /g, '-')
 
           // Find which phase this tactic belongs to
-          const phase = KILL_CHAIN_PHASES.find(p => p.tactics.includes(tactic))
+          const phase = KILL_CHAIN_PHASES.find((p) => p.tactics.includes(tactic))
           if (phase) {
             const isUsed = actorTtps.includes(tech.technique_id)
             phaseData[phase.id].techniques.push({
@@ -156,8 +156,8 @@ export default function KillChainVisualization({
         })
 
         // Calculate intensity (0-1) based on technique usage
-        const maxCount = Math.max(...Object.values(phaseData).map(p => p.count), 1)
-        Object.values(phaseData).forEach(phase => {
+        const maxCount = Math.max(...Object.values(phaseData).map((p) => p.count), 1)
+        Object.values(phaseData).forEach((phase) => {
           phase.intensity = phase.count / maxCount
         })
       }
@@ -178,7 +178,7 @@ export default function KillChainVisualization({
 
   // Get opacity based on intensity
   const getOpacity = (intensity) => {
-    return 0.3 + (intensity * 0.7)
+    return 0.3 + intensity * 0.7
   }
 
   if (loading) {
@@ -216,17 +216,16 @@ export default function KillChainVisualization({
                   style={{
                     backgroundColor: phase.color,
                     opacity: getOpacity(data?.intensity || 0),
-                    clipPath: index === KILL_CHAIN_PHASES.length - 1
-                      ? 'polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%, 5% 50%)'
-                      : 'polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%, 5% 50%)',
+                    clipPath:
+                      index === KILL_CHAIN_PHASES.length - 1
+                        ? 'polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%, 5% 50%)'
+                        : 'polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%, 5% 50%)',
                   }}
                 >
                   <div className="text-white text-xs font-medium whitespace-nowrap">
                     {phase.shortName}
                   </div>
-                  <div className="text-white/80 text-xs mt-0.5">
-                    {data?.count || 0}
-                  </div>
+                  <div className="text-white/80 text-xs mt-0.5">{data?.count || 0}</div>
                 </div>
 
                 {/* Activity indicator */}
@@ -264,32 +263,23 @@ export default function KillChainVisualization({
           {/* Techniques in this phase */}
           {selectedPhase.techniques?.length > 0 && (
             <div className="space-y-2">
-              <h5 className="text-xs text-gray-500 uppercase tracking-wider">
-                Active Techniques
-              </h5>
+              <h5 className="text-xs text-gray-500 uppercase tracking-wider">Active Techniques</h5>
               <div className="grid grid-cols-2 gap-2">
                 {selectedPhase.techniques
-                  .filter(t => t.isUsed)
+                  .filter((t) => t.isUsed)
                   .slice(0, 6)
-                  .map(tech => (
-                    <div
-                      key={tech.technique_id}
-                      className="bg-gray-900 rounded p-2"
-                    >
+                  .map((tech) => (
+                    <div key={tech.technique_id} className="bg-gray-900 rounded p-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-cyan-400 font-mono text-xs">
-                          {tech.technique_id}
-                        </span>
+                        <span className="text-cyan-400 font-mono text-xs">{tech.technique_id}</span>
                       </div>
-                      <div className="text-gray-300 text-sm truncate">
-                        {tech.name}
-                      </div>
+                      <div className="text-gray-300 text-sm truncate">{tech.name}</div>
                     </div>
                   ))}
               </div>
-              {selectedPhase.techniques.filter(t => t.isUsed).length > 6 && (
+              {selectedPhase.techniques.filter((t) => t.isUsed).length > 6 && (
                 <div className="text-xs text-gray-500">
-                  +{selectedPhase.techniques.filter(t => t.isUsed).length - 6} more
+                  +{selectedPhase.techniques.filter((t) => t.isUsed).length - 6} more
                 </div>
               )}
             </div>
@@ -301,13 +291,20 @@ export default function KillChainVisualization({
               Defensive Focus
             </h5>
             <p className="text-sm text-gray-400">
-              {selectedPhase.id === 'reconnaissance' && 'Minimize public exposure, monitor for port scanning, implement honeypots'}
-              {selectedPhase.id === 'weaponization' && 'Keep threat intel current, update detection signatures, monitor dark web'}
-              {selectedPhase.id === 'delivery' && 'Email filtering, user awareness training, block malicious domains'}
-              {selectedPhase.id === 'exploitation' && 'Patch management, EDR deployment, application whitelisting'}
-              {selectedPhase.id === 'installation' && 'Monitor autoruns, detect persistence mechanisms, audit scheduled tasks'}
-              {selectedPhase.id === 'command-control' && 'Network monitoring, DNS filtering, block known C2 infrastructure'}
-              {selectedPhase.id === 'actions' && 'Data loss prevention, backup verification, incident response readiness'}
+              {selectedPhase.id === 'reconnaissance' &&
+                'Minimize public exposure, monitor for port scanning, implement honeypots'}
+              {selectedPhase.id === 'weaponization' &&
+                'Keep threat intel current, update detection signatures, monitor dark web'}
+              {selectedPhase.id === 'delivery' &&
+                'Email filtering, user awareness training, block malicious domains'}
+              {selectedPhase.id === 'exploitation' &&
+                'Patch management, EDR deployment, application whitelisting'}
+              {selectedPhase.id === 'installation' &&
+                'Monitor autoruns, detect persistence mechanisms, audit scheduled tasks'}
+              {selectedPhase.id === 'command-control' &&
+                'Network monitoring, DNS filtering, block known C2 infrastructure'}
+              {selectedPhase.id === 'actions' &&
+                'Data loss prevention, backup verification, incident response readiness'}
             </p>
           </div>
         </div>
@@ -316,15 +313,12 @@ export default function KillChainVisualization({
       {/* Stats Summary */}
       <div className="flex items-center justify-between text-xs text-gray-500">
         <div>
-          Most active: {
-            Object.values(techniqueData)
-              .sort((a, b) => b.count - a.count)[0]?.name || 'N/A'
-          }
+          Most active:{' '}
+          {Object.values(techniqueData).sort((a, b) => b.count - a.count)[0]?.name || 'N/A'}
         </div>
         <div>
-          Total techniques tracked: {
-            Object.values(techniqueData).reduce((sum, p) => sum + p.count, 0)
-          }
+          Total techniques tracked:{' '}
+          {Object.values(techniqueData).reduce((sum, p) => sum + p.count, 0)}
         </div>
       </div>
     </div>
@@ -338,10 +332,7 @@ export function KillChainMini({ actorId, onViewFull }) {
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-white">Attack Kill Chain</h3>
         {onViewFull && (
-          <button
-            onClick={onViewFull}
-            className="text-xs text-cyan-400 hover:text-cyan-300"
-          >
+          <button onClick={onViewFull} className="text-xs text-cyan-400 hover:text-cyan-300">
             View Details
           </button>
         )}

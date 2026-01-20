@@ -246,7 +246,11 @@ export async function predictActorActivity(options = {}) {
     const week = getWeekNumber(new Date(inc.discovered_at))
 
     if (!actorWeekly[actorId]) {
-      actorWeekly[actorId] = { name: actorName, weeks: {}, trendStatus: inc.threat_actor?.trend_status }
+      actorWeekly[actorId] = {
+        name: actorName,
+        weeks: {},
+        trendStatus: inc.threat_actor?.trend_status,
+      }
     }
     actorWeekly[actorId].weeks[week] = (actorWeekly[actorId].weeks[week] || 0) + 1
   })
@@ -273,7 +277,8 @@ export async function predictActorActivity(options = {}) {
     }
 
     const forecastTotal = forecastValues.reduce((a, b) => a + b, 0)
-    const activityChange = recentActivity > 0 ? ((forecastTotal - recentActivity) / recentActivity) * 100 : 0
+    const activityChange =
+      recentActivity > 0 ? ((forecastTotal - recentActivity) / recentActivity) * 100 : 0
 
     // Confidence
     const confidence = Math.min(1, (values.length / 12 + regression.r2) / 2)
@@ -364,11 +369,23 @@ export async function predictVulnerabilityExploitation(options = {}) {
       if (daysSincePublish <= 30) {
         const recencyBonus = 0.1 * (1 - daysSincePublish / 30)
         probability += recencyBonus
-        factors.push({ name: 'Recent Publication', value: daysSincePublish, contribution: recencyBonus })
+        factors.push({
+          name: 'Recent Publication',
+          value: daysSincePublish,
+          contribution: recencyBonus,
+        })
       }
 
       // Factor 6: Affected popular products
-      const popularProducts = ['windows', 'chrome', 'apache', 'nginx', 'linux', 'microsoft', 'cisco']
+      const popularProducts = [
+        'windows',
+        'chrome',
+        'apache',
+        'nginx',
+        'linux',
+        'microsoft',
+        'cisco',
+      ]
       const isPopular = popularProducts.some(
         (p) =>
           vuln.product_name?.toLowerCase().includes(p) ||
@@ -472,8 +489,10 @@ export async function predictAttackVectors(options = {}) {
   const predictions = Object.entries(ttpTrends)
     .map(([ttp, counts]) => {
       const total = counts.early + counts.recent
-      const growthRate = counts.early > 0 ? (counts.recent - counts.early) / counts.early : counts.recent > 0 ? 1 : 0
-      const direction = growthRate > 0.2 ? 'increasing' : growthRate < -0.2 ? 'decreasing' : 'stable'
+      const growthRate =
+        counts.early > 0 ? (counts.recent - counts.early) / counts.early : counts.recent > 0 ? 1 : 0
+      const direction =
+        growthRate > 0.2 ? 'increasing' : growthRate < -0.2 ? 'decreasing' : 'stable'
 
       // Confidence based on data volume
       const confidence = Math.min(1, total / 20)
@@ -538,7 +557,10 @@ export async function generateThreatForecast(options = {}) {
     insights.push({
       type: 'warning',
       title: 'Sectors with Increasing Risk',
-      message: `${escalatingSectors.slice(0, 3).map((s) => s.sector).join(', ')} showing increased attack activity`,
+      message: `${escalatingSectors
+        .slice(0, 3)
+        .map((s) => s.sector)
+        .join(', ')} showing increased attack activity`,
       sectors: escalatingSectors.slice(0, 3),
     })
   }
@@ -549,7 +571,10 @@ export async function generateThreatForecast(options = {}) {
     insights.push({
       type: 'alert',
       title: 'Actors with Escalating Activity',
-      message: `${escalatingActors.slice(0, 3).map((a) => a.actorName).join(', ')} predicted to increase operations`,
+      message: `${escalatingActors
+        .slice(0, 3)
+        .map((a) => a.actorName)
+        .join(', ')} predicted to increase operations`,
       actors: escalatingActors.slice(0, 3),
     })
   }
@@ -573,7 +598,10 @@ export async function generateThreatForecast(options = {}) {
     insights.push({
       type: 'info',
       title: 'Trending Attack Techniques',
-      message: `${risingTechniques.slice(0, 3).map((t) => t.technique).join(', ')} usage is increasing`,
+      message: `${risingTechniques
+        .slice(0, 3)
+        .map((t) => t.technique)
+        .join(', ')} usage is increasing`,
       techniques: risingTechniques.slice(0, 5),
     })
   }

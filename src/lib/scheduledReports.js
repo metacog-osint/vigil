@@ -280,13 +280,15 @@ export const scheduledReports = {
   async getAllHistory(userId, limit = 20) {
     const { data, error } = await supabase
       .from('report_history')
-      .select(`
+      .select(
+        `
         *,
         scheduled_reports (
           name,
           frequency
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('generated_at', { ascending: false })
       .limit(limit)
@@ -320,7 +322,13 @@ export const scheduledReports = {
   /**
    * Update report history with delivery status
    */
-  async updateDeliveryStatus(historyId, status, recipientsSent = [], recipientsFailed = [], errorMessage = null) {
+  async updateDeliveryStatus(
+    historyId,
+    status,
+    recipientsSent = [],
+    recipientsFailed = [],
+    errorMessage = null
+  ) {
     const { data, error } = await supabase
       .from('report_history')
       .update({

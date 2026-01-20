@@ -200,7 +200,8 @@ function ResponseTimeChart({ data }) {
                   {item.severity}
                 </span>
                 <span className="text-gray-500">
-                  Avg: {formatDuration(item.avgResponseTime)} | Target: {formatDuration(item.target)}
+                  Avg: {formatDuration(item.avgResponseTime)} | Target:{' '}
+                  {formatDuration(item.target)}
                 </span>
               </div>
               <div className="h-2 bg-gray-800 rounded overflow-hidden">
@@ -422,7 +423,11 @@ export default function AlertAnalyticsDashboard({ teamId: _teamId }) {
 
     const fatigueScore = Math.min(
       100,
-      Math.round((avgDailyAlerts > 50 ? 30 : avgDailyAlerts * 0.6) + unackedRate * 50 + (noisyRules.length > 0 ? 20 : 0))
+      Math.round(
+        (avgDailyAlerts > 50 ? 30 : avgDailyAlerts * 0.6) +
+          unackedRate * 50 +
+          (noisyRules.length > 0 ? 20 : 0)
+      )
     )
 
     const fatigueIndicators = [

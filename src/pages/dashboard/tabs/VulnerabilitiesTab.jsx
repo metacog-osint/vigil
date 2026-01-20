@@ -44,7 +44,9 @@ export default function VulnerabilitiesTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Vulnerability Severity */}
         <div className="cyber-card">
-          <h2 className="text-sm font-semibold text-gray-400 mb-3">Vulnerability Severity Distribution</h2>
+          <h2 className="text-sm font-semibold text-gray-400 mb-3">
+            Vulnerability Severity Distribution
+          </h2>
           <VulnTreemapMini data={vulnsBySeverity} />
         </div>
 
@@ -58,9 +60,7 @@ export default function VulnerabilitiesTab({
           </div>
           <div className="space-y-2">
             {recentKEVs.length === 0 ? (
-              <div className="text-gray-500 text-sm text-center py-4">
-                No KEVs found
-              </div>
+              <div className="text-gray-500 text-sm text-center py-4">No KEVs found</div>
             ) : (
               recentKEVs.slice(0, 6).map((kev) => (
                 <div
@@ -78,13 +78,13 @@ export default function VulnerabilitiesTab({
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                     {kev.cvss_score && (
-                      <span className={`badge-${kev.cvss_score >= 9 ? 'critical' : kev.cvss_score >= 7 ? 'high' : 'medium'}`}>
+                      <span
+                        className={`badge-${kev.cvss_score >= 9 ? 'critical' : kev.cvss_score >= 7 ? 'high' : 'medium'}`}
+                      >
                         {kev.cvss_score}
                       </span>
                     )}
-                    {kev.ransomware_campaign_use && (
-                      <span className="badge-critical">RW</span>
-                    )}
+                    {kev.ransomware_campaign_use && <span className="badge-critical">RW</span>}
                   </div>
                 </div>
               ))

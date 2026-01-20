@@ -31,14 +31,16 @@ export async function getMissedAlertsForUser(userId, days = 7) {
   // Get ransomware incidents from the period
   const { data: incidents } = await supabase
     .from('incidents')
-    .select(`
+    .select(
+      `
       id,
       victim_name,
       sector,
       country,
       discovered_at,
       threat_actor:threat_actors(name, type)
-    `)
+    `
+    )
     .gte('discovered_at', cutoff.toISOString())
     .order('discovered_at', { ascending: false })
     .limit(10)
@@ -46,10 +48,10 @@ export async function getMissedAlertsForUser(userId, days = 7) {
   if (incidents) {
     // If user has profile, filter to their sector
     const relevantIncidents = profile?.sector
-      ? incidents.filter(i => i.sector?.toLowerCase().includes(profile.sector.toLowerCase()))
+      ? incidents.filter((i) => i.sector?.toLowerCase().includes(profile.sector.toLowerCase()))
       : incidents.slice(0, 5)
 
-    alerts.ransomware = relevantIncidents.map(i => ({
+    alerts.ransomware = relevantIncidents.map((i) => ({
       actor: i.threat_actor?.name || 'Unknown',
       victim: i.victim_name,
       sector: i.sector,
@@ -67,7 +69,7 @@ export async function getMissedAlertsForUser(userId, days = 7) {
     .limit(5)
 
   if (kevs) {
-    alerts.kev = kevs.map(k => ({
+    alerts.kev = kevs.map((k) => ({
       cve: k.cve_id,
       description: k.description?.substring(0, 100) + '...',
       cvss: k.cvss_score,
@@ -84,7 +86,7 @@ export async function getMissedAlertsForUser(userId, days = 7) {
     .limit(5)
 
   if (actors) {
-    alerts.escalating = actors.map(a => ({
+    alerts.escalating = actors.map((a) => ({
       name: a.name,
       incidents: a.incidents_7d,
       sectors: a.target_sectors?.slice(0, 3) || [],
@@ -165,50 +167,77 @@ export function generateMissedAlertsEmail(userName, alerts, weekOf) {
               </table>
 
               <!-- Ransomware Section -->
-              ${alerts.ransomware.length > 0 ? `
+              ${
+                alerts.ransomware.length > 0
+                  ? `
               <div style="margin-bottom: 25px;">
                 <h3 style="color: #f87171; margin: 0 0 15px 0; font-size: 16px; border-bottom: 1px solid #334155; padding-bottom: 10px;">
                   🔴 Ransomware Incidents
                 </h3>
-                ${alerts.ransomware.slice(0, 3).map(inc => `
+                ${alerts.ransomware
+                  .slice(0, 3)
+                  .map(
+                    (inc) => `
                 <div style="padding: 12px; background-color: rgba(239, 68, 68, 0.05); border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #ef4444;">
                   <div style="color: #f8fafc; font-size: 14px; font-weight: 500;">${inc.actor} hit ${inc.sector || 'unknown sector'}</div>
                   <div style="color: #64748b; font-size: 12px; margin-top: 4px;">${inc.victim} • ${formatDate(inc.date)}</div>
                 </div>
-                `).join('')}
+                `
+                  )
+                  .join('')}
                 ${alerts.ransomware.length > 3 ? `<p style="color: #64748b; font-size: 12px; margin: 10px 0 0 0;">+${alerts.ransomware.length - 3} more incidents</p>` : ''}
               </div>
-              ` : ''}
+              `
+                  : ''
+              }
 
               <!-- KEV Section -->
-              ${alerts.kev.length > 0 ? `
+              ${
+                alerts.kev.length > 0
+                  ? `
               <div style="margin-bottom: 25px;">
                 <h3 style="color: #fb923c; margin: 0 0 15px 0; font-size: 16px; border-bottom: 1px solid #334155; padding-bottom: 10px;">
                   🟠 New KEV Vulnerabilities
                 </h3>
-                ${alerts.kev.slice(0, 3).map(kev => `
+                ${alerts.kev
+                  .slice(0, 3)
+                  .map(
+                    (kev) => `
                 <div style="padding: 12px; background-color: rgba(249, 115, 22, 0.05); border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #f97316;">
                   <div style="color: #f8fafc; font-size: 14px; font-weight: 500;">${kev.cve} (CVSS ${kev.cvss})</div>
                   <div style="color: #64748b; font-size: 12px; margin-top: 4px;">${kev.description}</div>
                 </div>
-                `).join('')}
+                `
+                  )
+                  .join('')}
               </div>
-              ` : ''}
+              `
+                  : ''
+              }
 
               <!-- Escalating Actors Section -->
-              ${alerts.escalating.length > 0 ? `
+              ${
+                alerts.escalating.length > 0
+                  ? `
               <div style="margin-bottom: 25px;">
                 <h3 style="color: #facc15; margin: 0 0 15px 0; font-size: 16px; border-bottom: 1px solid #334155; padding-bottom: 10px;">
                   📈 Escalating Threat Actors
                 </h3>
-                ${alerts.escalating.slice(0, 3).map(actor => `
+                ${alerts.escalating
+                  .slice(0, 3)
+                  .map(
+                    (actor) => `
                 <div style="padding: 12px; background-color: rgba(234, 179, 8, 0.05); border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #eab308;">
                   <div style="color: #f8fafc; font-size: 14px; font-weight: 500;">${actor.name}</div>
                   <div style="color: #64748b; font-size: 12px; margin-top: 4px;">${actor.incidents} incidents this week • ${actor.sectors.join(', ')}</div>
                 </div>
-                `).join('')}
+                `
+                  )
+                  .join('')}
               </div>
-              ` : ''}
+              `
+                  : ''
+              }
 
               <!-- CTA -->
               <div style="text-align: center; padding: 25px 0; border-top: 1px solid #334155;">
@@ -261,20 +290,41 @@ Here's what happened in the threat landscape this week. With Professional, you'd
 🟠 ${alerts.kev.length} New KEV Vulnerabilities
 📈 ${alerts.escalating.length} Escalating Actors
 
-${alerts.ransomware.length > 0 ? `
+${
+  alerts.ransomware.length > 0
+    ? `
 🔴 RANSOMWARE INCIDENTS
-${alerts.ransomware.slice(0, 3).map(inc => `• ${inc.actor} hit ${inc.sector || 'unknown'} - ${inc.victim}`).join('\n')}
-` : ''}
+${alerts.ransomware
+  .slice(0, 3)
+  .map((inc) => `• ${inc.actor} hit ${inc.sector || 'unknown'} - ${inc.victim}`)
+  .join('\n')}
+`
+    : ''
+}
 
-${alerts.kev.length > 0 ? `
+${
+  alerts.kev.length > 0
+    ? `
 🟠 NEW KEV VULNERABILITIES
-${alerts.kev.slice(0, 3).map(kev => `• ${kev.cve} (CVSS ${kev.cvss})`).join('\n')}
-` : ''}
+${alerts.kev
+  .slice(0, 3)
+  .map((kev) => `• ${kev.cve} (CVSS ${kev.cvss})`)
+  .join('\n')}
+`
+    : ''
+}
 
-${alerts.escalating.length > 0 ? `
+${
+  alerts.escalating.length > 0
+    ? `
 📈 ESCALATING THREAT ACTORS
-${alerts.escalating.slice(0, 3).map(actor => `• ${actor.name} - ${actor.incidents} incidents this week`).join('\n')}
-` : ''}
+${alerts.escalating
+  .slice(0, 3)
+  .map((actor) => `• ${actor.name} - ${actor.incidents} incidents this week`)
+  .join('\n')}
+`
+    : ''
+}
 
 ━━━━━━━━━━━━━━━━━━━━━━
 
@@ -307,7 +357,7 @@ export async function getMissedAlertsRecipients() {
   if (!users) return []
 
   // Get their email addresses
-  const userIds = users.map(u => u.user_id)
+  const userIds = users.map((u) => u.user_id)
 
   // Note: In production, you'd join with auth.users or a profiles table
   // For now, return the user IDs

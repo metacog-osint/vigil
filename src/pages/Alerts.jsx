@@ -49,13 +49,16 @@ function AlertCard({ alert }) {
         <SeverityBadge severity={alert.severity} />
       </div>
 
-      <p className="text-sm text-gray-400 line-clamp-3 mb-3">
-        {alert.description}
-      </p>
+      <p className="text-sm text-gray-400 line-clamp-3 mb-3">{alert.description}</p>
 
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-2">
-          <span className={clsx('px-2 py-0.5 rounded capitalize', categoryColors[alert.category] || categoryColors.general)}>
+          <span
+            className={clsx(
+              'px-2 py-0.5 rounded capitalize',
+              categoryColors[alert.category] || categoryColors.general
+            )}
+          >
             {alert.category || 'general'}
           </span>
           {alert.cve_ids?.length > 0 && (
@@ -142,21 +145,31 @@ export default function Alerts() {
       <div className="flex flex-wrap gap-4 mb-6">
         <select
           value={category}
-          onChange={(e) => { setCategory(e.target.value); setPage(0) }}
+          onChange={(e) => {
+            setCategory(e.target.value)
+            setPage(0)
+          }}
           className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-cyber-accent"
         >
           {CATEGORIES.map((cat) => (
-            <option key={cat.value} value={cat.value}>{cat.label}</option>
+            <option key={cat.value} value={cat.value}>
+              {cat.label}
+            </option>
           ))}
         </select>
 
         <select
           value={severity}
-          onChange={(e) => { setSeverity(e.target.value); setPage(0) }}
+          onChange={(e) => {
+            setSeverity(e.target.value)
+            setPage(0)
+          }}
           className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-cyber-accent"
         >
           {SEVERITIES.map((sev) => (
-            <option key={sev.value} value={sev.value}>{sev.label}</option>
+            <option key={sev.value} value={sev.value}>
+              {sev.label}
+            </option>
           ))}
         </select>
 

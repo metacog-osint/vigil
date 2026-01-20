@@ -42,9 +42,7 @@ function HeatmapCell({ value, rowLabel, colLabel, onClick }) {
       )}
       title={`${rowLabel} × ${colLabel}: ${value}`}
     >
-      {value > 0 && (
-        <span className={clsx('text-xs font-medium', text)}>{value}</span>
-      )}
+      {value > 0 && <span className={clsx('text-xs font-medium', text)}>{value}</span>}
     </button>
   )
 }
@@ -58,7 +56,12 @@ function CellDetail({ data, onClose }) {
         <h4 className="text-sm font-medium text-white">Targeting Detail</h4>
         <button onClick={onClose} className="text-gray-400 hover:text-white">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -114,7 +117,7 @@ export function TargetingHeatmap({ data, sectors, countries, onCellClick }) {
   const matrix = useMemo(() => {
     const map = new Map()
 
-    for (const item of (data || [])) {
+    for (const item of data || []) {
       const key = `${item.target_sector}|${item.target_country}`
       const existing = map.get(key) || 0
       map.set(key, existing + (item.actor_count || 1))
@@ -129,11 +132,7 @@ export function TargetingHeatmap({ data, sectors, countries, onCellClick }) {
   }
 
   if (!sectors?.length || !countries?.length) {
-    return (
-      <div className="text-sm text-gray-500 text-center py-8">
-        No targeting data available
-      </div>
-    )
+    return <div className="text-sm text-gray-500 text-center py-8">No targeting data available</div>
   }
 
   return (
@@ -148,7 +147,7 @@ export function TargetingHeatmap({ data, sectors, countries, onCellClick }) {
           <thead>
             <tr>
               <th className="w-32 p-2 text-left text-xs text-gray-500">Sector / Country</th>
-              {countries.slice(0, 12).map(country => (
+              {countries.slice(0, 12).map((country) => (
                 <th key={country} className="p-1 text-center">
                   <span className="text-[10px] text-gray-400 transform -rotate-45 inline-block origin-bottom-left">
                     {country}
@@ -158,12 +157,12 @@ export function TargetingHeatmap({ data, sectors, countries, onCellClick }) {
             </tr>
           </thead>
           <tbody>
-            {sectors.slice(0, 10).map(sector => (
+            {sectors.slice(0, 10).map((sector) => (
               <tr key={sector}>
                 <td className="p-2 text-xs text-gray-400 truncate max-w-[120px]" title={sector}>
                   {sector}
                 </td>
-                {countries.slice(0, 12).map(country => {
+                {countries.slice(0, 12).map((country) => {
                   const value = matrix.get(`${sector}|${country}`) || 0
                   return (
                     <td key={country} className="p-0.5">
@@ -182,12 +181,7 @@ export function TargetingHeatmap({ data, sectors, countries, onCellClick }) {
         </table>
       </div>
 
-      {selectedCell && (
-        <CellDetail
-          data={selectedCell}
-          onClose={() => setSelectedCell(null)}
-        />
-      )}
+      {selectedCell && <CellDetail data={selectedCell} onClose={() => setSelectedCell(null)} />}
     </div>
   )
 }
@@ -200,7 +194,7 @@ export function TargetingHeatmapMini({ data, topN = 5 }) {
     const countryCounts = {}
     const matrixMap = new Map()
 
-    for (const item of (data || [])) {
+    for (const item of data || []) {
       const sector = item.target_sector
       const country = item.target_country
       const count = item.actor_count || 1
@@ -228,31 +222,30 @@ export function TargetingHeatmapMini({ data, topN = 5 }) {
   }, [data, topN])
 
   if (sectors.length === 0 || countries.length === 0) {
-    return (
-      <div className="text-xs text-gray-500 text-center py-4">
-        No targeting data
-      </div>
-    )
+    return <div className="text-xs text-gray-500 text-center py-4">No targeting data</div>
   }
 
   return (
     <div className="space-y-2">
-      <div className="grid gap-0.5" style={{ gridTemplateColumns: `80px repeat(${countries.length}, 1fr)` }}>
+      <div
+        className="grid gap-0.5"
+        style={{ gridTemplateColumns: `80px repeat(${countries.length}, 1fr)` }}
+      >
         {/* Header */}
         <div />
-        {countries.map(country => (
+        {countries.map((country) => (
           <div key={country} className="text-[9px] text-gray-500 text-center truncate px-1">
             {country.slice(0, 3)}
           </div>
         ))}
 
         {/* Rows */}
-        {sectors.map(sector => (
+        {sectors.map((sector) => (
           <>
             <div key={`label-${sector}`} className="text-[9px] text-gray-400 truncate pr-1">
               {sector}
             </div>
-            {countries.map(country => {
+            {countries.map((country) => {
               const value = matrix.get(`${sector}|${country}`) || 0
               const { bg } = getHeatColor(value)
               return (

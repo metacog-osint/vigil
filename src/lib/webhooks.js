@@ -124,10 +124,7 @@ export const webhooks = {
    * Get all webhooks for a user
    */
   async getAll(userId, teamId = null) {
-    let query = supabase
-      .from('webhooks')
-      .select('*')
-      .eq('user_id', userId)
+    let query = supabase.from('webhooks').select('*').eq('user_id', userId)
 
     if (teamId) {
       query = query.or(`team_id.eq.${teamId}`)
@@ -143,11 +140,7 @@ export const webhooks = {
    * Get webhook by ID
    */
   async getById(webhookId) {
-    const { data, error } = await supabase
-      .from('webhooks')
-      .select('*')
-      .eq('id', webhookId)
-      .single()
+    const { data, error } = await supabase.from('webhooks').select('*').eq('id', webhookId).single()
 
     if (error && error.code !== 'PGRST116') throw error
     return data
@@ -158,9 +151,7 @@ export const webhooks = {
    */
   async create(userId, webhookData) {
     // Generate secret for signature auth
-    const secret = webhookData.authType === 'signature'
-      ? generateSecret()
-      : null
+    const secret = webhookData.authType === 'signature' ? generateSecret() : null
 
     const { data, error } = await supabase
       .from('webhooks')
@@ -220,10 +211,7 @@ export const webhooks = {
    * Delete a webhook
    */
   async delete(webhookId) {
-    const { error } = await supabase
-      .from('webhooks')
-      .delete()
-      .eq('id', webhookId)
+    const { error } = await supabase.from('webhooks').delete().eq('id', webhookId)
 
     if (error) throw error
   },
@@ -286,7 +274,9 @@ export const webhooks = {
     }
 
     // Get session for authentication
-    const { data: { session } } = await supabase.auth.getSession()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     if (!session) {
       throw new Error('Authentication required to test webhooks')
     }
@@ -295,7 +285,7 @@ export const webhooks = {
     const response = await fetch('/api/webhooks/test', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${session.access_token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -401,7 +391,7 @@ export const webhookDeliveries = {
 function generateSecret() {
   const array = new Uint8Array(32)
   crypto.getRandomValues(array)
-  return Array.from(array, b => b.toString(16).padStart(2, '0')).join('')
+  return Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
 // Utility: Build headers for webhook request
@@ -450,13 +440,12 @@ async function computeSignature(payload, secret) {
     ['sign']
   )
 
-  const signature = await crypto.subtle.sign(
-    'HMAC',
-    key,
-    encoder.encode(JSON.stringify(payload))
-  )
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(JSON.stringify(payload)))
 
-  return 'sha256=' + Array.from(new Uint8Array(signature), b => b.toString(16).padStart(2, '0')).join('')
+  return (
+    'sha256=' +
+    Array.from(new Uint8Array(signature), (b) => b.toString(16).padStart(2, '0')).join('')
+  )
 }
 
 // Utility: Get events by category
@@ -496,27 +485,33 @@ export function validateWebhookUrl(url) {
     const hostname = parsed.hostname.toLowerCase()
 
     // Block localhost and loopback
-    if (hostname === 'localhost' ||
-        hostname === '127.0.0.1' ||
-        hostname.startsWith('127.') ||
-        hostname === '::1' ||
-        hostname === '[::1]') {
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.startsWith('127.') ||
+      hostname === '::1' ||
+      hostname === '[::1]'
+    ) {
       return { valid: false, error: 'Localhost URLs are not allowed' }
     }
 
     // Block internal hostnames
-    if (hostname === 'internal' ||
-        hostname.endsWith('.internal') ||
-        hostname.endsWith('.local') ||
-        hostname.endsWith('.localhost')) {
+    if (
+      hostname === 'internal' ||
+      hostname.endsWith('.internal') ||
+      hostname.endsWith('.local') ||
+      hostname.endsWith('.localhost')
+    ) {
       return { valid: false, error: 'Internal hostnames are not allowed' }
     }
 
     // Block cloud metadata endpoints (AWS, GCP, Azure)
-    if (hostname === '169.254.169.254' ||
-        hostname === 'metadata.google.internal' ||
-        hostname === 'metadata.azure.internal' ||
-        hostname.endsWith('.metadata.google.internal')) {
+    if (
+      hostname === '169.254.169.254' ||
+      hostname === 'metadata.google.internal' ||
+      hostname === 'metadata.azure.internal' ||
+      hostname.endsWith('.metadata.google.internal')
+    ) {
       return { valid: false, error: 'Cloud metadata endpoints are not allowed' }
     }
 
@@ -559,7 +554,7 @@ export function validateWebhookUrl(url) {
       }
 
       // Block broadcast
-      if (octets.every(o => o === 255)) {
+      if (octets.every((o) => o === 255)) {
         return { valid: false, error: 'Broadcast addresses are not allowed' }
       }
     }
@@ -567,10 +562,12 @@ export function validateWebhookUrl(url) {
     // Block IPv6 private/internal addresses
     if (hostname.includes(':')) {
       const cleanHostname = hostname.replace(/^\[|\]$/g, '')
-      if (cleanHostname.startsWith('fc') ||
-          cleanHostname.startsWith('fd') ||
-          cleanHostname.startsWith('fe80') ||
-          cleanHostname === '::1') {
+      if (
+        cleanHostname.startsWith('fc') ||
+        cleanHostname.startsWith('fd') ||
+        cleanHostname.startsWith('fe80') ||
+        cleanHostname === '::1'
+      ) {
         return { valid: false, error: 'Private IPv6 addresses are not allowed' }
       }
     }

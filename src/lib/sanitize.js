@@ -10,20 +10,39 @@ import DOMPurify from 'dompurify'
 
 // Allowed tags for markdown content
 const ALLOWED_TAGS = [
-  'p', 'br', 'strong', 'em', 'b', 'i', 'u',
-  'ul', 'ol', 'li',
-  'a', 'code', 'pre',
-  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-  'blockquote', 'hr',
-  'table', 'thead', 'tbody', 'tr', 'th', 'td',
-  'span', 'div'
+  'p',
+  'br',
+  'strong',
+  'em',
+  'b',
+  'i',
+  'u',
+  'ul',
+  'ol',
+  'li',
+  'a',
+  'code',
+  'pre',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'blockquote',
+  'hr',
+  'table',
+  'thead',
+  'tbody',
+  'tr',
+  'th',
+  'td',
+  'span',
+  'div',
 ]
 
 // Allowed attributes
-const ALLOWED_ATTR = [
-  'href', 'target', 'rel', 'class', 'id',
-  'colspan', 'rowspan'
-]
+const ALLOWED_ATTR = ['href', 'target', 'rel', 'class', 'id', 'colspan', 'rowspan']
 
 // Default configuration
 const DEFAULT_CONFIG = {

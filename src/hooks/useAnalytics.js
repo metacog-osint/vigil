@@ -23,9 +23,8 @@ export function usePageTracking() {
 
   useEffect(() => {
     // Extract page name from path
-    const pageName = location.pathname === '/'
-      ? 'dashboard'
-      : location.pathname.slice(1).replace(/\//g, '_')
+    const pageName =
+      location.pathname === '/' ? 'dashboard' : location.pathname.slice(1).replace(/\//g, '_')
 
     trackPageView(pageName, {
       path: location.pathname,

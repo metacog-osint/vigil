@@ -11,19 +11,23 @@ export const correlations = {
       // Get TTPs
       supabase
         .from('actor_techniques')
-        .select(`
+        .select(
+          `
           *,
           technique:techniques(id, name, tactics, description)
-        `)
+        `
+        )
         .eq('actor_id', actorId),
 
       // Get exploited vulnerabilities
       supabase
         .from('actor_vulnerabilities')
-        .select(`
+        .select(
+          `
           *,
           vulnerability:vulnerabilities(cve_id, cvss_score, description, affected_products)
-        `)
+        `
+        )
         .eq('actor_id', actorId),
 
       // Get IOCs
@@ -31,13 +35,13 @@ export const correlations = {
         .from('iocs')
         .select('id, type, value, malware_family, confidence')
         .eq('actor_id', actorId)
-        .limit(50)
+        .limit(50),
     ])
 
     return {
       techniques: techniques.data || [],
       vulnerabilities: vulnerabilities.data || [],
-      iocs: iocData.data || []
+      iocs: iocData.data || [],
     }
   },
 
@@ -45,9 +49,7 @@ export const correlations = {
     const correlationData = await this.getActorCorrelations(actorId)
 
     // Build graph structure for visualization
-    const nodes = [
-      { id: 'actor', type: 'actor', label: 'Actor' }
-    ]
+    const nodes = [{ id: 'actor', type: 'actor', label: 'Actor' }]
     const edges = []
 
     // Add technique nodes
@@ -57,7 +59,7 @@ export const correlations = {
         id: nodeId,
         type: 'technique',
         label: t.technique?.name || t.technique_id,
-        data: t.technique
+        data: t.technique,
       })
       edges.push({ from: 'actor', to: nodeId, label: 'uses' })
     }
@@ -69,7 +71,7 @@ export const correlations = {
         id: nodeId,
         type: 'vulnerability',
         label: v.cve_id,
-        data: v.vulnerability
+        data: v.vulnerability,
       })
       edges.push({ from: 'actor', to: nodeId, label: 'exploits' })
     }
@@ -81,7 +83,7 @@ export const correlations = {
         id: nodeId,
         type: 'ioc',
         label: i.value?.substring(0, 20) + (i.value?.length > 20 ? '...' : ''),
-        data: i
+        data: i,
       })
       edges.push({ from: 'actor', to: nodeId, label: 'associated' })
     }
@@ -92,33 +94,38 @@ export const correlations = {
   async getVulnActors(cveId) {
     return supabase
       .from('actor_vulnerabilities')
-      .select(`
+      .select(
+        `
         *,
         actor:threat_actors(id, name, trend_status, target_sectors)
-      `)
+      `
+      )
       .eq('cve_id', cveId)
   },
 
   async getTechniqueActors(techniqueId) {
     return supabase
       .from('actor_techniques')
-      .select(`
+      .select(
+        `
         *,
         actor:threat_actors(id, name, trend_status)
-      `)
+      `
+      )
       .eq('technique_id', techniqueId)
   },
 
   async linkActorVulnerability(actorId, cveId, confidence = 'medium', source = 'manual') {
-    return supabase
-      .from('actor_vulnerabilities')
-      .upsert({
+    return supabase.from('actor_vulnerabilities').upsert(
+      {
         actor_id: actorId,
         cve_id: cveId,
         confidence,
         source,
-        first_seen: new Date().toISOString().split('T')[0]
-      }, { onConflict: 'actor_id,cve_id' })
+        first_seen: new Date().toISOString().split('T')[0],
+      },
+      { onConflict: 'actor_id,cve_id' }
+    )
   },
 
   // ========================================
@@ -155,10 +162,7 @@ export const correlations = {
    * Get threat profile for a specific country
    */
   async getCountryThreats(country) {
-    return supabase
-      .from('country_threat_profile')
-      .select('*')
-      .ilike('country', `%${country}%`)
+    return supabase.from('country_threat_profile').select('*').ilike('country', `%${country}%`)
   },
 
   /**
@@ -192,16 +196,18 @@ export const correlations = {
     const grouped = {
       iocs: [],
       incidents: [],
-      cyber_events: []
+      cyber_events: [],
     }
 
-    for (const row of (data || [])) {
+    for (const row of data || []) {
       if (grouped[row.data_type]) {
         grouped[row.data_type].push({
           week: row.week,
           count: row.count,
           prev_week: row.prev_week,
-          change: row.prev_week ? ((row.count - row.prev_week) / row.prev_week * 100).toFixed(1) : null
+          change: row.prev_week
+            ? (((row.count - row.prev_week) / row.prev_week) * 100).toFixed(1)
+            : null,
         })
       }
     }
@@ -228,10 +234,7 @@ export const correlations = {
    * Get specific actor's activity summary
    */
   async getActorActivity(actorName) {
-    return supabase
-      .from('actor_activity_summary')
-      .select('*')
-      .ilike('actor_name', actorName)
+    return supabase.from('actor_activity_summary').select('*').ilike('actor_name', actorName)
   },
 
   // ========================================
@@ -242,21 +245,14 @@ export const correlations = {
    * Get attack chain for an actor
    */
   async getActorAttackChain(actorId) {
-    return supabase
-      .from('attack_chains')
-      .select('*')
-      .eq('actor_id', actorId)
-      .single()
+    return supabase.from('attack_chains').select('*').eq('actor_id', actorId).single()
   },
 
   /**
    * Get all attack chains with filters
    */
   async getAttackChains({ sector, confidence, limit = 50 } = {}) {
-    let query = supabase
-      .from('attack_chains')
-      .select('*')
-      .order('created_at', { ascending: false })
+    let query = supabase.from('attack_chains').select('*').order('created_at', { ascending: false })
 
     if (sector) {
       query = query.contains('target_sectors', [sector])
@@ -273,20 +269,14 @@ export const correlations = {
    * Search attack chains by CVE
    */
   async getAttackChainsByCVE(cveId) {
-    return supabase
-      .from('attack_chains')
-      .select('*')
-      .contains('vulnerabilities', [cveId])
+    return supabase.from('attack_chains').select('*').contains('vulnerabilities', [cveId])
   },
 
   /**
    * Search attack chains by technique
    */
   async getAttackChainsByTechnique(mitreId) {
-    return supabase
-      .from('attack_chains')
-      .select('*')
-      .contains('techniques', [mitreId])
+    return supabase.from('attack_chains').select('*').contains('techniques', [mitreId])
   },
 
   // ========================================
@@ -314,10 +304,7 @@ export const correlations = {
    * Get actors associated with an IOC
    */
   async getIOCActors(iocValue) {
-    return supabase
-      .from('actor_iocs')
-      .select('*')
-      .eq('ioc_value', iocValue)
+    return supabase.from('actor_iocs').select('*').eq('ioc_value', iocValue)
   },
 
   // ========================================
@@ -328,21 +315,21 @@ export const correlations = {
    * Get comprehensive actor dossier with all correlations
    */
   async getActorDossier(actorId) {
-    const [
-      actorData,
-      techniques,
-      vulnerabilities,
-      iocs,
-      attackChain,
-      activitySummary
-    ] = await Promise.all([
-      supabase.from('threat_actors').select('*').eq('id', actorId).single(),
-      supabase.from('actor_techniques').select('*, technique:techniques(*)').eq('actor_id', actorId),
-      supabase.from('actor_vulnerabilities').select('*, vulnerability:vulnerabilities(*)').eq('actor_id', actorId),
-      supabase.from('actor_iocs').select('*').eq('actor_id', actorId).limit(50),
-      supabase.from('attack_chains').select('*').eq('actor_id', actorId).single(),
-      supabase.from('actor_activity_summary').select('*').eq('actor_name', actorData?.data?.name)
-    ])
+    const [actorData, techniques, vulnerabilities, iocs, attackChain, activitySummary] =
+      await Promise.all([
+        supabase.from('threat_actors').select('*').eq('id', actorId).single(),
+        supabase
+          .from('actor_techniques')
+          .select('*, technique:techniques(*)')
+          .eq('actor_id', actorId),
+        supabase
+          .from('actor_vulnerabilities')
+          .select('*, vulnerability:vulnerabilities(*)')
+          .eq('actor_id', actorId),
+        supabase.from('actor_iocs').select('*').eq('actor_id', actorId).limit(50),
+        supabase.from('attack_chains').select('*').eq('actor_id', actorId).single(),
+        supabase.from('actor_activity_summary').select('*').eq('actor_name', actorData?.data?.name),
+      ])
 
     return {
       actor: actorData.data,
@@ -351,7 +338,7 @@ export const correlations = {
       iocs: iocs.data || [],
       attackChain: attackChain.data,
       activitySummary: activitySummary.data?.[0] || null,
-      error: actorData.error
+      error: actorData.error,
     }
   },
 
@@ -410,10 +397,7 @@ export const correlations = {
    * Get all campaigns with optional filters
    */
   async getCampaigns({ actor, sector, status, limit = 50 } = {}) {
-    let query = supabase
-      .from('campaigns')
-      .select('*')
-      .order('updated_at', { ascending: false })
+    let query = supabase.from('campaigns').select('*').order('updated_at', { ascending: false })
 
     if (actor) {
       query = query.ilike('actor_name', `%${actor}%`)
@@ -436,10 +420,12 @@ export const correlations = {
   async getCampaignIncidents(campaignId) {
     return supabase
       .from('campaign_incidents')
-      .select(`
+      .select(
+        `
         *,
         incident:incidents(*)
-      `)
+      `
+      )
       .eq('campaign_id', campaignId)
       .order('added_at', { ascending: false })
   },
@@ -509,9 +495,7 @@ export const correlations = {
    * Get geographic targeting matrix
    */
   async getGeographicTargetingMatrix({ country, sector, actorType } = {}) {
-    let query = supabase
-      .from('geographic_targeting_matrix')
-      .select('*')
+    let query = supabase.from('geographic_targeting_matrix').select('*')
 
     if (country) {
       query = query.eq('target_country', country)
@@ -532,11 +516,7 @@ export const correlations = {
    * Get IOC confidence with multi-source correlation
    */
   async getIOCConfidence(iocId) {
-    return supabase
-      .from('ioc_confidence')
-      .select('*')
-      .eq('id', iocId)
-      .single()
+    return supabase.from('ioc_confidence').select('*').eq('id', iocId).single()
   },
 
   /**
@@ -551,7 +531,7 @@ export const correlations = {
    */
   async refreshAdvancedViews() {
     return supabase.rpc('refresh_advanced_correlation_views')
-  }
+  },
 }
 
 export default correlations

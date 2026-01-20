@@ -314,7 +314,12 @@ export async function getAssetVulnerabilities(assetId, options = {}) {
 /**
  * Update vulnerability status for an asset
  */
-export async function updateVulnerabilityStatus(correlationId, status, notes = null, userId = null) {
+export async function updateVulnerabilityStatus(
+  correlationId,
+  status,
+  notes = null,
+  userId = null
+) {
   const updates = {
     status,
     updated_at: new Date().toISOString(),

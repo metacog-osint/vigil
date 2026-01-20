@@ -13,12 +13,7 @@ const STATE_EXPIRY_MS = 10 * 60 * 1000 // 10 minutes
  * Allowed redirect paths after OAuth callback
  * Prevents open redirect attacks
  */
-const ALLOWED_REDIRECT_PATHS = [
-  '/settings',
-  '/integrations',
-  '/chat-integrations',
-  '/dashboard',
-]
+const ALLOWED_REDIRECT_PATHS = ['/settings', '/integrations', '/chat-integrations', '/dashboard']
 
 /**
  * Generate a cryptographically secure OAuth state parameter
