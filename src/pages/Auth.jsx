@@ -389,13 +389,17 @@ export default function Auth() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">Email address</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-2">
+              Email address
+            </label>
             <input
+              id="email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              autoComplete="email"
+              autoComplete={mode === 'register' ? 'email' : 'username'}
               className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyber-accent focus:ring-1 focus:ring-cyber-accent"
               placeholder="you@company.com"
             />
@@ -403,14 +407,22 @@ export default function Auth() {
 
           {(mode === 'login' || mode === 'register') && (
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-2">
+                Password
+              </label>
               <input
+                id="password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
                 autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                {...(mode === 'register' && {
+                  passwordrules:
+                    'minlength: 8; required: upper; required: lower; required: digit; required: special;',
+                })}
                 className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyber-accent focus:ring-1 focus:ring-cyber-accent"
                 placeholder="••••••••"
               />
@@ -420,10 +432,15 @@ export default function Auth() {
 
           {mode === 'register' && (
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">
+              <label
+                htmlFor="confirm-password"
+                className="block text-sm font-medium text-gray-400 mb-2"
+              >
                 Confirm Password
               </label>
               <input
+                id="confirm-password"
+                name="confirm-password"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
