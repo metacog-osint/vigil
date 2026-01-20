@@ -177,6 +177,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
 
   // Update mode when URL changes
   useEffect(() => {
@@ -232,6 +233,12 @@ export default function Auth() {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    if (!acceptedTerms) {
+      setError('You must accept the Terms of Service and Privacy Policy to create an account')
+      setLoading(false)
+      return
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -453,6 +460,39 @@ export default function Auth() {
             </div>
           )}
 
+          {mode === 'register' && (
+            <div className="flex items-start gap-3">
+              <input
+                id="accept-terms"
+                name="accept-terms"
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-gray-600 bg-gray-800 text-cyber-accent focus:ring-cyber-accent focus:ring-offset-0 focus:ring-2"
+              />
+              <label htmlFor="accept-terms" className="text-sm text-gray-400">
+                I agree to the{' '}
+                <a
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cyber-accent hover:underline"
+                >
+                  Terms of Service
+                </a>{' '}
+                and{' '}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cyber-accent hover:underline"
+                >
+                  Privacy Policy
+                </a>
+              </label>
+            </div>
+          )}
+
           {mode === 'login' && (
             <div className="flex items-center justify-between text-sm">
               <button
@@ -538,20 +578,6 @@ export default function Auth() {
           </button>
         )}
       </div>
-
-      {/* Terms notice for registration */}
-      {mode === 'register' && (
-        <p className="mt-6 text-xs text-gray-500 text-center">
-          By creating an account, you agree to our{' '}
-          <a href="/terms" className="text-gray-400 hover:underline">
-            Terms of Service
-          </a>{' '}
-          and{' '}
-          <a href="/privacy" className="text-gray-400 hover:underline">
-            Privacy Policy
-          </a>
-        </p>
-      )}
     </AuthLayout>
   )
 }
