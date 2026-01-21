@@ -51,7 +51,7 @@ export async function generateDigest(userId, type = 'weekly') {
 
   // Filter incidents to period
   const periodIncidents = (recentIncidentsData || []).filter((inc) => {
-    const incDate = new Date(inc.created_at || inc.discovered_at)
+    const incDate = new Date(inc.created_at || inc.discovered_date)
     return incDate >= startDate && incDate <= endDate
   })
 
@@ -110,9 +110,9 @@ export async function generateDigest(userId, type = 'weekly') {
       id: i.id,
       victimName: i.victim_name,
       actorName: i.threat_actor?.name || 'Unknown',
-      sector: i.sector,
-      country: i.country,
-      date: i.discovered_at || i.created_at,
+      sector: i.victim_sector,
+      country: i.victim_country,
+      date: i.discovered_date || i.created_at,
     })),
     newVulnerabilities: periodVulns.slice(0, 5).map((v) => ({
       id: v.cve_id || v.id,

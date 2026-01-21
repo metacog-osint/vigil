@@ -256,7 +256,7 @@ export function SearchModal({ isOpen, onClose }) {
                     limit: 1,
                   })
                   if (actorData?.[0]?.id) {
-                    query = query.eq('threat_actor_id', actorData[0].id)
+                    query = query.eq('actor_id', actorData[0].id)
                   }
                 }
                 if (filters.sectors?.length) {
@@ -722,8 +722,8 @@ export function SearchModal({ isOpen, onClose }) {
                 </div>
                 <div>
                   <span className="text-purple-500/70">NL:</span>{' '}
-                  <span className="text-gray-500">Try:</span> "escalating actors targeting
-                  healthcare"
+                  <span className="text-gray-500">Try:</span> &quot;escalating actors targeting
+                  healthcare&quot;
                 </div>
               </div>
             </div>
@@ -873,7 +873,9 @@ export function SearchModal({ isOpen, onClose }) {
               )}
             </div>
           ) : allResults.length === 0 && !loading ? (
-            <div className="p-8 text-center text-gray-400">No results found for "{query}"</div>
+            <div className="p-8 text-center text-gray-400">
+              No results found for &quot;{query}&quot;
+            </div>
           ) : (
             <div className="p-2">
               {allResults.map((item, index) => (

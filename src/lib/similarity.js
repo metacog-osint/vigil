@@ -53,13 +53,13 @@ function calculateIncidentSimilarity(incident, candidate) {
   const factors = []
 
   // Same actor = 40 points
-  if (incident.threat_actor_id && incident.threat_actor_id === candidate.threat_actor_id) {
+  if (incident.actor_id && incident.actor_id === candidate.actor_id) {
     score += 40
     factors.push({ factor: 'Same threat actor', points: 40 })
   }
 
   // Same sector = 25 points
-  if (incident.sector && incident.sector === candidate.sector) {
+  if (incident.victim_sector && incident.victim_sector === candidate.victim_sector) {
     score += 25
     factors.push({ factor: 'Same sector', points: 25 })
   }

@@ -44,15 +44,13 @@ function linearRegression(data) {
   let sumX = 0,
     sumY = 0,
     sumXY = 0,
-    sumX2 = 0,
-    sumY2 = 0
+    sumX2 = 0
 
   data.forEach((point, i) => {
     sumX += i
     sumY += point
     sumXY += i * point
     sumX2 += i * i
-    sumY2 += point * point
   })
 
   const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
@@ -75,7 +73,7 @@ function linearRegression(data) {
 /**
  * Calculate exponential moving average
  */
-function exponentialMovingAverage(data, alpha = 0.3) {
+function _exponentialMovingAverage(data, alpha = 0.3) {
   if (data.length === 0) return []
 
   const ema = [data[0]]
@@ -136,9 +134,9 @@ export async function predictSectorRisk(options = {}) {
   // Fetch historical incident data by sector
   const { data: incidents, error } = await supabase
     .from('incidents')
-    .select('sector, discovered_at')
-    .gte('discovered_at', startDate.toISOString())
-    .not('sector', 'is', null)
+    .select('victim_sector, discovered_date')
+    .gte('discovered_date', startDate.toISOString())
+    .not('victim_sector', 'is', null)
 
   if (error) {
     console.error('Error fetching incidents for prediction:', error)
@@ -148,8 +146,8 @@ export async function predictSectorRisk(options = {}) {
   // Group by sector and day
   const sectorDaily = {}
   incidents.forEach((inc) => {
-    const sector = inc.sector
-    const day = new Date(inc.discovered_at).toISOString().split('T')[0]
+    const sector = inc.victim_sector
+    const day = new Date(inc.discovered_date).toISOString().split('T')[0]
 
     if (!sectorDaily[sector]) sectorDaily[sector] = {}
     sectorDaily[sector][day] = (sectorDaily[sector][day] || 0) + 1
@@ -167,7 +165,6 @@ export async function predictSectorRisk(options = {}) {
 
     // Calculate trend
     const regression = linearRegression(values)
-    const ema = exponentialMovingAverage(values)
     const seasonality = calculateSeasonality(values)
 
     // Current metrics
@@ -229,9 +226,9 @@ export async function predictActorActivity(options = {}) {
   // Fetch actor activity
   const { data: incidents, error } = await supabase
     .from('incidents')
-    .select('threat_actor_id, discovered_at, threat_actor:threat_actors(id, name, trend_status)')
-    .gte('discovered_at', startDate.toISOString())
-    .not('threat_actor_id', 'is', null)
+    .select('actor_id, discovered_date, threat_actor:threat_actors(id, name, trend_status)')
+    .gte('discovered_date', startDate.toISOString())
+    .not('actor_id', 'is', null)
 
   if (error) {
     console.error('Error fetching actor activity:', error)
@@ -241,9 +238,9 @@ export async function predictActorActivity(options = {}) {
   // Group by actor and week
   const actorWeekly = {}
   incidents.forEach((inc) => {
-    const actorId = inc.threat_actor_id
+    const actorId = inc.actor_id
     const actorName = inc.threat_actor?.name || actorId
-    const week = getWeekNumber(new Date(inc.discovered_at))
+    const week = getWeekNumber(new Date(inc.discovered_date))
 
     if (!actorWeekly[actorId]) {
       actorWeekly[actorId] = {
@@ -456,8 +453,8 @@ export async function predictAttackVectors(options = {}) {
   // Fetch incidents with TTPs
   const { data: incidents, error } = await supabase
     .from('incidents')
-    .select('ttps, discovered_at')
-    .gte('discovered_at', startDate.toISOString())
+    .select('ttps, discovered_date')
+    .gte('discovered_date', startDate.toISOString())
     .not('ttps', 'is', null)
 
   if (error) {
@@ -470,7 +467,7 @@ export async function predictAttackVectors(options = {}) {
   const midpoint = new Date(startDate.getTime() + (Date.now() - startDate.getTime()) / 2)
 
   incidents.forEach((inc) => {
-    const isRecent = new Date(inc.discovered_at) > midpoint
+    const isRecent = new Date(inc.discovered_date) > midpoint
     const ttps = inc.ttps || []
 
     ttps.forEach((ttp) => {
@@ -529,7 +526,7 @@ export async function predictAttackVectors(options = {}) {
  * Generate comprehensive threat forecast
  */
 export async function generateThreatForecast(options = {}) {
-  const { days = 90, forecastDays = 30, orgProfile = null } = options
+  const { days = 90, forecastDays = 30, orgProfile: _orgProfile = null } = options
 
   const [sectorRisk, actorActivity, vulnExploitation, attackVectors] = await Promise.all([
     predictSectorRisk({ days, forecastDays }),
@@ -537,16 +534,6 @@ export async function generateThreatForecast(options = {}) {
     predictVulnerabilityExploitation({ limit: 20 }),
     predictAttackVectors({ days }),
   ])
-
-  // Filter by org profile if provided
-  let relevantSectors = sectorRisk.predictions
-  let relevantVulns = vulnExploitation.predictions
-
-  if (orgProfile?.sector) {
-    relevantSectors = relevantSectors.filter(
-      (p) => p.sector.toLowerCase() === orgProfile.sector.toLowerCase()
-    )
-  }
 
   // Generate summary insights
   const insights = []

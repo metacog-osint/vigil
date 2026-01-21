@@ -95,7 +95,7 @@ export const SORT_OPTIONS = {
     { value: 'trend_status', label: 'Trend Status' },
   ],
   incidents: [
-    { value: 'discovered_at', label: 'Discovery Date' },
+    { value: 'discovered_date', label: 'Discovery Date' },
     { value: 'victim_name', label: 'Victim Name' },
     { value: 'victim_sector', label: 'Sector' },
   ],

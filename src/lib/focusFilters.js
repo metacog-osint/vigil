@@ -166,15 +166,15 @@ function matchesActorFilters(actor, profile) {
 
 function matchesIncidentFilters(incident, profile) {
   // Check sector match
-  if (profile.sector && incident.sector) {
-    if (incident.sector.toLowerCase() === profile.sector.toLowerCase()) {
+  if (profile.sector && incident.victim_sector) {
+    if (incident.victim_sector.toLowerCase() === profile.sector.toLowerCase()) {
       return true
     }
   }
 
   // Check country match
-  if (profile.country && incident.country) {
-    if (incident.country.toLowerCase() === profile.country.toLowerCase()) {
+  if (profile.country && incident.victim_country) {
+    if (incident.victim_country.toLowerCase() === profile.country.toLowerCase()) {
       return true
     }
   }

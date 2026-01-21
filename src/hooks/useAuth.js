@@ -29,8 +29,8 @@ export function useAuth() {
 
         if (session?.user) {
           setUser(session.user)
-          // Load user profile if exists
-          await loadProfile(session.user.id)
+          // Load user profile in background (don't block auth loading)
+          loadProfile(session.user.id)
         }
       } catch (error) {
         console.error('Auth initialization error:', error)
@@ -39,7 +39,14 @@ export function useAuth() {
       }
     }
 
-    initAuth()
+    // Safety timeout - ensure loading never hangs forever
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false)
+    }, 5000)
+
+    initAuth().finally(() => {
+      clearTimeout(safetyTimeout)
+    })
 
     // Subscribe to auth state changes
     const {
@@ -72,14 +79,15 @@ export function useAuth() {
         .from('user_preferences')
         .select('preferences')
         .eq('user_id', userId)
-        .single()
+        .maybeSingle() // Returns null instead of error when no rows
 
-      if (error && error.code !== 'PGRST116') {
-        // PGRST116 = no rows returned (new user, no profile yet)
-        // Also ignore 404 table not found errors
+      if (error) {
+        // Ignore 404 table not found errors
         if (!error.message?.includes('does not exist')) {
           console.error('Error loading profile:', error.message)
         }
+        setProfile(null)
+        return
       }
 
       setProfile(data?.preferences?.org_profile || null)
