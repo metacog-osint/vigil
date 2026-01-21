@@ -31,7 +31,7 @@ export default function CustomIOCs() {
     setError,
     loadLists,
     loadIocs,
-  } = useIocData(user?.uid)
+  } = useIocData(user?.id)
 
   // Filters
   const {
@@ -46,7 +46,7 @@ export default function CustomIOCs() {
 
   // Actions
   const { handleCreateList, handleDeleteList, handleAddIoc, handleImport, handleDeleteIocs } =
-    useIocActions(user?.uid, lists, setLists, selectedList, setSelectedList, loadLists, loadIocs)
+    useIocActions(user?.id, lists, setLists, selectedList, setSelectedList, loadLists, loadIocs)
 
   // UI state
   const [showCreateListModal, setShowCreateListModal] = useState(false)

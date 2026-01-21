@@ -40,8 +40,8 @@ export function useSettingsData(user) {
       setSyncLogs(syncResult.data || [])
       setOrgProfile(profileResult || null)
 
-      if (user?.uid) {
-        const sub = await getUserSubscription(user.uid)
+      if (user?.id) {
+        const sub = await getUserSubscription(user.id)
         setSubscription(sub)
       }
     } catch (err) {
@@ -49,7 +49,7 @@ export function useSettingsData(user) {
     } finally {
       setIsLoading(false)
     }
-  }, [user?.uid])
+  }, [user?.id])
 
   useEffect(() => {
     loadData()

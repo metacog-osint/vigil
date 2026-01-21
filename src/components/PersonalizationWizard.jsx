@@ -33,7 +33,7 @@ const DIGEST_OPTIONS = [
 
 export default function PersonalizationWizard({ onComplete, onSkip }) {
   const { user } = useAuth()
-  const userId = user?.uid || 'anonymous'
+  const userId = user?.id || 'anonymous'
 
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState(false)

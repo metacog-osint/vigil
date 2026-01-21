@@ -19,17 +19,17 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
   const [activeTab, setActiveTab] = useState('saved')
 
   useEffect(() => {
-    if (user?.uid) {
+    if (user?.id) {
       loadData()
     }
-  }, [user?.uid, page])
+  }, [user?.id, page])
 
   async function loadData() {
     setLoading(true)
     try {
       const [savedData, recentData] = await Promise.all([
-        savedSearches.getAll(user.uid, page),
-        recentSearches.getAll(user.uid, page, 10),
+        savedSearches.getAll(user.id, page),
+        recentSearches.getAll(user.id, page, 10),
       ])
       setSearches(savedData)
       setRecent(recentData)
@@ -54,7 +54,7 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
   async function handleDelete(searchId) {
     if (!confirm('Delete this saved search?')) return
     try {
-      await savedSearches.delete(searchId, user.uid)
+      await savedSearches.delete(searchId, user.id)
       setSearches((prev) => prev.filter((s) => s.id !== searchId))
     } catch (err) {
       alert('Failed to delete: ' + err.message)
@@ -63,7 +63,7 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
 
   async function handleTogglePin(search) {
     try {
-      const updated = await savedSearches.togglePin(search.id, user.uid, !search.is_pinned)
+      const updated = await savedSearches.togglePin(search.id, user.id, !search.is_pinned)
       setSearches((prev) => prev.map((s) => (s.id === search.id ? updated : s)))
     } catch (err) {
       console.error('Failed to toggle pin:', err)
@@ -72,7 +72,7 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
 
   async function handleSetDefault(search) {
     try {
-      await savedSearches.setDefault(search.id, user.uid, page)
+      await savedSearches.setDefault(search.id, user.id, page)
       setSearches((prev) =>
         prev.map((s) => ({
           ...s,
@@ -86,7 +86,7 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
 
   async function handleSave(searchData) {
     try {
-      const newSearch = await savedSearches.create(user.uid, {
+      const newSearch = await savedSearches.create(user.id, {
         ...searchData,
         page,
         filters: currentFilters,
@@ -427,7 +427,7 @@ export function SaveSearchButton({ page, currentFilters, onSaved }) {
 
   async function handleSave(searchData) {
     try {
-      await savedSearches.create(user.uid, {
+      await savedSearches.create(user.id, {
         ...searchData,
         page,
         filters: currentFilters,
@@ -476,15 +476,15 @@ export function useSavedSearch(page) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (user?.uid && page) {
+    if (user?.id && page) {
       loadDefault()
     }
-  }, [user?.uid, page])
+  }, [user?.id, page])
 
   async function loadDefault() {
     setLoading(true)
     try {
-      const search = await savedSearches.getDefault(user.uid, page)
+      const search = await savedSearches.getDefault(user.id, page)
       setDefaultSearch(search)
     } catch {
       // No default set

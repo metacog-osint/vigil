@@ -30,15 +30,15 @@ export default function Webhooks() {
   const hasAccess = canAccess(profile?.tier, 'api_access')
 
   useEffect(() => {
-    if (user?.uid && hasAccess) {
+    if (user?.id && hasAccess) {
       loadWebhooks()
     }
-  }, [user?.uid, hasAccess])
+  }, [user?.id, hasAccess])
 
   async function loadWebhooks() {
     setLoading(true)
     try {
-      const data = await webhooks.getAll(user.uid)
+      const data = await webhooks.getAll(user.id)
       setHookList(data)
     } catch (err) {
       console.error('Failed to load webhooks:', err)
@@ -69,7 +69,7 @@ export default function Webhooks() {
 
   async function handleCreate(data) {
     try {
-      const newHook = await webhooks.create(user.uid, data)
+      const newHook = await webhooks.create(user.id, data)
       setHookList((prev) => [newHook, ...prev])
       setShowCreate(false)
       setSelectedHook(newHook)

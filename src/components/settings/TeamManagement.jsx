@@ -326,14 +326,14 @@ export default function TeamManagement({ user }) {
   const [showInviteModal, setShowInviteModal] = useState(false)
 
   useEffect(() => {
-    if (user?.uid) {
+    if (user?.id) {
       loadTeams()
     }
-  }, [user?.uid])
+  }, [user?.id])
 
   async function loadTeams() {
     setLoading(true)
-    const { data, error } = await teams.getUserTeams(user.uid)
+    const { data, error } = await teams.getUserTeams(user.id)
     if (!error && data) {
       setUserTeams(data)
       if (data.length > 0 && !selectedTeam) {
@@ -444,7 +444,7 @@ export default function TeamManagement({ user }) {
               <TeamMemberList
                 teamId={selectedTeam.id}
                 userRole={selectedTeam.role}
-                currentUserId={user.uid}
+                currentUserId={user.id}
               />
             </div>
           )}
@@ -456,7 +456,7 @@ export default function TeamManagement({ user }) {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onCreated={handleTeamCreated}
-        userId={user.uid}
+        userId={user.id}
       />
 
       {selectedTeam && (
@@ -465,7 +465,7 @@ export default function TeamManagement({ user }) {
           onClose={() => setShowInviteModal(false)}
           onInvited={() => {}}
           teamId={selectedTeam.id}
-          userId={user.uid}
+          userId={user.id}
         />
       )}
     </div>

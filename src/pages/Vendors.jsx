@@ -41,18 +41,18 @@ export default function Vendors() {
   const hasAccess = canAccess(profile?.tier, 'attack_surface')
 
   useEffect(() => {
-    if (user?.uid && hasAccess) {
+    if (user?.id && hasAccess) {
       loadData()
     }
-  }, [user?.uid, hasAccess])
+  }, [user?.id, hasAccess])
 
   async function loadData() {
     setLoading(true)
     try {
       const [vendorData, eventsData, summaryData] = await Promise.all([
-        vendors.getAll(user.uid),
-        vendorEvents.getOpen(user.uid),
-        vendors.getRiskSummary(user.uid),
+        vendors.getAll(user.id),
+        vendorEvents.getOpen(user.id),
+        vendors.getRiskSummary(user.id),
       ])
       setVendorList(vendorData)
       setOpenEvents(eventsData)
@@ -66,7 +66,7 @@ export default function Vendors() {
 
   async function handleCreate(data) {
     try {
-      const newVendor = await vendors.create(user.uid, data)
+      const newVendor = await vendors.create(user.id, data)
       setVendorList((prev) => [newVendor, ...prev])
       setShowCreate(false)
     } catch (err) {
