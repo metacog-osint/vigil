@@ -37,10 +37,26 @@ export const tenants = {
    * Get tenant by slug or custom domain
    */
   async getByIdentifier(identifier) {
-    const { data, error } = await supabase.rpc('get_tenant', { p_identifier: identifier })
+    try {
+      const { data, error } = await supabase.rpc('get_tenant', { p_identifier: identifier })
 
-    if (error) throw error
-    return data?.[0] || null
+      // Gracefully handle missing RPC function - multi-tenancy not enabled
+      if (error) {
+        if (error.message?.includes('does not exist') ||
+            error.message?.includes('not found') ||
+            error.code === '42883' ||
+            String(error.code) === '404') {
+          return null
+        }
+        throw error
+      }
+      return data?.[0] || null
+    } catch (err) {
+      if (err.message?.includes('does not exist') || err.message?.includes('404')) {
+        return null
+      }
+      throw err
+    }
   },
 
   /**
@@ -57,10 +73,28 @@ export const tenants = {
    * Get current user's tenants
    */
   async getUserTenants(userId) {
-    const { data, error } = await supabase.rpc('get_user_tenants', { p_user_id: userId })
+    try {
+      const { data, error } = await supabase.rpc('get_user_tenants', { p_user_id: userId })
 
-    if (error) throw error
-    return data || []
+      // Gracefully handle missing RPC function (404) - multi-tenancy not enabled
+      if (error) {
+        if (error.message?.includes('does not exist') ||
+            error.message?.includes('not found') ||
+            error.code === '42883' ||  // PostgreSQL: undefined_function
+            String(error.code) === '404') {
+          return [] // No tenants - single-tenant mode
+        }
+        throw error
+      }
+      return data || []
+    } catch (err) {
+      // Network errors or RPC not available - return empty
+      if (err.message?.includes('does not exist') || err.message?.includes('404')) {
+        return []
+      }
+      console.error('Failed to load user tenants:', err)
+      return []
+    }
   },
 
   /**
