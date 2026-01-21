@@ -1,7 +1,7 @@
 # Vigil Corrective Action Plan
 
 > **Created:** January 20, 2026
-> **Status:** In Progress
+> **Status:** Complete (Phase 1-4)
 > **Purpose:** Systematic remediation of schema-code mismatches and documentation gaps
 
 ---
@@ -169,9 +169,9 @@ All 5 functions ARE fully implemented in `src/lib/predictions.js`:
 | API Key Rotation | `src/lib/apiKeys.js` | Low |
 | Chat Integration | `src/lib/chat.js` | Low |
 
-**Resolution:** Create `docs/ADVANCED_FEATURES.md` covering these
+**Resolution:** Created `docs/ADVANCED_FEATURES.md` covering all 9 feature areas
 
-**Status:** [ ] Pending
+**Status:** [x] Complete (2026-01-20)
 
 ---
 
@@ -201,9 +201,13 @@ All 5 functions ARE fully implemented in `src/lib/predictions.js`:
 
 **Command:** `npm run reclassify:sectors`
 
-**Verification:** Check count of "Unknown" sectors before/after
+**Results (2026-01-20):**
+- Total incidents: 52,656
+- Updated: 4,410 (8.4%)
+- Improved from Other/Unknown: 3,504 (6.7%)
+- Classification rate: 55.6% specific sectors (29,284/52,656)
 
-**Status:** [ ] Pending
+**Status:** [x] Complete (2026-01-20)
 
 ---
 
@@ -249,9 +253,9 @@ Phase 5.1 (future)
 | 2.1 | Fix user.uid | [x] Complete | 2026-01-20 |
 | 3.1 | Update predictions docs | [x] Complete | 2026-01-20 |
 | 3.2 | Remove Workers claims | [x] Complete | 2026-01-20 |
-| 3.3 | Document features | [ ] Pending | |
+| 3.3 | Document features | [x] Complete | 2026-01-20 |
 | 4.1 | Sector classification | [x] Complete | 2026-01-20 |
-| 4.2 | Reclassify sectors | [ ] Pending | |
+| 4.2 | Reclassify sectors | [x] Complete | 2026-01-20 |
 | 5.1 | Add tests | [ ] Future | |
 
 ---
@@ -298,4 +302,7 @@ This section will be updated as work progresses.
 - `src/components/panels/SimilarIncidentsPanel.jsx` - sector → victim_sector
 - `DATA_SOURCES.md` - removed Cloudflare Workers claims, fixed script paths
 - `supabase/functions/ingest-ransomwatch/index.ts` - added sector classifier
+
+### Created (This Session - 2026-01-20):
+- `docs/ADVANCED_FEATURES.md` - documented 9 undocumented feature areas
 
