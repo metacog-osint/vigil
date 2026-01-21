@@ -35,27 +35,29 @@ export async function getMissedAlertsForUser(userId, days = 7) {
       `
       id,
       victim_name,
-      sector,
-      country,
-      discovered_at,
+      victim_sector,
+      victim_country,
+      discovered_date,
       threat_actor:threat_actors(name, type)
     `
     )
-    .gte('discovered_at', cutoff.toISOString())
-    .order('discovered_at', { ascending: false })
+    .gte('discovered_date', cutoff.toISOString())
+    .order('discovered_date', { ascending: false })
     .limit(10)
 
   if (incidents) {
     // If user has profile, filter to their sector
     const relevantIncidents = profile?.sector
-      ? incidents.filter((i) => i.sector?.toLowerCase().includes(profile.sector.toLowerCase()))
+      ? incidents.filter((i) =>
+          i.victim_sector?.toLowerCase().includes(profile.sector.toLowerCase())
+        )
       : incidents.slice(0, 5)
 
     alerts.ransomware = relevantIncidents.map((i) => ({
       actor: i.threat_actor?.name || 'Unknown',
       victim: i.victim_name,
-      sector: i.sector,
-      date: i.discovered_at,
+      sector: i.victim_sector,
+      date: i.discovered_date,
     }))
   }
 
@@ -101,7 +103,7 @@ export async function getMissedAlertsForUser(userId, days = 7) {
 /**
  * Generate HTML email for missed alerts
  */
-export function generateMissedAlertsEmail(userName, alerts, weekOf) {
+export function generateMissedAlertsEmail(userName, alerts, _weekOf) {
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
       month: 'short',

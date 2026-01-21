@@ -69,10 +69,10 @@ async function fetchMissedAlerts(orgProfile, days = 7) {
   if (orgProfile?.sector) {
     const { data: incidents } = await supabase
       .from('incidents')
-      .select('id, victim_name, threat_actor:threat_actors(name), discovered_at')
-      .ilike('sector', `%${orgProfile.sector}%`)
-      .gte('discovered_at', cutoff.toISOString())
-      .order('discovered_at', { ascending: false })
+      .select('id, victim_name, threat_actor:threat_actors(name), discovered_date')
+      .ilike('victim_sector', `%${orgProfile.sector}%`)
+      .gte('discovered_date', cutoff.toISOString())
+      .order('discovered_date', { ascending: false })
       .limit(3)
 
     incidents?.forEach((inc) => {
@@ -80,7 +80,7 @@ async function fetchMissedAlerts(orgProfile, days = 7) {
         type: 'ransomware',
         title: `${inc.threat_actor?.name || 'Unknown'} hit ${orgProfile.sector} sector`,
         description: inc.victim_name,
-        date: inc.discovered_at,
+        date: inc.discovered_date,
         relevance: 'high',
       })
     })
@@ -185,7 +185,7 @@ function AlertItem({ alert }) {
  * Full missed alerts widget for dashboard
  */
 export function MissedAlertsWidget({ orgProfile, className }) {
-  const { tier, canAccess } = useSubscription()
+  const { tier: _tier, canAccess } = useSubscription()
   const [alerts, setAlerts] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -281,7 +281,7 @@ export function MissedAlertsCard({ count = 7, className }) {
         <div className="text-3xl">🔔</div>
         <div>
           <div className="text-white font-medium">{count} alerts this week</div>
-          <div className="text-xs text-yellow-400/70">You're not receiving alerts</div>
+          <div className="text-xs text-yellow-400/70">You&apos;re not receiving alerts</div>
         </div>
       </div>
       <div className="mt-3 text-xs text-gray-400">Upgrade to Professional →</div>

@@ -64,7 +64,7 @@ export default async function handler(request) {
   }
 
   // Check rate limit
-  if (!checkRateLimit(user.uid)) {
+  if (!checkRateLimit(user.id)) {
     return new Response(JSON.stringify({ error: 'Rate limit exceeded. Max 10 emails per minute.' }), {
       status: 429,
       headers: {

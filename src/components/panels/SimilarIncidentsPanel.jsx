@@ -90,7 +90,7 @@ function IncidentItem({ incident, similarity }) {
       )}
 
       <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
-        {incident.sector && <span>{incident.sector}</span>}
+        {incident.victim_sector && <span>{incident.victim_sector}</span>}
         {incident.discovered_date && (
           <span>
             {formatDistanceToNow(new Date(incident.discovered_date), { addSuffix: true })}
@@ -101,7 +101,7 @@ function IncidentItem({ incident, similarity }) {
   )
 }
 
-export default function SimilarIncidentsPanel({ incidentId, currentIncident }) {
+export default function SimilarIncidentsPanel({ incidentId, currentIncident: _currentIncident }) {
   const [similarIncidents, setSimilarIncidents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

@@ -98,7 +98,7 @@ function countCoOccurrences(items, keyFn1, keyFn2) {
 export function detectActorSectorPatterns(incidents) {
   const counts = countCoOccurrences(
     incidents,
-    (i) => i.threat_actor_id || i.threat_actor?.id,
+    (i) => i.actor_id || i.threat_actor?.id,
     (i) => i.sector
   )
 
@@ -107,7 +107,7 @@ export function detectActorSectorPatterns(incidents) {
     .map(([key, count]) => {
       const [actorId, sector] = key.split('|')
       const actor = incidents.find(
-        (i) => (i.threat_actor_id || i.threat_actor?.id) === actorId
+        (i) => (i.actor_id || i.threat_actor?.id) === actorId
       )?.threat_actor
 
       return {
@@ -130,7 +130,7 @@ export function detectActorTechniquePatterns(incidents) {
   const patterns = []
 
   // Group incidents by actor
-  const actorIncidents = groupBy(incidents, (i) => i.threat_actor_id || i.threat_actor?.id)
+  const actorIncidents = groupBy(incidents, (i) => i.actor_id || i.threat_actor?.id)
 
   Object.entries(actorIncidents).forEach(([actorId, actorIncs]) => {
     // Count technique usage
@@ -171,16 +171,17 @@ export function detectTemporalClusters(incidents, windowMs = TIME_WINDOWS.DAY) {
 
   // Sort by timestamp
   const sorted = [...incidents].sort(
-    (a, b) => new Date(a.discovered_at || a.created_at) - new Date(b.discovered_at || b.created_at)
+    (a, b) =>
+      new Date(a.discovered_date || a.created_at) - new Date(b.discovered_date || b.created_at)
   )
 
   // Slide window to find clusters
   for (let i = 0; i < sorted.length; i++) {
-    const windowStart = new Date(sorted[i].discovered_at || sorted[i].created_at)
+    const windowStart = new Date(sorted[i].discovered_date || sorted[i].created_at)
     const windowEnd = new Date(windowStart.getTime() + windowMs)
 
     const windowIncidents = sorted.filter((inc) => {
-      const ts = new Date(inc.discovered_at || inc.created_at)
+      const ts = new Date(inc.discovered_date || inc.created_at)
       return ts >= windowStart && ts <= windowEnd
     })
 
@@ -263,7 +264,7 @@ export function detectCampaigns(incidents) {
   const campaigns = []
 
   // Group incidents by actor
-  const actorIncidents = groupBy(incidents, (i) => i.threat_actor_id || i.threat_actor?.id)
+  const actorIncidents = groupBy(incidents, (i) => i.actor_id || i.threat_actor?.id)
 
   Object.entries(actorIncidents).forEach(([actorId, actorIncs]) => {
     if (actorIncs.length < MIN_PATTERN_OCCURRENCES) return
@@ -271,7 +272,7 @@ export function detectCampaigns(incidents) {
     // Sort by time
     const sorted = [...actorIncs].sort(
       (a, b) =>
-        new Date(a.discovered_at || a.created_at) - new Date(b.discovered_at || b.created_at)
+        new Date(a.discovered_date || a.created_at) - new Date(b.discovered_date || b.created_at)
     )
 
     // Find time-bounded clusters that might be campaigns
@@ -279,8 +280,8 @@ export function detectCampaigns(incidents) {
     let campaignIncidents = [sorted[0]]
 
     for (let i = 1; i < sorted.length; i++) {
-      const prev = new Date(sorted[i - 1].discovered_at || sorted[i - 1].created_at)
-      const curr = new Date(sorted[i].discovered_at || sorted[i].created_at)
+      const prev = new Date(sorted[i - 1].discovered_date || sorted[i - 1].created_at)
+      const curr = new Date(sorted[i].discovered_date || sorted[i].created_at)
 
       // If within 7 days, add to campaign
       if (curr - prev < TIME_WINDOWS.WEEK) {
@@ -297,10 +298,10 @@ export function detectCampaigns(incidents) {
             actorId,
             actorName: actor?.name || actorId,
             startTime: new Date(
-              campaignStart.discovered_at || campaignStart.created_at
+              campaignStart.discovered_date || campaignStart.created_at
             ).toISOString(),
             endTime: new Date(
-              campaignIncidents[campaignIncidents.length - 1].discovered_at ||
+              campaignIncidents[campaignIncidents.length - 1].discovered_date ||
                 campaignIncidents[campaignIncidents.length - 1].created_at
             ).toISOString(),
             incidentCount: campaignIncidents.length,
@@ -326,9 +327,11 @@ export function detectCampaigns(incidents) {
         type: PATTERN_TYPES.CAMPAIGN,
         actorId,
         actorName: actor?.name || actorId,
-        startTime: new Date(campaignStart.discovered_at || campaignStart.created_at).toISOString(),
+        startTime: new Date(
+          campaignStart.discovered_date || campaignStart.created_at
+        ).toISOString(),
         endTime: new Date(
-          campaignIncidents[campaignIncidents.length - 1].discovered_at ||
+          campaignIncidents[campaignIncidents.length - 1].discovered_date ||
             campaignIncidents[campaignIncidents.length - 1].created_at
         ).toISOString(),
         incidentCount: campaignIncidents.length,
@@ -353,12 +356,12 @@ export function detectAnomalies(incidents, baselineDays = 30) {
   // Calculate daily baseline
   const dailyCounts = {}
   const baselineIncidents = incidents.filter((i) => {
-    const ts = new Date(i.discovered_at || i.created_at)
+    const ts = new Date(i.discovered_date || i.created_at)
     return ts >= baselineStart
   })
 
   baselineIncidents.forEach((inc) => {
-    const date = new Date(inc.discovered_at || inc.created_at).toISOString().split('T')[0]
+    const date = new Date(inc.discovered_date || inc.created_at).toISOString().split('T')[0]
     dailyCounts[date] = (dailyCounts[date] || 0) + 1
   })
 
@@ -372,7 +375,7 @@ export function detectAnomalies(incidents, baselineDays = 30) {
 
     if (Math.abs(zScore) > ANOMALY_THRESHOLD) {
       const dayIncidents = baselineIncidents.filter((i) => {
-        const incDate = new Date(i.discovered_at || i.created_at).toISOString().split('T')[0]
+        const incDate = new Date(i.discovered_date || i.created_at).toISOString().split('T')[0]
         return incDate === date
       })
 
@@ -422,8 +425,8 @@ export async function analyzePatterns(options = {}) {
       threat_actor:threat_actors(id, name, aliases)
     `
     )
-    .gte('discovered_at', startDate.toISOString())
-    .order('discovered_at', { ascending: false })
+    .gte('discovered_date', startDate.toISOString())
+    .order('discovered_date', { ascending: false })
 
   if (error) {
     console.error('Error fetching incidents for pattern analysis:', error)

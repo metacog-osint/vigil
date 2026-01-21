@@ -34,7 +34,7 @@ export async function getNewItemCounts(since) {
       supabase
         .from('vulnerabilities')
         .select('id', { count: 'exact', head: true })
-        .eq('is_kev', true)
+        .not('kev_date', 'is', null)
         .gte('kev_date', sinceISO.split('T')[0]),
 
       // New IOCs
@@ -93,7 +93,7 @@ export async function getNewItems(since, limit = 3) {
       supabase
         .from('vulnerabilities')
         .select('cve_id, description, cvss_score, kev_date')
-        .eq('is_kev', true)
+        .not('kev_date', 'is', null)
         .gte('kev_date', sinceISO.split('T')[0])
         .order('kev_date', { ascending: false })
         .limit(limit),

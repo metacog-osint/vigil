@@ -185,7 +185,7 @@ export async function handleStatsCommand(context = {}) {
     supabase
       .from('incidents')
       .select('id', { count: 'exact', head: true })
-      .gte('discovered_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+      .gte('discovered_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
     supabase
       .from('iocs')
       .select('id', { count: 'exact', head: true })
@@ -193,7 +193,7 @@ export async function handleStatsCommand(context = {}) {
     supabase
       .from('vulnerabilities')
       .select('id', { count: 'exact', head: true })
-      .eq('is_kev', true),
+      .not('kev_date', 'is', null),
   ])
 
   const stats = {
@@ -213,7 +213,7 @@ export async function handleStatsCommand(context = {}) {
 /**
  * Handle /vigil help
  */
-export function handleHelpCommand(context = {}) {
+export function handleHelpCommand(_context = {}) {
   const helpText = `
 *Vigil Bot Commands*
 

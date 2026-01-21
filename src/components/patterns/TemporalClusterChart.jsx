@@ -71,7 +71,7 @@ function ClusterLegend({ clusters }) {
   )
 }
 
-function AnomalyMarker({ x, y, anomaly }) {
+function _AnomalyMarker({ x, y, anomaly }) {
   return (
     <g>
       <circle
@@ -103,7 +103,8 @@ export function TemporalClusterChart({
     const byDate = new Map()
 
     for (const item of data) {
-      const date = item.date || item.discovered_at?.split('T')[0]
+      const date =
+        item.date || item.discovered_date?.split('T')[0] || item.discovered_at?.split('T')[0]
       if (!date) continue
 
       if (!byDate.has(date)) {
@@ -266,7 +267,15 @@ export function TemporalClusterMini({ data, clusters = [], height = 120 }) {
 
 // Cluster summary card
 export function ClusterSummaryCard({ cluster, onClick }) {
-  const { id, label, count = 0, actorCount = 0, dateRange, intensity = 'medium', color } = cluster
+  const {
+    id: _id,
+    label,
+    count = 0,
+    actorCount = 0,
+    dateRange,
+    intensity = 'medium',
+    color,
+  } = cluster
 
   const intensityColors = {
     high: 'border-red-500/30 bg-red-500/10',
