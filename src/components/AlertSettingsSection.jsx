@@ -123,10 +123,10 @@ export default function AlertSettingsSection() {
   const hasCustomAlerts = canAccess('custom_alert_rules')
 
   useEffect(() => {
-    if (user?.uid) {
+    if (user?.id) {
       loadData()
     }
-  }, [user?.uid])
+  }, [user?.id])
 
   useEffect(() => {
     // Check push support
@@ -140,8 +140,8 @@ export default function AlertSettingsSection() {
 
     try {
       const [prefs, hooks] = await Promise.all([
-        getAlertPreferences(user.uid),
-        hasCustomAlerts ? getWebhooks(user.uid) : Promise.resolve([]),
+        getAlertPreferences(user.id),
+        hasCustomAlerts ? getWebhooks(user.id) : Promise.resolve([]),
       ])
 
       setPreferences(prefs)
@@ -167,10 +167,10 @@ export default function AlertSettingsSection() {
 
     try {
       if (pushSubscribed) {
-        await unsubscribeFromPush(user.uid)
+        await unsubscribeFromPush(user.id)
         setPushSubscribed(false)
       } else {
-        await subscribeToPush(user.uid)
+        await subscribeToPush(user.id)
         setPushSubscribed(true)
       }
     } catch (err) {
@@ -187,7 +187,7 @@ export default function AlertSettingsSection() {
     setSuccess(false)
 
     try {
-      await updateAlertPreferences(user.uid, preferences)
+      await updateAlertPreferences(user.id, preferences)
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch (err) {
@@ -209,7 +209,7 @@ export default function AlertSettingsSection() {
     }
 
     try {
-      const created = await createWebhook(user.uid, newWebhook)
+      const created = await createWebhook(user.id, newWebhook)
       setWebhooks([created, ...webhooks])
       setShowAddWebhook(false)
       setNewWebhook({
@@ -265,7 +265,7 @@ export default function AlertSettingsSection() {
   async function loadDeliveryLogs() {
     setLogsLoading(true)
     try {
-      const { data } = await getAlertHistory(user.uid, { limit: 50, channel: 'webhook' })
+      const { data } = await getAlertHistory(user.id, { limit: 50, channel: 'webhook' })
       setDeliveryLogs(data || [])
     } catch (err) {
       console.error('Failed to load delivery logs:', err)

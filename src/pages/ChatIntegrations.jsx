@@ -25,10 +25,10 @@ export default function ChatIntegrations() {
   const [showConnectModal, setShowConnectModal] = useState(false)
 
   useEffect(() => {
-    if (user?.uid) {
+    if (user?.id) {
       loadIntegrations()
     }
-  }, [user?.uid])
+  }, [user?.id])
 
   useEffect(() => {
     if (selectedIntegration) {
@@ -39,7 +39,7 @@ export default function ChatIntegrations() {
   async function loadIntegrations() {
     setLoading(true)
     try {
-      const data = await chatIntegrations.getAll(user.uid)
+      const data = await chatIntegrations.getAll(user.id)
       setIntegrations(data)
       if (data.length > 0 && !selectedIntegration) {
         setSelectedIntegration(data[0])
@@ -102,7 +102,7 @@ export default function ChatIntegrations() {
   function handleConnect(platform) {
     // Generate cryptographically secure state to prevent CSRF attacks
     const state = generateOAuthState({
-      userId: user.uid,
+      userId: user.id,
       platform,
       returnTo: '/chat-integrations',
     })

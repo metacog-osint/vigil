@@ -46,3 +46,4 @@ playwright-report/
 
 # Windows reserved names
 nul
+.env.vercel

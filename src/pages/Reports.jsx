@@ -31,7 +31,7 @@ const TIMEZONES = [
 export default function Reports() {
   const { user } = useAuth()
   const { canAccess, tier } = useSubscription()
-  const userId = user?.uid || 'anonymous'
+  const userId = user?.id || 'anonymous'
 
   const [reports, setReports] = useState([])
   const [history, setHistory] = useState([])

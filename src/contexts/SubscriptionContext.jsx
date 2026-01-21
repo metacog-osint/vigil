@@ -12,7 +12,7 @@ export function SubscriptionProvider({ children }) {
 
   useEffect(() => {
     async function loadSubscription() {
-      if (!user?.uid) {
+      if (!user?.id) {
         setSubscription({ tier: 'free', status: 'active' })
         setLoading(false)
         return
@@ -20,7 +20,7 @@ export function SubscriptionProvider({ children }) {
 
       setLoading(true)
       try {
-        const sub = await getUserSubscription(user.uid)
+        const sub = await getUserSubscription(user.id)
         setSubscription(sub)
       } catch (error) {
         console.error('Error loading subscription:', error)
@@ -30,7 +30,7 @@ export function SubscriptionProvider({ children }) {
     }
 
     loadSubscription()
-  }, [user?.uid])
+  }, [user?.id])
 
   const tier = subscription?.tier || 'free'
 
@@ -45,8 +45,8 @@ export function SubscriptionProvider({ children }) {
     features: getTierFeatures(tier),
     // Refresh subscription (after payment, etc.)
     refresh: async () => {
-      if (user?.uid) {
-        const sub = await getUserSubscription(user.uid)
+      if (user?.id) {
+        const sub = await getUserSubscription(user.id)
         setSubscription(sub)
       }
     },

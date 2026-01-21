@@ -112,7 +112,7 @@ export default function Settings() {
       <div className="space-y-6">
         {/* Subscription */}
         <SettingSection title="Subscription" description="Manage your Vigil subscription plan">
-          <SubscriptionSection subscription={subscription} userId={user?.uid} onError={setError} />
+          <SubscriptionSection subscription={subscription} userId={user?.id} onError={setError} />
         </SettingSection>
 
         {/* API Keys */}
@@ -120,7 +120,7 @@ export default function Settings() {
           title="API Access"
           description="Manage API keys for programmatic access to Vigil data"
         >
-          <ApiKeysSection userId={user?.uid} />
+          <ApiKeysSection userId={user?.id} />
         </SettingSection>
 
         {/* Integrations */}
@@ -128,7 +128,7 @@ export default function Settings() {
           title="Integrations"
           description="Connect Vigil to your SIEM, ticketing, and communication tools"
         >
-          <IntegrationsSection userId={user?.uid} />
+          <IntegrationsSection userId={user?.id} />
         </SettingSection>
 
         {/* SSO/SAML Configuration */}

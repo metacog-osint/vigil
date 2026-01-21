@@ -47,10 +47,10 @@ export default function AuditLogs() {
   const hasAccess = canAccess(profile?.tier, 'audit_logs')
 
   useEffect(() => {
-    if (user?.uid && hasAccess) {
+    if (user?.id && hasAccess) {
       loadData()
     }
-  }, [user?.uid, hasAccess, days, category, status, search])
+  }, [user?.id, hasAccess, days, category, status, search])
 
   async function loadData() {
     setLoading(true)
@@ -59,7 +59,7 @@ export default function AuditLogs() {
       startDate.setDate(startDate.getDate() - days)
 
       const filters = {
-        userId: user.uid,
+        userId: user.id,
         startDate: startDate.toISOString(),
         ...(category && { eventCategory: category }),
         ...(status && { status }),
@@ -69,7 +69,7 @@ export default function AuditLogs() {
 
       const [logsData, summaryData] = await Promise.all([
         auditLogs.getAll(filters),
-        auditLogs.getSummary(user.uid, null, days),
+        auditLogs.getSummary(user.id, null, days),
       ])
 
       setLogs(logsData)
@@ -88,7 +88,7 @@ export default function AuditLogs() {
       startDate.setDate(startDate.getDate() - days)
 
       const filters = {
-        userId: user.uid,
+        userId: user.id,
         startDate: startDate.toISOString(),
         ...(category && { eventCategory: category }),
         ...(status && { status }),
@@ -127,13 +127,13 @@ export default function AuditLogs() {
       startDate.setDate(startDate.getDate() - (type === 'soc2' ? 365 : 90))
 
       const filters = {
-        userId: user.uid,
+        userId: user.id,
         startDate: startDate.toISOString(),
         limit: 10000,
       }
 
       const logsData = await auditLogs.getAll(filters)
-      const summaryData = await auditLogs.getSummary(user.uid, null, type === 'soc2' ? 365 : 90)
+      const summaryData = await auditLogs.getSummary(user.id, null, type === 'soc2' ? 365 : 90)
 
       const report = {
         reportType: type === 'soc2' ? 'SOC 2 Type II Evidence' : 'PCI-DSS Compliance Evidence',
@@ -547,7 +547,7 @@ export default function AuditLogs() {
         {/* Settings Modal */}
         {showSettings && (
           <AuditSettingsModal
-            userId={user?.uid}
+            userId={user?.id}
             teamId={profile?.team_id}
             onClose={() => setShowSettings(false)}
           />

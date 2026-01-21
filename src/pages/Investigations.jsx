@@ -30,7 +30,7 @@ import {
 export default function Investigations() {
   const { user } = useAuth()
   const { canAccess, tier } = useSubscription()
-  const userId = user?.uid || 'anonymous'
+  const userId = user?.id || 'anonymous'
 
   const hasAccess = canAccess('investigations') || canAccess('threat_hunts')
 
