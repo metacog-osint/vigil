@@ -14,9 +14,9 @@ export const compare = {
   async getIncidentTrend(startDate, endDate) {
     const { data, error } = await supabase
       .from('incidents')
-      .select('discovered_at')
-      .gte('discovered_at', startDate.toISOString())
-      .lte('discovered_at', endDate.toISOString())
+      .select('discovered_date')
+      .gte('discovered_date', startDate.toISOString())
+      .lte('discovered_date', endDate.toISOString())
 
     if (error) {
       console.error('Error fetching incident trend:', error)
@@ -34,8 +34,8 @@ export const compare = {
 
     // Count incidents per day
     data?.forEach((incident) => {
-      if (incident.discovered_at) {
-        const dateKey = incident.discovered_at.split('T')[0]
+      if (incident.discovered_date) {
+        const dateKey = incident.discovered_date.split('T')[0]
         if (countsByDate[dateKey] !== undefined) {
           countsByDate[dateKey]++
         }
@@ -59,9 +59,9 @@ export const compare = {
   async getRegionBreakdown(startDate, endDate) {
     const { data, error } = await supabase
       .from('incidents')
-      .select('country')
-      .gte('discovered_at', startDate.toISOString())
-      .lte('discovered_at', endDate.toISOString())
+      .select('victim_country')
+      .gte('discovered_date', startDate.toISOString())
+      .lte('discovered_date', endDate.toISOString())
 
     if (error) {
       console.error('Error fetching region breakdown:', error)
@@ -178,7 +178,7 @@ export const compare = {
     }
 
     data?.forEach((incident) => {
-      const country = incident.country
+      const country = incident.victim_country
       const region = regionMap[country] || 'unknown'
       regionCounts[region]++
     })
@@ -199,9 +199,9 @@ export const compare = {
   async getSectorBreakdown(startDate, endDate) {
     const { data, error } = await supabase
       .from('incidents')
-      .select('sector')
-      .gte('discovered_at', startDate.toISOString())
-      .lte('discovered_at', endDate.toISOString())
+      .select('victim_sector')
+      .gte('discovered_date', startDate.toISOString())
+      .lte('discovered_date', endDate.toISOString())
 
     if (error) {
       console.error('Error fetching sector breakdown:', error)
@@ -211,7 +211,7 @@ export const compare = {
     // Count by sector
     const sectorCounts = {}
     data?.forEach((incident) => {
-      const sector = incident.sector || 'unknown'
+      const sector = incident.victim_sector || 'unknown'
       sectorCounts[sector] = (sectorCounts[sector] || 0) + 1
     })
 
@@ -231,18 +231,18 @@ export const compare = {
       supabase
         .from('incidents')
         .select('id', { count: 'exact', head: true })
-        .gte('discovered_at', startDate.toISOString())
-        .lte('discovered_at', endDate.toISOString()),
+        .gte('discovered_date', startDate.toISOString())
+        .lte('discovered_date', endDate.toISOString()),
       supabase
         .from('incidents')
-        .select('threat_actor_id')
-        .gte('discovered_at', startDate.toISOString())
-        .lte('discovered_at', endDate.toISOString())
-        .not('threat_actor_id', 'is', null),
+        .select('actor_id')
+        .gte('discovered_date', startDate.toISOString())
+        .lte('discovered_date', endDate.toISOString())
+        .not('actor_id', 'is', null),
       supabase
         .from('vulnerabilities')
         .select('id', { count: 'exact', head: true })
-        .eq('is_kev', true)
+        .not('kev_date', 'is', null)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString()),
       supabase
@@ -253,7 +253,7 @@ export const compare = {
     ])
 
     // Count unique actors
-    const uniqueActors = new Set(actorCount.data?.map((i) => i.threat_actor_id) || [])
+    const uniqueActors = new Set(actorCount.data?.map((i) => i.actor_id) || [])
 
     return {
       incidents: incidentCount.count || 0,

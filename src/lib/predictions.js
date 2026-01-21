@@ -98,7 +98,7 @@ export async function getSectorTargetingPrediction(sector) {
   const { data: incidents } = await supabase
     .from('incidents')
     .select('id')
-    .eq('sector', sector)
+    .eq('victim_sector', sector)
     .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
 
   const recentIncidents = incidents?.length || 0
@@ -252,7 +252,7 @@ export async function getOrgRiskScore(profile) {
     const { data: vulns } = await supabase
       .from('vulnerabilities')
       .select('cve_id, severity')
-      .eq('is_kev', true)
+      .not('kev_date', 'is', null)
       .textSearch('affected_products', techTerms.join(' | '))
       .limit(10)
 
@@ -348,7 +348,7 @@ export async function getPredictiveAlerts(profile) {
   const { data: kevs } = await supabase
     .from('vulnerabilities')
     .select('cve_id')
-    .eq('is_kev', true)
+    .not('kev_date', 'is', null)
     .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
     .limit(5)
 
@@ -406,13 +406,13 @@ async function calculateScoreTrend(profile) {
       supabase
         .from('incidents')
         .select('id', { count: 'exact', head: true })
-        .eq('sector', profile.sector)
+        .eq('victim_sector', profile.sector)
         .gte('created_at', sevenDaysAgo.toISOString())
         .lte('created_at', now.toISOString()),
       supabase
         .from('incidents')
         .select('id', { count: 'exact', head: true })
-        .eq('sector', profile.sector)
+        .eq('victim_sector', profile.sector)
         .gte('created_at', fourteenDaysAgo.toISOString())
         .lt('created_at', sevenDaysAgo.toISOString()),
     ])

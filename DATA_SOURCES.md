@@ -10,7 +10,7 @@ This document provides a comprehensive overview of all threat intelligence data 
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
-| RansomLook | `https://www.ransomlook.io/api` | Ransomware incidents, victim claims | Every 30min | `workers/src/feeds/ransomlook.js` | None |
+| RansomLook | `https://www.ransomlook.io/api` | Ransomware incidents, victim claims | Every 30min | `ingest-ransomlook.mjs` | None |
 | Ransomware.live | `https://api.ransomware.live/v2` | Victim claims, historical data (2020+) | Every 6h | `ingest-ransomware-live.mjs` | None |
 | Ransomwatch | `https://raw.githubusercontent.com/joshhighet/ransomwatch/main/` | Victim posts, group metadata | Every 6h | `ingest-ransomwatch.mjs` | None |
 
@@ -18,9 +18,9 @@ This document provides a comprehensive overview of all threat intelligence data 
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
-| ThreatFox | `https://threatfox-api.abuse.ch/api/v1/` | IPs, domains, URLs, hashes | Every 30min | `workers/src/feeds/threatfox.js` | API Key (`ABUSECH_API_KEY`) |
-| URLhaus | `https://urlhaus-api.abuse.ch/v1/urls/recent/` | Malicious URLs | Every 30min | `workers/src/feeds/urlhaus.js` | API Key (`ABUSECH_API_KEY`) |
-| Feodo Tracker | `https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.json` | Botnet C2 IPs | Every 30min | `workers/src/feeds/feodo.js` | None |
+| ThreatFox | `https://threatfox-api.abuse.ch/api/v1/` | IPs, domains, URLs, hashes | Every 30min | `ingest-threatfox.mjs` | API Key (`ABUSECH_API_KEY`) |
+| URLhaus | `https://urlhaus-api.abuse.ch/v1/urls/recent/` | Malicious URLs | Every 30min | `ingest-urlhaus.mjs` | API Key (`ABUSECH_API_KEY`) |
+| Feodo Tracker | `https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.json` | Botnet C2 IPs | Every 30min | `ingest-feodo.mjs` | None |
 | Spamhaus DROP | `https://www.spamhaus.org/drop/*.txt` | IP blocklists (DROP, EDROP, DROPv6) | Daily | `ingest-spamhaus.mjs` | None |
 | AlienVault OTX | `https://otx.alienvault.com/api/v1` | Community threat pulses, IOCs | Daily | `ingest-alienvault-otx.mjs` | API Key |
 | PhishTank | `http://data.phishtank.com/data/` | Verified phishing URLs | Daily | `ingest-phishtank.mjs` | Optional |
@@ -38,7 +38,7 @@ This document provides a comprehensive overview of all threat intelligence data 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
 | MITRE ATT&CK | `https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json` | Techniques, APT groups, mitigations | Every 6h | `ingest-mitre.mjs` | None |
-| MITRE ATLAS | `https://raw.githubusercontent.com/mitre-atlas/atlas-data/main/dist/ATLAS.yaml` | AI/ML adversarial techniques | Weekly | `workers/src/feeds/mitre-atlas.js` | None |
+| MITRE ATLAS | `https://raw.githubusercontent.com/mitre-atlas/atlas-data/main/dist/ATLAS.yaml` | AI/ML adversarial techniques | Weekly | `ingest-mitre.mjs` | None |
 | Malpedia | `https://malpedia.caad.fkie.fraunhofer.de/api` | Actor profiles, malware families | Every 6h | `ingest-malpedia.mjs` | None |
 | MISP Galaxy | `https://raw.githubusercontent.com/MISP/misp-galaxy/main/clusters/` | Threat actor clusters | Every 6h | `ingest-misp-galaxy.mjs` | None |
 
@@ -46,8 +46,8 @@ This document provides a comprehensive overview of all threat intelligence data 
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
-| MalwareBazaar | `https://mb-api.abuse.ch/api/v1/` | Malware samples, hashes | Daily (06:00 UTC) | `workers/src/feeds/malwarebazaar.js` | API Key (`ABUSECH_API_KEY`) |
-| ANY.RUN Trends | `https://any.run/malware-trends/` | Malware family trends | Daily | `workers/src/feeds/anyrun.js` | None (scraper) |
+| MalwareBazaar | `https://mb-api.abuse.ch/api/v1/` | Malware samples, hashes | Daily (06:00 UTC) | `ingest-malwarebazaar.mjs` | API Key (`ABUSECH_API_KEY`) |
+| ANY.RUN Trends | `https://any.run/malware-trends/` | Malware family trends | Daily | `ingest-anyrun.mjs` | None (scraper) |
 
 ### Breach Data
 
@@ -67,20 +67,20 @@ This document provides a comprehensive overview of all threat intelligence data 
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
-| VulnCheck KEV | `https://api.vulncheck.com/v3` | Extended KEV (173% larger than CISA) | Daily | `workers/src/feeds/vulncheck.js` | API Key |
-| CISA ICS-CERT | `https://www.cisa.gov/sites/default/files/feeds/ics-cert_advisories.json` | ICS/OT advisories | Daily | `workers/src/feeds/cisa-ics.js` | None |
+| VulnCheck KEV | `https://api.vulncheck.com/v3` | Extended KEV (173% larger than CISA) | Daily | `ingest-vulncheck.mjs` | API Key |
+| CISA ICS-CERT | `https://www.cisa.gov/sites/default/files/feeds/ics-cert_advisories.json` | ICS/OT advisories | Daily | `ingest-cisa-alerts.mjs` | None |
 
 ### Ransomware Payment Tracking
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
-| Ransomwhere | `https://api.ransomwhe.re/export` | Ransomware BTC payments, wallet addresses | Daily | `workers/src/feeds/ransomwhere.js` | None |
+| Ransomwhere | `https://api.ransomwhe.re/export` | Ransomware BTC payments, wallet addresses | Daily | `planned` | None |
 
 ### MITRE ATT&CK Campaigns
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
-| MITRE ATT&CK | `https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json` | Named campaigns (SolarWinds, Hafnium, etc.) | Weekly | `workers/src/feeds/mitre.js` | None |
+| MITRE ATT&CK | `https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json` | Named campaigns (SolarWinds, Hafnium, etc.) | Weekly | `ingest-mitre.mjs` | None |
 
 ### Community Threat Intelligence
 
@@ -98,7 +98,7 @@ This document provides a comprehensive overview of all threat intelligence data 
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
 |--------|----------|-----------|----------|--------|------|
-| BGPStream | `https://bgpstream.crosswork.cisco.com/api` | BGP hijacks, route leaks, outages | Daily | `workers/src/feeds/bgpstream.js` | None |
+| BGPStream | `https://bgpstream.crosswork.cisco.com/api` | BGP hijacks, route leaks, outages | Daily | `planned` | None |
 
 ### Cyber Events Intelligence
 
@@ -297,18 +297,18 @@ These items are tracked for future implementation based on user feedback and res
 
 ## Integration Architecture
 
-### Ingestion Flow (Cloudflare Workers)
+### Ingestion Flow (GitHub Actions)
 
-As of January 2026, all data ingestion has migrated from GitHub Actions to Cloudflare Workers for improved reliability and reduced latency.
+Data ingestion is handled by GitHub Actions workflows that run on schedule, executing Node.js scripts from the `scripts/` directory.
 
 ```
 External API/Feed
        │
        ▼
 ┌─────────────────────────┐
-│ Cloudflare Worker       │  (workers/src/feeds/*.js)
+│   GitHub Actions        │  (scripts/ingest-*.mjs)
 │  - Cron-triggered       │
-│  - Edge execution       │
+│  - Node.js execution    │
 │  - Fetch & transform    │
 │  - Batch processing     │
 └────────┬────────────────┘
@@ -330,9 +330,9 @@ External API/Feed
 └─────────────────┘
 ```
 
-**Worker Endpoint:** `vigil-ingest.theintelligencecompany.workers.dev`
+**Workflows:** `.github/workflows/data-ingestion.yml`, `.github/workflows/critical-alerts-ingestion.yml`
 
-### Scheduling Tiers (Cloudflare Cron Triggers)
+### Scheduling Tiers (GitHub Actions Cron)
 
 | Tier | Cron | Feeds | Rationale |
 |------|------|-------|-----------|
@@ -355,12 +355,11 @@ External API/Feed
 
 ### Error Handling
 
-All Cloudflare Workers implement:
+All ingestion scripts implement:
 - Graceful degradation (skip feed if API key missing)
 - Batch processing with partial failure handling
-- Cloudflare's built-in 50 subrequest limit management
-- Response logging for debugging
-- Automatic retry on next cron trigger
+- Response logging for debugging via `sync_log` table
+- Automatic retry on next scheduled run
 
 ---
 
