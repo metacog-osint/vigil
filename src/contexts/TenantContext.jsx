@@ -53,18 +53,18 @@ export function TenantProvider({ children }) {
 
   // Load user's tenants
   const loadUserTenants = useCallback(async () => {
-    if (!user?.uid) {
+    if (!user?.id) {
       setUserTenants([])
       return
     }
 
     try {
-      const tenantList = await tenants.getUserTenants(user.uid)
+      const tenantList = await tenants.getUserTenants(user.id)
       setUserTenants(tenantList)
     } catch (err) {
       console.error('Failed to load user tenants:', err)
     }
-  }, [user?.uid])
+  }, [user?.id])
 
   // Load tenant branding
   const loadBranding = useCallback(async (tenantId) => {
@@ -119,12 +119,12 @@ export function TenantProvider({ children }) {
         }
 
         // Load user's tenants if logged in
-        if (user?.uid) {
+        if (user?.id) {
           await loadUserTenants()
 
           // Load membership if we have a current tenant
           if (detectedTenant) {
-            await loadMembership(detectedTenant.id, user.uid)
+            await loadMembership(detectedTenant.id, user.id)
           }
         }
       } catch (err) {
@@ -136,7 +136,7 @@ export function TenantProvider({ children }) {
     }
 
     init()
-  }, [user?.uid, detectTenant, loadBranding, loadUserTenants, loadMembership])
+  }, [user?.id, detectTenant, loadBranding, loadUserTenants, loadMembership])
 
   // Switch to a different tenant
   const switchTenant = useCallback(
@@ -147,7 +147,7 @@ export function TenantProvider({ children }) {
         if (tenant) {
           setCurrentTenant(tenant)
           await loadBranding(tenant.id)
-          await loadMembership(tenant.id, user?.uid)
+          await loadMembership(tenant.id, user?.id)
         }
       } catch (err) {
         console.error('Failed to switch tenant:', err)
@@ -156,7 +156,7 @@ export function TenantProvider({ children }) {
         setLoading(false)
       }
     },
-    [user?.uid, loadBranding, loadMembership]
+    [user?.id, loadBranding, loadMembership]
   )
 
   // Clear tenant (go back to default)

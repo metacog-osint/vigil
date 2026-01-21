@@ -30,7 +30,7 @@ const SEVERITY_OPTIONS = ['critical', 'high', 'medium', 'low']
 
 export default function AlertRulesSection() {
   const { user } = useAuth()
-  const userId = user?.uid || 'anonymous'
+  const userId = user?.id || 'anonymous'
 
   const [rules, setRules] = useState([])
   const [loading, setLoading] = useState(true)

@@ -33,7 +33,7 @@ export default function Assets() {
     stats,
     matchStats,
     refresh,
-  } = useAssetData(user?.uid)
+  } = useAssetData(user?.id)
 
   // Filters
   const {
@@ -56,7 +56,7 @@ export default function Assets() {
     handleUpdateMatchStatus,
     handleCreateAsset,
     handleBulkImport,
-  } = useAssetActions(user?.uid, setAssetList, setMatches, refresh)
+  } = useAssetActions(user?.id, setAssetList, setMatches, refresh)
 
   // UI state
   const [activeTab, setActiveTab] = useState('assets')

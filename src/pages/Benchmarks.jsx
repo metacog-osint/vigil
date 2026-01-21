@@ -48,10 +48,10 @@ export default function Benchmarks() {
   }, [periodType])
 
   useEffect(() => {
-    if (user?.uid) {
+    if (user?.id) {
       loadPreferences()
     }
-  }, [user?.uid])
+  }, [user?.id])
 
   async function loadData() {
     setLoading(true)
@@ -67,7 +67,7 @@ export default function Benchmarks() {
 
   async function loadPreferences() {
     try {
-      const prefs = await benchmarkPreferences.get(user.uid)
+      const prefs = await benchmarkPreferences.get(user.id)
       if (prefs) {
         setUserPrefs(prefs)
         if (prefs.comparison_sectors?.length) {

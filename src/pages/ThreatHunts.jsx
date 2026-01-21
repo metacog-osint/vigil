@@ -19,7 +19,7 @@ const STATUS_FILTERS = [
 
 export default function ThreatHunts() {
   const { user } = useAuth()
-  const userId = user?.uid || 'anonymous'
+  const userId = user?.id || 'anonymous'
 
   const [hunts, setHunts] = useState([])
   const [userProgress, setUserProgress] = useState({})

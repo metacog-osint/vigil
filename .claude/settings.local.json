@@ -147,7 +147,14 @@
       "Bash(npx sharp-cli:*)",
       "Bash(vercel env rm:*)",
       "Bash(vercel env add:*)",
-      "Bash(printf:*)"
+      "Bash(printf:*)",
+      "Bash(xxd:*)",
+      "Bash(source .env)",
+      "Bash(source D:/Projects/Vigil/.env)",
+      "Bash(python3:*)",
+      "Bash(for table in alerts breaches threat_actors incidents iocs vulnerabilities)",
+      "Bash(do echo -n \"$table: \")",
+      "Bash(done)"
     ]
   }
 }

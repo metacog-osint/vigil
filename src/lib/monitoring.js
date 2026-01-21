@@ -100,7 +100,7 @@ export function captureMessage(message, level = 'info', context = {}) {
 export function setUser(user) {
   if (Sentry && user) {
     Sentry.setUser({
-      id: user.uid,
+      id: user.id,
       email: user.email,
     })
   } else if (Sentry) {
