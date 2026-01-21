@@ -129,24 +129,50 @@ export async function createBillingPortalSession(userId) {
  * @param {string} userId - Firebase user ID
  */
 export async function getUserSubscription(userId) {
-  const { data, error } = await supabase
-    .from('user_subscriptions')
-    .select('*')
-    .eq('user_id', userId)
-    .single()
+  try {
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
 
-  if (error && error.code !== 'PGRST116') {
-    console.error('Error fetching subscription:', error)
-  }
+    // Gracefully handle missing table (404/406) or no rows (PGRST116)
+    if (error) {
+      // Table doesn't exist or access denied - return free tier
+      if (error.message?.includes('does not exist') ||
+          error.code === '42P01' ||  // PostgreSQL: undefined_table
+          error.code === 'PGRST204' ||  // PostgREST: no rows
+          error.code === 'PGRST116' ||  // PostgREST: single row expected
+          String(error.code) === '406' ||
+          String(error.code) === '404') {
+        return {
+          tier: 'free',
+          status: 'active',
+          billingPeriod: null,
+          currentPeriodEnd: null,
+        }
+      }
+      console.error('Error fetching subscription:', error)
+    }
 
-  return (
-    data || {
+    return (
+      data || {
+        tier: 'free',
+        status: 'active',
+        billingPeriod: null,
+        currentPeriodEnd: null,
+      }
+    )
+  } catch (err) {
+    // Network errors or other issues - return free tier
+    console.error('Subscription fetch failed:', err)
+    return {
       tier: 'free',
       status: 'active',
       billingPeriod: null,
       currentPeriodEnd: null,
     }
-  )
+  }
 }
 
 /**
