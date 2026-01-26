@@ -32,7 +32,7 @@ jobs:
     if: github.event.inputs.source == '' || github.event.inputs.source == 'iocs'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -102,7 +102,7 @@ jobs:
     if: github.event.inputs.source == '' || github.event.inputs.source == 'vulnerabilities'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -151,7 +151,7 @@ jobs:
     if: always()
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
