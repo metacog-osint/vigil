@@ -92,11 +92,15 @@ export function AuthProvider({ children }) {
     // Subscribe to auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Keep this callback synchronous. supabase-js runs it while holding its auth
+      // lock, so awaiting another Supabase call here (loadProfile) deadlocks every
+      // query on the page after a token refresh. Defer it until the lock is released.
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setUser(session?.user ?? null)
         if (session?.user) {
-          await loadProfile(session.user.id)
+          const userId = session.user.id
+          setTimeout(() => loadProfile(userId), 0)
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
