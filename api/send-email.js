@@ -10,6 +10,9 @@
 import { verifyRequest } from './_lib/supabase-auth.js'
 import { getCorsHeaders, handleCorsPreflightRequest } from './_lib/cors.js'
 
+// Web-standard handler (Request in, Response out) requires the Edge runtime
+export const config = { runtime: 'edge' }
+
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 const FROM_EMAIL = process.env.FROM_EMAIL || 'alerts@vigil.theintelligence.company'
 const FROM_NAME = 'Vigil Alerts'

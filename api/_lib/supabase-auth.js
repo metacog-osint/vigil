@@ -6,10 +6,12 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+// Verifying a user's JWT only needs the public anon key; the service-role key
+// is not required (and was never set in Vercel, which crashed these functions).
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
 
-// Create admin client for token verification
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+// Client used only for token verification
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,
