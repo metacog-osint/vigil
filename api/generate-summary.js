@@ -83,6 +83,108 @@ ${incidentDetails.join('\n') || 'No recent activity'}
 Write a factual 2-sentence summary about this group. No advice.`
 }
 
+/**
+ * Entity summary prompts (actor, vulnerability, ioc, incident)
+ * Built server-side so the client only sends entity data, never a raw prompt.
+ */
+const ENTITY_PROMPTS = {
+  actor: (actor, incidents = []) =>
+    `
+Provide a 2-3 sentence threat intelligence summary for the threat actor "${actor.name}".
+
+Actor data:
+- Trend status: ${actor.trend_status || 'Unknown'}
+- Incidents in last 7 days: ${actor.incidents_7d || 0}
+- Incident velocity: ${Number.isFinite(actor.incident_velocity) ? actor.incident_velocity.toFixed(2) : 'Unknown'} per day
+- Target sectors: ${actor.target_sectors?.join(', ') || 'Unknown'}
+- Target countries: ${actor.target_countries?.join(', ') || 'Unknown'}
+- First seen: ${actor.first_observed || 'Unknown'}
+- Recent victims: ${
+      incidents
+        .slice(0, 5)
+        .map((i) => i.victim_name)
+        .join(', ') || 'None recent'
+    }
+
+Focus on:
+1. Current threat level and activity trend
+2. Primary targeting focus (sectors/regions)
+3. Key risk indicators for defenders
+
+Be specific and actionable. Start with the most important finding.
+`.trim(),
+
+  vulnerability: (vuln) =>
+    `
+Provide a 2-3 sentence threat intelligence summary for ${vuln.cve_id}.
+
+Vulnerability data:
+- CVSS Score: ${vuln.cvss_score || 'Unknown'}
+- EPSS Score: ${Number.isFinite(vuln.epss_score) ? (vuln.epss_score * 100).toFixed(2) : 'Unknown'}%
+- Vendor: ${vuln.vendor || 'Unknown'}
+- Product: ${vuln.product || 'Unknown'}
+- In KEV: ${vuln.kev_date ? 'Yes' : 'No'}
+- Exploit Maturity: ${vuln.exploit_maturity || 'Unknown'}
+- Published: ${vuln.published_date || 'Unknown'}
+- Description: ${vuln.description?.slice(0, 500) || 'Not available'}
+
+Focus on:
+1. Real-world exploitation risk
+2. Priority for patching
+3. Key mitigation recommendations
+
+Be specific and actionable.
+`.trim(),
+
+  ioc: (ioc) =>
+    `
+Provide a brief threat intelligence assessment for this IOC:
+
+IOC data:
+- Type: ${ioc.type}
+- Value: ${ioc.value}
+- Source: ${ioc.source || 'Unknown'}
+- Confidence: ${ioc.confidence || 'Unknown'}%
+- First seen: ${ioc.first_seen || 'Unknown'}
+- Malware family: ${ioc.malware_family || 'Unknown'}
+- Tags: ${ioc.tags?.join(', ') || 'None'}
+
+Focus on:
+1. Threat context and attribution
+2. Recommended detection/blocking approach
+3. Related threat activity
+
+Be concise (2-3 sentences).
+`.trim(),
+
+  incident: (incident) =>
+    `
+Provide a threat intelligence summary for this incident:
+
+Incident data:
+- Victim: ${incident.victim_name}
+- Sector: ${incident.victim_sector || 'Unknown'}
+- Country: ${incident.victim_country || 'Unknown'}
+- Threat Actor: ${incident.threat_actor?.name || 'Unknown'}
+- Actor Trend: ${incident.threat_actor?.trend_status || 'Unknown'}
+- Discovered: ${incident.discovered_date || 'Unknown'}
+- Source: ${incident.source || 'Unknown'}
+
+Focus on:
+1. Significance of this incident
+2. Pattern/campaign context if applicable
+3. Implications for similar organizations
+
+Be concise (2-3 sentences).
+`.trim(),
+}
+
+const DEFAULT_SYSTEM_PROMPT =
+  "You are a threat intelligence analyst. Write brief, factual summaries about current threat activity. Never give advice or recommendations - just report what's happening. Be specific with names and numbers."
+
+const ENTITY_SYSTEM_PROMPT =
+  'You are a threat intelligence analyst. Provide concise, actionable summaries. Never use markdown formatting. Use plain text only.'
+
 export default async function handler(request) {
   const origin = request.headers.get('origin') || ''
   const corsHeaders = getCorsHeaders(origin)
@@ -144,6 +246,8 @@ export default async function handler(request) {
 
     let prompt
     let maxTokens = 150
+    let systemPrompt = DEFAULT_SYSTEM_PROMPT
+    let temperature = 0.5
 
     switch (type) {
       case 'bluf':
@@ -160,8 +264,22 @@ export default async function handler(request) {
         prompt = buildActorPrompt(data.actor, data.incidents || [])
         maxTokens = 200
         break
+      case 'entity': {
+        const promptFn = ENTITY_PROMPTS[data.entityType]
+        if (!promptFn || !data.entity) {
+          return new Response(JSON.stringify({ error: 'Invalid entityType or missing entity' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          })
+        }
+        prompt = promptFn(data.entity, Array.isArray(data.incidents) ? data.incidents : [])
+        maxTokens = 300
+        systemPrompt = ENTITY_SYSTEM_PROMPT
+        temperature = 0.3
+        break
+      }
       default:
-        return new Response(JSON.stringify({ error: 'Invalid summary type. Use "bluf" or "actor"' }), {
+        return new Response(JSON.stringify({ error: 'Invalid summary type. Use "bluf", "actor" or "entity"' }), {
           status: 400,
           headers: { 'Content-Type': 'application/json', ...corsHeaders },
         })
@@ -179,15 +297,14 @@ export default async function handler(request) {
         messages: [
           {
             role: 'system',
-            content:
-              'You are a threat intelligence analyst. Write brief, factual summaries about current threat activity. Never give advice or recommendations - just report what\'s happening. Be specific with names and numbers.',
+            content: systemPrompt,
           },
           {
             role: 'user',
             content: prompt,
           },
         ],
-        temperature: 0.5,
+        temperature,
         max_tokens: maxTokens,
       }),
     })

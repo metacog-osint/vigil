@@ -170,6 +170,38 @@ export async function generateActorSummary(actor, recentIncidents = []) {
 }
 
 /**
+ * Generate a summary for an entity (actor, vulnerability, ioc, incident)
+ * Uses backend API to securely call AI service
+ */
+export async function generateEntitySummary(entityType, entity, incidents = []) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session) return null
+
+  try {
+    const response = await fetch('/api/generate-summary', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'entity',
+        data: { entityType, entity, incidents },
+      }),
+    })
+
+    if (!response.ok) return null
+    const result = await response.json()
+    return result.summary || null
+  } catch (error) {
+    logger.error('Entity summary generation failed:', error)
+    return null
+  }
+}
+
+/**
  * Parse a natural language query into structured search parameters
  * Uses keyword-based parsing for fast, reliable results
  * Examples:
@@ -311,4 +343,10 @@ export function queryToFilters(parsed) {
   return filters
 }
 
-export default { generateBLUF, generateActorSummary, parseNaturalQuery, queryToFilters }
+export default {
+  generateBLUF,
+  generateActorSummary,
+  generateEntitySummary,
+  parseNaturalQuery,
+  queryToFilters,
+}
