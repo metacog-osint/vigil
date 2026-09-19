@@ -21,20 +21,33 @@ export function createSupabaseClient(env) {
     from(table) {
       return {
         // SELECT query
-        async select(columns = '*') {
-          const url = `${supabaseUrl}/rest/v1/${table}?select=${encodeURIComponent(columns)}`
-          const response = await fetch(url, {
-            headers: { ...baseHeaders, 'Prefer': 'return=representation' }
-          })
+        // `query` is an optional PostgREST filter string, e.g. 'name=in.("a","b")'.
+        // Pages through results, since PostgREST caps each response (1000 rows by default).
+        async select(columns = '*', query = '') {
+          const pageSize = 1000
+          const rows = []
 
-          if (!response.ok) {
-            const error = await response.text()
-            console.error(`SELECT ${table} failed:`, error)
-            return { data: null, error: { message: error } }
+          for (let offset = 0; ; offset += pageSize) {
+            const url =
+              `${supabaseUrl}/rest/v1/${table}?select=${encodeURIComponent(columns)}` +
+              (query ? `&${query}` : '') +
+              `&limit=${pageSize}&offset=${offset}`
+            const response = await fetch(url, {
+              headers: { ...baseHeaders, 'Prefer': 'return=representation' }
+            })
+
+            if (!response.ok) {
+              const error = await response.text()
+              console.error(`SELECT ${table} failed:`, error)
+              return { data: null, error: { message: error } }
+            }
+
+            const page = await response.json()
+            rows.push(...page)
+            if (page.length < pageSize) break
           }
 
-          const data = await response.json()
-          return { data, error: null }
+          return { data: rows, error: null }
         },
 
         // INSERT
