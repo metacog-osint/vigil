@@ -414,7 +414,7 @@ export const iocs = {
       `,
         { count: 'exact' }
       )
-      .order('last_seen', { ascending: false })
+      .order('last_seen_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
     if (type) {
@@ -442,7 +442,7 @@ export const iocs = {
       `
       )
       .ilike('value', `%${value}%`)
-      .order('last_seen', { ascending: false })
+      .order('last_seen_at', { ascending: false })
       .limit(100)
 
     if (type) {
@@ -457,7 +457,7 @@ export const iocs = {
       .from('iocs')
       .select('*')
       .eq('actor_id', actorId)
-      .order('last_seen', { ascending: false })
+      .order('last_seen_at', { ascending: false })
       .limit(limit)
   },
 
@@ -489,7 +489,7 @@ export const iocs = {
         `
         )
         .or(`value.eq.${value},value.ilike.%${value}%`)
-        .order('last_seen', { ascending: false })
+        .order('last_seen_at', { ascending: false })
         .limit(10),
 
       // Search malware samples
@@ -575,7 +575,7 @@ export const iocs = {
           }
         )
         break
-      case 'url':
+      case 'url': {
         const encoded = encodeURIComponent(value)
         links.push(
           {
@@ -590,6 +590,7 @@ export const iocs = {
           }
         )
         break
+      }
       case 'cve':
         links.push(
           { name: 'NVD', url: `https://nvd.nist.gov/vuln/detail/${value}`, icon: 'nvd' },
@@ -1314,29 +1315,37 @@ export const dashboard = {
   async getOverview() {
     const now = new Date()
     const last30d = new Date(now - 30 * 24 * 60 * 60 * 1000)
-    const last90d = new Date(now - 90 * 24 * 60 * 60 * 1000)
-    const last365d = new Date(now - 365 * 24 * 60 * 60 * 1000)
 
+    // Whole-table totals use estimated counts: exact counts over the large
+    // incidents/iocs tables exceed the statement timeout and return errors.
+    // Filtered counts (30d incidents, KEV) stay exact.
     // Run queries in parallel
     const [actorCount, incidentCount30d, incidentCountTotal, kevCount, iocCount] =
       await Promise.all([
-        supabase.from('threat_actors').select('*', { count: 'exact', head: true }),
+        supabase.from('threat_actors').select('*', { count: 'estimated', head: true }),
         supabase
           .from('incidents')
           .select('*', { count: 'exact', head: true })
           .gte('discovered_date', last30d.toISOString()),
-        supabase.from('incidents').select('*', { count: 'exact', head: true }),
+        supabase.from('incidents').select('*', { count: 'estimated', head: true }),
         supabase
           .from('vulnerabilities')
           .select('*', { count: 'exact', head: true })
           .not('kev_date', 'is', null),
-        supabase.from('iocs').select('*', { count: 'exact', head: true }),
+        supabase.from('iocs').select('*', { count: 'estimated', head: true }),
       ])
 
     return {
+      // Correct property names that useDashboardData expects
       totalActors: actorCount.count || 0,
-      incidents24h: incidentCount30d.count || 0, // Renamed to show 30d instead
-      incidents7d: incidentCountTotal.count || 0, // Total incidents
+      incidents30d: incidentCount30d.count || 0,
+      incidentsTotal: incidentCountTotal.count || 0,
+      kevTotal: kevCount.count || 0,
+      iocTotal: iocCount.count || 0,
+
+      // @deprecated Legacy aliases for backward compatibility
+      incidents24h: incidentCount30d.count || 0,
+      incidents7d: incidentCountTotal.count || 0,
       newKEV7d: kevCount.count || 0,
       newIOCs24h: iocCount.count || 0,
     }
