@@ -15,7 +15,12 @@ export const config = { runtime: 'edge' }
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_API_KEY = process.env.GROQ_API_KEY
-const GROQ_MODEL = 'llama-3.3-70b-versatile'
+// llama-3.3-70b-versatile was retired by Groq on 2026-08-16; gpt-oss-120b is its
+// recommended replacement. Override with the GROQ_MODEL env var if it changes again.
+const GROQ_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b'
+// gpt-oss models reason before answering; this leaves room for that on top of the
+// visible summary so the answer isn't cut off.
+const REASONING_HEADROOM_TOKENS = 1024
 
 // Rate limit: 5 summary requests per minute per user
 const rateLimitMap = new Map()
@@ -308,7 +313,9 @@ export default async function handler(request) {
           },
         ],
         temperature,
-        max_tokens: maxTokens,
+        max_tokens: maxTokens + REASONING_HEADROOM_TOKENS,
+        reasoning_effort: 'low',
+        include_reasoning: false,
       }),
     })
 
