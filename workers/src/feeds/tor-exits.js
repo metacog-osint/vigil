@@ -3,6 +3,8 @@
  * Cloudflare Worker version
  */
 
+import { stampListed } from '../lib/sightings.js'
+
 const TOR_EXIT_URL = 'https://check.torproject.org/torbulkexitlist'
 
 export async function ingestTorExits(supabase) {
@@ -50,7 +52,7 @@ export async function ingestTorExits(supabase) {
 
       const { error } = await supabase
         .from('iocs')
-        .upsert(records, { onConflict: 'type,value' })
+        .upsert(stampListed(records), { onConflict: 'type,value' })
 
       if (error) {
         console.error(`Batch ${i}-${i+batch.length} failed:`, error.message)

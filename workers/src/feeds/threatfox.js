@@ -3,6 +3,8 @@
  * Cloudflare Worker version
  */
 
+import { stampListed } from '../lib/sightings.js'
+
 const THREATFOX_API = 'https://threatfox-api.abuse.ch/api/v1/'
 
 export async function ingestThreatFox(supabase, env) {
@@ -65,7 +67,7 @@ export async function ingestThreatFox(supabase, env) {
 
       const { error } = await supabase
         .from('iocs')
-        .upsert(records, { onConflict: 'type,value' })
+        .upsert(stampListed(records), { onConflict: 'type,value' })
 
       if (error) {
         console.error(`ThreatFox batch failed:`, error.message)

@@ -3,6 +3,8 @@
  * Cloudflare Worker version
  */
 
+import { stampListed } from '../lib/sightings.js'
+
 const PULSEDIVE_API = 'https://pulsedive.com/api'
 
 export async function ingestPulsedive(supabase, env) {
@@ -68,7 +70,7 @@ export async function ingestPulsedive(supabase, env) {
         if (records.length > 0) {
           const { error } = await supabase
             .from('iocs')
-            .upsert(records, { onConflict: 'type,value' })
+            .upsert(stampListed(records), { onConflict: 'type,value' })
 
           if (error) {
             failed += records.length
