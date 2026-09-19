@@ -69,9 +69,9 @@ The worker also exposes HTTP endpoints for manual testing:
 curl https://vigil-ingestion.<your-subdomain>.workers.dev/health
 
 # Trigger specific feeds
-curl https://vigil-ingestion.<your-subdomain>.workers.dev/ingest/kev
-curl https://vigil-ingestion.<your-subdomain>.workers.dev/ingest/threatfox
-curl https://vigil-ingestion.<your-subdomain>.workers.dev/ingest/ransomlook
+curl -H "Authorization: Bearer $ADMIN_TOKEN" https://vigil-ingestion.<your-subdomain>.workers.dev/ingest/kev
+curl -H "Authorization: Bearer $ADMIN_TOKEN" https://vigil-ingestion.<your-subdomain>.workers.dev/ingest/threatfox
+curl -H "Authorization: Bearer $ADMIN_TOKEN" https://vigil-ingestion.<your-subdomain>.workers.dev/ingest/ransomlook
 ```
 
 ## Local Development

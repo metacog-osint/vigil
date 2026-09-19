@@ -42,10 +42,12 @@ export const tenants = {
 
       // Gracefully handle missing RPC function - multi-tenancy not enabled
       if (error) {
-        if (error.message?.includes('does not exist') ||
-            error.message?.includes('not found') ||
-            error.code === '42883' ||
-            String(error.code) === '404') {
+        if (
+          error.message?.includes('does not exist') ||
+          error.message?.includes('not found') ||
+          error.code === '42883' ||
+          String(error.code) === '404'
+        ) {
           return null
         }
         throw error
@@ -78,10 +80,12 @@ export const tenants = {
 
       // Gracefully handle missing RPC function (404) - multi-tenancy not enabled
       if (error) {
-        if (error.message?.includes('does not exist') ||
-            error.message?.includes('not found') ||
-            error.code === '42883' ||  // PostgreSQL: undefined_function
-            String(error.code) === '404') {
+        if (
+          error.message?.includes('does not exist') ||
+          error.message?.includes('not found') ||
+          error.code === '42883' || // PostgreSQL: undefined_function
+          String(error.code) === '404'
+        ) {
           return [] // No tenants - single-tenant mode
         }
         throw error

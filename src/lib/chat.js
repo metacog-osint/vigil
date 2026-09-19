@@ -447,13 +447,21 @@ export const messageQueue = {
   },
 }
 
+// OAuth client IDs, read statically so Vite only inlines these variables.
+// (Dynamic import.meta.env[...] access makes Vite bundle every VITE_ variable.)
+const OAUTH_CLIENT_IDS = {
+  slack: import.meta.env.VITE_SLACK_CLIENT_ID,
+  teams: import.meta.env.VITE_TEAMS_CLIENT_ID,
+  discord: import.meta.env.VITE_DISCORD_CLIENT_ID,
+}
+
 // Helper: Generate OAuth URL
 export function getOAuthUrl(platform, redirectUri, state) {
   const config = PLATFORMS[platform]
   if (!config) throw new Error(`Unknown platform: ${platform}`)
 
   const params = new URLSearchParams({
-    client_id: import.meta.env[`VITE_${platform.toUpperCase()}_CLIENT_ID`] || '',
+    client_id: OAUTH_CLIENT_IDS[platform] || '',
     redirect_uri: redirectUri,
     scope: config.scopes.join(' '),
     state,

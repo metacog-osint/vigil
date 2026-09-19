@@ -5,7 +5,7 @@
  * Extracts all state variables and loading logic from Dashboard.jsx.
  * Supports demo mode with mock data.
  */
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   dashboard,
   incidents,
@@ -45,6 +45,10 @@ export default function useDashboardData() {
   // Check for demo mode
   const { isDemoMode } = useDemo()
   const demoData = useDemoData()
+
+  // Track if we've already initiated a load to prevent double-fetching
+  // Using a ref because we don't want this to trigger re-renders
+  const loadInitiatedRef = useRef(false)
 
   // Core dashboard data
   const [stats, setStats] = useState(null)
@@ -271,22 +275,22 @@ export default function useDashboardData() {
 
   // Main dashboard load (skip in demo mode)
   useEffect(() => {
-    // Skip real data loading in demo mode
     if (isDemoMode) return
+
+    // Prevent double-fetching when the effect re-runs
+    if (loadInitiatedRef.current) return
+    loadInitiatedRef.current = true
+
+    // Safety timeout - ensure loading state doesn't hang forever
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false)
+      setError('Dashboard load timed out. Please refresh.')
+    }, 15000)
 
     async function loadDashboard() {
       try {
-        const [
-          statsData,
-          incidentsData,
-          actorsData,
-          kevsData,
-          sectorStats,
-          vulnStats,
-          escalatingData,
-          syncData,
-          calendarStats,
-        ] = await Promise.all([
+        // Use Promise.allSettled so one failing query doesn't block everything
+        const results = await Promise.allSettled([
           dashboard.getOverview(),
           incidents.getRecent({ limit: 10, days: 365 }),
           threatActors.getTopActive(365, 5),
@@ -297,6 +301,32 @@ export default function useDashboardData() {
           syncLog.getRecent(1),
           incidents.getDailyCounts(90),
         ])
+
+        // Extract values, using defaults for rejected promises
+        const getValue = (result, defaultValue = null) =>
+          result.status === 'fulfilled' ? result.value : defaultValue
+
+        const statsData = getValue(results[0], {
+          totalActors: 0,
+          incidents30d: 0,
+          incidentsTotal: 0,
+          kevTotal: 0,
+          iocTotal: 0,
+        })
+        const incidentsData = getValue(results[1], { data: [] })
+        const actorsData = getValue(results[2], { data: [] })
+        const kevsData = getValue(results[3], { data: [] })
+        const sectorStats = getValue(results[4], [])
+        const vulnStats = getValue(results[5], [])
+        const escalatingData = getValue(results[6], { data: [] })
+        const syncData = getValue(results[7], { data: [] })
+        const calendarStats = getValue(results[8], [])
+
+        const failed = results.filter((r) => r.status === 'rejected')
+        if (failed.length > 0) {
+          failed.forEach((r) => console.error('Dashboard query failed:', r.reason))
+          setError(`${failed.length} data sources failed to load. Showing available data.`)
+        }
 
         setStats(statsData)
         setRecentIncidents(incidentsData.data || [])
@@ -320,45 +350,34 @@ export default function useDashboardData() {
           topActors: actorsData.data || [],
         })
           .then((summary) => {
-            if (summary) {
-              setAiSummary(summary)
-            } else {
-              console.warn('AI summary returned null - check VITE_GROQ_API_KEY')
-            }
+            if (summary) setAiSummary(summary)
           })
-          .catch((err) => {
-            console.error('AI summary generation error:', err)
+          .catch(() => {
+            // AI summary is optional
           })
 
-        // Load personalization data (non-blocking)
+        // Load secondary data (each handles its own errors)
         loadPersonalizationData()
-
-        // Load trend data (non-blocking)
         loadTrendData()
-
-        // Load Sprint 1 widgets data (non-blocking)
         loadWidgetsData()
-
-        // Load correlations data (non-blocking)
         loadCorrelationsData()
       } catch (err) {
-        console.error('Dashboard load error:', err)
-        setError(err.message || 'Failed to load dashboard data')
-        // Set default stats so dashboard still renders
-        setStats({
-          totalActors: 0,
-          incidents30d: 0,
-          incidentsTotal: 0,
-          kevTotal: 0,
-          iocTotal: 0,
-        })
+        console.error('Error loading dashboard:', err)
+        setError('Failed to load dashboard data')
       } finally {
+        clearTimeout(safetyTimeout)
         setLoading(false)
       }
     }
 
     loadDashboard()
-  }, [isDemoMode, loadPersonalizationData, loadTrendData, loadWidgetsData, loadCorrelationsData])
+
+    return () => {
+      clearTimeout(safetyTimeout)
+    }
+    // Load functions intentionally omitted; loadInitiatedRef prevents double-loading
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemoMode])
 
   // Mark a tab as loaded (for lazy loading support)
   const markTabLoaded = useCallback((tabId) => {
