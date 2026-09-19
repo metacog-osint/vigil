@@ -75,7 +75,7 @@ export async function generateBLUF(data, options = { save: true }) {
           aiSummaries
             .save(summary, {
               type: 'dashboard_bluf',
-              model: result.model || 'llama-3.3-70b-versatile',
+              model: result.model || 'openai/gpt-oss-120b',
               incidents30d: metadata.incidents30d,
               actors: metadata.actors,
               sectors: metadata.sectors,
