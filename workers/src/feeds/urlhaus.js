@@ -3,6 +3,8 @@
  * Cloudflare Worker version
  */
 
+import { stampListed } from '../lib/sightings.js'
+
 const URLHAUS_API = 'https://urlhaus-api.abuse.ch/v1/urls/recent/'
 
 export async function ingestURLhaus(supabase, env) {
@@ -58,7 +60,7 @@ export async function ingestURLhaus(supabase, env) {
 
       const { error } = await supabase
         .from('iocs')
-        .upsert(records, { onConflict: 'type,value' })
+        .upsert(stampListed(records), { onConflict: 'type,value' })
 
       if (error) {
         failed += batch.length

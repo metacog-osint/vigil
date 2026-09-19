@@ -3,6 +3,8 @@
  * Cloudflare Worker version
  */
 
+import { stampListed } from '../lib/sightings.js'
+
 const FEODO_API = 'https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.json'
 
 export async function ingestFeodo(supabase) {
@@ -50,7 +52,7 @@ export async function ingestFeodo(supabase) {
 
       const { error } = await supabase
         .from('iocs')
-        .upsert(records, { onConflict: 'type,value' })
+        .upsert(stampListed(records), { onConflict: 'type,value' })
 
       if (error) {
         failed += batch.length
