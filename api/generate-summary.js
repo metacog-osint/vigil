@@ -10,6 +10,9 @@
 import { verifyRequest } from './_lib/supabase-auth.js'
 import { getCorsHeaders, handleCorsPreflightRequest } from './_lib/cors.js'
 
+// Web-standard handler (Request in, Response out) requires the Edge runtime
+export const config = { runtime: 'edge' }
+
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_API_KEY = process.env.GROQ_API_KEY
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
