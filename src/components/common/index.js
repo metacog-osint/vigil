@@ -16,10 +16,5 @@ export {
 export { default as Skeleton, SkeletonDashboard } from './Skeleton'
 export { default as Sparkline } from './Sparkline'
 export { default as StatCard } from './StatCard'
-export {
-  default as TimeDisplay,
-  TimeAgo,
-  formatRelativeTime,
-  formatAbsoluteTime,
-} from './TimeDisplay'
+export { default as TimeDisplay, TimeAgo } from './TimeDisplay'
 export { Tooltip } from './Tooltip'
