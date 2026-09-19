@@ -211,8 +211,8 @@ npm run ingest:nvd       # NVD CVEs only
 VITE_SUPABASE_URL=https://xxx.supabase.co
 VITE_SUPABASE_ANON_KEY=xxx
 
-# Optional - AI Summaries (free tier)
-VITE_GROQ_API_KEY=xxx  # Get from https://console.groq.com/keys
+# Optional - AI Summaries (free tier), server-side only
+GROQ_API_KEY=xxx  # Get from https://console.groq.com/keys - never prefix with VITE_
 
 # Optional (Firebase - not currently used)
 VITE_FIREBASE_API_KEY=
@@ -226,7 +226,7 @@ The dashboard includes an AI-generated BLUF (Bottom Line Up Front) summary power
 
 1. Create a free account at https://console.groq.com
 2. Generate an API key
-3. Add `VITE_GROQ_API_KEY` to your `.env` file or Vercel environment variables
+3. Add `GROQ_API_KEY` to your Vercel environment variables (server-side; the `/api/generate-summary` function reads it). Never use a `VITE_` prefix for secrets: Vite bundles those into public JavaScript.
 4. Restart the dev server or redeploy
 
 Without the API key, the dashboard works normally without the AI summary.

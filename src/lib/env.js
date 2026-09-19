@@ -5,6 +5,16 @@
  * Fails fast with clear error messages if configuration is missing.
  */
 
+// Public (client-safe) environment variables, read statically.
+// Never use dynamic import.meta.env[name] access: Vite then inlines the whole
+// env object, including every VITE_ variable, into the public bundle.
+const PUBLIC_ENV = {
+  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+  VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
+  VITE_APP_VERSION: import.meta.env.VITE_APP_VERSION,
+}
+
 // Required environment variables
 const REQUIRED_VARS = [
   {
@@ -27,11 +37,6 @@ const OPTIONAL_VARS = [
     default: null,
   },
   {
-    name: 'VITE_GROQ_API_KEY',
-    description: 'Groq AI API key for summaries',
-    default: null,
-  },
-  {
     name: 'VITE_APP_VERSION',
     description: 'Application version for Sentry releases',
     default: '0.0.0',
@@ -48,7 +53,7 @@ export function validateEnv() {
 
   // Check required variables
   for (const { name, description, example } of REQUIRED_VARS) {
-    const value = import.meta.env[name]
+    const value = PUBLIC_ENV[name]
     if (!value) {
       missing.push({ name, description, example })
     }
@@ -75,7 +80,7 @@ export function validateEnv() {
 
   // Check optional variables and log warnings
   for (const { name, description, default: defaultValue } of OPTIONAL_VARS) {
-    const value = import.meta.env[name]
+    const value = PUBLIC_ENV[name]
     if (!value && defaultValue === null) {
       warnings.push({ name, description })
     }
@@ -125,20 +130,20 @@ function formatMissingVarsError(missing) {
 }
 
 /**
- * Get an environment variable with optional default
- * @param {string} name - Variable name (without VITE_ prefix)
+ * Get a public environment variable with optional default
+ * @param {string} name - Variable name (without VITE_ prefix); must be listed in PUBLIC_ENV
  * @param {string} defaultValue - Default value if not set
  */
 export function getEnv(name, defaultValue = '') {
-  return import.meta.env[`VITE_${name}`] || defaultValue
+  return PUBLIC_ENV[`VITE_${name}`] || defaultValue
 }
 
 /**
  * Check if an optional feature is enabled
- * @param {string} name - Feature name (e.g., 'SENTRY_DSN')
+ * @param {string} name - Feature name (e.g., 'SENTRY_DSN'); must be listed in PUBLIC_ENV
  */
 export function hasFeature(name) {
-  return !!import.meta.env[`VITE_${name}`]
+  return !!PUBLIC_ENV[`VITE_${name}`]
 }
 
 /**
@@ -155,7 +160,6 @@ export function getEnvDebugInfo() {
     supabaseUrl: import.meta.env.VITE_SUPABASE_URL ? '✓ configured' : '✗ missing',
     supabaseKey: import.meta.env.VITE_SUPABASE_ANON_KEY ? '✓ configured' : '✗ missing',
     sentryDsn: import.meta.env.VITE_SENTRY_DSN ? '✓ configured' : '○ optional',
-    groqKey: import.meta.env.VITE_GROQ_API_KEY ? '✓ configured' : '○ optional',
     appVersion: import.meta.env.VITE_APP_VERSION || 'not set',
   }
 }

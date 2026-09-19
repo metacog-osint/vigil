@@ -1,5 +1,5 @@
 // Advanced Search - Query language powered search
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { supabase } from '../lib/supabase'
@@ -48,7 +48,7 @@ export default function AdvancedSearch() {
   const validation = useMemo(() => validateQuery(query), [query])
 
   // Get suggestions
-  const suggestions = useMemo(() => {
+  const _suggestions = useMemo(() => {
     if (query.length < 2) return []
     return getQuerySuggestions(entityType, query)
   }, [query, entityType])
@@ -85,7 +85,7 @@ export default function AdvancedSearch() {
       } else if (entityType === 'actors') {
         dbQuery = dbQuery.order('last_seen', { ascending: false })
       } else {
-        dbQuery = dbQuery.order('last_seen', { ascending: false })
+        dbQuery = dbQuery.order('last_seen_at', { ascending: false })
       }
 
       const { data, count, error: queryError } = await dbQuery
