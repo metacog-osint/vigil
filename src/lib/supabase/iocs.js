@@ -56,7 +56,7 @@ export const iocs = {
       `,
         { count: 'exact' }
       )
-      .order('last_seen', { ascending: false })
+      .order('last_seen_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
     if (type) {
@@ -84,7 +84,7 @@ export const iocs = {
       `
       )
       .ilike('value', `%${value}%`)
-      .order('last_seen', { ascending: false })
+      .order('last_seen_at', { ascending: false })
       .limit(100)
 
     if (type) {
@@ -99,7 +99,7 @@ export const iocs = {
       .from('iocs')
       .select('*')
       .eq('actor_id', actorId)
-      .order('last_seen', { ascending: false })
+      .order('last_seen_at', { ascending: false })
       .limit(limit)
   },
 
@@ -129,7 +129,7 @@ export const iocs = {
         `
         )
         .or(`value.eq.${value},value.ilike.%${value}%`)
-        .order('last_seen', { ascending: false })
+        .order('last_seen_at', { ascending: false })
         .limit(10),
 
       supabase
@@ -212,7 +212,7 @@ export const iocs = {
           }
         )
         break
-      case 'url':
+      case 'url': {
         const encoded = encodeURIComponent(value)
         links.push(
           {
@@ -227,6 +227,7 @@ export const iocs = {
           }
         )
         break
+      }
       case 'cve':
         links.push(
           { name: 'NVD', url: `https://nvd.nist.gov/vuln/detail/${value}`, icon: 'nvd' },

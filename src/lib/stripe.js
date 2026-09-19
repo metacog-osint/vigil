@@ -139,12 +139,14 @@ export async function getUserSubscription(userId) {
     // Gracefully handle missing table (404/406) or no rows (PGRST116)
     if (error) {
       // Table doesn't exist or access denied - return free tier
-      if (error.message?.includes('does not exist') ||
-          error.code === '42P01' ||  // PostgreSQL: undefined_table
-          error.code === 'PGRST204' ||  // PostgREST: no rows
-          error.code === 'PGRST116' ||  // PostgREST: single row expected
-          String(error.code) === '406' ||
-          String(error.code) === '404') {
+      if (
+        error.message?.includes('does not exist') ||
+        error.code === '42P01' || // PostgreSQL: undefined_table
+        error.code === 'PGRST204' || // PostgREST: no rows
+        error.code === 'PGRST116' || // PostgREST: single row expected
+        String(error.code) === '406' ||
+        String(error.code) === '404'
+      ) {
         return {
           tier: 'free',
           status: 'active',

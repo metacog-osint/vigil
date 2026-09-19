@@ -10,20 +10,23 @@ export const dashboard = {
     const now = new Date()
     const last30d = new Date(now - 30 * 24 * 60 * 60 * 1000)
 
+    // Whole-table totals use estimated counts: exact counts over the large
+    // incidents/iocs tables exceed the statement timeout and return errors.
+    // Filtered counts (30d incidents, KEV) stay exact.
     // Run queries in parallel
     const [actorCount, incidentCount30d, incidentCountTotal, kevCount, iocCount] =
       await Promise.all([
-        supabase.from('threat_actors').select('*', { count: 'exact', head: true }),
+        supabase.from('threat_actors').select('*', { count: 'estimated', head: true }),
         supabase
           .from('incidents')
           .select('*', { count: 'exact', head: true })
           .gte('discovered_date', last30d.toISOString()),
-        supabase.from('incidents').select('*', { count: 'exact', head: true }),
+        supabase.from('incidents').select('*', { count: 'estimated', head: true }),
         supabase
           .from('vulnerabilities')
           .select('*', { count: 'exact', head: true })
           .not('kev_date', 'is', null),
-        supabase.from('iocs').select('*', { count: 'exact', head: true }),
+        supabase.from('iocs').select('*', { count: 'estimated', head: true }),
       ])
 
     return {

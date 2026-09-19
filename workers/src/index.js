@@ -170,7 +170,7 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     }
 
     if (request.method === 'OPTIONS') {
@@ -194,49 +194,11 @@ export default {
         })
       }
 
-      // Debug endpoint - test Supabase connection
-      if (url.pathname === '/debug/supabase') {
-        try {
-          // Test a simple insert to sync_log
-          const testResult = await supabase.from('sync_log').insert({
-            source: 'debug-test',
-            status: 'success',
-            completed_at: new Date().toISOString(),
-            metadata: { test: true }
-          })
-
-          // Test a simple upsert to iocs (like tor-exits would do)
-          const upsertResult = await supabase.from('iocs').upsert({
-            value: '192.0.2.1',
-            type: 'ip',
-            source: 'debug-test',
-            confidence: 'low',
-            first_seen: new Date().toISOString(),
-            last_seen: new Date().toISOString(),
-            tags: ['test-tag'],
-            metadata: { node_type: 'test', last_checked: new Date().toISOString() }
-          }, { onConflict: 'type,value' })
-
-          // Test batch upsert (3 records)
-          const batchResult = await supabase.from('iocs').upsert([
-            { value: '192.0.2.2', type: 'ip', source: 'debug-test', confidence: 'low', first_seen: new Date().toISOString(), last_seen: new Date().toISOString() },
-            { value: '192.0.2.3', type: 'ip', source: 'debug-test', confidence: 'low', first_seen: new Date().toISOString(), last_seen: new Date().toISOString() },
-            { value: '192.0.2.4', type: 'ip', source: 'debug-test', confidence: 'low', first_seen: new Date().toISOString(), last_seen: new Date().toISOString() }
-          ], { onConflict: 'type,value' })
-
-          return jsonResponse({
-            insert_test: testResult,
-            upsert_single: upsertResult,
-            upsert_batch: batchResult,
-            env_check: {
-              has_url: !!env.SUPABASE_URL,
-              has_key: !!env.SUPABASE_KEY,
-              url_preview: env.SUPABASE_URL?.substring(0, 30) + '...'
-            }
-          })
-        } catch (e) {
-          return jsonResponse({ error: e.message, stack: e.stack }, 500)
-        }
+      // Everything below triggers ingestion with the service-role key, so it
+      // requires the ADMIN_TOKEN secret (set with: npx wrangler secret put ADMIN_TOKEN)
+      const authHeader = request.headers.get('Authorization') || ''
+      if (!env.ADMIN_TOKEN || authHeader !== `Bearer ${env.ADMIN_TOKEN}`) {
+        return jsonResponse({ error: 'Unauthorized' }, 401)
       }
 
       // List available endpoints
