@@ -6,6 +6,7 @@ import './index.css'
 import { registerServiceWorker } from './lib/serviceWorker'
 import { initSentry } from './lib/sentry'
 import { validateEnv } from './lib/env'
+import { AuthProvider } from './contexts/AuthContext'
 
 // Validate environment variables before anything else
 try {
@@ -33,9 +34,11 @@ if (import.meta.env.PROD) {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </AuthProvider>
   </React.StrictMode>
 )
 

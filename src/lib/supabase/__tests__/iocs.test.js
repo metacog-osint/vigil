@@ -134,12 +134,12 @@ describe('iocs module', () => {
       expect(mockQuery.range).toHaveBeenCalledWith(100, 149)
     })
 
-    it('should order by last_seen descending', async () => {
+    it('should order by last_seen_at descending', async () => {
       const mockQuery = supabase.from('iocs')
 
       await iocs.getAll()
 
-      expect(mockQuery.order).toHaveBeenCalledWith('last_seen', { ascending: false })
+      expect(mockQuery.order).toHaveBeenCalledWith('last_seen_at', { ascending: false })
     })
 
     it('should combine multiple filters', async () => {
@@ -183,12 +183,12 @@ describe('iocs module', () => {
       expect(mockQuery.limit).toHaveBeenCalledWith(100)
     })
 
-    it('should order results by last_seen descending', async () => {
+    it('should order results by last_seen_at descending', async () => {
       const mockQuery = supabase.from('iocs')
 
       await iocs.search('malware')
 
-      expect(mockQuery.order).toHaveBeenCalledWith('last_seen', { ascending: false })
+      expect(mockQuery.order).toHaveBeenCalledWith('last_seen_at', { ascending: false })
     })
   })
 
@@ -219,12 +219,12 @@ describe('iocs module', () => {
       expect(mockQuery.limit).toHaveBeenCalledWith(25)
     })
 
-    it('should order by last_seen descending', async () => {
+    it('should order by last_seen_at descending', async () => {
       const mockQuery = supabase.from('iocs')
 
       await iocs.getByActor('test-actor-id')
 
-      expect(mockQuery.order).toHaveBeenCalledWith('last_seen', { ascending: false })
+      expect(mockQuery.order).toHaveBeenCalledWith('last_seen_at', { ascending: false })
     })
   })
 
@@ -258,7 +258,7 @@ describe('iocs module', () => {
   describe('quickLookup', () => {
     beforeEach(() => {
       // Setup mock for Promise.all pattern used in quickLookup
-      vi.mocked(supabase.from).mockImplementation((table) => ({
+      vi.mocked(supabase.from).mockImplementation((_table) => ({
         select: vi.fn().mockReturnThis(),
         or: vi.fn().mockReturnThis(),
         ilike: vi.fn().mockReturnThis(),
