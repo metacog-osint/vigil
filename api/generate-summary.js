@@ -51,26 +51,45 @@ function buildBLUFPrompt(data) {
   const { incidents30d = 0, topActors = [], escalatingActors = [], topSectors = [], recentIncidents = [] } = data
 
   const topActorNames = topActors.slice(0, 5).map((a) => a.name).filter(Boolean)
-  const escalatingNames = escalatingActors.slice(0, 3).map((a) => a.name).filter(Boolean)
-  const realSectors = topSectors
-    .filter((s) => !['Other', 'Unknown', 'Not Found', 'other'].includes(s.name))
-    .slice(0, 3)
   const recentActorNames = [
     ...new Set(recentIncidents.slice(0, 20).map((i) => i.threat_actor?.name).filter(Boolean)),
   ].slice(0, 5)
-  const victims = recentIncidents.slice(0, 5).map((i) => i.victim_name).filter(Boolean)
   const activeGroups = recentActorNames.length > 0 ? recentActorNames : topActorNames
+
+  // Escalation claims carry their evidence: this week's victims vs the week before
+  const escalating = escalatingActors
+    .slice(0, 3)
+    .filter((a) => a.name)
+    .map((a) => `${a.name} (${a.incidents_7d ?? '?'} victims this week vs ${a.incidents_prev_7d ?? '?'} the week before)`)
+
+  // Never name victims whose names the group redacted ("abc*******")
+  const victims = recentIncidents
+    .map((i) => i.victim_name)
+    .filter((v) => v && !v.includes('***'))
+    .slice(0, 5)
+
+  // Sectors are inferred from victim names and missing for most incidents; only
+  // mention them when enough victims have one
+  const UNKNOWN_SECTORS = ['Other', 'Unknown', 'Not Found', 'other', 'unknown']
+  const sectorTotal = topSectors.reduce((n, s) => n + (s.value || 0), 0)
+  const knownSectors = topSectors.filter((s) => !UNKNOWN_SECTORS.includes(s.name))
+  const sectorCoverage = sectorTotal > 0 ? knownSectors.reduce((n, s) => n + (s.value || 0), 0) / sectorTotal : 0
+  const coveragePct = Math.round(sectorCoverage * 100)
+  const sectorLine =
+    sectorCoverage >= 0.3
+      ? `- Top sectors (sector known for ${coveragePct}% of victims): ${knownSectors.slice(0, 3).map((s) => s.name).join(', ')}`
+      : `- Sector is unknown for ${100 - coveragePct}% of victims. Do not describe sector targeting.`
 
   return `You are a ransomware threat analyst. Write ONE specific sentence about current activity.
 
-Data:
+Data (victim posts on ransomware leak sites):
 - ${incidents30d} ransomware incidents in last 30 days
 - Most active groups: ${activeGroups.join(', ') || 'Unknown'}
-${escalatingNames.length > 0 ? `- Escalating actors: ${escalatingNames.join(', ')}` : ''}
-- Top sectors: ${realSectors.map((s) => s.name).join(', ') || 'Various'}
-- Recent victims: ${victims.join(', ') || 'Multiple organizations'}
+${escalating.length > 0 ? `- Escalating: ${escalating.join('; ')}` : '- No group meets the escalation threshold this week'}
+${sectorLine}
+- Example recent victims: ${victims.join(', ') || 'none suitable to name'}
 
-Write a one-sentence BLUF summary. Be specific with names and numbers. No advice.`
+Write a one-sentence BLUF summary. Use only the facts above; include the numbers for any escalation you mention. No advice.`
 }
 
 /**
