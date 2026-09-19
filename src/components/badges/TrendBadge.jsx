@@ -16,6 +16,12 @@ const TrendBadge = memo(function TrendBadge({ status, showLabel = true, size = '
           icon: '↓',
           label: 'Declining',
         }
+      case 'INACTIVE':
+        return {
+          color: 'bg-gray-900/50 text-gray-500 border-gray-800',
+          icon: '○',
+          label: 'Inactive',
+        }
       case 'STABLE':
       default:
         return {
