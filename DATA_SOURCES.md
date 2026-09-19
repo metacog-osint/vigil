@@ -408,7 +408,7 @@ VITE_FIREBASE_PROJECT_ID=
 ABUSECH_API_KEY=              # Required since 2025 - get from https://abuse.ch/api/#auth
 
 # Optional Enrichment
-VITE_GROQ_API_KEY=
+GROQ_API_KEY=                 # Server-side only (Vercel) - never prefix with VITE_
 VIRUSTOTAL_API_KEY=
 HYBRIDANALYSIS_API_KEY=
 OTX_API_KEY=
