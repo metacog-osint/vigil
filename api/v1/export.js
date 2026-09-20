@@ -286,7 +286,7 @@ export default async function handler(request) {
       case 'iocs':
         query = supabase
           .from('iocs')
-          .select('*, threat_actor:threat_actors(id, name)')
+          .select('*, threat_actor:threat_actors!iocs_actor_id_fkey(id, name)')
           .gte('created_at', cutoffDate.toISOString())
           .limit(limit)
         break

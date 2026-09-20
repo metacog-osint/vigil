@@ -195,9 +195,26 @@ export default function IOCSearchContent() {
                       {ioc.malware_family && (
                         <span className="text-orange-400">{ioc.malware_family}</span>
                       )}
-                      {ioc.threat_actor?.name && (
-                        <span className="text-cyber-accent">{ioc.threat_actor.name}</span>
+                      {/* Groups reached through the reviewed family mapping, not a
+                          direct actor column - no feed sets one. */}
+                      {ioc.actor_names?.length > 0
+                        ? ioc.actor_names.map((name) => (
+                            <span key={name} className="text-cyber-accent">
+                              {name}
+                            </span>
+                          ))
+                        : ioc.threat_actor?.name && (
+                            <span className="text-cyber-accent">{ioc.threat_actor.name}</span>
+                          )}
+                      {ioc.sanctioned_by && (
+                        <span
+                          className="text-red-400"
+                          title={`OFAC designated: ${ioc.sanctioned_by}`}
+                        >
+                          OFAC: {ioc.sanctioned_by}
+                        </span>
                       )}
+                      {ioc.sighting_count > 1 && <span>seen {ioc.sighting_count}×</span>}
                       {ioc.tags?.length > 0 && <span>{ioc.tags.slice(0, 3).join(', ')}</span>}
                     </div>
                     <EnrichmentBadges metadata={ioc.metadata} ioc={ioc} />
