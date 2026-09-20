@@ -1,5 +1,6 @@
 // @ts-check
 import { test, expect } from '@playwright/test'
+import { openApp } from './support/app'
 
 /**
  * Mobile viewport E2E tests
@@ -7,11 +8,11 @@ import { test, expect } from '@playwright/test'
  */
 
 // Use mobile viewport for all tests in this file
-test.use({ viewport: { width: 375, height: 667 } })
+test.use({ viewport: { width: 375, height: 667 }, hasTouch: true })
 
 test.describe('Mobile Navigation', () => {
   test('should show mobile menu button', async ({ page }) => {
-    await page.goto('/dashboard')
+    await openApp(page, '/dashboard')
 
     // Mobile should show hamburger menu or similar
     const menuButton = page.locator(
@@ -27,20 +28,20 @@ test.describe('Mobile Navigation', () => {
   })
 
   test('should navigate between pages on mobile', async ({ page }) => {
-    await page.goto('/dashboard')
+    await openApp(page, '/dashboard')
 
-    // Try to navigate to actors page
-    const actorsLink = page.locator('a[href*="actors"], button:has-text("Actors")')
-    const hasLink = await actorsLink.first().isVisible().catch(() => false)
+    // The sidebar is rendered off-canvas on a phone, so its links are present but
+    // not clickable until the drawer is opened.
+    await page.getByRole('button', { name: /open navigation menu/i }).click()
 
-    if (hasLink) {
-      await actorsLink.first().click()
-      await expect(page).toHaveURL(/.*actors.*/)
-    }
+    const actorsLink = page.getByRole('link', { name: 'Threat Actors', exact: true }).first()
+    await actorsLink.click()
+
+    await expect(page).toHaveURL(/.*actors.*/)
   })
 
   test('should display dashboard properly on mobile', async ({ page }) => {
-    await page.goto('/dashboard')
+    await openApp(page, '/dashboard')
 
     // Main content should be visible
     const mainContent = page.locator('main, [role="main"], .dashboard')
@@ -57,7 +58,7 @@ test.describe('Mobile Navigation', () => {
 
 test.describe('Mobile Search', () => {
   test('should open search on mobile', async ({ page }) => {
-    await page.goto('/dashboard')
+    await openApp(page, '/dashboard')
 
     // Find search trigger
     const searchTrigger = page.locator(
@@ -76,7 +77,7 @@ test.describe('Mobile Search', () => {
   })
 
   test('should show search results on mobile', async ({ page }) => {
-    await page.goto('/iocs')
+    await openApp(page, '/iocs')
     await page.waitForLoadState('networkidle')
 
     // Find search input
@@ -98,7 +99,7 @@ test.describe('Mobile Search', () => {
 
 test.describe('Mobile Detail Panels', () => {
   test('should show actor details on mobile', async ({ page }) => {
-    await page.goto('/actors')
+    await openApp(page, '/actors')
     await page.waitForLoadState('networkidle')
 
     // Click on first actor
@@ -122,7 +123,7 @@ test.describe('Mobile Detail Panels', () => {
   })
 
   test('should close detail panel on mobile', async ({ page }) => {
-    await page.goto('/actors')
+    await openApp(page, '/actors')
     await page.waitForLoadState('networkidle')
 
     // Open a detail panel first
@@ -133,24 +134,30 @@ test.describe('Mobile Detail Panels', () => {
       await actorRow.click()
       await page.waitForTimeout(500)
 
-      // Find close button
-      const closeButton = page.locator(
-        'button[aria-label*="close" i], button:has-text("Close"), [data-testid="close-panel"]'
-      ).first()
+      // The navigation drawer also has a close button, sitting off-canvas at a
+      // negative offset; Playwright still counts it as visible, so it is excluded
+      // by name rather than by :visible.
+      const closeButton = page
+        .locator('button[aria-label*="close" i]:not([aria-label*="navigation" i])')
+        .or(page.getByRole('button', { name: /^close$/i }))
+        .first()
 
       const hasClose = await closeButton.isVisible().catch(() => false)
 
       if (hasClose) {
         await closeButton.click()
-        await page.waitForTimeout(300)
+        await expect(closeButton).toBeHidden()
       }
+
+      // Whether or not a panel opened, the page must still be usable.
+      await expect(page.locator('body')).toBeVisible()
     }
   })
 })
 
 test.describe('Mobile Tables', () => {
   test('should display tables responsively', async ({ page }) => {
-    await page.goto('/incidents')
+    await openApp(page, '/incidents')
     await page.waitForLoadState('networkidle')
 
     // Table or card list should be visible
@@ -168,7 +175,7 @@ test.describe('Mobile Tables', () => {
   })
 
   test('should handle pagination on mobile', async ({ page }) => {
-    await page.goto('/incidents')
+    await openApp(page, '/incidents')
     await page.waitForLoadState('networkidle')
 
     // Find pagination controls
@@ -188,7 +195,7 @@ test.describe('Mobile Tables', () => {
 
 test.describe('Mobile Forms', () => {
   test('should display search filters properly', async ({ page }) => {
-    await page.goto('/actors')
+    await openApp(page, '/actors')
     await page.waitForLoadState('networkidle')
 
     // Find filter controls
@@ -204,7 +211,7 @@ test.describe('Mobile Forms', () => {
 
 test.describe('Mobile Touch Interactions', () => {
   test('should support swipe gestures if applicable', async ({ page }) => {
-    await page.goto('/dashboard')
+    await openApp(page, '/dashboard')
     await page.waitForLoadState('networkidle')
 
     // This is a basic touch interaction test
@@ -221,7 +228,7 @@ test.describe('Mobile Performance', () => {
   test('should load dashboard within acceptable time', async ({ page }) => {
     const startTime = Date.now()
 
-    await page.goto('/dashboard')
+    await openApp(page, '/dashboard')
     await page.waitForLoadState('networkidle')
 
     const loadTime = Date.now() - startTime
@@ -233,7 +240,7 @@ test.describe('Mobile Performance', () => {
   test('should load actors page within acceptable time', async ({ page }) => {
     const startTime = Date.now()
 
-    await page.goto('/actors')
+    await openApp(page, '/actors')
     await page.waitForLoadState('networkidle')
 
     const loadTime = Date.now() - startTime
