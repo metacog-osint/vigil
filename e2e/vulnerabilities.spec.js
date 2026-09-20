@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { openApp } from './support/app'
 
 test.describe('Vulnerabilities Page', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/vulnerabilities')
+    await openApp(page, '/vulnerabilities')
   })
 
   test('should display vulnerabilities heading', async ({ page }) => {

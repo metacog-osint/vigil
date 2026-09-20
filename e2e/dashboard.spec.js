@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { openApp } from './support/app'
 
 test.describe('Dashboard', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/')
+    await openApp(page)
   })
 
   test('should load and display the dashboard', async ({ page }) => {
@@ -27,14 +28,11 @@ test.describe('Dashboard', () => {
     const sidebar = page.locator('nav, aside').first()
     await expect(sidebar).toBeVisible()
 
-    // Check for navigation items
-    const eventsLink = page.getByRole('link', { name: /events/i })
-    const actorsLink = page.getByRole('link', { name: /actors/i })
-    const settingsLink = page.getByRole('link', { name: /settings/i })
-
-    await expect(eventsLink).toBeVisible()
-    await expect(actorsLink).toBeVisible()
-    await expect(settingsLink).toBeVisible()
+    // Named as they appear in the sidebar; .first() because each entry is rendered
+    // twice, for the collapsed and expanded states.
+    for (const name of ['Activity', 'Threat Actors', 'Settings']) {
+      await expect(sidebar.getByRole('link', { name, exact: true }).first()).toBeVisible()
+    }
   })
 
   test('should display header with search button', async ({ page }) => {

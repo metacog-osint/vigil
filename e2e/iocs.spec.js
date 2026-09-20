@@ -1,12 +1,13 @@
 import { test, expect } from '@playwright/test'
+import { openApp } from './support/app'
 
 test.describe('IOC Search Page', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/iocs')
+    await openApp(page, '/iocs')
   })
 
-  test('should display IOC Search heading', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'IOC Search', level: 1 })).toBeVisible()
+  test('should display the IOC page heading', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'IOC Intelligence' })).toBeVisible()
   })
 
   test('should have search input', async ({ page }) => {

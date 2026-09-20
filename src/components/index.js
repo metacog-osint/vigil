@@ -113,6 +113,8 @@ export { ActorTrajectoryMini, ActorSelector } from './charts/ActorTrajectoryChar
 // Additional exports from SectorTrendChart
 export { SectorTrendMini, ActivityTrendChart, ActivityTrendMini } from './charts/SectorTrendChart'
 
+export { CoverageNote } from './common'
+
 // ============================================
 // PANEL COMPONENTS
 // ============================================
@@ -125,6 +127,8 @@ export {
   SectorDrilldown,
   CountryAttackPanel,
   ActorQuickProfile,
+  ActorProfilePanel,
+  SanctionsResult,
   ActorRelationshipGraph,
   AttackPathDiagram,
 } from './panels'

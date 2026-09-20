@@ -75,7 +75,7 @@ export default async function handler(request) {
         .from('iocs')
         .select(`
           *,
-          threat_actor:threat_actors(id, name)
+          threat_actor:threat_actors!iocs_actor_id_fkey(id, name)
         `)
         .eq('id', iocId)
         .single()
@@ -99,7 +99,7 @@ export default async function handler(request) {
         .from('iocs')
         .select(`
           *,
-          threat_actor:threat_actors(id, name)
+          threat_actor:threat_actors!iocs_actor_id_fkey(id, name)
         `)
         .eq('value', value)
 
@@ -125,7 +125,7 @@ export default async function handler(request) {
       .from('iocs')
       .select(`
         *,
-        threat_actor:threat_actors(id, name)
+        threat_actor:threat_actors!iocs_actor_id_fkey(id, name)
       `, { count: 'exact' })
 
     // Validated filters
