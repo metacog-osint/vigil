@@ -77,6 +77,17 @@ This document provides a comprehensive overview of all threat intelligence data 
 |--------|----------|-----------|----------|--------|------|
 | Ransomwhere | `https://api.ransomwhe.re/export` | Ransomware BTC payments, wallet addresses | Daily | `planned` | None |
 
+### Sanctions
+
+| Source | Endpoint | Data Type | Schedule | Script | Auth |
+|--------|----------|-----------|----------|--------|------|
+| OFAC SDN | `https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML` | Designated digital-currency addresses, entities, programs | Daily 03:00 UTC | `workers/src/feeds/ofac-sdn.js` | None |
+
+Parsed from SDN.XML rather than SDN.CSV: the CSV truncates its remarks field at 1,000
+characters and loses over half the addresses. The 127 MB advanced export has the same
+coverage as the 29 MB SDN.XML, which is streamed and filtered to the 99 entities that
+carry addresses. Delistings are dated, never deleted.
+
 ### MITRE ATT&CK Campaigns
 
 | Source | Endpoint | Data Type | Schedule | Script | Auth |
