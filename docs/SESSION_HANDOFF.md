@@ -34,9 +34,9 @@ Do not collapse them:
 
 | | |
 |---|---|
-| **Work sample** | For a TRM Labs application. Must be credible and clean. |
-| **Engine** | Feeds the "Offshoot" product (credit-union monitoring; separate spec, separate Supabase project). |
-| **Product** | Vigil may have its own direct customers. **This is not ruled out** — do not assume otherwise. |
+| **Portfolio piece** | Read by people assessing the work. Must be credible and clean. |
+| **Engine** | A downstream consumer reads from it, with its own spec and its own Supabase project. Vigil's schema is not its only reader. |
+| **Product** | Vigil may be used directly by people who are not its author. **This is not ruled out** — do not assume otherwise. |
 
 ---
 
