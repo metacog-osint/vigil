@@ -22,6 +22,7 @@ const SettingsLayout = lazy(() => import('./pages/SettingsLayout'))
 const Alerts = lazy(() => import('./pages/Alerts'))
 const AdvancedSearch = lazy(() => import('./pages/AdvancedSearch'))
 const TrendAnalysis = lazy(() => import('./pages/TrendAnalysis'))
+const ReviewQueue = lazy(() => import('./pages/ReviewQueue'))
 const ThreatHunts = lazy(() => import('./pages/ThreatHunts'))
 const Pricing = lazy(() => import('./pages/Pricing'))
 const ApiDocs = lazy(() => import('./pages/ApiDocs'))
@@ -249,6 +250,7 @@ function ProtectedApp() {
                           <Route path="/watchlists" element={<Watchlists />} />
                           <Route path="/alerts" element={<Alerts />} />
                           <Route path="/trends" element={<TrendAnalysis />} />
+                          <Route path="/review" element={<ReviewQueue />} />
                           <Route path="/threat-hunts" element={<ThreatHunts />} />
                           <Route path="/pricing" element={<Pricing />} />
                           <Route path="/api-docs" element={<ApiDocs />} />
