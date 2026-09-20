@@ -133,12 +133,14 @@ export default function IOCSearchContent() {
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               placeholder="Enter hash, IP, domain, or URL..."
+              aria-label="Search indicators by hash, IP, domain or URL"
               className="cyber-input w-full font-mono"
             />
           </div>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
+            aria-label="Filter by indicator type"
             className="cyber-input"
           >
             {IOC_TYPES.map((type) => (

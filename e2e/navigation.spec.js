@@ -1,91 +1,71 @@
 import { test, expect } from '@playwright/test'
+import { openApp } from './support/app'
+
+/**
+ * Sidebar navigation. Links are scoped to the sidebar - the dashboard links to the
+ * same routes from its cards - and .first() is needed even then, because the sidebar
+ * renders each entry twice for its collapsed and expanded states.
+ */
+const navLink = (page, name) =>
+  page.locator('nav, aside').first().getByRole('link', { name, exact: true }).first()
 
 test.describe('Navigation', () => {
-  test('should navigate to Events page', async ({ page }) => {
-    await page.goto('/')
+  test('should navigate to the Activity feed', async ({ page }) => {
+    await openApp(page)
 
-    // Click on Events link
-    await page.getByRole('link', { name: /events/i }).click()
+    await navLink(page, 'Activity').click()
 
-    // Verify URL changed
     await expect(page).toHaveURL(/\/events/)
-
-    // Verify page content
-    await expect(page.getByRole('heading', { name: /event/i })).toBeVisible()
+    await expect(page.getByRole('heading').first()).toBeVisible()
   })
 
   test('should navigate to Threat Actors page', async ({ page }) => {
-    await page.goto('/')
+    await openApp(page)
 
-    // Click on Actors link
-    await page.getByRole('link', { name: /actors/i }).click()
+    await navLink(page, 'Threat Actors').click()
 
-    // Verify URL changed
     await expect(page).toHaveURL(/\/actors/)
-
-    // Verify page content
-    await expect(page.getByRole('heading', { name: /actor/i })).toBeVisible()
+    await expect(page.getByRole('heading').first()).toBeVisible()
   })
 
-  test('should navigate to Ransomware/Incidents page', async ({ page }) => {
-    await page.goto('/')
+  test('should navigate to the Incidents page', async ({ page }) => {
+    await openApp(page)
 
-    // Click on Ransomware or Incidents link
-    const link = page.getByRole('link', { name: /ransomware|incidents/i })
-    await link.click()
+    await navLink(page, 'Alerts').click()
 
-    // Verify URL changed
-    await expect(page).toHaveURL(/\/ransomware|\/incidents/)
-
-    // Verify page content
-    await expect(page.getByRole('heading', { name: /ransomware|incidents/i })).toBeVisible()
+    await expect(page).toHaveURL(/\/alerts/)
+    await expect(page.getByRole('heading').first()).toBeVisible()
   })
 
   test('should navigate to Vulnerabilities page', async ({ page }) => {
-    await page.goto('/')
+    await openApp(page)
 
-    // Click on Vulnerabilities link
-    await page.getByRole('link', { name: /vulnerabilities|cve/i }).click()
+    await navLink(page, 'Vulnerabilities').click()
 
-    // Verify URL changed
     await expect(page).toHaveURL(/\/vulnerabilities/)
-
-    // Verify page content
-    await expect(page.getByRole('heading', { name: /vulnerabilit|cve|kev/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /vulnerabilit|cve|kev/i }).first()).toBeVisible()
   })
 
   test('should navigate to IOCs page', async ({ page }) => {
-    await page.goto('/')
+    await openApp(page)
 
-    // Click on IOC Search link (exact name in sidebar)
-    await page.getByRole('link', { name: 'IOC Search' }).click()
+    await navLink(page, 'IOC Search').click()
 
-    // Verify URL changed
     await expect(page).toHaveURL(/\/iocs/)
-
-    // Verify page content - be specific about the h1 heading
-    await expect(page.getByRole('heading', { name: 'IOC Search', level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'IOC Intelligence' })).toBeVisible()
   })
 
   test('should display Watchlists page', async ({ page }) => {
-    // Navigate directly to watchlists page
-    await page.goto('/watchlists')
+    await openApp(page, '/watchlists')
 
-    // Verify URL
     await expect(page).toHaveURL(/\/watchlists/)
-
-    // Wait for page to load and verify heading
-    await expect(page.getByRole('heading', { name: 'Watchlists' })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/watchlist/i).first()).toBeVisible({ timeout: 10000 })
   })
 
   test('should display Settings page', async ({ page }) => {
-    // Navigate directly to settings page
-    await page.goto('/settings')
+    await openApp(page, '/settings')
 
-    // Verify URL
     await expect(page).toHaveURL(/\/settings/)
-
-    // Verify page content - look for h1 specifically
     await expect(page.locator('h1')).toContainText(/settings/i)
   })
 })

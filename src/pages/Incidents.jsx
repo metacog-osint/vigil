@@ -454,12 +454,14 @@ export default function Incidents() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by victim name or actor..."
+            aria-label="Search incidents by victim name or actor"
             className="cyber-input w-full"
           />
         </div>
         <select
           value={sectorFilter}
           onChange={(e) => setSectorFilter(e.target.value)}
+          aria-label="Filter by victim sector"
           className={`cyber-input ${sectorFilter ? 'ring-2 ring-cyan-500 border-cyan-500' : ''}`}
         >
           <option value="">All Sectors</option>
