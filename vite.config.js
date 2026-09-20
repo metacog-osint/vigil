@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
     plugins,
     server: {
       port: 5174,
-      open: true
+      open: true,
     },
     build: {
       outDir: 'dist',
@@ -30,10 +30,6 @@ export default defineConfig(({ mode }) => {
             // Supabase client - separate chunk
             if (id.includes('node_modules/@supabase')) {
               return 'vendor-supabase'
-            }
-            // Firebase - separate chunk
-            if (id.includes('node_modules/firebase')) {
-              return 'vendor-firebase'
             }
             // Date utilities - separate chunk
             if (id.includes('node_modules/date-fns')) {
