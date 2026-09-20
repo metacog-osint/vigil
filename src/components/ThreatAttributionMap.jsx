@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
 import { supabase } from '../lib/supabase'
+import { CoverageNote } from './common'
 
 const geoUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
@@ -211,9 +212,30 @@ export default function ThreatAttributionMap({
 }) {
   const [countryData, setCountryData] = useState({})
   const [actorOrigins, setActorOrigins] = useState({})
+  const [coverage, setCoverage] = useState(null)
   const [loading, setLoading] = useState(true)
   const [tooltip, setTooltip] = useState(null)
   const [position, setPosition] = useState({ coordinates: [0, 20], zoom: 1 })
+
+  // The date of the most recent incident that had a country at all, so an empty
+  // window can say when the data stopped rather than just showing nothing.
+  const [lastCountryDate, setLastCountryDate] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    supabase
+      .from('incidents')
+      .select('discovered_date')
+      .not('victim_country', 'is', null)
+      .order('discovered_date', { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        if (!cancelled) setLastCountryDate(data?.[0]?.discovered_date || null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // Fetch victim country data
   useEffect(() => {
@@ -222,16 +244,21 @@ export default function ThreatAttributionMap({
       const cutoffDate = new Date()
       cutoffDate.setDate(cutoffDate.getDate() - days)
 
-      // Get incidents by victim country
+      // Every incident in the window, including those without a country: the ones
+      // that cannot be plotted are exactly what the coverage note has to report.
       const { data: incidents } = await supabase
         .from('incidents')
         .select(
           'victim_country, victim_sector, actor_id, threat_actor:threat_actors(name, actor_type)'
         )
         .gte('discovered_date', cutoffDate.toISOString())
-        .not('victim_country', 'is', null)
 
       if (incidents) {
+        setCoverage({
+          total: incidents.length,
+          covered: incidents.filter((inc) => inc.victim_country).length,
+        })
+
         // Aggregate by country
         const byCountry = {}
         incidents.forEach((inc) => {
@@ -587,6 +614,16 @@ export default function ThreatAttributionMap({
           <span>Critical</span>
         </div>
       </div>
+
+      {/* What the map can and cannot show for this window */}
+      {!loading && coverage && viewMode === 'victims' && (
+        <CoverageNote
+          covered={coverage.covered}
+          total={coverage.total}
+          lastCovered={lastCountryDate}
+          className="mt-2"
+        />
+      )}
     </div>
   )
 }

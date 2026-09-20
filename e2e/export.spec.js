@@ -1,5 +1,6 @@
 // @ts-check
 import { test, expect } from '@playwright/test'
+import { openApp } from './support/app'
 
 /**
  * E2E tests for Export functionality
@@ -32,7 +33,7 @@ test.describe('Export Button', () => {
 
 test.describe('Export Formats', () => {
   test('should show export format options on actors page', async ({ page }) => {
-    await page.goto('/actors')
+    await openApp(page, '/actors')
     await page.waitForLoadState('networkidle')
 
     // Find and click export button
@@ -51,7 +52,7 @@ test.describe('Export Formats', () => {
   })
 
   test('should trigger download on export click', async ({ page }) => {
-    await page.goto('/vulnerabilities')
+    await openApp(page, '/vulnerabilities')
     await page.waitForLoadState('networkidle')
 
     // Set up download listener
@@ -82,7 +83,7 @@ test.describe('Export Formats', () => {
 
 test.describe('Export Data Integrity', () => {
   test('should export current filtered data', async ({ page }) => {
-    await page.goto('/incidents')
+    await openApp(page, '/incidents')
     await page.waitForLoadState('networkidle')
 
     // Apply a filter if available
@@ -104,7 +105,7 @@ test.describe('Export Data Integrity', () => {
 
 test.describe('Bulk Export', () => {
   test('should handle large dataset export', async ({ page }) => {
-    await page.goto('/iocs')
+    await openApp(page, '/iocs')
     await page.waitForLoadState('networkidle')
 
     // IOCs page typically has many records
@@ -118,7 +119,7 @@ test.describe('Bulk Export', () => {
 
 test.describe('Export Accessibility', () => {
   test('export button should be keyboard accessible', async ({ page }) => {
-    await page.goto('/actors')
+    await openApp(page, '/actors')
     await page.waitForLoadState('networkidle')
 
     // Tab to export button
@@ -135,7 +136,7 @@ test.describe('Export Accessibility', () => {
 
 test.describe('STIX 2.1 Export', () => {
   test('should have STIX export option on IOCs page', async ({ page }) => {
-    await page.goto('/iocs')
+    await openApp(page, '/iocs')
     await page.waitForLoadState('networkidle')
 
     // Find export button
@@ -154,7 +155,7 @@ test.describe('STIX 2.1 Export', () => {
   })
 
   test('should export valid STIX bundle', async ({ page }) => {
-    await page.goto('/actors')
+    await openApp(page, '/actors')
     await page.waitForLoadState('networkidle')
 
     // Set up download listener
@@ -188,7 +189,7 @@ test.describe('Export Mobile Experience', () => {
   test.use({ viewport: { width: 375, height: 667 } })
 
   test('should show export button on mobile', async ({ page }) => {
-    await page.goto('/actors')
+    await openApp(page, '/actors')
     await page.waitForLoadState('networkidle')
 
     // Export may be in overflow menu on mobile
