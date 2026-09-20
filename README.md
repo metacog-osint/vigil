@@ -1,197 +1,204 @@
 # Vigil
 
-**Cyber Threat Intelligence Dashboard**
+**A threat intelligence database that records why it believes things.**
 
-Real-time monitoring of threat actors, ransomware groups, APTs, incidents, vulnerabilities, and indicators of compromise.
+Vigil tracks ransomware groups, APTs, exploited vulnerabilities and indicators from ~30 public
+sources. That part is not unusual. What is unusual is that Vigil keeps a written record of every
+judgment call it makes about that data — which two names are one group, when a group counts as
+dead, whether a sanctions designation applies — with the evidence behind each one, and refuses to
+assert anything it cannot support.
+
+Live at [vigil.theintelligence.company](https://vigil.theintelligence.company). The landing page
+reads the live database without an account.
 
 ---
 
-## Features
+## Why this exists
 
-### Core Intelligence
-- **Dashboard** - AI-generated threat summary, sector distribution, activity charts, recent incidents
-- **Threat Actors** - 1,000+ actors across 6 categories with trend status (ESCALATING/STABLE/DECLINING)
-- **Incidents** - 16,000+ ransomware attacks with sector classification
-- **Vulnerabilities** - CISA KEV catalog with CVSS scores
-- **IOC Search** - Hash/IP/domain lookup with external enrichment links
-- **Advanced Search** - Query language powered search across all data
-- **ATT&CK Matrix** - MITRE ATT&CK technique browser with heatmap view
-- **Alerts** - CISA security alerts
-- **Export** - CSV, JSON, and STIX 2.1 export formats
+Threat intelligence products routinely conflate three different claims:
 
-### Threat Actor Categories (v0.4.0)
-| Category | Count | Description |
-|----------|-------|-------------|
-| **Ransomware** | 578 | Encrypt & extort groups (LockBit, Akira, etc.) |
-| **APT** | 362 | State-sponsored espionage (APT28, Lazarus, etc.) |
-| **Cybercrime** | 25 | Financial fraud (FIN7, Magecart, Scattered Spider) |
-| **Hacktivism** | 23 | Political motivation (Anonymous, Killnet, Lapsus$) |
-| **Initial Access Broker** | 9 | Sell network access (Emotet, Qakbot operators) |
-| **Data Extortion** | 3 | Steal without encrypting (Karakurt, RansomHouse) |
+| Relationship       | Meaning                          | Example               |
+| ------------------ | -------------------------------- | --------------------- |
+| **Identity**       | Two names for the same operation | ALPHV = BlackCat      |
+| **Lineage**        | One grew out of another          | Mespinoza became Pysa |
+| **Shared tooling** | Different groups, same malware   | Cobalt Strike users   |
 
-### Analytics Features (v0.3.0)
-- **Actor Trajectory Charts** - Compare actor activity over time with multi-line charts
-- **Attack Path Visualization** - Visual attack chains (Actor → Technique → Vulnerability → IOC)
-- **Incident Flow Diagrams** - Sankey-style visualization of Actor → Sector attack flows
-- **Trend Analysis** - Week-over-week comparisons, sector trends, "what changed" summaries
-- **Automated Trend Calculation** - ESCALATING/STABLE/DECLINING based on 7-day activity
-- **AI Summaries** - Groq-powered threat intelligence summaries
+Merge them and you get a database that looks authoritative and is quietly wrong. Alias lists from
+public feeds regularly file distinct groups together; indicators arrive labelled with a malware
+family and get attributed to whichever group a vendor once associated with it; a group whose
+servers were seized three years ago still reads `status = active`.
 
-### User Experience
-- **Organization Profile** - Configure sector, geography, and tech stack for personalized intelligence
-- **Relevance Scoring** - Threats scored based on relevance to your organization
-- **Keyboard Shortcuts** - Press `?` for help, `g+d` for Dashboard, `Cmd+K` for search
-- **Smart Time Display** - Adaptive formatting ("2 hours ago", "Yesterday", etc.)
-- **Data Sources Panel** - View sync status and trigger manual updates
+Vigil keeps the three apart, and every decision that required a human is stored with its rationale,
+its evidence and who made it. The reasoning lives in the migration headers, not in a wiki — see
+[`supabase/migrations/`](./supabase/migrations/), and the
+Methodology section of the in-app Help page.
 
-### Threat Actors Page (v0.4.1)
-- **Pagination** - Load 50 actors at a time with "Load More" button
-- **CSV Export** - Export filtered results with all columns
-- **Saved Filters** - Save and load filter combinations for quick access
-- **Activity Sparklines** - Mini trend charts showing 7-day activity patterns
-- **Related Actors** - Shows similar actors based on shared TTPs and target sectors
-- **Quick Watchlist** - Shift+click to select multiple actors, bulk add to watchlist
-- **Keyboard Navigation** - Arrow keys to navigate, Enter to view details, / to search
-- **Map View** - Visual breakdown of actors by region, sector, and type
-- **Risk Score** - Relevance scoring (0-100) based on org profile match
+## Three worked examples
 
-## Data Sources
+**A sanctions match that was declined** — [`089_sanctions_alias_review.sql`](./supabase/migrations/089_sanctions_alias_review.sql)
 
-### Automated (Every 6 Hours)
+OFAC's SDN list names `HYDRA` as an alias of HYDRA MARKET, a darknet marketplace. Vigil tracks a
+ransomware family called Hydra with zero incidents. Matching on aliases would have published the
+claim that a tracked actor is OFAC-designated when it is not.
 
-| Source | Data | Actors/Records |
-|--------|------|----------------|
-| [RansomLook](https://ransomlook.io/) | Ransomware groups & victims | ~600 groups |
-| [Ransomware.live](https://ransomware.live/) | Ransomware attacks | 16,000+ incidents |
-| [MITRE ATT&CK](https://attack.mitre.org/) | APT groups & techniques | 172 groups, 691 techniques |
-| [Malpedia](https://malpedia.caad.fkie.fraunhofer.de/) | Malware families & actors | 864 actors, 3,638 families |
-| [MISP Galaxy](https://github.com/MISP/misp-galaxy) | Community threat actor data | 2,940 actors |
-| [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Exploited vulnerabilities | 1,100+ CVEs |
-| [CISA Alerts](https://www.cisa.gov/news-events/cybersecurity-advisories) | Security advisories | Latest alerts |
-| [NVD](https://nvd.nist.gov/) | CVE database | Recent CVEs |
-| [Abuse.ch ThreatFox](https://threatfox.abuse.ch/) | IOCs | Malware indicators |
-| [Abuse.ch URLhaus](https://urlhaus.abuse.ch/) | Malicious URLs | Active threats |
-| [Abuse.ch Feodo](https://feodotracker.abuse.ch/) | Botnet C2 IPs | C2 servers |
+Exact name matches are applied automatically. Alias matches are queued as data-quality findings and
+applied only once a verdict is recorded. The Hydra match was reviewed and **rejected**, and the
+rejection persists — the same evidence will not re-raise it.
 
-### Curated (Manual Updates)
-- Hacktivism groups (no structured feed available)
-- Initial Access Brokers (from threat reports)
-- Data extortion groups (subset of ransomware)
+**A police operation that was being counted as victims** — [`095_lockbit_identity.sql`](./supabase/migrations/095_lockbit_identity.sql)
 
-## Quick Start
+LockBit existed as seven separate records (`LockBit`, `lockbit2`, `Lockbit3`, `lockbit3_fs`,
+`lockbit3_cronos`, `lockbit4`, `lockbit5`). 4,275 incidents were split across them, so the record
+actually named "LockBit" showed 5 incidents and read INACTIVE while the group's live activity
+accrued to `lockbit5`. The date ranges are contiguous and non-overlapping: one brand on one leak
+infrastructure, which is identity — not lineage, not shared tooling.
 
-### Prerequisites
-- Node.js 18+
-- Supabase account (free tier)
-- Groq API key (optional, for AI summaries)
+`lockbit3_cronos` was different, and merging it blindly would have made Vigil wrong in public. Its
+23 "victims", all dated 20–21 February 2024, are the NCA and FBI notices posted on the seized leak
+site during Operation Cronos: _Who is LockbitSupp?_, _US Indictments_, _Arrest in Poland_,
+_Lockbit Decryption Keys_. An incident row asserts that a group claimed a victim. These assert the
+opposite. They were moved to `leak_site_notices` — kept, because the takedown is part of the
+group's history, but no longer counted.
 
-### Installation
+**A status that requires evidence** — [`096_actor_status_defunct.sql`](./supabase/migrations/096_actor_status_defunct.sql)
+
+Every actor in the database read `status = active`, including groups seized years earlier. The
+obvious fix — infer death from silence — is wrong: LockBit's infrastructure was seized in February
+2024 and it has claimed victims since.
+
+So `defunct` requires two things: a **recorded event that ended the operation**, and **no victim
+claim in the 180 days since**. Each event is stored with its date, the authorities involved and a
+link to the announcing authority's own page. Silence alone means dormant, which the INACTIVE trend
+already says. A group that resumes is marked active again the moment it claims a victim, and the
+resumption is recorded rather than passing silently.
+
+## The review process
+
+Checks run hourly and split findings three ways:
+
+1. **Detected** — recorded with the evidence behind them.
+2. **Auto-fixed** — only where the fix is mechanical: a duplicate incident with the same actor,
+   victim and date; a spelling variant of a name already decided.
+3. **Queued for review** — anything requiring judgment. These wait for a recorded verdict and are
+   never applied on their own.
+
+Some findings stay queued on purpose. `babuk2`/`satanlock` are reported as linked operators rather
+than a shared brand; `ransomedvc2`/`rebornvc` is a successor claim resting on three incidents.
+Neither is guessed at.
+
+## What Vigil does not claim
+
+- **Claimed incidents are claims.** A ransomware group's post asserts a breach. Vigil records the
+  assertion and its date, not a verified compromise.
+- **Victim names** appear as the leak site published them. Where a site redacted a name, it stays
+  redacted rather than being guessed.
+- **Sector and country** are inferred by keyword where a source gives none. Coverage is partial —
+  71% of incidents have no country — and the views that use them state their own coverage.
+- **Leak-site reachability** reflects the upstream source's last check, not a live probe.
+- **History is only ever added to.** A re-sighted indicator is recorded as a new sighting rather
+  than overwriting the last; infrastructure that disappears keeps its history.
+
+---
+
+## What's in it
+
+As of 20 September 2026 — live figures are on the landing page:
+
+|                                  |          |
+| -------------------------------- | -------- |
+| Threat actors                    | ~4,510   |
+| Incidents (victim claims, 2020–) | ~39,500  |
+| Indicators                       | ~568,500 |
+| CISA KEV entries                 | ~1,825   |
+| Database migrations              | 96       |
+
+Of those actors, roughly 380 carry a trend assessment. The rest are names seen too few times to
+say anything about — which the interface states rather than counting them as tracked groups.
+
+**Features:** dashboard and activity timeline; threat actor profiles with ATT&CK techniques,
+tooling, leak-site addresses, sanctions designations and takedown history; ransomware incident
+browser; CISA KEV and NVD vulnerabilities with EPSS; IOC search and bulk lookup; MITRE ATT&CK
+matrix; trend and geographic analysis; investigations and notebooks; watchlists and alerting;
+attack surface and vendor monitoring; CSV/JSON/STIX 2.1 export; REST API.
+
+## How it works
+
+```
+Public feeds ──► Cloudflare Worker (cron) ──► Supabase Postgres ──► React SPA on Vercel
+                       22 feeds                   RLS enforced          anon read-only
+                  hourly / 6h / daily / weekly    96 migrations
+```
+
+- **Ingestion** runs on a **Cloudflare Worker** with four cron schedules — hourly for ransomware
+  leak sites and fresh IOCs, six-hourly for IOC and vulnerability feeds, daily for actor databases
+  and enrichment, weekly for MITRE reference data. The free plan allows 10 ms CPU per trigger, so
+  feeds stream and filter rather than parsing whole documents. (The OFAC SDN feed reads a 29 MB XML
+  export and keeps the 99 entries carrying a digital currency address.)
+- **Hourly data-quality checks** and `apply_actor_status` run as Postgres functions after
+  ingestion; results land in `sync_log`.
+- **Storage** is Supabase Postgres. Row-level security is enforced on every table: public threat
+  data is anon-readable and never anon-writable, user data is scoped by `user_id`, and the review
+  tables are service-role only.
+- **`scripts/`** holds Node equivalents of the worker feeds plus additional sources used ad hoc.
+  Production ingestion is the worker; the ingestion workflows under `.github/workflows/` are the
+  superseded GitHub Actions path.
+
+## Repository layout
+
+```
+src/            React app — 159 components, 46 routes, lazy-loaded
+  lib/supabase/   query modules, one per entity
+  pages/          route pages
+api/            Vercel functions — REST API v1, Stripe, SCIM, email
+workers/        Cloudflare Worker — 22 ingestion feeds
+supabase/
+  migrations/   96 migrations; the reasoning is in the headers
+scripts/        Node ingestion, enrichment, correlation and digest jobs
+docs/           architecture, database, API, auth, data ingestion
+e2e/            Playwright specs, run through demo mode
+```
+
+## Running it
+
+Requires Node 18+ and a Supabase project.
 
 ```bash
-# Clone and install
-git clone https://github.com/metacog-osint/vigil.git
-cd vigil
 npm install
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your Supabase credentials
-
-# Run database migrations (in Supabase SQL Editor)
-# Execute files in supabase/migrations/ in order (001-007)
-
-# Ingest data
-npm run ingest
-
-# Start development server
-npm run dev
+cp .env.example .env     # add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+npm run dev              # http://localhost:5174
 ```
 
-Open http://localhost:5174
-
-## Project Structure
-
-```
-vigil/
-├── src/
-│   ├── components/     # React components (70+ components)
-│   ├── pages/          # Route pages (13 pages)
-│   ├── hooks/          # Custom React hooks
-│   └── lib/            # Supabase client, query parser, AI, export
-├── scripts/            # Data ingestion & analytics (15 scripts)
-├── supabase/
-│   ├── migrations/     # Database schema (7 migrations)
-│   └── functions/      # Edge functions
-├── .github/
-│   └── workflows/      # Automated ingestion (every 6 hours)
-└── docs/               # Documentation
-```
-
-## Scripts
+Apply `supabase/migrations/` in order. `npm run ingest` populates from the public feeds; individual
+sources have their own scripts (`npm run ingest:kev`, `ingest:ransomlook`, …).
 
 ```bash
-# Development
-npm run dev          # Start development server
-npm run build        # Production build
-npm run test         # Run tests
-
-# Data Ingestion (automated via GitHub Actions)
-npm run ingest:ransomlook     # RansomLook ransomware
-npm run ingest:ransomware-live # Ransomware.live
-npm run ingest:mitre          # MITRE ATT&CK + APT groups
-npm run ingest:malpedia       # Malpedia actors + malware
-npm run ingest:misp-galaxy    # MISP Galaxy threat actors
-npm run ingest:kev            # CISA KEV
-npm run ingest:cisa-alerts    # CISA alerts
-npm run ingest:nvd            # NVD CVEs
-npm run ingest:threatfox      # ThreatFox IOCs
-npm run ingest:urlhaus        # URLhaus malicious URLs
-npm run ingest:feodo          # Feodo C2 trackers
-
-# Analytics
-npm run snapshot:actors         # Daily actor trend snapshot
-npm run generate:weekly-summary # Weekly summary generation
-npm run seed:correlations       # Actor-CVE correlations
-npm run seed:actor-types        # Curated actor categories
+npm test          # 928 unit tests
+npm run test:e2e  # Playwright, via demo mode — no credentials needed
+npm run build
 ```
-
-## Tech Stack
-
-- **Frontend**: React 18, Vite, Tailwind CSS, Recharts
-- **Database**: Supabase (PostgreSQL)
-- **AI**: Groq API (Llama 3.3 70B) for threat summaries
-- **Hosting**: Vercel
-- **Automation**: GitHub Actions (every 6 hours)
 
 ## Documentation
 
-### Product & Features
-- [FEATURES.md](./FEATURES.md) - Detailed feature documentation
-- [ROADMAP.md](./ROADMAP.md) - Future feature plans
-- [CHANGELOG.md](./CHANGELOG.md) - Version history
+|                                                    |                                     |
+| -------------------------------------------------- | ----------------------------------- |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)     | System architecture                 |
+| [docs/DATABASE.md](./docs/DATABASE.md)             | Schema and relationships            |
+| [docs/API.md](./docs/API.md)                       | REST API reference                  |
+| [docs/AUTH.md](./docs/AUTH.md)                     | Authentication and authorization    |
+| [docs/DATA_INGESTION.md](./docs/DATA_INGESTION.md) | Feeds, scheduling, troubleshooting  |
+| [DATA_SOURCES.md](./DATA_SOURCES.md)               | Every source, endpoint and schedule |
+| [CHANGELOG.md](./CHANGELOG.md)                     | Version history                     |
 
-### Technical
-- [DATABASE.md](./DATABASE.md) - Database schema documentation
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System architecture
-- [docs/DATA_INGESTION.md](./docs/DATA_INGESTION.md) - Data sources and automation
-- [DATA_SOURCES.md](./DATA_SOURCES.md) - All data sources with status
+## Data sources
 
-### Operations
-- [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) - Hosting, pricing, deployment guide
-- [docs/SECURITY_AUDIT.md](./docs/SECURITY_AUDIT.md) - Security review findings
-- [ALERTING_SYSTEM.md](./ALERTING_SYSTEM.md) - Real-time alerts documentation
+Ransomware leak sites (RansomLook, Ransomware.live, Ransomwatch) · vulnerabilities (CISA KEV, NVD,
+EPSS, VulnCheck, CISA ICS) · indicators (ThreatFox, URLhaus, Feodo, MalwareBazaar, Pulsedive, Tor
+exits) · threat actors (MITRE ATT&CK, MITRE ATLAS, Malpedia, MISP Galaxy) · sanctions (OFAC SDN) ·
+payments (Ransomwhere) · routing (BGPStream) · enrichment (Censys, ANY.RUN).
 
-### Development
-- [CLAUDE.md](./CLAUDE.md) - AI assistant context
-- [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) - Development notes
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contributor guidelines
-- [BUILD_PLAN_V2.md](./BUILD_PLAN_V2.md) - Consolidated development roadmap
-
-## License
-
-MIT
+Each source's terms differ, and not all permit commercial use. See
+[DATA_SOURCES.md](./DATA_SOURCES.md) before building on this.
 
 ---
 
-*Version 0.4.2 - January 2026*
-*Built by The Intelligence Company*
+_The Intelligence Company · [github.com/metacog-osint/vigil](https://github.com/metacog-osint/vigil)_
