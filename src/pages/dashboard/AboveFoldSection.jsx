@@ -47,6 +47,18 @@ export default function AboveFoldSection({ lastSync, aiSummary, escalatingActors
             <span className="text-xs text-gray-500 ml-auto">AI-Generated</span>
           </div>
           <p className="text-gray-300 text-sm leading-relaxed">{aiSummary}</p>
+          {/* Written by the app, not the model, so the basis can't be invented */}
+          <p className="text-xs text-gray-500 mt-2">
+            Based on {stats?.incidents30d ?? 'recent'} victim posts from ransomware leak-site
+            monitoring (last 30 days)
+            {lastSync?.completed_at && (
+              <>
+                {' '}
+                · data as of <SmartTime date={lastSync.completed_at} />
+              </>
+            )}{' '}
+            · AI-generated; verify before use
+          </p>
         </div>
       )}
 

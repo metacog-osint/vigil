@@ -78,9 +78,9 @@ export async function ingestMITRE(supabase) {
     for (let i = 0; i < groupRecords.length; i += batchSize) {
       const batch = groupRecords.slice(i, i + batchSize)
 
-      const { error } = await supabase
-        .from('threat_actors')
-        .upsert(batch, { onConflict: 'name' })
+      // Identity-aware merge (migration 079): matches merged spellings and never
+      // overwrites aliases or actor_type on an existing record
+      const { error } = await supabase.rpc('upsert_actors', { p_actors: batch })
 
       if (error) {
         failed += batch.length

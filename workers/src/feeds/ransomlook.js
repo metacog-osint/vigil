@@ -64,8 +64,7 @@ export async function ingestRansomlook(supabase) {
       }
     }
 
-    // Trigger trend calculation
-    await supabase.rpc('apply_actor_trends')
+    // Trends and data-quality checks run once per hourly job (see index.js)
 
   } catch (error) {
     console.error('Ransomlook ingestion error:', error.message)
@@ -143,51 +142,24 @@ async function fetchExistingKeys(supabase, records) {
 }
 
 async function ensureActors(supabase, actorNames) {
+  // upsert_actors (migration 079) resolves each group name to its canonical actor:
+  // same normalised name, or a spelling merged away earlier (e.g. 'thegentlemen' ->
+  // 'The Gentlemen'). Unknown groups are created. Returns [{name, id}].
   const actorMap = {}
+  const names = actorNames.filter(Boolean)
 
-  // Fetch all existing actors in one query
-  const { data: existing } = await supabase
-    .from('threat_actors')
-    .select('id,name')
-
-  const existingByName = {}
-  for (const actor of (existing || [])) {
-    existingByName[actor.name.toLowerCase()] = actor.id
-  }
-
-  // Find which actors need to be created
-  const newActors = actorNames.filter(name =>
-    name && !existingByName[name.toLowerCase()]
-  )
-
-  // Batch insert new actors
-  if (newActors.length > 0) {
-    const newRecords = newActors.map(name => ({
-      name: name,
+  for (let i = 0; i < names.length; i += 50) {
+    const records = names.slice(i, i + 50).map((name) => ({
+      name,
       actor_type: 'ransomware',
       status: 'active',
       source: 'ransomlook',
-      first_seen: new Date().toISOString().split('T')[0]
+      first_seen: new Date().toISOString().split('T')[0],
     }))
-
-    await supabase
-      .from('threat_actors')
-      .upsert(newRecords, { onConflict: 'name' })
-
-    // Refetch to get IDs
-    const { data: allActors } = await supabase
-      .from('threat_actors')
-      .select('id,name')
-
-    for (const actor of (allActors || [])) {
-      existingByName[actor.name.toLowerCase()] = actor.id
-    }
-  }
-
-  // Build the map
-  for (const name of actorNames) {
-    if (name && existingByName[name.toLowerCase()]) {
-      actorMap[name] = existingByName[name.toLowerCase()]
+    const { data, error } = await supabase.rpc('upsert_actors', { p_actors: records })
+    if (error) throw new Error(`upsert_actors failed: ${error.message}`)
+    for (const row of data || []) {
+      if (row.id) actorMap[row.name] = row.id
     }
   }
 

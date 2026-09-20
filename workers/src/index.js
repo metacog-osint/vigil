@@ -62,6 +62,15 @@ export default {
           console.log('Running hourly critical ingestion...')
           results.ransomlook = await ingestRansomlook(supabase, env)
           results.threatfox = await ingestThreatFox(supabase, env)
+
+          // Data-quality review: merge safe actor duplicates, queue alias matches for
+          // review, link orphaned incidents, recompute trends
+          // (run_data_quality_checks, migrations 077/080). Result lands in sync_log.
+          {
+            const { data, error } = await supabase.rpc('run_data_quality_checks')
+            results.dataQuality = error ? { success: false, error: error.message } : { success: true, ...data }
+          }
+
           break
 
         // =============================================
@@ -81,8 +90,6 @@ export default {
           results.vulncheck = await ingestVulnCheck(supabase, env)
           results.nvd = await ingestNVD(supabase, env)
 
-          // Calculate trends after ingestion
-          await supabase.rpc('apply_actor_trends')
           break
 
         // =============================================

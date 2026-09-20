@@ -59,9 +59,9 @@ export async function ingestMISPGalaxy(supabase) {
         }
       })
 
-      const { error } = await supabase
-        .from('threat_actors')
-        .upsert(records, { onConflict: 'name' })
+      // Identity-aware merge (migration 079): matches merged spellings and never
+      // overwrites aliases or actor_type on an existing record
+      const { error } = await supabase.rpc('upsert_actors', { p_actors: records })
 
       if (error) {
         failed += batch.length
