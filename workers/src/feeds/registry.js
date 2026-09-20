@@ -99,7 +99,7 @@ export const JOBS = [
   { id: 'tor-exits', priority: 4, cost: 6, intervalMinutes: DAY, run: (db, env) => ingestTorExits(db, env) },
 
   // --- Sanctions, payments and group profiles ---
-  { id: 'ofac-sdn', priority: 2, cost: 6, intervalMinutes: DAY, run: (db, env) => ingestOFAC(db, env) },
+  { id: 'ofac-sdn', priority: 2, cost: 4, intervalMinutes: DAY, run: (db, env) => ingestOFAC(db, env) },
   { id: 'ransomware.live', priority: 3, cost: 12, intervalMinutes: DAY, run: (db, env) => ingestRansomwareLive(db, env) },
   { id: 'ransomwhere', priority: 4, cost: 10, intervalMinutes: DAY, run: (db, env) => ingestRansomwhere(db, env) },
 
