@@ -9,15 +9,7 @@
  */
 import { Link } from 'react-router-dom'
 import { StatCard, SmartTime } from '../../components'
-
-/**
- * A count the database did not return is shown as an em dash, never as 0.
- * getOverview returns null when a count query failed, and `|| 0` would turn
- * that absence into a figure Vigil cannot back.
- */
-function figure(n) {
-  return typeof n === 'number' ? n.toLocaleString() : '—'
-}
+import { figure } from '../../lib/format'
 
 export default function AboveFoldSection({ lastSync, aiSummary, escalatingActors, stats }) {
   return (

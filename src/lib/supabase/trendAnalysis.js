@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './client'
+import { RECENT_WINDOW_DAYS, comparableWindows, countIncidents, tally } from './counts'
 
 export const trendAnalysis = {
   async getWeeklyComparison(weeksBack = 8) {
@@ -33,36 +34,37 @@ export const trendAnalysis = {
     }
   },
 
+  /**
+   * The last seven days against the seven before them.
+   *
+   * This used to take "this week" to mean the calendar week so far. On a
+   * Sunday that is a single day, and it was reported against a full previous
+   * week as "12 incidents this week, down 94%" - on the same screen as "197
+   * new incidents (7d)" and one group credited with 33 that week. Both
+   * windows now come from comparableWindows(), so they cannot differ in
+   * length, and the current window is the same one getChangeSummary reports.
+   */
   async calculateWeekOverWeek() {
-    const now = new Date()
-    const thisWeekStart = new Date(now)
-    thisWeekStart.setDate(now.getDate() - now.getDay())
-    thisWeekStart.setHours(0, 0, 0, 0)
+    const { current, previous } = comparableWindows(RECENT_WINDOW_DAYS)
 
-    const lastWeekStart = new Date(thisWeekStart)
-    lastWeekStart.setDate(lastWeekStart.getDate() - 7)
-
-    const [thisWeek, lastWeek] = await Promise.all([
-      supabase
-        .from('incidents')
-        .select('victim_sector', { count: 'exact' })
-        .gte('discovered_date', thisWeekStart.toISOString().split('T')[0]),
-      supabase
-        .from('incidents')
-        .select('victim_sector', { count: 'exact' })
-        .gte('discovered_date', lastWeekStart.toISOString().split('T')[0])
-        .lt('discovered_date', thisWeekStart.toISOString().split('T')[0]),
+    const [currentCount, previousCount] = await Promise.all([
+      countIncidents(current),
+      countIncidents(previous),
     ])
 
-    const currentCount = thisWeek.count || 0
-    const previousCount = lastWeek.count || 0
+    // A count that failed is not a week with no incidents in it, so there is
+    // no change to report either.
+    const bothRead = typeof currentCount === 'number' && typeof previousCount === 'number'
     const changePercent =
-      previousCount > 0 ? Math.round(((currentCount - previousCount) / previousCount) * 100) : 0
+      bothRead && previousCount > 0
+        ? Math.round(((currentCount - previousCount) / previousCount) * 100)
+        : null
 
     return {
       currentWeek: { incidents_total: currentCount },
       previousWeek: { incidents_total: previousCount },
       incidentChange: changePercent,
+      windowDays: RECENT_WINDOW_DAYS,
     }
   },
 
@@ -124,21 +126,20 @@ export const trendAnalysis = {
     return d.toISOString().split('T')[0]
   },
 
-  async getChangeSummary(sinceDays = 7) {
-    const cutoffDate = new Date()
-    cutoffDate.setDate(cutoffDate.getDate() - sinceDays)
-    const cutoff = cutoffDate.toISOString().split('T')[0]
+  async getChangeSummary(sinceDays = RECENT_WINDOW_DAYS) {
+    const { current } = comparableWindows(sinceDays)
+    const cutoff = current.from
 
     const [newIncidents, newActors, newKEVs, escalatingActors] = await Promise.all([
-      supabase
-        .from('incidents')
-        .select('*', { count: 'exact', head: true })
-        .gte('discovered_date', cutoff),
+      // The same window, from the same place, as the week-over-week tile.
+      countIncidents(current),
 
       supabase
         .from('threat_actors')
         .select('*', { count: 'exact', head: true })
-        .gte('created_at', cutoffDate.toISOString()),
+        // created_at is a timestamp, but the same cutoff date: midnight on
+        // the day the window opens, so this agrees with the counts above.
+        .gte('created_at', cutoff),
 
       supabase
         .from('vulnerabilities')
@@ -154,9 +155,9 @@ export const trendAnalysis = {
     ])
 
     return {
-      newIncidents: newIncidents.count || 0,
-      newActors: newActors.count || 0,
-      newKEVs: newKEVs.count || 0,
+      newIncidents,
+      newActors: tally(newActors),
+      newKEVs: tally(newKEVs),
       escalatingActors: escalatingActors.data || [],
       sinceDays,
     }
