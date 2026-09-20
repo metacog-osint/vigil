@@ -1,0 +1,104 @@
+<?xml version="1.0" standalone="yes"?>
+<sdnList xmlns="https://sanctionslistservice.ofac.treas.gov/api/download/sdn.xsd">
+  <publshInformation>
+    <Publish_Date>09/18/2026</Publish_Date>
+    <Record_Count>4</Record_Count>
+  </publshInformation>
+
+  <!--
+    A trimmed copy of the shape OFAC publishes, not of its contents. The addresses
+    below are synthetic: this fixture exists to prove the parser still reads the
+    format, and a fake address cannot be mistaken for a designation Vigil asserts.
+    The real document is 29 MB and does not belong in a repository.
+  -->
+
+  <!-- An entity with one address, aliases and two programs. -->
+  <sdnEntry>
+    <uid>900001</uid>
+    <lastName>EXAMPLE THREAT GROUP</lastName>
+    <sdnType>Entity</sdnType>
+    <programList>
+      <program>CYBER2</program>
+      <program>DPRK3</program>
+    </programList>
+    <akaList>
+      <aka>
+        <uid>900101</uid>
+        <type>a.k.a.</type>
+        <category>strong</category>
+        <lastName>EXAMPLE GROUP</lastName>
+      </aka>
+      <aka>
+        <uid>900102</uid>
+        <type>f.k.a.</type>
+        <category>weak</category>
+        <lastName>SAMPLE COLLECTIVE</lastName>
+      </aka>
+    </akaList>
+    <idList>
+      <id>
+        <uid>900201</uid>
+        <idType>Digital Currency Address - XBT</idType>
+        <idNumber>1ExampleDoNotUseAAAAAAAAAAAAAAAAAA</idNumber>
+      </id>
+    </idList>
+  </sdnEntry>
+
+  <!-- An individual holding addresses in two different currencies. -->
+  <sdnEntry>
+    <uid>900002</uid>
+    <firstName>PAT</firstName>
+    <lastName>EXAMPLEPERSON</lastName>
+    <sdnType>Individual</sdnType>
+    <programList>
+      <program>CYBER2</program>
+    </programList>
+    <idList>
+      <id>
+        <uid>900202</uid>
+        <idType>Digital Currency Address - ETH</idType>
+        <idNumber>0xExampleDoNotUse0000000000000000000000ff</idNumber>
+      </id>
+      <id>
+        <uid>900203</uid>
+        <idType>Digital Currency Address - XBT</idType>
+        <idNumber>bc1qexampledonotuse00000000000000000000000</idNumber>
+      </id>
+      <id>
+        <uid>900204</uid>
+        <idType>Passport</idType>
+        <idNumber>X0000000</idNumber>
+      </id>
+    </idList>
+  </sdnEntry>
+
+  <!-- No digital currency address at all: most of the 19,000 entries look like this. -->
+  <sdnEntry>
+    <uid>900003</uid>
+    <lastName>EXAMPLE SHIPPING COMPANY</lastName>
+    <sdnType>Entity</sdnType>
+    <programList>
+      <program>IRAN</program>
+    </programList>
+    <idList>
+      <id>
+        <uid>900205</uid>
+        <idType>Vessel Registration Identification</idType>
+        <idNumber>IMO 0000000</idNumber>
+      </id>
+    </idList>
+  </sdnEntry>
+
+  <!-- An address with nothing to attribute it to. Dropped rather than guessed at. -->
+  <sdnEntry>
+    <uid>900004</uid>
+    <sdnType>Entity</sdnType>
+    <idList>
+      <id>
+        <uid>900206</uid>
+        <idType>Digital Currency Address - XBT</idType>
+        <idNumber>1OrphanExampleDoNotUseAAAAAAAAAAAA</idNumber>
+      </id>
+    </idList>
+  </sdnEntry>
+</sdnList>
