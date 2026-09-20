@@ -3,8 +3,9 @@
  * Main page for viewing and analyzing threat actors
  * Refactored to use extracted components from ./actors/
  */
-import { useState, useEffect, useRef } from 'react'
-import { watchlists } from '../lib/supabase'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { watchlists, threatActors } from '../lib/supabase'
 import { Tooltip, FIELD_TOOLTIPS } from '../components/Tooltip'
 import { SECTORS } from '../lib/constants'
 
@@ -29,7 +30,11 @@ export default function ThreatActors() {
   const [statusFilter, setStatusFilter] = useState('')
 
   // UI state
+  const { actorKey } = useParams()
+  const navigate = useNavigate()
   const [selectedActor, setSelectedActor] = useState(null)
+  const [actorNotFound, setActorNotFound] = useState(false)
+  const resolvedKey = useRef(null)
   const [viewMode, setViewMode] = useState('table')
   const [selectedRows, setSelectedRows] = useState(new Set())
   const [focusedRowIndex, setFocusedRowIndex] = useState(-1)
@@ -54,6 +59,53 @@ export default function ThreatActors() {
   const relatedActors = useRelatedActors(selectedActor)
   const savedFiltersHook = useSavedFilters()
 
+  // The url selects the actor, not the click. A detail view nobody can link
+  // to is the group profiles being built and then hidden.
+  useEffect(() => {
+    if (!actorKey) {
+      setSelectedActor(null)
+      setActorNotFound(false)
+      resolvedKey.current = null
+      return
+    }
+
+    // The loaded list first. In demo mode it is the only source there is —
+    // going straight to the database meant no demo group could ever open —
+    // and on the real site it saves a round trip.
+    const known = actors.find(
+      (a) => a.id === actorKey || a.name?.toLowerCase() === actorKey.toLowerCase()
+    )
+    if (known) {
+      setSelectedActor(known)
+      setActorNotFound(false)
+      resolvedKey.current = actorKey
+      return
+    }
+
+    // The list grows as more pages load, so this effect reruns; ask the
+    // database once per key rather than once per page of results.
+    if (resolvedKey.current === actorKey) return
+
+    let cancelled = false
+    threatActors.getByIdOrName(actorKey).then(({ data, error }) => {
+      if (cancelled) return
+      resolvedKey.current = actorKey
+      setSelectedActor(data || null)
+      // An unknown name and a failed lookup are different answers, and only
+      // one of them is the visitor's fault. Say which.
+      setActorNotFound(!data && !error)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [actorKey, actors])
+
+  const selectActor = useCallback(
+    (actor) => navigate(actor ? `/actors/${actor.id}` : '/actors'),
+    [navigate]
+  )
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -71,11 +123,11 @@ export default function ThreatActors() {
           break
         case 'Enter':
           if (focusedRowIndex >= 0 && sortedActors[focusedRowIndex]) {
-            setSelectedActor(sortedActors[focusedRowIndex])
+            selectActor(sortedActors[focusedRowIndex])
           }
           break
         case 'Escape':
-          setSelectedActor(null)
+          selectActor(null)
           setFocusedRowIndex(-1)
           break
         case '/':
@@ -87,7 +139,7 @@ export default function ThreatActors() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [viewMode, focusedRowIndex, sortedActors])
+  }, [viewMode, focusedRowIndex, sortedActors, selectActor])
 
   // Row click handler
   function handleRowClick(actor, event) {
@@ -102,7 +154,7 @@ export default function ThreatActors() {
         return next
       })
     } else {
-      setSelectedActor(actor)
+      selectActor(actor)
       setSelectedRows(new Set())
     }
   }
@@ -465,22 +517,30 @@ export default function ThreatActors() {
         )}
       </div>
 
+      {/* A url naming a group we do not hold is an answer, so give it. */}
+      {actorNotFound && (
+        <div className="cyber-card mb-4 text-sm">
+          <span className="text-white">No threat actor matches “{actorKey}”.</span>
+          <span className="text-gray-400 ml-2">It may be tracked here under a different name.</span>
+        </div>
+      )}
+
       {/* Content */}
-      {viewMode === 'overview' ? (
-        <ActorOverviewView
-          actors={actors}
-          loading={loading}
-          totalCount={totalCount}
-          trendSummary={trendSummary}
-          onSelectActor={setSelectedActor}
-          onSetTypeFilter={setTypeFilter}
-          onSetSectorFilter={setSectorFilter}
-          typeFilter={typeFilter}
-          setViewMode={setViewMode}
-        />
-      ) : (
-        <div className="flex gap-6">
-          <div className="flex-1" ref={tableRef}>
+      <div className="flex gap-6">
+        <div className="flex-1" ref={tableRef}>
+          {viewMode === 'overview' ? (
+            <ActorOverviewView
+              actors={actors}
+              loading={loading}
+              totalCount={totalCount}
+              trendSummary={trendSummary}
+              onSelectActor={selectActor}
+              onSetTypeFilter={setTypeFilter}
+              onSetSectorFilter={setSectorFilter}
+              typeFilter={typeFilter}
+              setViewMode={setViewMode}
+            />
+          ) : (
             <ActorTableView
               actors={sortedActors}
               loading={loading}
@@ -502,29 +562,33 @@ export default function ThreatActors() {
               userOrgProfile={userOrgProfile}
               riskScores={riskScores}
             />
-          </div>
-
-          {/* Desktop Detail Panel */}
-          {selectedActor && (
-            <ActorDetailPanel
-              actor={selectedActor}
-              onClose={() => setSelectedActor(null)}
-              timelineEvents={timelineEvents}
-              relatedActors={relatedActors}
-              onSelectActor={setSelectedActor}
-            />
           )}
         </div>
-      )}
 
-      {/* Mobile Detail Modal */}
-      {selectedActor && viewMode === 'table' && (
+        {/*
+          Beside either view. It used to live inside the table branch, so
+          selecting a group from the overview set state that nothing rendered
+          and the click looked like it had done nothing.
+        */}
+        {selectedActor && (
+          <ActorDetailPanel
+            actor={selectedActor}
+            onClose={() => selectActor(null)}
+            timelineEvents={timelineEvents}
+            relatedActors={relatedActors}
+            onSelectActor={selectActor}
+          />
+        )}
+      </div>
+
+      {/* The same panel; its own lg:hidden decides which of the two shows. */}
+      {selectedActor && (
         <ActorDetailPanel
           actor={selectedActor}
-          onClose={() => setSelectedActor(null)}
+          onClose={() => selectActor(null)}
           timelineEvents={timelineEvents}
           relatedActors={relatedActors}
-          onSelectActor={setSelectedActor}
+          onSelectActor={selectActor}
           isMobile={true}
         />
       )}
