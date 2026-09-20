@@ -87,7 +87,7 @@ export const auditLogs = {
     const eventInfo = EVENT_TYPES[eventData.eventType] || {}
 
     const { data, error } = await supabase
-      .from('audit_logs')
+      .from('audit_log')
       .insert({
         user_id: eventData.userId,
         user_email: eventData.userEmail,
@@ -100,7 +100,8 @@ export const auditLogs = {
         resource_id: eventData.resourceId,
         resource_name: eventData.resourceName,
         description: eventData.description,
-        metadata: eventData.metadata || {},
+        // The API writes the same field as `details`; one column, one name.
+        details: eventData.metadata || {},
         ip_address: eventData.ipAddress,
         user_agent: eventData.userAgent,
         status: eventData.status || 'success',
@@ -120,7 +121,7 @@ export const auditLogs = {
    * Get audit logs with filtering
    */
   async getAll(filters = {}) {
-    let query = supabase.from('audit_logs').select('*')
+    let query = supabase.from('audit_log').select('*')
 
     if (filters.userId) {
       query = query.eq('user_id', filters.userId)
@@ -180,7 +181,7 @@ export const auditLogs = {
     since.setDate(since.getDate() - days)
 
     const { data, error } = await supabase
-      .from('audit_logs')
+      .from('audit_log')
       .select('*')
       .eq('user_id', userId)
       .gte('created_at', since.toISOString())
@@ -199,7 +200,7 @@ export const auditLogs = {
     since.setDate(since.getDate() - days)
 
     const { data, error } = await supabase
-      .from('audit_logs')
+      .from('audit_log')
       .select('*')
       .eq('team_id', teamId)
       .gte('created_at', since.toISOString())
@@ -218,7 +219,7 @@ export const auditLogs = {
     since.setDate(since.getDate() - days)
 
     let query = supabase
-      .from('audit_logs')
+      .from('audit_log')
       .select('event_category, action, status, created_at')
       .gte('created_at', since.toISOString())
 
