@@ -62,21 +62,6 @@ export const savedSearches = {
   },
 
   /**
-   * Get shared searches for a team
-   */
-  async getShared(teamId) {
-    const { data, error } = await supabase
-      .from('saved_searches')
-      .select('*')
-      .eq('team_id', teamId)
-      .eq('is_shared', true)
-      .order('name')
-
-    if (error) throw error
-    return data || []
-  },
-
-  /**
    * Get default search for a page
    */
   async getDefault(userId, page) {
@@ -141,9 +126,7 @@ export const savedSearches = {
         view_mode: searchData.viewMode,
         visible_columns: searchData.visibleColumns || [],
         is_default: searchData.isDefault || false,
-        is_shared: searchData.isShared || false,
         is_pinned: searchData.isPinned || false,
-        team_id: searchData.teamId,
       })
       .select()
       .single()
@@ -179,7 +162,6 @@ export const savedSearches = {
     if (updates.viewMode !== undefined) updateData.view_mode = updates.viewMode
     if (updates.visibleColumns !== undefined) updateData.visible_columns = updates.visibleColumns
     if (updates.isDefault !== undefined) updateData.is_default = updates.isDefault
-    if (updates.isShared !== undefined) updateData.is_shared = updates.isShared
     if (updates.isPinned !== undefined) updateData.is_pinned = updates.isPinned
     if (updates.pinOrder !== undefined) updateData.pin_order = updates.pinOrder
 
