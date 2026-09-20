@@ -7,7 +7,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.js'],
-    include: ['src/**/*.{test,spec}.{js,jsx}'],
+    // workers/ runs the ingestion. It had no tests at all until the scheduler
+    // rewrite, which is part of why a silent failure lasted four months.
+    include: ['src/**/*.{test,spec}.{js,jsx}', 'workers/**/*.{test,spec}.js'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],

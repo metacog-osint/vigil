@@ -43,7 +43,7 @@ export async function ingestThreatFox(supabase, env) {
     const iocs = data.data || []
     console.log(`Fetched ${iocs.length} IOCs from ThreatFox`)
 
-    const batchSize = 100
+    const batchSize = 250  // see cisa-kev.js on batch size and subrequests
     for (let i = 0; i < iocs.length; i += batchSize) {
       const batch = iocs.slice(i, i + batchSize)
 
