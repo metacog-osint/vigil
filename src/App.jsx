@@ -22,6 +22,7 @@ const SettingsLayout = lazy(() => import('./pages/SettingsLayout'))
 const Alerts = lazy(() => import('./pages/Alerts'))
 const AdvancedSearch = lazy(() => import('./pages/AdvancedSearch'))
 const TrendAnalysis = lazy(() => import('./pages/TrendAnalysis'))
+const ReviewQueue = lazy(() => import('./pages/ReviewQueue'))
 const ThreatHunts = lazy(() => import('./pages/ThreatHunts'))
 const Pricing = lazy(() => import('./pages/Pricing'))
 const ApiDocs = lazy(() => import('./pages/ApiDocs'))
@@ -223,6 +224,8 @@ function ProtectedApp() {
                           <Route path="/" element={<Dashboard />} />
                           <Route path="/events" element={<Activity />} />
                           <Route path="/actors" element={<ThreatActors />} />
+                          {/* The panel is the detail view; the url selects which */}
+                          <Route path="/actors/:actorKey" element={<ThreatActors />} />
                           <Route
                             path="/ransomware"
                             element={<Navigate to="/events?view=ransomware" replace />}
@@ -247,6 +250,7 @@ function ProtectedApp() {
                           <Route path="/watchlists" element={<Watchlists />} />
                           <Route path="/alerts" element={<Alerts />} />
                           <Route path="/trends" element={<TrendAnalysis />} />
+                          <Route path="/review" element={<ReviewQueue />} />
                           <Route path="/threat-hunts" element={<ThreatHunts />} />
                           <Route path="/pricing" element={<Pricing />} />
                           <Route path="/api-docs" element={<ApiDocs />} />
@@ -271,6 +275,13 @@ function ProtectedApp() {
                           <Route path="/auth" element={<Navigate to="/" replace />} />
                           <Route path="/login" element={<Navigate to="/" replace />} />
                           <Route path="/register" element={<Navigate to="/" replace />} />
+                          {/*
+                            Without this, an unmatched path signed in matched no
+                            route and <main> rendered nothing at all: sidebar and
+                            header intact, content blank. A visitor cannot tell
+                            that apart from a page that failed to load.
+                          */}
+                          <Route path="*" element={<Navigate to="/" replace />} />
                         </Routes>
                       </Suspense>
                     </ErrorBoundary>
