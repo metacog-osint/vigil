@@ -168,6 +168,7 @@ describe('iocs module', () => {
         p_value: 'evil.com',
         p_type: null,
         p_limit: 100,
+        p_country: null,
       })
     })
 
@@ -178,7 +179,31 @@ describe('iocs module', () => {
         p_value: '192.168',
         p_type: 'ip',
         p_limit: 100,
+        p_country: null,
       })
+    })
+
+    // A country on its own is a real search: "what is hosted in RU".
+    it('should search by country with no value', async () => {
+      await iocs.search('', null, 'RU')
+
+      expect(supabase.rpc).toHaveBeenCalledWith('search_iocs', {
+        p_value: '',
+        p_type: null,
+        p_limit: 100,
+        p_country: 'RU',
+      })
+    })
+
+    it('should expose where an indicator is hosted', async () => {
+      supabase.rpc.mockResolvedValueOnce({
+        data: [{ id: '1', value: '185.220.101.24', country_code: 'DE', actor_names: null }],
+        error: null,
+      })
+
+      const { data } = await iocs.search('185.220.')
+
+      expect(data[0].country_code).toBe('DE')
     })
 
     it('should expose a linked group as threat_actor', async () => {

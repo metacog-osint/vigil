@@ -506,6 +506,25 @@ seized by the NCA and FBI in February 2024, and LockBit has claimed victims sinc
 so it is **still active** and its page says it was seized and resumed. Recording the
 takedown and reading it as the end of the group are two different things.
 
+### Where things are
+
+Two different geographies appear in Vigil, and they answer different questions.
+
+**Infrastructure location** is where a malicious address sits. It is resolved
+locally against a published range table, so every indicator that parses to an
+address carries one - 56,404 of them, across 150 countries. It describes hosting,
+not the people using it: a Dutch server does not make a Dutch operator, and
+bulletproof hosting is chosen precisely because of where it is.
+
+**Attributed origin** is where a group is said to come from. It is a claim by a
+published source, carried with that source's own confidence score, and it is never
+inferred from where a group's servers happen to be.
+
+**Victim location** is a third thing again, supplied by the leak site or not at
+all, and it is the one Vigil is thinnest on - see the coverage note on any map.
+
+IP geolocation by [DB-IP](https://db-ip.com), used under CC BY 4.0.
+
 ### The review process
 
 Hourly checks split findings three ways:
