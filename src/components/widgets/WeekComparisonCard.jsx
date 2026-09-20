@@ -1,8 +1,15 @@
 // Week-over-week comparison card
 import { clsx } from 'clsx'
+import { figure } from '../../lib/format'
 
 function ChangeIndicator({ value, size = 'md' }) {
-  if (value === 0 || value === null || value === undefined) {
+  // A comparison that could not be made is not a comparison showing no
+  // change. Saying "0%" when a count failed is the same lie as saying "0".
+  if (value === null || value === undefined) {
+    return <span className={clsx('text-gray-400', size === 'lg' ? 'text-2xl' : 'text-sm')}>—</span>
+  }
+
+  if (value === 0) {
     return (
       <span className={clsx('text-gray-400', size === 'lg' ? 'text-2xl' : 'text-sm')}>→ 0%</span>
     )
@@ -41,7 +48,7 @@ export function WeekComparisonCard({ data, loading }) {
     )
   }
 
-  const { currentWeek, previousWeek, incidentChange } = data
+  const { currentWeek, previousWeek, incidentChange, windowDays = 7 } = data
 
   return (
     <div className="cyber-card p-6">
@@ -49,8 +56,10 @@ export function WeekComparisonCard({ data, loading }) {
 
       <div className="flex items-baseline justify-between mb-4">
         <div>
-          <div className="text-3xl font-bold text-white">{currentWeek?.incidents_total || 0}</div>
-          <div className="text-xs text-gray-500">incidents this week</div>
+          <div className="text-3xl font-bold text-white">
+            {figure(currentWeek?.incidents_total)}
+          </div>
+          <div className="text-xs text-gray-500">incidents in the last {windowDays} days</div>
         </div>
         <ChangeIndicator value={incidentChange} size="lg" />
       </div>
@@ -58,19 +67,19 @@ export function WeekComparisonCard({ data, loading }) {
       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
         <div>
           <div className="text-lg font-semibold text-white">
-            {currentWeek?.incidents_total || 0}
+            {figure(currentWeek?.incidents_total)}
           </div>
-          <div className="text-xs text-gray-500">This Week</div>
+          <div className="text-xs text-gray-500">Last {windowDays} days</div>
         </div>
         <div>
           <div className="text-lg font-semibold text-gray-400">
-            {previousWeek?.incidents_total || 0}
+            {figure(previousWeek?.incidents_total)}
           </div>
-          <div className="text-xs text-gray-500">Last Week</div>
+          <div className="text-xs text-gray-500">The {windowDays} days before</div>
         </div>
       </div>
 
-      {incidentChange !== 0 && (
+      {incidentChange !== 0 && incidentChange !== null && (
         <div
           className={clsx(
             'mt-4 p-3 rounded text-sm',
