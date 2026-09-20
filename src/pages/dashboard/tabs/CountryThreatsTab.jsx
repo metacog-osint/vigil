@@ -6,8 +6,9 @@
  * - World map visualization
  * - Attack attribution by nation
  */
-import { useState, useMemo } from 'react'
-import { SkeletonTable } from '../../../components'
+import { useState, useMemo, useEffect } from 'react'
+import { correlations } from '../../../lib/supabase'
+import { SkeletonTable, CoverageNote } from '../../../components'
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps'
 
 // ISO-2 to ISO-3 mapping for common countries
@@ -240,6 +241,25 @@ function CountryDetailPanel({ country, onClose }) {
 }
 
 export default function CountryThreatsTab({ countryThreats, loading }) {
+  // Country is absent from most incidents, so the map states its own coverage
+  // rather than implying it plots everything.
+  const [coverage, setCoverage] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    correlations
+      .getCountryCoverage()
+      .then((data) => {
+        if (!cancelled) setCoverage(data)
+      })
+      .catch(() => {
+        if (!cancelled) setCoverage(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const [selectedCountry, setSelectedCountry] = useState(null)
   const [tooltipContent, setTooltipContent] = useState('')
 
@@ -301,7 +321,16 @@ export default function CountryThreatsTab({ countryThreats, loading }) {
     <div className="space-y-6">
       {/* World Map */}
       <div className="cyber-card">
-        <h2 className="text-lg font-semibold text-white mb-4">Global Threat Distribution</h2>
+        <h2 className="text-lg font-semibold text-white">Global Threat Distribution</h2>
+        {coverage && (
+          <CoverageNote
+            covered={coverage.covered}
+            total={coverage.total}
+            lastCovered={coverage.lastCovered}
+            className="mb-4"
+          />
+        )}
+        {!coverage && <div className="mb-4" />}
         <div className="h-80">
           <ComposableMap
             projection="geoMercator"

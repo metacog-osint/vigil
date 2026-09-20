@@ -179,6 +179,46 @@ export const correlations = {
   /**
    * Get all country threat profiles
    */
+  /**
+   * How much of the incident data can actually be placed on a map.
+   *
+   * Country is only ever as good as the source: it arrived with the
+   * ransomware.live victim feed and is absent from ransomlook, so recent
+   * incidents have none. Views that plot countries use this to say so.
+   */
+  async getCountryCoverage({ days = null } = {}) {
+    let total = supabase.from('incidents').select('id', { count: 'exact', head: true })
+    let covered = supabase
+      .from('incidents')
+      .select('id', { count: 'exact', head: true })
+      .not('victim_country', 'is', null)
+
+    if (days) {
+      const cutoff = new Date()
+      cutoff.setDate(cutoff.getDate() - days)
+      const iso = cutoff.toISOString().split('T')[0]
+      total = total.gte('discovered_date', iso)
+      covered = covered.gte('discovered_date', iso)
+    }
+
+    const [totalResult, coveredResult, lastResult] = await Promise.all([
+      total,
+      covered,
+      supabase
+        .from('incidents')
+        .select('discovered_date')
+        .not('victim_country', 'is', null)
+        .order('discovered_date', { ascending: false })
+        .limit(1),
+    ])
+
+    return {
+      total: totalResult.count ?? 0,
+      covered: coveredResult.count ?? 0,
+      lastCovered: lastResult.data?.[0]?.discovered_date || null,
+    }
+  },
+
   async getAllCountryThreats(limit = 50) {
     return supabase
       .from('country_threat_profile')
