@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { openApp } from './support/app'
 
 test.describe('Search', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/')
+    await openApp(page)
   })
 
   test('should open search modal when clicking search button', async ({ page }) => {
