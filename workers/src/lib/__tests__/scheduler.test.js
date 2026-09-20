@@ -166,6 +166,29 @@ describe('runJob', () => {
     expect(ctx.logDb.rows[0].records_failed).toBe(3)
   })
 
+  it('counts a feed that checked and found nothing new as a successful run', async () => {
+    // OFAC HEADs the list and returns without downloading when Last-Modified has
+    // not moved. Having checked is exactly what the feed asserts, so this must not
+    // be read as a skip - ofac-sdn is critical, and a skip would make feed_health
+    // call it stale and ingestion_is_healthy() answer false.
+    const ctx = context()
+    const result = await runJob(
+      job({
+        run: async () => ({
+          success: true,
+          source: 'ofac-sdn',
+          unchanged: true,
+          last_modified: 'Fri, 18 Sep 2026 14:01:54 GMT',
+          addresses: 1043,
+        }),
+      }),
+      ctx
+    )
+
+    expect(result.status).toBe('success')
+    expect(ctx.logDb.rows[0].status).toBe('success')
+  })
+
   it('records a reported failure as an error', async () => {
     const ctx = context()
     const result = await runJob(
