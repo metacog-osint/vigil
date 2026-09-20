@@ -9,15 +9,7 @@
  */
 import { Link } from 'react-router-dom'
 import { StatCard, SmartTime } from '../../components'
-
-/**
- * A count the database did not return is shown as an em dash, never as 0.
- * getOverview returns null when a count query failed, and `|| 0` would turn
- * that absence into a figure Vigil cannot back.
- */
-function figure(n) {
-  return typeof n === 'number' ? n.toLocaleString() : '—'
-}
+import { figure } from '../../lib/format'
 
 export default function AboveFoldSection({ lastSync, aiSummary, escalatingActors, stats }) {
   return (
@@ -97,7 +89,10 @@ export default function AboveFoldSection({ lastSync, aiSummary, escalatingActors
             {escalatingActors.map((actor) => (
               <Link
                 key={actor.id}
-                to="/actors"
+                // Every one of these used to land on the unfiltered list, so
+                // naming a group here and then not opening it was the whole
+                // interaction. The profile is the reason the name is a link.
+                to={`/actors/${actor.id}`}
                 className="inline-flex items-center gap-1 px-2 py-1 bg-red-900/30 rounded text-sm text-red-300 hover:bg-red-900/50 transition-colors"
               >
                 <span>{actor.name}</span>
