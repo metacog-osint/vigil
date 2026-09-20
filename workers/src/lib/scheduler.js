@@ -17,12 +17,22 @@
 import { SubrequestBudgetError } from './supabase.js'
 
 /**
- * A job is only started if a useful share of its declared cost is still available.
- * Requiring the full cost would leave cheap jobs waiting behind an expensive one
- * that will never fit; requiring none would start feeds that fail halfway and
- * write nothing useful.
+ * A job is started only when its whole declared cost is still available.
+ *
+ * This began as half the cost, on the reasoning that a job given most of what it
+ * needs would mostly finish. It does not work that way. A feed that runs out
+ * part-way has still spent everything it used getting there, and it writes nothing
+ * for it - the budget is gone and the work is not done. NVD did this on every run:
+ * admitted with a third of what it needed, it burned the rest of the invocation and
+ * was recorded as budget_exhausted, which is also why the feeds below it in the
+ * queue never got a slot.
+ *
+ * Nothing is starved by this. The admission loop skips a job it cannot afford and
+ * keeps looking, so a cheap job still runs behind an expensive one that was passed
+ * over, and the expensive one is picked up by a trigger with more room - the
+ * 6-hourly and daily ticks, where the hourly feeds are not due.
  */
-const MIN_SHARE_OF_COST = 0.5
+const REQUIRE_FULL_COST = 1
 
 /**
  * Reads the last successful run of every job. `feed_health` (migration 101) does
@@ -146,7 +156,7 @@ export async function runDueJobs({ jobs, feedDb, logDb, healthDb, env, budget, t
   for (const job of due) {
     // `continue`, not `break`: a cheap job further down the list can still run
     // after an expensive one has been passed over.
-    if (budget.remaining < job.cost * MIN_SHARE_OF_COST) {
+    if (budget.remaining < job.cost * REQUIRE_FULL_COST) {
       deferred.push(job.id)
       continue
     }
