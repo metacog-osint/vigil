@@ -25,84 +25,52 @@
  * makes sanctions claims from. Having checked is the thing being asserted.
  */
 
-const SDN_XML = 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML'
 const MARKER = 'Digital Currency Address'
 const ENTRY_END = '</sdnEntry>'
 
-export async function ingestOFAC(supabase) {
-  console.log('Starting OFAC SDN ingestion...')
+/**
+ * Runs the fetch where it can actually happen.
+ *
+ * Every attempt from this Worker returned HTTP 525 - Cloudflare's own "SSL
+ * handshake failed" - across nine runs. Treasury was never the problem: the same
+ * endpoint answers 200 from a desktop, and answers 200 from a Supabase Edge
+ * Function in 672 ms for all 29 MB. So the work moved there and this job invokes
+ * it: one subrequest instead of four, and none of the Edge Function's database
+ * writes are charged to this invocation's budget.
+ *
+ * The scheduler still records the sync_log row from what comes back, so every
+ * feed is logged by one code path. The parser below stays here because it is
+ * what the tests exercise; the deployed copy is supabase/functions/ofac-sdn.
+ */
+export async function ingestOFAC(_db, env) {
+  const url = env?.SUPABASE_URL
+  const key = env?.SUPABASE_KEY
+
+  if (!url || !key) {
+    return {
+      success: false,
+      source: 'ofac-sdn',
+      error: 'missing SUPABASE_URL or SUPABASE_KEY, cannot reach the ofac-sdn function',
+    }
+  }
 
   try {
-    // Ask what the published list is dated before deciding to fetch it.
-    const published = await publishedAt()
-
-    const { data: cursors } = await supabase
-      .from('feed_cursors')
-      .select('cursor', 'feed_id=eq.ofac-sdn')
-    const seen = cursors?.[0]?.cursor || {}
-
-    if (published && seen.last_modified === published) {
-      console.log(`OFAC unchanged since ${published}, not downloading`)
-      return {
-        success: true,
-        source: 'ofac-sdn',
-        unchanged: true,
-        last_modified: published,
-        addresses: seen.addresses ?? null,
-      }
-    }
-
-    const response = await fetch(SDN_XML, {
-      headers: { 'User-Agent': 'Vigil-ThreatIntel/1.0', Accept: 'application/xml' },
+    const response = await fetch(`${url}/functions/v1/ofac-sdn`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
     })
+
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      const body = await response.text().catch(() => '')
+      throw new Error(`ofac-sdn function HTTP ${response.status}: ${body.slice(0, 200)}`)
     }
 
-    const rows = await parseEntries(response.body)
-    console.log(`Parsed ${rows.length} sanctioned addresses`)
-
-    const { data, error } = await supabase.rpc('upsert_sanctioned_addresses', { p_rows: rows })
-    if (error) throw new Error(`upsert_sanctioned_addresses failed: ${error.message}`)
-
-    console.log(
-      `OFAC complete: ${data.addresses} addresses (${data.new} new, ${data.delisted} delisted, ` +
-        `${data.relisted} relisted), ${data.actors_linked} actor links`
-    )
-    // Recorded only after the upsert succeeded. A cursor written ahead of the data
-    // would tell the next run to skip a list it never actually ingested.
-    if (published) {
-      await supabase.from('feed_cursors').upsert(
-        {
-          feed_id: 'ofac-sdn',
-          cursor: { last_modified: published, addresses: data.addresses ?? rows.length },
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'feed_id' }
-      )
-    }
-
-    return { success: true, source: 'ofac-sdn', last_modified: published, ...data }
+    // The function reports its own outcome, including whether it downloaded
+    // anything. Passed through unchanged so the log says what actually happened.
+    return await response.json()
   } catch (error) {
     console.error('OFAC ingestion error:', error.message)
     return { success: false, source: 'ofac-sdn', error: error.message }
-  }
-}
-
-/**
- * The publication date of the current list, or null if the HEAD gives no answer.
- * Null means "fetch anyway": a missing header is not evidence that nothing changed.
- */
-async function publishedAt() {
-  try {
-    const head = await fetch(SDN_XML, {
-      method: 'HEAD',
-      headers: { 'User-Agent': 'Vigil-ThreatIntel/1.0' },
-    })
-    return head.ok ? head.headers.get('last-modified') : null
-  } catch (error) {
-    console.log(`OFAC HEAD failed (${error.message}), fetching in full`)
-    return null
   }
 }
 
