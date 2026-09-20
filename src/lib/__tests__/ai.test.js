@@ -4,7 +4,7 @@
  * actor summaries, and natural language query parsing
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { generateBLUF, generateActorSummary, parseNaturalQuery, queryToFilters } from '../ai'
 
 // Mock aiSummaries from supabase
@@ -35,16 +35,6 @@ describe('generateBLUF', () => {
     mockGetLatest.mockResolvedValue({ data: null })
     mockSave.mockResolvedValue({ data: {}, error: null })
     mockGetSession.mockResolvedValue({ data: { session: { access_token: 'mock-supabase-token' } } })
-  })
-
-  it('should return null when user is not authenticated', async () => {
-    // Temporarily make currentUser null
-    vi.doMock('../firebase', () => ({
-      auth: { currentUser: null },
-    }))
-
-    // Re-import to get the new mock - for now just test the fetch behavior
-    // The actual test will verify the API is called correctly
   })
 
   it('should call API endpoint with correct parameters', async () => {

@@ -14,6 +14,10 @@ export { supabase, subscribeToTable }
 
 // Modules that live only in ./supabase/, re-exported so both import paths work
 export { profiles } from './supabase/profiles'
+
+// One implementation of the dashboard counts, not two: the copy that used to
+// live here drifted from ./supabase/dashboard and kept its own `|| 0` bug.
+export { dashboard } from './supabase/dashboard'
 export { landing } from './supabase/landing'
 
 // Threat Actors queries
@@ -1311,48 +1315,6 @@ export const syncLog = {
       .eq('source', source)
       .order('completed_at', { ascending: false })
       .limit(10)
-  },
-}
-
-// Dashboard stats
-export const dashboard = {
-  async getOverview() {
-    const now = new Date()
-    const last30d = new Date(now - 30 * 24 * 60 * 60 * 1000)
-
-    // Whole-table totals use estimated counts: exact counts over the large
-    // incidents/iocs tables exceed the statement timeout and return errors.
-    // Filtered counts (30d incidents, KEV) stay exact.
-    // Run queries in parallel
-    const [actorCount, incidentCount30d, incidentCountTotal, kevCount, iocCount] =
-      await Promise.all([
-        supabase.from('threat_actors').select('*', { count: 'estimated', head: true }),
-        supabase
-          .from('incidents')
-          .select('*', { count: 'exact', head: true })
-          .gte('discovered_date', last30d.toISOString()),
-        supabase.from('incidents').select('*', { count: 'estimated', head: true }),
-        supabase
-          .from('vulnerabilities')
-          .select('*', { count: 'exact', head: true })
-          .not('kev_date', 'is', null),
-        supabase.from('iocs').select('*', { count: 'estimated', head: true }),
-      ])
-
-    return {
-      // Correct property names that useDashboardData expects
-      totalActors: actorCount.count || 0,
-      incidents30d: incidentCount30d.count || 0,
-      incidentsTotal: incidentCountTotal.count || 0,
-      kevTotal: kevCount.count || 0,
-      iocTotal: iocCount.count || 0,
-
-      // @deprecated Legacy aliases for backward compatibility
-      incidents24h: incidentCount30d.count || 0,
-      incidents7d: incidentCountTotal.count || 0,
-      newKEV7d: kevCount.count || 0,
-      newIOCs24h: iocCount.count || 0,
-    }
   },
 }
 

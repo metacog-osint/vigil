@@ -5,6 +5,19 @@
 
 import { supabase } from './client'
 
+/**
+ * A count that could not be read is null, not zero.
+ *
+ * supabase-js resolves rather than throws, so a failed count arrives as
+ * { count: undefined, error }. Coercing that to 0 publishes a figure the
+ * database never returned - "0 KEV Vulnerabilities" is a claim, and a wrong
+ * one. Callers render null as an em dash.
+ */
+function tally(result) {
+  if (result?.error) return null
+  return typeof result?.count === 'number' ? result.count : null
+}
+
 export const dashboard = {
   async getOverview() {
     const now = new Date()
@@ -30,22 +43,11 @@ export const dashboard = {
       ])
 
     return {
-      // Correct property names - use these
-      totalActors: actorCount.count || 0,
-      incidents30d: incidentCount30d.count || 0,
-      incidentsTotal: incidentCountTotal.count || 0,
-      kevTotal: kevCount.count || 0,
-      iocTotal: iocCount.count || 0,
-
-      // @deprecated Legacy aliases - MISLEADING NAMES, will be removed in v2.0
-      // incidents24h actually contains 30-day data - use incidents30d instead
-      // incidents7d actually contains total incidents - use incidentsTotal instead
-      // newKEV7d actually contains total KEVs - use kevTotal instead
-      // newIOCs24h actually contains total IOCs - use iocTotal instead
-      incidents24h: incidentCount30d.count || 0,
-      incidents7d: incidentCountTotal.count || 0,
-      newKEV7d: kevCount.count || 0,
-      newIOCs24h: iocCount.count || 0,
+      totalActors: tally(actorCount),
+      incidents30d: tally(incidentCount30d),
+      incidentsTotal: tally(incidentCountTotal),
+      kevTotal: tally(kevCount),
+      iocTotal: tally(iocCount),
     }
   },
 }

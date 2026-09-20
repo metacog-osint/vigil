@@ -5,7 +5,7 @@
  * Formats: splunk, elastic, sentinel, stix, csv
  */
 
-import { validateApiKey, hasScope, logRequest, errorResponse, jsonResponse, supabase } from '../_lib/auth.js'
+import { validateApiKey, hasScope, logRequest, errorResponse, supabase } from '../_lib/auth.js'
 
 export const config = {
   runtime: 'edge'
@@ -177,7 +177,7 @@ function formatSTIX(data, dataType) {
 /**
  * Format as CSV
  */
-function formatCSV(data, dataType) {
+function formatCSV(data, _dataType) {
   if (data.length === 0) return ''
 
   const headers = Object.keys(data[0]).filter(k => typeof data[0][k] !== 'object')
