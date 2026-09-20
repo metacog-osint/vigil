@@ -61,6 +61,39 @@ export const threatActors = {
       .single()
   },
 
+  /**
+   * Resolve whatever is in the URL: a uuid, a display name, or an alias.
+   *
+   * A link to a group is as likely to be written /actors/Qilin as
+   * /actors/<uuid>, and a group is often linked to under a name it has since
+   * stopped using — so the alias list is the third attempt rather than a
+   * miss. Returns { data: null } for an unknown key; not finding a group is
+   * an answer, not an error.
+   */
+  async getByIdOrName(key) {
+    if (!key) return { data: null, error: null }
+
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key)
+    if (isUuid) {
+      return supabase.from('threat_actors').select('*').eq('id', key).maybeSingle()
+    }
+
+    const byName = await supabase
+      .from('threat_actors')
+      .select('*')
+      .ilike('name', key)
+      .limit(1)
+      .maybeSingle()
+    if (byName.error || byName.data) return byName
+
+    return supabase
+      .from('threat_actors')
+      .select('*')
+      .contains('aliases', [key])
+      .limit(1)
+      .maybeSingle()
+  },
+
   async getTopActive(days = 30, limit = 10) {
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - days)

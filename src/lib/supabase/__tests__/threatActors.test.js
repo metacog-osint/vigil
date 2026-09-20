@@ -18,6 +18,7 @@ vi.mock('../client', () => {
     in: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     single: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
   }
 
   return {
@@ -148,7 +149,7 @@ describe('threatActors module', () => {
 
       vi.mocked(supabase.from).mockImplementation(mockFrom)
 
-      const result = await threatActors.getTrendSummary()
+      await threatActors.getTrendSummary()
 
       // Should call supabase.from 3 times (once for each status)
       expect(supabase.from).toHaveBeenCalledTimes(3)
@@ -293,5 +294,68 @@ describe('threatActors module', () => {
       // Note: The slicing happens in topActorIds, not the final result
       expect(result.data).toBeDefined()
     })
+  })
+})
+
+describe('threatActors.getByIdOrName', () => {
+  // The shared mock in this file is armed once at import; the global
+  // beforeEach clears it, so this block builds its own query object and
+  // points supabase.from at it before every test.
+  let q
+
+  beforeEach(() => {
+    q = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      ilike: vi.fn().mockReturnThis(),
+      contains: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
+    }
+    supabase.from.mockReturnValue(q)
+  })
+
+  it('looks a uuid up by id', async () => {
+    q.maybeSingle.mockResolvedValueOnce({ data: { id: 'x', name: 'Qilin' }, error: null })
+
+    await threatActors.getByIdOrName('0f3b1f9e-1c2d-4a5b-8c9d-0e1f2a3b4c5d')
+
+    expect(q.eq).toHaveBeenCalledWith('id', '0f3b1f9e-1c2d-4a5b-8c9d-0e1f2a3b4c5d')
+    expect(q.ilike).not.toHaveBeenCalled()
+  })
+
+  it('looks anything else up by name', async () => {
+    q.maybeSingle.mockResolvedValueOnce({ data: { id: 'x', name: 'Qilin' }, error: null })
+
+    const { data } = await threatActors.getByIdOrName('Qilin')
+
+    expect(q.ilike).toHaveBeenCalledWith('name', 'Qilin')
+    expect(data.name).toBe('Qilin')
+  })
+
+  it('falls back to the alias list when the name does not match', async () => {
+    q.maybeSingle
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({ data: { id: 'x', name: 'BlackSuit' }, error: null })
+
+    const { data } = await threatActors.getByIdOrName('Royal')
+
+    expect(q.contains).toHaveBeenCalledWith('aliases', ['Royal'])
+    expect(data.name).toBe('BlackSuit')
+  })
+
+  it('reports an unknown name as absence, not as an error', async () => {
+    const { data, error } = await threatActors.getByIdOrName('NotAGroup')
+
+    expect(data).toBeNull()
+    expect(error).toBeNull()
+  })
+
+  it('does not query at all for an empty key', async () => {
+    const { data, error } = await threatActors.getByIdOrName('')
+
+    expect(supabase.from).not.toHaveBeenCalled()
+    expect(data).toBeNull()
+    expect(error).toBeNull()
   })
 })

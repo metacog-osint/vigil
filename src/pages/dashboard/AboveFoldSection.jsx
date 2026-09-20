@@ -97,7 +97,10 @@ export default function AboveFoldSection({ lastSync, aiSummary, escalatingActors
             {escalatingActors.map((actor) => (
               <Link
                 key={actor.id}
-                to="/actors"
+                // Every one of these used to land on the unfiltered list, so
+                // naming a group here and then not opening it was the whole
+                // interaction. The profile is the reason the name is a link.
+                to={`/actors/${actor.id}`}
                 className="inline-flex items-center gap-1 px-2 py-1 bg-red-900/30 rounded text-sm text-red-300 hover:bg-red-900/50 transition-colors"
               >
                 <span>{actor.name}</span>
