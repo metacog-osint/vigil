@@ -4,7 +4,7 @@
  *
  * POST /api/send-email
  * Body: { to, subject, html, text, template?, data? }
- * Headers: Authorization: Bearer <firebase-id-token>
+ * Headers: Authorization: Bearer <supabase-access-token>
  */
 
 import { verifyRequest } from './_lib/supabase-auth.js'
@@ -57,7 +57,7 @@ export default async function handler(request) {
     })
   }
 
-  // Verify Firebase token
+  // Verify Supabase token
   const { user, error: authError } = await verifyRequest(request)
   if (authError) {
     return new Response(JSON.stringify({ error: authError }), {

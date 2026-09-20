@@ -49,7 +49,7 @@ export async function ingestRansomlook(supabase) {
     const newRecords = records.filter((r) => !existingKeys.has(incidentKey(r)))
     skipped = records.length - newRecords.length
 
-    const batchSize = 50
+    const batchSize = 250  // see cisa-kev.js on batch size and subrequests
     for (let i = 0; i < newRecords.length; i += batchSize) {
       const batch = newRecords.slice(i, i + batchSize)
       const { error } = await supabase.from('incidents').insert(batch)
