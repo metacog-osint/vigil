@@ -27,8 +27,10 @@ export async function ingestCISAKEV(supabase) {
 
     console.log(`Fetched ${vulnerabilities.length} KEV entries`)
 
-    // Process in batches of 50
-    const batchSize = 50
+    // Batch size is a subrequest decision, not a throughput one. The catalogue is
+    // ~1,400 entries; at 50 per batch that is 28 of the invocation's 50 subrequests
+    // spent on one feed, which is what left no room for the run to record itself.
+    const batchSize = 250
     for (let i = 0; i < vulnerabilities.length; i += batchSize) {
       const batch = vulnerabilities.slice(i, i + batchSize)
 

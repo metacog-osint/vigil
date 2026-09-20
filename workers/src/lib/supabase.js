@@ -1,14 +1,59 @@
 /**
  * Lightweight Supabase client for Cloudflare Workers
  * Uses REST API directly with fetch (no npm dependencies)
+ *
+ * Workers Free allows 50 subrequests per invocation. A run that exceeds it is
+ * killed without running its catch block, which is how ingestion failures went
+ * unrecorded for months: the feeds spent the whole budget, and the sync_log
+ * write at the end of the run was the request that got refused. Pass a budget
+ * (createSubrequestBudget) and the client refuses its own calls first, leaving
+ * room for the run to record what happened.
  */
 
-export function createSupabaseClient(env) {
+/** Thrown when a budgeted client is asked for more subrequests than remain. */
+export class SubrequestBudgetError extends Error {
+  constructor(message) {
+    super(message)
+    this.name = 'SubrequestBudgetError'
+  }
+}
+
+/**
+ * @param limit    platform cap per invocation (50 on Workers Free)
+ * @param reserve  subrequests held back for logging and the feeds' own fetch()
+ *                 calls, which this client cannot see
+ */
+export function createSubrequestBudget({ limit = 50, reserve = 12 } = {}) {
+  let used = 0
+  const ceiling = limit - reserve
+
+  return {
+    get used() { return used },
+    get remaining() { return Math.max(0, ceiling - used) },
+    spend() {
+      if (used >= ceiling) {
+        throw new SubrequestBudgetError(
+          `subrequest budget exhausted (${used}/${ceiling}, ${reserve} reserved)`
+        )
+      }
+      used++
+    }
+  }
+}
+
+export function createSupabaseClient(env, { budget = null } = {}) {
   const supabaseUrl = env.SUPABASE_URL
   const supabaseKey = env.SUPABASE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('Missing SUPABASE_URL or SUPABASE_KEY environment variables')
+  }
+
+  // Every call the client makes goes through here so the budget, if there is
+  // one, is spent before the subrequest is.
+  const request = (url, init) => {
+    if (budget) budget.spend()
+    return fetch(url, init)
   }
 
   const baseHeaders = {
@@ -32,7 +77,7 @@ export function createSupabaseClient(env) {
               `${supabaseUrl}/rest/v1/${table}?select=${encodeURIComponent(columns)}` +
               (query ? `&${query}` : '') +
               `&limit=${pageSize}&offset=${offset}`
-            const response = await fetch(url, {
+            const response = await request(url, {
               headers: { ...baseHeaders, 'Prefer': 'return=representation' }
             })
 
@@ -55,7 +100,7 @@ export function createSupabaseClient(env) {
           const url = `${supabaseUrl}/rest/v1/${table}`
           const body = Array.isArray(records) ? records : [records]
 
-          const response = await fetch(url, {
+          const response = await request(url, {
             method: 'POST',
             headers: { ...baseHeaders, 'Prefer': 'return=minimal' },
             body: JSON.stringify(body)
@@ -78,7 +123,7 @@ export function createSupabaseClient(env) {
           const resolution = ignoreDuplicates ? 'ignore-duplicates' : 'merge-duplicates'
           const url = `${supabaseUrl}/rest/v1/${table}?on_conflict=${encodeURIComponent(onConflict)}`
 
-          const response = await fetch(url, {
+          const response = await request(url, {
             method: 'POST',
             headers: {
               ...baseHeaders,
@@ -121,7 +166,7 @@ export function createSupabaseClient(env) {
               const filterString = state._filters.join('&')
               const url = `${state._supabaseUrl}/rest/v1/${state._table}?${filterString}`
 
-              const response = await fetch(url, {
+              const response = await request(url, {
                 method: 'PATCH',
                 headers: { ...state._headers, 'Prefer': 'return=minimal' },
                 body: JSON.stringify(state._record)
@@ -149,7 +194,7 @@ export function createSupabaseClient(env) {
     async rpc(functionName, params = {}) {
       const url = `${supabaseUrl}/rest/v1/rpc/${functionName}`
 
-      const response = await fetch(url, {
+      const response = await request(url, {
         method: 'POST',
         headers: { ...baseHeaders, 'Prefer': 'return=representation' },
         body: JSON.stringify(params)
