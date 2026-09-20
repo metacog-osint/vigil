@@ -491,6 +491,21 @@ Alias lists from public sources are treated as **candidates, not facts** — the
 
 A group is **ESCALATING** when its last 7 days exceed the previous 7 by more than 25%, and **DECLINING** on the same threshold downward. A rise from 1 victim to 2 is not a trend, so a group needs at least 3 victims in the window to escalate. A group with no activity in 90 days is **INACTIVE** rather than stable — stability implies ongoing operations.
 
+### Active, dormant and defunct
+
+A group is **defunct** only when two things are true: there is a recorded event that
+ended the operation - a seizure, arrests, a dissolution - and no victim has been
+claimed in the 180 days since. Every such event is stored with its date, the
+authorities involved and a link to the announcing authority's own page.
+
+Silence alone is not death. A group that has simply gone quiet keeps its **active**
+status and is marked INACTIVE by the trend, because operations go dormant and return.
+
+The reverse matters too. LockBit's administration environment and leak site were
+seized by the NCA and FBI in February 2024, and LockBit has claimed victims since,
+so it is **still active** and its page says it was seized and resumed. Recording the
+takedown and reading it as the end of the group are two different things.
+
 ### The review process
 
 Hourly checks split findings three ways:

@@ -114,7 +114,7 @@ export function ActorDetailPanel({
 
       {/* Sanctions, tooling and leak sites */}
       <div className="pt-4 border-t border-gray-800">
-        <ActorProfilePanel actorId={actor.id} />
+        <ActorProfilePanel actorId={actor.id} lastVictim={actor.last_seen} />
       </div>
 
       {/* Correlation Panel - TTPs, CVEs, IOCs */}
