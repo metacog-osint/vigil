@@ -12,6 +12,9 @@ import { logger } from './logger'
 // Re-export the centralized client and subscription helper
 export { supabase, subscribeToTable }
 
+// Modules that live only in ./supabase/, re-exported so both import paths work
+export { profiles } from './supabase/profiles'
+
 // Threat Actors queries
 export const threatActors = {
   async getAll(options = {}) {

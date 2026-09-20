@@ -16,6 +16,7 @@
  * - teams.js: Team collaboration
  * - trendAnalysis.js: Temporal intelligence
  * - correlations.js: Actor-CVE-TTP linking
+ * - profiles.js: Group tooling, leak sites and sanctions designations
  * - savedSearches.js: Saved search management
  * - userPreferences.js: User preferences
  * - tags.js: Entity tagging system
@@ -59,6 +60,7 @@ export { alertRules } from './alertRules'
 // Analytics & Intelligence
 export { trendAnalysis } from './trendAnalysis'
 export { correlations } from './correlations'
+export { profiles } from './profiles'
 export { relevance } from './relevance'
 export { dashboard } from './dashboard'
 export { compare } from './compare'

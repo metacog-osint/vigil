@@ -125,6 +125,8 @@ export {
   SectorDrilldown,
   CountryAttackPanel,
   ActorQuickProfile,
+  ActorProfilePanel,
+  SanctionsResult,
   ActorRelationshipGraph,
   AttackPathDiagram,
 } from './panels'

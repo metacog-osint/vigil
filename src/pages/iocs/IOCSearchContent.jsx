@@ -2,7 +2,7 @@
  * IOC Search Content - used within the unified IOCs page
  * Supports demo mode with mock data
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { iocs } from '../../lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
 import {
@@ -11,6 +11,7 @@ import {
   ExportButton,
   EnrichmentPanel,
   EnrichmentBadges,
+  SanctionsResult,
 } from '../../components'
 import { useDemo } from '../../contexts/DemoContext'
 import useDemoData from '../../hooks/useDemoData'
@@ -69,7 +70,7 @@ export default function IOCSearchContent() {
     }
   }
 
-  async function loadRecentIOCs() {
+  const loadRecentIOCs = useCallback(async () => {
     // Demo mode: use mock IOCs
     if (isDemoMode) {
       setRecentIOCs(demoData.iocs)
@@ -83,11 +84,11 @@ export default function IOCSearchContent() {
     } catch (error) {
       console.error('Error loading recent IOCs:', error)
     }
-  }
+  }, [isDemoMode, demoData.iocs])
 
   useEffect(() => {
     loadRecentIOCs()
-  }, [isDemoMode])
+  }, [loadRecentIOCs])
 
   const getTypeBadge = (type) => {
     switch (type) {
@@ -155,6 +156,9 @@ export default function IOCSearchContent() {
           Examples: SHA256 hash, MD5 hash, IP address, domain name
         </div>
       </form>
+
+      {/* A searched wallet address is checked against the OFAC SDN list */}
+      {searched && !isDemoMode && <SanctionsResult value={searchValue} />}
 
       {/* Results */}
       <div>
