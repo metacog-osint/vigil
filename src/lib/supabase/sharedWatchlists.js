@@ -1,6 +1,8 @@
 /**
- * Shared Watchlists Module
- * Team collaborative watchlists
+ * Team Watchlists Module
+ *
+ * Reads team_watchlists and team_watchlist_items. It spent its whole life
+ * querying shared_watchlists, which has never existed.
  */
 
 import { supabase } from './client'
@@ -9,11 +11,11 @@ export const sharedWatchlists = {
   // Get team's watchlists
   async getTeamWatchlists(teamId) {
     return supabase
-      .from('shared_watchlists')
+      .from('team_watchlists')
       .select(
         `
         *,
-        items:shared_watchlist_items(count)
+        items:team_watchlist_items(count)
       `
       )
       .eq('team_id', teamId)
@@ -22,13 +24,13 @@ export const sharedWatchlists = {
 
   // Get watchlist by ID
   async getWatchlist(watchlistId) {
-    return supabase.from('shared_watchlists').select('*').eq('id', watchlistId).single()
+    return supabase.from('team_watchlists').select('*').eq('id', watchlistId).single()
   },
 
   // Create watchlist
   async createWatchlist(teamId, name, description, createdBy) {
     return supabase
-      .from('shared_watchlists')
+      .from('team_watchlists')
       .insert({
         team_id: teamId,
         name,
@@ -41,26 +43,22 @@ export const sharedWatchlists = {
 
   // Update watchlist
   async updateWatchlist(watchlistId, updates) {
-    return supabase
-      .from('shared_watchlists')
-      .update(updates)
-      .eq('id', watchlistId)
-      .select()
-      .single()
+    return supabase.from('team_watchlists').update(updates).eq('id', watchlistId).select().single()
   },
 
   // Delete watchlist
   async deleteWatchlist(watchlistId) {
-    return supabase.from('shared_watchlists').delete().eq('id', watchlistId)
+    return supabase.from('team_watchlists').delete().eq('id', watchlistId)
   },
 
   // Get watchlist items with entity details
   async getWatchlistItems(watchlistId) {
     const { data: items, error } = await supabase
-      .from('shared_watchlist_items')
+      .from('team_watchlist_items')
       .select('*')
       .eq('watchlist_id', watchlistId)
-      .order('created_at', { ascending: false })
+      // The column is added_at: an item is added to a list, not created by it.
+      .order('added_at', { ascending: false })
 
     if (error || !items) return { data: null, error }
 
@@ -77,7 +75,14 @@ export const sharedWatchlists = {
         }[item.entity_type]
 
         if (table) {
-          const { data } = await supabase.from(table).select('*').eq('id', item.entity_id).single()
+          // vulnerabilities is keyed on cve_id and has no id column, so every
+          // vulnerability pinned to a list used to 400 here.
+          const keyColumn = table === 'vulnerabilities' ? 'cve_id' : 'id'
+          const { data } = await supabase
+            .from(table)
+            .select('*')
+            .eq(keyColumn, item.entity_id)
+            .single()
           entity = data
         }
 
@@ -91,7 +96,7 @@ export const sharedWatchlists = {
   // Add item to watchlist
   async addItem(watchlistId, entityType, entityId, addedBy, notes = null) {
     return supabase
-      .from('shared_watchlist_items')
+      .from('team_watchlist_items')
       .insert({
         watchlist_id: watchlistId,
         entity_type: entityType,
@@ -105,13 +110,13 @@ export const sharedWatchlists = {
 
   // Remove item from watchlist
   async removeItem(itemId) {
-    return supabase.from('shared_watchlist_items').delete().eq('id', itemId)
+    return supabase.from('team_watchlist_items').delete().eq('id', itemId)
   },
 
   // Update item notes
   async updateItemNotes(itemId, notes) {
     return supabase
-      .from('shared_watchlist_items')
+      .from('team_watchlist_items')
       .update({ notes })
       .eq('id', itemId)
       .select()

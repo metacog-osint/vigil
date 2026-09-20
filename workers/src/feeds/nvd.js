@@ -37,7 +37,12 @@ export async function ingestNVD(supabase) {
 
     console.log(`Fetched ${vulnerabilities.length} CVEs from NVD`)
 
-    const batchSize = 50
+    // NVD returns its full page - 2,000 CVEs - for a 7-day window. At 50 per batch
+    // that is 40 subrequests, measured against the live database, and the worker's
+    // whole invocation allows 32. This feed could never finish; it spent whatever
+    // was left of each run's budget and was recorded as budget_exhausted every time.
+    // See cisa-kev.js on why batch size is a subrequest decision.
+    const batchSize = 250
     for (let i = 0; i < vulnerabilities.length; i += batchSize) {
       const batch = vulnerabilities.slice(i, i + batchSize)
 
