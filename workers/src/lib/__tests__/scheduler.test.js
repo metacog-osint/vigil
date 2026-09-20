@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 
-import { selectDueJobs, runJob, runDueJobs } from '../scheduler.js'
+import { selectDueJobs, runJob, runDueJobs, createTimeBudget } from '../scheduler.js'
 import { createSubrequestBudget, SubrequestBudgetError } from '../supabase.js'
 
 /**
@@ -316,6 +316,52 @@ describe('runDueJobs', () => {
     })
 
     expect(summary.ran.map(r => r.id)).toEqual(['needs-12'])
+  })
+
+  it('stops admitting jobs when the invocation is running out of wall clock', async () => {
+    // A Cron Trigger gets 15 minutes and is then cut off with no error to catch,
+    // which is how the 18:00 run of 20 Sep lost its summary row: ransomware.live
+    // alone took 239 seconds against a loaded database.
+    let now = 0
+    const clock = createTimeBudget({ limitMs: 1000, reserveMs: 400, now: () => now })
+    const logDb = fakeLog()
+
+    const summary = await runDueJobs({
+      jobs: [
+        job({ id: 'in-time', cost: 2, run: async () => { now = 700; return { success: true } } }),
+        job({ id: 'too-late', cost: 2 })
+      ],
+      feedDb: {},
+      logDb,
+      healthDb: healthDb([]),
+      env: {},
+      budget: createSubrequestBudget({ limit: 50, reserve: 18 }),
+      clock,
+      trigger: 'test'
+    })
+
+    expect(summary.ran.map(r => r.id)).toEqual(['in-time'])
+    expect(summary.deferred).toEqual(['too-late'])
+    expect(summary.stoppedEarly).toBe('time')
+  })
+
+  it('runs everything when the clock is not a constraint', async () => {
+    const clock = createTimeBudget({ limitMs: 900000, reserveMs: 300000 })
+    const logDb = fakeLog()
+
+    const summary = await runDueJobs({
+      jobs: [job({ id: 'one', cost: 2 }), job({ id: 'two', cost: 2 })],
+      feedDb: {},
+      logDb,
+      healthDb: healthDb([]),
+      env: {},
+      budget: createSubrequestBudget({ limit: 50, reserve: 18 }),
+      clock,
+      trigger: 'test'
+    })
+
+    expect(summary.ran.map(r => r.id)).toEqual(['one', 'two'])
+    expect(summary.stoppedEarly).toBeNull()
   })
 
   it('still runs when feed_health cannot be read, rather than running nothing', async () => {
