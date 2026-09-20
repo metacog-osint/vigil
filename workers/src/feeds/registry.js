@@ -74,7 +74,7 @@ export const JOBS = [
   { id: 'threatfox', priority: 1, cost: 6, intervalMinutes: HOUR, run: (db, env) => ingestThreatFox(db, env) },
   { id: 'data-quality', priority: 1, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'run_data_quality_checks') },
   { id: 'actor-status', priority: 1, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'apply_actor_status') },
-  { id: 'ioc-geo', priority: 1, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'resolve_ioc_geo', { p_limit: 20000 }) },
+  { id: 'ioc-geo', priority: 1, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'resolve_ioc_geo', { p_limit: 5000 }) },
 
   // --- Vulnerabilities: what R1/R2 in the offshoot spec depend on ---
   { id: 'cisa-kev', priority: 2, cost: 10, intervalMinutes: 6 * HOUR, run: (db, env) => ingestCISAKEV(db, env) },
