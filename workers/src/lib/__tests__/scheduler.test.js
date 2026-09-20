@@ -279,6 +279,45 @@ describe('runDueJobs', () => {
     expect(summary.ran.map(r => r.id)).toEqual(['cheap'])
   })
 
+  it('will not start a job that only partly fits', async () => {
+    // The case NVD hit every run: admitted with a third of what it needed, it spent
+    // the rest of the invocation and wrote nothing for it. A job either has room to
+    // finish or waits for a trigger that has room.
+    const budget = createSubrequestBudget({ limit: 30, reserve: 18 }) // ceiling 12
+    const logDb = fakeLog()
+
+    const summary = await runDueJobs({
+      jobs: [job({ id: 'needs-20', cost: 20 })],
+      feedDb: {},
+      logDb,
+      healthDb: healthDb([]),
+      env: {},
+      budget,
+      trigger: 'test'
+    })
+
+    expect(summary.ran).toEqual([])
+    expect(summary.deferred).toEqual(['needs-20'])
+    expect(logDb.rows).toEqual([])
+  })
+
+  it('runs a job whose full cost is exactly what remains', async () => {
+    const budget = createSubrequestBudget({ limit: 30, reserve: 18 }) // ceiling 12
+    const logDb = fakeLog()
+
+    const summary = await runDueJobs({
+      jobs: [job({ id: 'needs-12', cost: 12 })],
+      feedDb: {},
+      logDb,
+      healthDb: healthDb([]),
+      env: {},
+      budget,
+      trigger: 'test'
+    })
+
+    expect(summary.ran.map(r => r.id)).toEqual(['needs-12'])
+  })
+
   it('still runs when feed_health cannot be read, rather than running nothing', async () => {
     const logDb = fakeLog()
     const summary = await runDueJobs({
