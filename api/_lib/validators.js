@@ -195,10 +195,11 @@ export function validateIOCValue(value, type) {
     case 'domain':
       if (!isValidDomain(value)) return { valid: false, error: 'Invalid domain format' }
       break
-    case 'hash':
+    case 'hash': {
       const hashResult = isValidHash(value)
       if (!hashResult.valid) return { valid: false, error: 'Invalid hash format (must be MD5, SHA1, SHA256, or SHA512)' }
       break
+    }
     case 'email':
       if (!isValidEmail(value)) return { valid: false, error: 'Invalid email format' }
       break
