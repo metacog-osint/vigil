@@ -7,7 +7,7 @@ vi.mock('../../../lib/supabase', () => ({
   profiles: { getActorProfile: (...args) => getActorProfile(...args) },
 }))
 
-const EMPTY = { tools: [], sites: [], sanctions: [] }
+const EMPTY = { tools: [], sites: [], sanctions: [], takedowns: [] }
 
 describe('ActorProfilePanel', () => {
   beforeEach(() => {
@@ -59,6 +59,37 @@ describe('ActorProfilePanel', () => {
     render(<ActorProfilePanel actorId="a1" />)
 
     expect(await screen.findByText('Leak sites (2, 1 reachable)')).toBeInTheDocument()
+  })
+
+  const CRONOS = {
+    event_date: '2024-02-20',
+    kind: 'law_enforcement_seizure',
+    operation_name: 'Operation Cronos',
+    authorities: ['NCA', 'FBI'],
+    summary: 'Leak site and affiliate servers seized',
+    source_url: 'https://www.nationalcrimeagency.gov.uk/example',
+    source_title: 'NCA announcement',
+  }
+
+  it('shows a takedown with its operation and source', async () => {
+    getActorProfile.mockResolvedValue({ ...EMPTY, takedowns: [CRONOS] })
+    render(<ActorProfilePanel actorId="a1" lastVictim="2023-01-01" />)
+
+    expect(await screen.findByText('DISRUPTED BY LAW ENFORCEMENT')).toBeInTheDocument()
+    expect(screen.getByText(/Operation Cronos/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /NCA announcement/ })).toHaveAttribute(
+      'href',
+      CRONOS.source_url
+    )
+  })
+
+  // The case a reader is most likely to get wrong: seized, and still going.
+  it('distinguishes a group that resumed after the seizure', async () => {
+    getActorProfile.mockResolvedValue({ ...EMPTY, takedowns: [CRONOS] })
+    render(<ActorProfilePanel actorId="a1" lastVictim="2026-09-18" />)
+
+    expect(await screen.findByText('SEIZED, THEN RESUMED')).toBeInTheDocument()
+    expect(screen.getByText(/still counted as active/)).toBeInTheDocument()
   })
 
   it('renders nothing for an actor with no profile data', async () => {

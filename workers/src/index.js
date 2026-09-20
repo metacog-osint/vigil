@@ -73,6 +73,14 @@ export default {
             results.dataQuality = error ? { success: false, error: error.message } : { success: true, ...data }
           }
 
+          // Actor status: a group whose infrastructure was seized is marked defunct
+          // once it has been silent for 180 days, and marked active again the moment
+          // it claims another victim (apply_actor_status, migration 096).
+          {
+            const { data, error } = await supabase.rpc('apply_actor_status')
+            results.actorStatus = error ? { success: false, error: error.message } : { success: true, ...data }
+          }
+
           break
 
         // =============================================

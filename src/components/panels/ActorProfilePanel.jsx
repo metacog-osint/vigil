@@ -35,6 +35,47 @@ function SanctionsNotice({ sanctions }) {
   )
 }
 
+function TakedownSection({ takedowns, resumed }) {
+  if (takedowns.length === 0) return null
+
+  return (
+    <div
+      className={`p-3 rounded-lg border ${
+        resumed ? 'bg-amber-900/20 border-amber-700/50' : 'bg-gray-800/60 border-gray-700'
+      }`}
+    >
+      <div className="text-xs font-medium mb-1 tracking-wide">
+        <span className={resumed ? 'text-amber-400' : 'text-gray-400'}>
+          {resumed ? 'SEIZED, THEN RESUMED' : 'DISRUPTED BY LAW ENFORCEMENT'}
+        </span>
+      </div>
+      {takedowns.map((t) => (
+        <div key={`${t.event_date}-${t.source_url}`} className="text-xs text-gray-300 mt-1">
+          <span className="text-white">{t.event_date}</span>
+          {t.operation_name && <span className="text-gray-400"> · {t.operation_name}</span>}
+          {t.authorities?.length > 0 && (
+            <span className="text-gray-400"> · {t.authorities.join(', ')}</span>
+          )}
+          <div className="text-gray-400 mt-0.5">{t.summary}</div>
+          <a
+            href={t.source_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyber-accent hover:underline"
+          >
+            {t.source_title || 'Source'} →
+          </a>
+        </div>
+      ))}
+      {resumed && (
+        <div className="text-xs text-amber-300/90 mt-2">
+          The group has claimed victims since this action, so it is still counted as active.
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ToolSection({ tools }) {
   if (tools.length === 0) return null
 
@@ -99,7 +140,7 @@ function SiteSection({ sites }) {
   )
 }
 
-export default function ActorProfilePanel({ actorId }) {
+export default function ActorProfilePanel({ actorId, lastVictim }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -130,16 +171,30 @@ export default function ActorProfilePanel({ actorId }) {
 
   if (!profile) return null
 
-  const { tools, sites, sanctions } = profile
-  if (tools.length === 0 && sites.length === 0 && sanctions.length === 0) return null
+  const { tools, sites, sanctions, takedowns = [] } = profile
+  if (
+    tools.length === 0 &&
+    sites.length === 0 &&
+    sanctions.length === 0 &&
+    takedowns.length === 0
+  ) {
+    return null
+  }
+
+  // A takedown followed by fresh victims is the interesting case, and the one a
+  // reader is most likely to get wrong.
+  const latestEvent = takedowns[0]?.event_date
+  const resumed = Boolean(latestEvent && lastVictim && lastVictim > latestEvent)
 
   return (
     <div className="space-y-4">
+      <TakedownSection takedowns={takedowns} resumed={resumed} />
       <SanctionsNotice sanctions={sanctions} />
       <ToolSection tools={tools} />
       <SiteSection sites={sites} />
       <div className="text-xs text-gray-600">
-        Profile data from ransomware.live; designations from the OFAC SDN list.
+        Profile data from ransomware.live; designations from the OFAC SDN list; takedowns from the
+        announcing authority.
       </div>
     </div>
   )

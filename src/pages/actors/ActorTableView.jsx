@@ -285,7 +285,14 @@ export function ActorTableView({
                   source={FIELD_TOOLTIPS.status.source}
                   position="left"
                 >
-                  <span className={`badge-${actor.status === 'active' ? 'high' : 'low'}`}>
+                  <span
+                    className={`badge-${actor.status === 'defunct' ? 'low' : 'high'}`}
+                    title={
+                      actor.status === 'defunct'
+                        ? 'Infrastructure seized or the operation ended, and nothing claimed since'
+                        : undefined
+                    }
+                  >
                     {actor.status || 'active'}
                   </span>
                 </Tooltip>

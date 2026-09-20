@@ -12,9 +12,9 @@ export const profiles = {
    * One round trip; each table is small and indexed on actor_id.
    */
   async getActorProfile(actorId) {
-    if (!actorId) return { tools: [], sites: [], sanctions: [] }
+    if (!actorId) return { tools: [], sites: [], sanctions: [], takedowns: [] }
 
-    const [tools, sites, sanctions] = await Promise.all([
+    const [tools, sites, sanctions, takedowns] = await Promise.all([
       supabase
         .from('actor_tools')
         .select('tool_name, category, source, last_seen')
@@ -31,12 +31,18 @@ export const profiles = {
         .from('actor_sanctions')
         .select('entity_name, entity_uid, programs, match_basis, source, first_seen')
         .eq('actor_id', actorId),
+      supabase
+        .from('actor_takedowns')
+        .select('event_date, kind, operation_name, authorities, summary, source_url, source_title')
+        .eq('actor_id', actorId)
+        .order('event_date', { ascending: false }),
     ])
 
     return {
       tools: tools.data || [],
       sites: sites.data || [],
       sanctions: sanctions.data || [],
+      takedowns: takedowns.data || [],
     }
   },
 
