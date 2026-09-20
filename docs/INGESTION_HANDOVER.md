@@ -25,12 +25,12 @@ CISA KEV ingested on 19 September while the last logged run of its cron was
 Four more faults surfaced once per-feed logging existed. Each was invisible before
 it:
 
-| Fault | Detail |
-|---|---|
-| `sync_log.records_failed` never existed | Added in migration 005, but 001 and 005 both use `CREATE TABLE IF NOT EXISTS`, so the live table is the 001 shape. Every write naming that column was rejected (107). |
-| KEV flag frozen at 12 January | The worker writes `kev_date`; the app filters on `is_kev`. Two column sets for the same facts, parted company when the GitHub Actions workflows were disabled. `?kev=true` served a catalogue eight months old. A trigger now keeps them in agreement whoever writes the row (102). |
-| `resolve_ioc_geo` timed out on every call since 097 | Not the work — 56,421 of 56,431 indicators were already located — but a heap fetch per row in the scan feeding the anti-join. `INCLUDE (value)` made it index-only: 15.6s to 1.2s (106, 108, 109). |
-| NVD could never finish | It fetched NVD's full 2,000-result page and upserted 50 at a time: 40 subrequests against an invocation allowing 32. Batching at 250 took it to 8. |
+| Fault                                               | Detail                                                                                                                                                                                                                                                                              |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sync_log.records_failed` never existed             | Added in migration 005, but 001 and 005 both use `CREATE TABLE IF NOT EXISTS`, so the live table is the 001 shape. Every write naming that column was rejected (107).                                                                                                               |
+| KEV flag frozen at 12 January                       | The worker writes `kev_date`; the app filters on `is_kev`. Two column sets for the same facts, parted company when the GitHub Actions workflows were disabled. `?kev=true` served a catalogue eight months old. A trigger now keeps them in agreement whoever writes the row (102). |
+| `resolve_ioc_geo` timed out on every call since 097 | Not the work — 56,421 of 56,431 indicators were already located — but a heap fetch per row in the scan feeding the anti-join. `INCLUDE (value)` made it index-only: 15.6s to 1.2s (106, 108, 109).                                                                                  |
+| NVD could never finish                              | It fetched NVD's full 2,000-result page and upserted 50 at a time: 40 subrequests against an invocation allowing 32. Batching at 250 took it to 8.                                                                                                                                  |
 
 ## 2. What the worker does now
 
@@ -79,13 +79,13 @@ That is how NVD was found to cost 40 against a ceiling of 32.
 
 ## 3. Commits and migrations
 
-| Commit | What |
-|---|---|
+| Commit    | What                                                                                                                |
+| --------- | ------------------------------------------------------------------------------------------------------------------- |
 | `0e13935` | The rewrite: scheduler, registry, per-feed logging, subrequest budget, `feed_health`, KEV columns, `records_failed` |
-| `ca088d3` | `ioc_geo` covering index — 15.6s to 1.2s |
-| `b12745a` | OFAC `Last-Modified` check and parser fixture |
-| `b7de512` | NVD batching and the full-cost admission rule |
-| `c4136cb` | The wall-clock budget |
+| `ca088d3` | `ioc_geo` covering index — 15.6s to 1.2s                                                                            |
+| `b12745a` | OFAC `Last-Modified` check and parser fixture                                                                       |
+| `b7de512` | NVD batching and the full-cost admission rule                                                                       |
+| `c4136cb` | The wall-clock budget                                                                                               |
 
 Migrations applied live: **101, 102, 106, 107, 108, 109, 124**. Numbers 103–105 and
 110–123 belong to the parallel session on the same branch.
@@ -94,14 +94,14 @@ Worker tests: **29, from none**. `vitest.config.js` now includes `workers/**`.
 
 ## 4. Where it stands, 18:33 UTC 20 Sep
 
-| | |
-|---|---|
-| fresh | **14** |
-| late | 0 |
-| stale | 3 — `censys`, `epss`, `malpedia` |
+|                             |                                                                                                     |
+| --------------------------- | --------------------------------------------------------------------------------------------------- |
+| fresh                       | **14**                                                                                              |
+| late                        | 0                                                                                                   |
+| stale                       | 3 — `censys`, `epss`, `malpedia`                                                                    |
 | never run under the new ids | 7 — `anyrun-trends`, `bgpstream`, `misp-galaxy`, `mitre`, `mitre-atlas`, `ransomwhere`, `tor-exits` |
-| failing | `ofac-sdn` (525), `vulncheck` (401) |
-| `ingestion_is_healthy()` | **false**, solely because of `ofac-sdn` |
+| failing                     | `ofac-sdn` (525), `vulncheck` (401)                                                                 |
+| `ingestion_is_healthy()`    | **false**, solely because of `ofac-sdn`                                                             |
 
 Nine fresh at 17:30, fourteen at 18:33. `pulsedive` ran for the first time since
 January; `feodo` and `malwarebazaar` for the first time since May. The seven that
@@ -117,9 +117,9 @@ Everything else on this list is downstream of it.
 
 The same NVD feed, same code, same day:
 
-| Where | Duration |
-|---|---|
-| Locally, against the live database | **27 seconds** |
+| Where                                  | Duration        |
+| -------------------------------------- | --------------- |
+| Locally, against the live database     | **27 seconds**  |
 | Inside the worker (`http:/ingest/nvd`) | **274 seconds** |
 
 The 18:15 tick took **876 seconds — 14.6 of its 15 allowed minutes**, where the
@@ -141,7 +141,23 @@ constraint of Supabase Pro only** — exhaust query discipline first.
 A timeout during a real ingest now shows up as a recorded feed error. Those are
 honest records of a slow database, not broken feeds.
 
-### 2. OFAC cannot be fetched from Cloudflare
+### 2. OFAC cannot be fetched from Cloudflare — RESOLVED 20 Sep, awaiting a worker deploy
+
+**The fetch moved to a Supabase Edge Function** (`supabase/functions/ofac-sdn`),
+which the worker job now invokes: one subrequest instead of four. Measured from
+that runtime before anything was built — HEAD 200 in 586 ms, GET 200 and
+29,093,584 bytes in **672 ms**. Cloudflare's edge is the only thing that cannot
+do it.
+
+**This is inert until `npm run deploy` is run from `workers/`.** There is no CI
+deploy for the worker. Until then the account below still holds.
+
+A bug surfaced in the port: the worker read its cursor with
+`.select('cursor', 'feed_id=eq.ofac-sdn')`. The second argument to `.select()`
+is an options object, not a filter, so it read every row and took the first. It
+worked only because `feed_cursors` holds exactly one row.
+
+<details><summary>The original diagnosis, kept because it is what made the fix obvious</summary>
 
 `ofac-sdn` returns **HTTP 525** (Cloudflare "SSL handshake failed") on every run —
 four attempts across two hours. Not Treasury: three direct fetches from the desktop
@@ -161,13 +177,13 @@ The failure is cheap now too — 4.4s instead of 61s.
 
 - **Supabase Edge Function.** Pro includes 2M invocations/month against a need of
   ~30; 2s CPU against the Worker's 10ms; 400s wall clock; 256 MB memory. Egress is
-  billed on data sent *to a client*, so pulling 29 MB *in* is not charged. Does not
+  billed on data sent _to a client_, so pulling 29 MB _in_ is not charged. Does not
   create a project, so no compute hours. Caveat: 2s CPU is generous but unproven
   for a 29 MB scan.
 - **Local npm script.** Free, but only runs when a laptop does — wrong for a feed
   marked `critical`.
 
-**Not started. Deferred for review.**
+</details>
 
 ### 3. VulnCheck returns 401
 
@@ -175,12 +191,16 @@ The failure is cheap now too — 4.4s instead of 61s.
 remove the feed from `registry.js` **and** `feed_expectations`. Leaving it fails
 every six hours for no benefit.
 
-### 4. Confirm the backlog finishes draining
+### 4. Confirm the backlog finishes draining — ANSWERED, it is draining
 
-The seven never-run feeds are picked up by the **00:00 and 03:00** ticks, where the
-hourly feeds are not due and most of the budget is free. Check tomorrow. If any are
-still `never` after a day, the admission rule is starving them and the priorities
-need revisiting.
+By 22:00 on 20 September: **17 fresh, 1 late, 2 stale, 6 never** (from 14 / 0 / 3
+/ 9). Four of the seven never-run feeds had come good on their own —
+`anyrun-trends`, `bgpstream`, `misp-galaxy` and `epss`. The admission rule was
+not starving them; they were waiting their turn as priority 4–5 jobs, exactly as
+designed.
+
+Still `never`: `mitre`, `mitre-atlas` and `tor-exits` (weeklies, not yet due),
+`ransomwhere` (ran and errored), plus `ofac-sdn` and `vulncheck` below.
 
 ### 5. Smaller things
 
@@ -193,12 +213,12 @@ need revisiting.
   `expected_interval_minutes` in `feed_expectations`. The migration says change one
   and change the other. Nothing enforces it. A test could.
 - **The pre-commit hook covers neither `workers/` nor `supabase/`.** Every commit
-  this session printed *"lint-staged could not find any staged files matching
-  configured tasks"*, despite CLAUDE.md saying Husky runs ESLint/Prettier on staged
+  this session printed _"lint-staged could not find any staged files matching
+  configured tasks"_, despite CLAUDE.md saying Husky runs ESLint/Prettier on staged
   files. Linting was run by hand.
-- **`BUILD_PLAN_V2.md` and `ROADMAP.md` are eight months stale** — January, v1.3.2,
-  "32 data sources", "migrations 068 total". The repo is past 124. This is the repo
-  being used as a work sample.
+- ~~`BUILD_PLAN_V2.md` and `ROADMAP.md` are eight months stale~~ — moved to
+  `docs/archive/` on 20 September with a notice saying they are historical and
+  that the README and migration headers win where they disagree.
 
 ---
 
