@@ -405,8 +405,9 @@ Vigil aggregates data from multiple trusted public threat intelligence feeds.
 
 | Source | Data | Update Frequency |
 |--------|------|------------------|
-| RansomLook | Ransomware incidents | Every 6 hours |
+| RansomLook | Ransomware incidents | Hourly |
 | Ransomware.live | Leak site monitoring | Every 6 hours |
+| Ransomware.live groups | Group techniques, tooling, leak sites | Daily |
 | HIBP | Data breaches | Weekly |
 
 ### Vulnerabilities
@@ -443,9 +444,81 @@ Vigil aggregates data from multiple trusted public threat intelligence feeds.
 | MITRE ATT&CK | Techniques & tactics | Weekly |
 | CISA Alerts | Cybersecurity advisories | Every 6 hours |
 
+### Sanctions
+
+| Source | Data | Update Frequency |
+|--------|------|------------------|
+| OFAC SDN | Designated digital-currency addresses | Daily |
+
 ### Data Freshness
 
 Look for the sync status indicator in the footer to see when data was last updated. Most feeds are refreshed every 6 hours via automated ingestion.
+    `,
+  },
+  {
+    id: 'methodology',
+    title: 'Methodology',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      </svg>
+    ),
+    content: `
+## Methodology
+
+How Vigil decides what to assert, and what it deliberately leaves unsaid.
+
+### Attribution: three different claims
+
+Threat intelligence conflates three relationships that mean different things. Vigil keeps them apart:
+
+| Relationship | Meaning | Example |
+|--------------|---------|---------|
+| **Identity** | Two names for the same operation | ALPHV = BlackCat |
+| **Lineage** | One grew out of another | Mespinoza became Pysa |
+| **Shared tooling** | Different groups, same malware | Cobalt Strike users |
+
+Indicators arrive labelled with a malware family, never with a group. A family is linked to a group only through a **reviewed mapping**, and each link records whether the family is that group's own ransomware brand or merely tooling it uses. An indicator shown under a group says which of the two applies.
+
+Alias lists from public sources are treated as **candidates, not facts** — they routinely merge distinct groups that a vendor once filed together.
+
+### Trends
+
+A group is **ESCALATING** when its last 7 days exceed the previous 7 by more than 25%, and **DECLINING** on the same threshold downward. A rise from 1 victim to 2 is not a trend, so a group needs at least 3 victims in the window to escalate. A group with no activity in 90 days is **INACTIVE** rather than stable — stability implies ongoing operations.
+
+### The review process
+
+Hourly checks split findings three ways:
+
+1. **Detected** — recorded with the evidence behind them.
+2. **Auto-fixed** — only where the fix is mechanical: a duplicate incident with the same actor, victim and date; a spelling variant of a name already decided.
+3. **Queued for review** — anything requiring analyst judgment. These wait for a recorded verdict and are never applied on their own.
+
+Verdicts persist, so a rejected match stays rejected the next time the same evidence appears.
+
+### Sanctions
+
+Designated cryptocurrency addresses come from Treasury's **OFAC SDN list**, refreshed daily and parsed from the structured XML export rather than the CSV, which truncates and silently drops over half the addresses.
+
+A group is shown as OFAC-designated only when its name matches the designated entity, or when an alias match has been **confirmed in review**. OFAC lists "HYDRA" as an alias of HYDRA MARKET; an unrelated group called Hydra would not inherit that designation.
+
+**Delistings are recorded, not erased.** An address removed from the list keeps its history and is shown as previously designated, with the date it left.
+
+### History is never discarded
+
+Pattern-of-life analysis depends on the full record, so observations are only ever added. When a feed re-reports an indicator, that re-sighting is recorded rather than overwriting the last one, and infrastructure that disappears keeps its history instead of being deleted.
+
+### What Vigil does not claim
+
+- **Victim names** are shown as the leak site published them. Where a site redacted a name, Vigil leaves it redacted rather than guessing.
+- **Sector and country** are inferred from victim names by keyword where a source gives none. The coverage is partial and the inference is shallow; it is used for aggregate views, not for individual claims.
+- **Leak-site reachability** reflects the last check by the upstream source, not a live probe.
+- **Claimed incidents are claims.** A ransomware group's post asserts a breach; Vigil records the assertion and its date, not a verified compromise.
     `,
   },
   {
