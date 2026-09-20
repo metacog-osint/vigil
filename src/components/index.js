@@ -158,7 +158,6 @@ export {
   ApiKeysSection,
   BrandingConfigSection,
   IntegrationsSection,
-  SecuritySettings,
   SSOConfigSection,
   TeamManagement,
 } from './settings'
