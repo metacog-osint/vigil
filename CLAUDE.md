@@ -1,6 +1,11 @@
 # CLAUDE.md - AI Assistant Context
 
 > **Last Updated:** January 19, 2026 | **Version:** 2.1.0
+>
+> **Parts of this file are dated.** Read
+> [`docs/SESSION_HANDOFF.md`](./docs/SESSION_HANDOFF.md) first: it carries current
+> state, what is outstanding, the rules for working alongside the other sessions
+> that share this working tree, and the traps that have bitten more than once.
 
 Essential context for AI assistants. **For detailed docs, see the `docs/` folder.**
 
@@ -17,6 +22,7 @@ Essential context for AI assistants. **For detailed docs, see the `docs/` folder
 | `docs/FEATURES.md` | Feature documentation |
 | `docs/UX_IMPROVEMENTS.md` | UX system (Focus Mode, Digests, etc.) |
 | `DATA_SOURCES.md` | All threat intel feeds |
+| `docs/SESSION_HANDOFF.md` | **Start here** — current state, open work, working rules |
 
 ---
 
