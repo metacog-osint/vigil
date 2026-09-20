@@ -204,15 +204,11 @@ need revisiting.
 
 ## Not ingestion, still open
 
-- **Three offshoot documents have no home.** `OFFSHOOT_SPEC v2.5.md`,
-  `COMPETITOR_SCAN.md` and `CU_BACKTEST.md` are still in `~/Downloads`. The spec's
-  §1 says Vigil carries no commercial surface, and memory records the same rule, so
-  pricing, the stop rule and the United Savings conflict-of-interest note must not
-  be committed here. Suggested: a separate private repo. `CU_BACKTEST.md` splits
-  cleanly — its analysis and sourcing would strengthen `docs/`, its "what this
-  means for the product" section belongs with the spec.
-- **The "Vigil work-sample steps 1–5"** the spec gates itself on are not in the
-  repo, and `BUILD_PLAN_V2.md` / `ROADMAP.md` are too stale to be it. Ask.
+- **The downstream consumer's own documents have no home.** They are held outside
+  the repo and must stay that way: this repository carries no commercial surface,
+  and those documents do. They belong in a separate private repo. One of them
+  splits cleanly — its analysis and sourcing would strengthen `docs/`; the rest
+  stays with the spec.
 
 ---
 
