@@ -81,6 +81,13 @@ export default {
             results.actorStatus = error ? { success: false, error: error.message } : { success: true, ...data }
           }
 
+          // Locate new IP indicators against the local range table (migration 097).
+          // No external call: the ranges live in the database.
+          {
+            const { data, error } = await supabase.rpc('resolve_ioc_geo', { p_limit: 20000 })
+            results.iocGeo = error ? { success: false, error: error.message } : { success: true, ...data }
+          }
+
           break
 
         // =============================================
