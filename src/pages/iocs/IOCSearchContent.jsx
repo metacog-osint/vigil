@@ -31,6 +31,7 @@ export default function IOCSearchContent() {
 
   const [searchValue, setSearchValue] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
+  const [countryFilter, setCountryFilter] = useState('')
   const [results, setResults] = useState([])
   const [recentIOCs, setRecentIOCs] = useState([])
   const [loading, setLoading] = useState(false)
@@ -38,7 +39,8 @@ export default function IOCSearchContent() {
 
   async function handleSearch(e) {
     e.preventDefault()
-    if (!searchValue.trim()) return
+    // Either a value or a country is enough to search on.
+    if (!searchValue.trim() && !countryFilter.trim()) return
 
     setLoading(true)
     setSearched(true)
@@ -60,7 +62,11 @@ export default function IOCSearchContent() {
     }
 
     try {
-      const { data, error } = await iocs.search(searchValue.trim(), typeFilter || null)
+      const { data, error } = await iocs.search(
+        searchValue.trim(),
+        typeFilter || null,
+        countryFilter.trim() || null
+      )
       if (error) throw error
       setResults(data || [])
     } catch (error) {
@@ -137,6 +143,15 @@ export default function IOCSearchContent() {
               className="cyber-input w-full font-mono"
             />
           </div>
+          <input
+            type="text"
+            value={countryFilter}
+            onChange={(e) => setCountryFilter(e.target.value.toUpperCase().slice(0, 2))}
+            placeholder="Country"
+            aria-label="Filter by the country the infrastructure is located in (ISO-2 code)"
+            className="cyber-input w-24 font-mono uppercase"
+            maxLength={2}
+          />
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
@@ -155,12 +170,29 @@ export default function IOCSearchContent() {
         </div>
 
         <div className="mt-3 text-xs text-gray-500">
-          Examples: SHA256 hash, MD5 hash, IP address, domain name
+          Examples: SHA256 hash, MD5 hash, IP address, domain name. A two-letter country code
+          searches by where the infrastructure is hosted, with or without a value.
         </div>
       </form>
 
       {/* A searched wallet address is checked against the OFAC SDN list */}
       {searched && !isDemoMode && <SanctionsResult value={searchValue} />}
+
+      {/* CC BY 4.0 requires the credit wherever the located data is shown */}
+      {searched && (
+        <p className="text-xs text-gray-600">
+          Country shows where the address is hosted. IP geolocation by{' '}
+          <a
+            href="https://db-ip.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+          >
+            DB-IP
+          </a>
+          , used under CC BY 4.0.
+        </p>
+      )}
 
       {/* Results */}
       <div>
@@ -208,6 +240,16 @@ export default function IOCSearchContent() {
                         : ioc.threat_actor?.name && (
                             <span className="text-cyber-accent">{ioc.threat_actor.name}</span>
                           )}
+                      {/* Where the infrastructure sits, for the indicators that
+                          resolve to an address (migration 097) */}
+                      {ioc.country_code && (
+                        <span
+                          className="font-mono text-gray-300"
+                          title="Country the address is located in"
+                        >
+                          {ioc.country_code}
+                        </span>
+                      )}
                       {ioc.sanctioned_by && (
                         <span
                           className="text-red-400"
