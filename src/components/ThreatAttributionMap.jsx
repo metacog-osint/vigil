@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
 import { supabase } from '../lib/supabase'
 import { CoverageNote } from './common'
+import { geoToIso2 } from '../lib/countryCodes'
 
 const geoUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
@@ -289,26 +290,34 @@ export default function ThreatAttributionMap({
         setCountryData(byCountry)
       }
 
-      // Get actor origins (from target_countries on threat_actors)
+      // Attributed country of origin, from its own column rather than from
+      // metadata or - as it used to be - from the targeting field (migration 098).
       const { data: actors } = await supabase
         .from('threat_actors')
-        .select('name, target_countries, metadata')
-        .not('target_countries', 'is', null)
+        .select('name, origin_country, origin_confidence')
+        .not('origin_country', 'is', null)
 
       if (actors) {
         const origins = {}
         actors.forEach((actor) => {
-          // Check metadata for origin country
-          const origin = actor.metadata?.origin_country || actor.metadata?.country
-          if (origin) {
-            const country = origin.toUpperCase()
-            if (!origins[country]) {
-              origins[country] = { count: 0, actors: [] }
-            }
-            origins[country].count++
-            origins[country].actors.push(actor.name)
+          const country = actor.origin_country.toUpperCase()
+          if (!origins[country]) {
+            origins[country] = { count: 0, actors: [], confidences: [] }
+          }
+          origins[country].count++
+          origins[country].actors.push(actor.name)
+          if (actor.origin_confidence !== null && actor.origin_confidence !== undefined) {
+            origins[country].confidences.push(actor.origin_confidence)
           }
         })
+
+        // Attribution is a claim, so the tooltip carries the source's confidence.
+        for (const entry of Object.values(origins)) {
+          entry.avgConfidence = entry.confidences.length
+            ? Math.round(entry.confidences.reduce((a, b) => a + b, 0) / entry.confidences.length)
+            : null
+        }
+
         setActorOrigins(origins)
       }
 
@@ -321,10 +330,8 @@ export default function ThreatAttributionMap({
   // Calculate color intensity based on count
   const getColor = (countryCode) => {
     const data = viewMode === 'attackers' ? actorOrigins : countryData
-    // Convert ISO-3 to ISO-2 using direct lookup
-    const iso2 = countryCode?.length === 3 ? ISO3_TO_ISO2[countryCode] : countryCode?.toUpperCase()
-
-    const countryInfo = data[iso2] || data[countryCode?.toUpperCase()]
+    // geoToIso2 has already resolved the atlas's numeric id to ISO-2
+    const countryInfo = data[countryCode]
     if (!countryInfo) return '#1f2937' // Default dark gray
 
     const count = countryInfo.count || 0
@@ -356,10 +363,8 @@ export default function ThreatAttributionMap({
   // Get tooltip content
   const getTooltipContent = (countryCode, countryName) => {
     const data = viewMode === 'attackers' ? actorOrigins : countryData
-    // Convert ISO-3 to ISO-2 using direct lookup
-    const iso2 = countryCode?.length === 3 ? ISO3_TO_ISO2[countryCode] : countryCode?.toUpperCase()
-
-    const countryInfo = data[iso2] || data[countryCode?.toUpperCase()]
+    // geoToIso2 has already resolved the atlas's numeric id to ISO-2
+    const countryInfo = data[countryCode]
 
     if (!countryInfo || countryInfo.count === 0) {
       return { name: countryName, count: 0 }
@@ -390,7 +395,7 @@ export default function ThreatAttributionMap({
   }
 
   const handleMouseEnter = (geo, evt) => {
-    const countryCode = geo.properties?.ISO_A3 || geo.id
+    const countryCode = geoToIso2(geo)
     const countryName = getCountryName(geo)
     const content = getTooltipContent(countryCode, countryName)
 
@@ -406,17 +411,15 @@ export default function ThreatAttributionMap({
   }
 
   const handleClick = (geo) => {
-    const countryCode = geo.properties?.ISO_A3 || geo.id
+    const countryCode = geoToIso2(geo)
     const countryName = getCountryName(geo)
     const data = viewMode === 'attackers' ? actorOrigins : countryData
-    // Convert ISO-3 to ISO-2 using direct lookup
-    const iso2 = countryCode?.length === 3 ? ISO3_TO_ISO2[countryCode] : countryCode?.toUpperCase()
-
-    const countryInfo = data[iso2] || data[countryCode?.toUpperCase()]
+    // geoToIso2 has already resolved the atlas's numeric id to ISO-2
+    const countryInfo = data[countryCode]
 
     if (onCountryClick && countryInfo?.count > 0) {
       onCountryClick({
-        code: iso2 || countryCode,
+        code: countryCode,
         name: countryName,
         ...countryInfo,
       })
@@ -498,7 +501,7 @@ export default function ThreatAttributionMap({
               <Geographies geography={geoUrl}>
                 {({ geographies }) =>
                   geographies.map((geo) => {
-                    const countryCode = geo.properties?.ISO_A3 || geo.id
+                    const countryCode = geoToIso2(geo)
                     const isSelected = selectedCountry === countryCode
 
                     return (
@@ -623,6 +626,13 @@ export default function ThreatAttributionMap({
           lastCovered={lastCountryDate}
           className="mt-2"
         />
+      )}
+      {!loading && viewMode === 'attackers' && (
+        <p className="text-xs text-gray-500 mt-2">
+          Attributed country of origin for{' '}
+          {Object.values(actorOrigins).reduce((n, o) => n + o.count, 0)} groups, as published by
+          MISP galaxy with its own confidence score. Attribution is a claim, not an observation.
+        </p>
       )}
     </div>
   )
