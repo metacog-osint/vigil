@@ -30,10 +30,12 @@ export const correlations = {
         )
         .eq('actor_id', actorId),
 
-      // Get IOCs
+      // Get IOCs. iocs.actor_id is never set by any feed - indicators arrive
+      // labelled with a malware family, not a group - so the link runs through
+      // ioc_actor_links, the reviewed family-to-actor mapping (migrations 083/084).
       supabase
-        .from('iocs')
-        .select('id, type, value, malware_family, confidence')
+        .from('ioc_actor_links')
+        .select('ioc_id, type, value, malware_family, ioc_source, relation, confidence, rationale')
         .eq('actor_id', actorId)
         .limit(50),
     ])
@@ -41,7 +43,16 @@ export const correlations = {
     return {
       techniques: techniques.data || [],
       vulnerabilities: vulnerabilities.data || [],
-      iocs: iocData.data || [],
+      iocs: (iocData.data || []).map((link) => ({
+        id: link.ioc_id,
+        type: link.type,
+        value: link.value,
+        malware_family: link.malware_family,
+        source: link.ioc_source,
+        confidence: link.confidence,
+        relation: link.relation,
+        rationale: link.rationale,
+      })),
     }
   },
 
@@ -168,6 +179,46 @@ export const correlations = {
   /**
    * Get all country threat profiles
    */
+  /**
+   * How much of the incident data can actually be placed on a map.
+   *
+   * Country is only ever as good as the source: it arrived with the
+   * ransomware.live victim feed and is absent from ransomlook, so recent
+   * incidents have none. Views that plot countries use this to say so.
+   */
+  async getCountryCoverage({ days = null } = {}) {
+    let total = supabase.from('incidents').select('id', { count: 'exact', head: true })
+    let covered = supabase
+      .from('incidents')
+      .select('id', { count: 'exact', head: true })
+      .not('victim_country', 'is', null)
+
+    if (days) {
+      const cutoff = new Date()
+      cutoff.setDate(cutoff.getDate() - days)
+      const iso = cutoff.toISOString().split('T')[0]
+      total = total.gte('discovered_date', iso)
+      covered = covered.gte('discovered_date', iso)
+    }
+
+    const [totalResult, coveredResult, lastResult] = await Promise.all([
+      total,
+      covered,
+      supabase
+        .from('incidents')
+        .select('discovered_date')
+        .not('victim_country', 'is', null)
+        .order('discovered_date', { ascending: false })
+        .limit(1),
+    ])
+
+    return {
+      total: totalResult.count ?? 0,
+      covered: coveredResult.count ?? 0,
+      lastCovered: lastResult.data?.[0]?.discovered_date || null,
+    }
+  },
+
   async getAllCountryThreats(limit = 50) {
     return supabase
       .from('country_threat_profile')

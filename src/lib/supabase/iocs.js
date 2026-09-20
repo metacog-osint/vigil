@@ -52,7 +52,7 @@ export const iocs = {
       .select(
         `
         *,
-        threat_actor:threat_actors(id, name)
+        threat_actor:threat_actors!iocs_actor_id_fkey(id, name)
       `,
         { count: 'exact' }
       )
@@ -74,24 +74,32 @@ export const iocs = {
     return query
   },
 
+  /**
+   * Substring search across 568k indicators.
+   *
+   * Runs through the search_iocs function (migration 090) rather than a PostgREST
+   * filter: the equivalent `ilike` query made the planner walk the last_seen_at
+   * index and discard 560k rows, which took 28s and failed outright for anonymous
+   * users on a 3s timeout. The function fences the ordering and returns the
+   * indicator's linked groups and any OFAC designation in the same round trip.
+   */
   async search(value, type = null) {
-    let query = supabase
-      .from('iocs')
-      .select(
-        `
-        *,
-        threat_actor:threat_actors(id, name)
-      `
-      )
-      .ilike('value', `%${value}%`)
-      .order('last_seen_at', { ascending: false })
-      .limit(100)
+    const { data, error } = await supabase.rpc('search_iocs', {
+      p_value: value,
+      p_type: type || null,
+      p_limit: 100,
+    })
 
-    if (type) {
-      query = query.eq('type', type)
+    if (error) return { data: null, error }
+
+    return {
+      data: (data || []).map((row) => ({
+        ...row,
+        // Shape kept for callers that read ioc.threat_actor
+        threat_actor: row.actor_names?.length ? { name: row.actor_names[0] } : null,
+      })),
+      error: null,
     }
-
-    return query
   },
 
   async getByActor(actorId, limit = 50) {
@@ -109,7 +117,7 @@ export const iocs = {
       .select(
         `
         *,
-        threat_actor:threat_actors(id, name)
+        threat_actor:threat_actors!iocs_actor_id_fkey(id, name)
       `
       )
       .order('created_at', { ascending: false })
@@ -125,7 +133,7 @@ export const iocs = {
         .select(
           `
           *,
-          threat_actor:threat_actors(id, name, trend_status)
+          threat_actor:threat_actors!iocs_actor_id_fkey(id, name, trend_status)
         `
         )
         .or(`value.eq.${value},value.ilike.%${value}%`)

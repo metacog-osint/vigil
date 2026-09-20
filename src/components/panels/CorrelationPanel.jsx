@@ -125,13 +125,23 @@ function IOCItem({ ioc }) {
         >
           {ioc.type?.toUpperCase()}
         </span>
-        {ioc.confidence && <span className="text-xs text-gray-500">{ioc.confidence}% conf</span>}
+        {ioc.confidence && (
+          <span className="text-xs text-gray-500">
+            {/* Feeds store confidence as a word; older records stored a score. */}
+            {Number.isFinite(Number(ioc.confidence))
+              ? `${ioc.confidence}% conf`
+              : `${ioc.confidence} confidence`}
+          </span>
+        )}
       </div>
       <div className="text-sm text-white font-mono mt-1 truncate" title={ioc.value}>
         {ioc.value}
       </div>
       {ioc.malware_family && (
-        <div className="text-xs text-gray-500 mt-1">Family: {ioc.malware_family}</div>
+        <div className="text-xs text-gray-500 mt-1" title={ioc.rationale || undefined}>
+          Family: {ioc.malware_family}
+          {ioc.relation === 'used_by' && ' (shared tooling)'}
+        </div>
       )}
     </div>
   )
@@ -183,7 +193,7 @@ const CONFIDENCE_COLORS = {
   low: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
 }
 
-function IOCAnalytics({ iocs, actorName, onExport }) {
+function IOCAnalytics({ iocs, onExport }) {
   // Calculate IOC type distribution
   const typeDistribution = useMemo(() => {
     const counts = {}
@@ -517,11 +527,7 @@ export function CorrelationPanel({ actorId, actorName }) {
         >
           <div className="space-y-4">
             {/* IOC Analytics */}
-            <IOCAnalytics
-              iocs={iocs}
-              actorName={actorName}
-              onExport={() => handleExportIOCs(iocs, actorName)}
-            />
+            <IOCAnalytics iocs={iocs} onExport={() => handleExportIOCs(iocs, actorName)} />
 
             {/* IOC List */}
             <div className="border-t border-gray-700 pt-3">

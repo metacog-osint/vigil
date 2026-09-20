@@ -2,7 +2,7 @@
  * IOC Search Content - used within the unified IOCs page
  * Supports demo mode with mock data
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { iocs } from '../../lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
 import {
@@ -11,6 +11,7 @@ import {
   ExportButton,
   EnrichmentPanel,
   EnrichmentBadges,
+  SanctionsResult,
 } from '../../components'
 import { useDemo } from '../../contexts/DemoContext'
 import useDemoData from '../../hooks/useDemoData'
@@ -69,7 +70,7 @@ export default function IOCSearchContent() {
     }
   }
 
-  async function loadRecentIOCs() {
+  const loadRecentIOCs = useCallback(async () => {
     // Demo mode: use mock IOCs
     if (isDemoMode) {
       setRecentIOCs(demoData.iocs)
@@ -83,11 +84,11 @@ export default function IOCSearchContent() {
     } catch (error) {
       console.error('Error loading recent IOCs:', error)
     }
-  }
+  }, [isDemoMode, demoData.iocs])
 
   useEffect(() => {
     loadRecentIOCs()
-  }, [isDemoMode])
+  }, [loadRecentIOCs])
 
   const getTypeBadge = (type) => {
     switch (type) {
@@ -132,12 +133,14 @@ export default function IOCSearchContent() {
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               placeholder="Enter hash, IP, domain, or URL..."
+              aria-label="Search indicators by hash, IP, domain or URL"
               className="cyber-input w-full font-mono"
             />
           </div>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
+            aria-label="Filter by indicator type"
             className="cyber-input"
           >
             {IOC_TYPES.map((type) => (
@@ -155,6 +158,9 @@ export default function IOCSearchContent() {
           Examples: SHA256 hash, MD5 hash, IP address, domain name
         </div>
       </form>
+
+      {/* A searched wallet address is checked against the OFAC SDN list */}
+      {searched && !isDemoMode && <SanctionsResult value={searchValue} />}
 
       {/* Results */}
       <div>
@@ -191,9 +197,26 @@ export default function IOCSearchContent() {
                       {ioc.malware_family && (
                         <span className="text-orange-400">{ioc.malware_family}</span>
                       )}
-                      {ioc.threat_actor?.name && (
-                        <span className="text-cyber-accent">{ioc.threat_actor.name}</span>
+                      {/* Groups reached through the reviewed family mapping, not a
+                          direct actor column - no feed sets one. */}
+                      {ioc.actor_names?.length > 0
+                        ? ioc.actor_names.map((name) => (
+                            <span key={name} className="text-cyber-accent">
+                              {name}
+                            </span>
+                          ))
+                        : ioc.threat_actor?.name && (
+                            <span className="text-cyber-accent">{ioc.threat_actor.name}</span>
+                          )}
+                      {ioc.sanctioned_by && (
+                        <span
+                          className="text-red-400"
+                          title={`OFAC designated: ${ioc.sanctioned_by}`}
+                        >
+                          OFAC: {ioc.sanctioned_by}
+                        </span>
                       )}
+                      {ioc.sighting_count > 1 && <span>seen {ioc.sighting_count}×</span>}
                       {ioc.tags?.length > 0 && <span>{ioc.tags.slice(0, 3).join(', ')}</span>}
                     </div>
                     <EnrichmentBadges metadata={ioc.metadata} ioc={ioc} />

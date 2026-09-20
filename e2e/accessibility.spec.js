@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { openApp } from './support/app'
 import AxeBuilder from '@axe-core/playwright'
 
 /**
@@ -30,7 +31,7 @@ function formatViolations(violations) {
 
 test.describe('Accessibility - Core Pages', () => {
   test('Dashboard should have no critical a11y violations', async ({ page }) => {
-    await page.goto('/')
+    await openApp(page)
     await page.waitForLoadState('networkidle')
 
     const violations = await checkAccessibility(page)
@@ -44,7 +45,7 @@ test.describe('Accessibility - Core Pages', () => {
   })
 
   test('Threat Actors page should have no critical a11y violations', async ({ page }) => {
-    await page.goto('/actors')
+    await openApp(page, '/actors')
     await page.waitForLoadState('networkidle')
 
     const violations = await checkAccessibility(page)
@@ -58,7 +59,7 @@ test.describe('Accessibility - Core Pages', () => {
   })
 
   test('Incidents page should have no critical a11y violations', async ({ page }) => {
-    await page.goto('/ransomware')
+    await openApp(page, '/ransomware')
     await page.waitForLoadState('networkidle')
 
     const violations = await checkAccessibility(page)
@@ -72,7 +73,7 @@ test.describe('Accessibility - Core Pages', () => {
   })
 
   test('Vulnerabilities page should have no critical a11y violations', async ({ page }) => {
-    await page.goto('/vulnerabilities')
+    await openApp(page, '/vulnerabilities')
     await page.waitForLoadState('networkidle')
 
     const violations = await checkAccessibility(page)
@@ -86,7 +87,7 @@ test.describe('Accessibility - Core Pages', () => {
   })
 
   test('IOC Search page should have no critical a11y violations', async ({ page }) => {
-    await page.goto('/iocs')
+    await openApp(page, '/iocs')
     await page.waitForLoadState('networkidle')
 
     const violations = await checkAccessibility(page)
@@ -100,7 +101,7 @@ test.describe('Accessibility - Core Pages', () => {
   })
 
   test('Settings page should have no critical a11y violations', async ({ page }) => {
-    await page.goto('/settings')
+    await openApp(page, '/settings')
     await page.waitForLoadState('networkidle')
 
     const violations = await checkAccessibility(page)
@@ -116,7 +117,7 @@ test.describe('Accessibility - Core Pages', () => {
 
 test.describe('Accessibility - Navigation & Keyboard', () => {
   test('Page should have accessible navigation structure', async ({ page }) => {
-    await page.goto('/')
+    await openApp(page)
     await page.waitForLoadState('networkidle')
 
     // Check for proper landmark regions
@@ -132,7 +133,7 @@ test.describe('Accessibility - Navigation & Keyboard', () => {
   })
 
   test('All links should have accessible names', async ({ page }) => {
-    await page.goto('/')
+    await openApp(page)
     await page.waitForLoadState('networkidle')
 
     const violations = await checkAccessibility(page)
@@ -146,7 +147,7 @@ test.describe('Accessibility - Navigation & Keyboard', () => {
   })
 
   test('All buttons should have accessible names', async ({ page }) => {
-    await page.goto('/')
+    await openApp(page)
     await page.waitForLoadState('networkidle')
 
     const violations = await checkAccessibility(page)
@@ -160,7 +161,7 @@ test.describe('Accessibility - Navigation & Keyboard', () => {
   })
 
   test('Images should have alt text', async ({ page }) => {
-    await page.goto('/')
+    await openApp(page)
     await page.waitForLoadState('networkidle')
 
     const violations = await checkAccessibility(page)
@@ -176,7 +177,7 @@ test.describe('Accessibility - Navigation & Keyboard', () => {
 
 test.describe('Accessibility - Color Contrast', () => {
   test('Dashboard should have sufficient color contrast', async ({ page }) => {
-    await page.goto('/')
+    await openApp(page)
     await page.waitForLoadState('networkidle')
 
     const violations = await checkAccessibility(page)
@@ -197,7 +198,7 @@ test.describe('Accessibility - Color Contrast', () => {
 
 test.describe('Accessibility - Forms', () => {
   test('IOC Search form should have proper labels', async ({ page }) => {
-    await page.goto('/iocs')
+    await openApp(page, '/iocs')
     await page.waitForLoadState('networkidle')
 
     const violations = await checkAccessibility(page)
@@ -215,7 +216,7 @@ test.describe('Accessibility - Forms', () => {
   })
 
   test('Settings forms should have proper labels', async ({ page }) => {
-    await page.goto('/settings')
+    await openApp(page, '/settings')
     await page.waitForLoadState('networkidle')
 
     const violations = await checkAccessibility(page)
@@ -236,7 +237,7 @@ test.describe('Accessibility - Forms', () => {
 test.describe('Accessibility - Full Audit Report', () => {
   test.skip('Generate full a11y audit report for Dashboard', async ({ page }) => {
     // Skip by default - run manually for detailed reports
-    await page.goto('/')
+    await openApp(page)
     await page.waitForLoadState('networkidle')
 
     const results = await new AxeBuilder({ page })

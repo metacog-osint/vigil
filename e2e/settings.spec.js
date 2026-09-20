@@ -5,10 +5,11 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { openApp } from './support/app'
 
 test.describe('Settings Page', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/settings')
+    await openApp(page, '/settings')
   })
 
   test.describe('Settings Navigation', () => {
@@ -39,27 +40,17 @@ test.describe('Settings Page', () => {
     })
   })
 
-  test.describe('Profile Settings', () => {
-    test('should display profile form', async ({ page }) => {
-      // Look for profile section
-      const profileSection = page.locator(
-        '[data-testid="profile-settings"], h2:has-text("Profile"), text=Profile'
-      )
-
-      if ((await profileSection.count()) > 0) {
-        await profileSection.first().click().catch(() => {})
-      }
-
-      // Check for profile form fields
-      const nameInput = page.locator('input[name="name"], input[placeholder*="name" i]')
-      const emailInput = page.locator('input[name="email"], input[type="email"]')
-
-      // At least one form field should exist
+  test.describe('Settings a free user can see', () => {
+    // Profile and account forms belong to a signed-in account; demo mode has none,
+    // so what Settings offers here is the plan and the workspace configuration.
+    test('should show the subscription section', async ({ page }) => {
+      await expect(page.getByText(/subscription/i).first()).toBeVisible({ timeout: 10000 })
     })
 
-    test('should have save button', async ({ page }) => {
-      const saveButton = page.locator('button:has-text("Save"), button[type="submit"]')
-      await expect(saveButton.first()).toBeVisible({ timeout: 10000 })
+    test('should offer the tabs that do not need an account', async ({ page }) => {
+      for (const name of ['General', 'Webhooks', 'API Docs']) {
+        await expect(page.getByRole('button', { name, exact: true }).first()).toBeVisible()
+      }
     })
   })
 
@@ -202,7 +193,7 @@ test.describe('Settings Page', () => {
 
 test.describe('Settings Persistence', () => {
   test('should show save confirmation', async ({ page }) => {
-    await page.goto('/settings')
+    await openApp(page, '/settings')
 
     // Find any save button and check for confirmation mechanism
     const saveButton = page.locator('button:has-text("Save")')
@@ -217,7 +208,7 @@ test.describe('Settings Persistence', () => {
 
 test.describe('Settings Accessibility', () => {
   test('should have proper form labels', async ({ page }) => {
-    await page.goto('/settings')
+    await openApp(page, '/settings')
 
     // Check that inputs have labels
     const inputs = page.locator('input:not([type="hidden"])')
@@ -239,7 +230,7 @@ test.describe('Settings Accessibility', () => {
   })
 
   test('should be keyboard navigable', async ({ page }) => {
-    await page.goto('/settings')
+    await openApp(page, '/settings')
 
     // Press Tab multiple times and verify focus moves
     for (let i = 0; i < 5; i++) {

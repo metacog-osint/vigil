@@ -5,21 +5,23 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { openApp } from './support/app'
 
 test.describe('Alert Configuration', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to alerts/settings page
-    await page.goto('/alerts')
+    await openApp(page, '/alerts')
   })
 
   test.describe('Alert Rules', () => {
-    test('should display alert rules list', async ({ page }) => {
-      // Wait for page to load
+    test('should display the alert feed, or say why it is empty', async ({ page }) => {
       await expect(page.locator('h1')).toContainText(/alerts/i)
 
-      // Check for alert rules section
-      const rulesSection = page.locator('[data-testid="alert-rules"], .alert-rules, h2:has-text("Rules")')
-      await expect(rulesSection.or(page.locator('text=No alert rules'))).toBeVisible({ timeout: 10000 })
+      // The page lists CISA advisories; with none matching it explains itself
+      // rather than rendering an empty panel.
+      const feed = page.locator('.cyber-card').first()
+      const emptyState = page.getByText(/no alerts found/i)
+      await expect(feed.or(emptyState).first()).toBeVisible({ timeout: 10000 })
     })
 
     test('should have create rule button', async ({ page }) => {
@@ -48,7 +50,7 @@ test.describe('Alert Configuration', () => {
   test.describe('Webhook Configuration', () => {
     test('should navigate to webhook settings', async ({ page }) => {
       // Navigate to settings/webhooks
-      await page.goto('/settings')
+      await openApp(page, '/settings')
 
       // Look for webhooks section or tab
       const webhooksTab = page.locator('text=Webhooks, button:has-text("Webhooks"), a:has-text("Webhooks")')
@@ -59,7 +61,7 @@ test.describe('Alert Configuration', () => {
     })
 
     test('should display webhook list', async ({ page }) => {
-      await page.goto('/settings')
+      await openApp(page, '/settings')
 
       // Find webhooks section
       const webhooksSection = page.locator('[data-testid="webhooks"], .webhooks-section')
@@ -69,7 +71,7 @@ test.describe('Alert Configuration', () => {
     })
 
     test('should show webhook types (Slack, Discord, Teams)', async ({ page }) => {
-      await page.goto('/settings')
+      await openApp(page, '/settings')
 
       // Look for platform options
       const platforms = ['Slack', 'Discord', 'Teams', 'Generic']
@@ -82,7 +84,7 @@ test.describe('Alert Configuration', () => {
 
   test.describe('Notification Preferences', () => {
     test('should show notification settings', async ({ page }) => {
-      await page.goto('/settings')
+      await openApp(page, '/settings')
 
       // Look for notifications section
       const notificationsSection = page.locator(
@@ -94,7 +96,7 @@ test.describe('Alert Configuration', () => {
     })
 
     test('should have email notification toggle', async ({ page }) => {
-      await page.goto('/settings')
+      await openApp(page, '/settings')
 
       // Look for email toggle
       const emailToggle = page.locator(
@@ -106,7 +108,7 @@ test.describe('Alert Configuration', () => {
     })
 
     test('should have push notification toggle', async ({ page }) => {
-      await page.goto('/settings')
+      await openApp(page, '/settings')
 
       // Look for push toggle
       const pushToggle = page.locator(
@@ -118,7 +120,7 @@ test.describe('Alert Configuration', () => {
     })
 
     test('should have quiet hours settings', async ({ page }) => {
-      await page.goto('/settings')
+      await openApp(page, '/settings')
 
       // Look for quiet hours
       const quietHours = page.locator('text=Quiet Hours, text=Do Not Disturb, [data-testid="quiet-hours"]')
@@ -131,7 +133,7 @@ test.describe('Alert Configuration', () => {
   test.describe('Alert History', () => {
     test('should display alert history', async ({ page }) => {
       // Navigate to alerts page
-      await page.goto('/alerts')
+      await openApp(page, '/alerts')
 
       // Look for history section or tab
       const historySection = page.locator(
@@ -143,7 +145,7 @@ test.describe('Alert Configuration', () => {
     })
 
     test('should show alert status indicators', async ({ page }) => {
-      await page.goto('/alerts')
+      await openApp(page, '/alerts')
 
       // Look for status badges
       const statusBadges = page.locator('.badge, [data-testid="alert-status"]')
@@ -154,15 +156,16 @@ test.describe('Alert Configuration', () => {
 
 test.describe('Alert Settings Integration', () => {
   test('should integrate with settings page', async ({ page }) => {
-    await page.goto('/settings')
+    await openApp(page, '/settings')
 
-    // Check for alert-related sections
-    const alertSettings = page.locator('text=Alert, text=Notification')
-    await expect(alertSettings.first()).toBeVisible({ timeout: 10000 })
+    // 'text=' is not CSS and cannot be combined in a selector list, which is why
+    // this never matched anything.
+    const alertSettings = page.getByText(/alert|notification/i).first()
+    await expect(alertSettings).toBeVisible({ timeout: 10000 })
   })
 
   test('should persist notification preferences', async ({ page }) => {
-    await page.goto('/settings')
+    await openApp(page, '/settings')
 
     // This test would require authentication to properly test
     // For now, just verify the settings UI is accessible

@@ -19,6 +19,7 @@ vi.mock('../client', () => {
   return {
     supabase: {
       from: vi.fn(() => mockQuery),
+      rpc: vi.fn(() => Promise.resolve({ data: [], error: null })),
     },
   }
 })
@@ -158,37 +159,58 @@ describe('iocs module', () => {
   })
 
   describe('search', () => {
-    it('should search by value with ilike', async () => {
-      const mockQuery = supabase.from('iocs')
-
+    // Search goes through the search_iocs function rather than a PostgREST filter:
+    // the ilike equivalent timed out for anonymous users (migration 090).
+    it('should search through the search_iocs function', async () => {
       await iocs.search('evil.com')
 
-      expect(supabase.from).toHaveBeenCalledWith('iocs')
-      expect(mockQuery.ilike).toHaveBeenCalledWith('value', '%evil.com%')
+      expect(supabase.rpc).toHaveBeenCalledWith('search_iocs', {
+        p_value: 'evil.com',
+        p_type: null,
+        p_limit: 100,
+      })
     })
 
-    it('should apply type filter when provided', async () => {
-      const mockQuery = supabase.from('iocs')
-
+    it('should pass the type filter through', async () => {
       await iocs.search('192.168', 'ip')
 
-      expect(mockQuery.eq).toHaveBeenCalledWith('type', 'ip')
+      expect(supabase.rpc).toHaveBeenCalledWith('search_iocs', {
+        p_value: '192.168',
+        p_type: 'ip',
+        p_limit: 100,
+      })
     })
 
-    it('should limit results to 100', async () => {
-      const mockQuery = supabase.from('iocs')
+    it('should expose a linked group as threat_actor', async () => {
+      supabase.rpc.mockResolvedValueOnce({
+        data: [{ id: '1', value: 'evil.com', actor_names: ['LockBit', 'Conti'] }],
+        error: null,
+      })
 
-      await iocs.search('test')
+      const { data } = await iocs.search('evil.com')
 
-      expect(mockQuery.limit).toHaveBeenCalledWith(100)
+      expect(data[0].threat_actor).toEqual({ name: 'LockBit' })
+      expect(data[0].actor_names).toEqual(['LockBit', 'Conti'])
     })
 
-    it('should order results by last_seen_at descending', async () => {
-      const mockQuery = supabase.from('iocs')
+    it('should leave threat_actor null when no group is linked', async () => {
+      supabase.rpc.mockResolvedValueOnce({
+        data: [{ id: '1', value: 'evil.com', actor_names: null }],
+        error: null,
+      })
 
-      await iocs.search('malware')
+      const { data } = await iocs.search('evil.com')
 
-      expect(mockQuery.order).toHaveBeenCalledWith('last_seen_at', { ascending: false })
+      expect(data[0].threat_actor).toBeNull()
+    })
+
+    it('should return the error without mapping when the search fails', async () => {
+      supabase.rpc.mockResolvedValueOnce({ data: null, error: { message: 'boom' } })
+
+      const result = await iocs.search('evil.com')
+
+      expect(result.data).toBeNull()
+      expect(result.error).toEqual({ message: 'boom' })
     })
   })
 

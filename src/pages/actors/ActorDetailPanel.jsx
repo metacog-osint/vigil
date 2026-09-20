@@ -2,7 +2,7 @@
  * Actor Detail Panel Component
  * Shows detailed information about a selected threat actor
  */
-import { TrendBadge, Timeline, CorrelationPanel } from '../../components'
+import { TrendBadge, Timeline, CorrelationPanel, ActorProfilePanel } from '../../components'
 
 export function ActorDetailPanel({
   actor,
@@ -111,6 +111,11 @@ export function ActorDetailPanel({
           />
         </div>
       )}
+
+      {/* Sanctions, tooling and leak sites */}
+      <div className="pt-4 border-t border-gray-800">
+        <ActorProfilePanel actorId={actor.id} lastVictim={actor.last_seen} />
+      </div>
 
       {/* Correlation Panel - TTPs, CVEs, IOCs */}
       <div className="pt-4 border-t border-gray-800">

@@ -23,6 +23,8 @@ import { ingestCISAICS } from './feeds/cisa-ics.js'
 // Ransomware & Incidents
 import { ingestRansomlook } from './feeds/ransomlook.js'
 import { ingestRansomwhere } from './feeds/ransomwhere.js'
+import { ingestRansomwareLive } from './feeds/ransomware-live.js'
+import { ingestOFAC } from './feeds/ofac-sdn.js'
 
 // Threat Actor Databases
 import { ingestMalpedia } from './feeds/malpedia.js'
@@ -71,6 +73,14 @@ export default {
             results.dataQuality = error ? { success: false, error: error.message } : { success: true, ...data }
           }
 
+          // Actor status: a group whose infrastructure was seized is marked defunct
+          // once it has been silent for 180 days, and marked active again the moment
+          // it claims another victim (apply_actor_status, migration 096).
+          {
+            const { data, error } = await supabase.rpc('apply_actor_status')
+            results.actorStatus = error ? { success: false, error: error.message } : { success: true, ...data }
+          }
+
           break
 
         // =============================================
@@ -113,6 +123,12 @@ export default {
 
           // Ransomware payments
           results.ransomwhere = await ingestRansomwhere(supabase, env)
+
+          // Group profiles: ATT&CK techniques, tooling and leak sites
+          results.ransomwareLive = await ingestRansomwareLive(supabase, env)
+
+          // Sanctions: OFAC-designated digital currency addresses
+          results.ofac = await ingestOFAC(supabase, env)
 
           // Enrichment
           results.censys = await enrichCensys(supabase, env)
@@ -225,6 +241,8 @@ export default {
                 '/ingest/threatfox',
                 '/ingest/ransomlook',
                 '/ingest/ransomwhere',
+                '/ingest/ransomware-live',
+                '/ingest/ofac',
                 '/ingest/urlhaus',
                 '/ingest/feodo',
                 '/ingest/vulncheck',
@@ -266,7 +284,9 @@ export default {
           malpedia: await ingestMalpedia(supabase, env),
           mispGalaxy: await ingestMISPGalaxy(supabase, env),
           epss: await ingestEPSS(supabase, env),
-          torExits: await ingestTorExits(supabase, env)
+          torExits: await ingestTorExits(supabase, env),
+          ransomwareLive: await ingestRansomwareLive(supabase, env),
+          ofac: await ingestOFAC(supabase, env)
         }
         return jsonResponse(results)
       }
@@ -285,6 +305,8 @@ export default {
         '/ingest/threatfox': () => ingestThreatFox(supabase, env),
         '/ingest/ransomlook': () => ingestRansomlook(supabase, env),
         '/ingest/ransomwhere': () => ingestRansomwhere(supabase, env),
+        '/ingest/ransomware-live': () => ingestRansomwareLive(supabase, env),
+        '/ingest/ofac': () => ingestOFAC(supabase, env),
         '/ingest/urlhaus': () => ingestURLhaus(supabase, env),
         '/ingest/feodo': () => ingestFeodo(supabase, env),
         '/ingest/malwarebazaar': () => ingestMalwareBazaar(supabase, env),
