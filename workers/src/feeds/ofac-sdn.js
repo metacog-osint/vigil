@@ -12,6 +12,17 @@
  *
  * Delisting is recorded, not deleted: upsert_sanctioned_addresses (migration 088)
  * dates any address that has left the list and leaves its history intact.
+ *
+ * Most runs do not download anything. OFAC publishes no delta endpoint and ignores
+ * If-Modified-Since - asked for one, got 200 and all 29 MB back - but it does set
+ * Last-Modified, and a HEAD returns that without the body. The list changes a few
+ * times a month, so comparing the header against feed_cursors (migration 124)
+ * turns most runs into a few hundred bytes.
+ *
+ * A run that checks and finds nothing new is a successful run, not a skipped one.
+ * The distinction matters: the scheduler records `skipped` as "this feed did not
+ * run", which through feed_health means "not fresh", and ofac-sdn is a feed Vigil
+ * makes sanctions claims from. Having checked is the thing being asserted.
  */
 
 const SDN_XML = 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML'
@@ -22,6 +33,25 @@ export async function ingestOFAC(supabase) {
   console.log('Starting OFAC SDN ingestion...')
 
   try {
+    // Ask what the published list is dated before deciding to fetch it.
+    const published = await publishedAt()
+
+    const { data: cursors } = await supabase
+      .from('feed_cursors')
+      .select('cursor', 'feed_id=eq.ofac-sdn')
+    const seen = cursors?.[0]?.cursor || {}
+
+    if (published && seen.last_modified === published) {
+      console.log(`OFAC unchanged since ${published}, not downloading`)
+      return {
+        success: true,
+        source: 'ofac-sdn',
+        unchanged: true,
+        last_modified: published,
+        addresses: seen.addresses ?? null,
+      }
+    }
+
     const response = await fetch(SDN_XML, {
       headers: { 'User-Agent': 'Vigil-ThreatIntel/1.0', Accept: 'application/xml' },
     })
@@ -39,15 +69,45 @@ export async function ingestOFAC(supabase) {
       `OFAC complete: ${data.addresses} addresses (${data.new} new, ${data.delisted} delisted, ` +
         `${data.relisted} relisted), ${data.actors_linked} actor links`
     )
-    return { success: true, source: 'ofac-sdn', ...data }
+    // Recorded only after the upsert succeeded. A cursor written ahead of the data
+    // would tell the next run to skip a list it never actually ingested.
+    if (published) {
+      await supabase.from('feed_cursors').upsert(
+        {
+          feed_id: 'ofac-sdn',
+          cursor: { last_modified: published, addresses: data.addresses ?? rows.length },
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'feed_id' }
+      )
+    }
+
+    return { success: true, source: 'ofac-sdn', last_modified: published, ...data }
   } catch (error) {
     console.error('OFAC ingestion error:', error.message)
     return { success: false, source: 'ofac-sdn', error: error.message }
   }
 }
 
+/**
+ * The publication date of the current list, or null if the HEAD gives no answer.
+ * Null means "fetch anyway": a missing header is not evidence that nothing changed.
+ */
+async function publishedAt() {
+  try {
+    const head = await fetch(SDN_XML, {
+      method: 'HEAD',
+      headers: { 'User-Agent': 'Vigil-ThreatIntel/1.0' },
+    })
+    return head.ok ? head.headers.get('last-modified') : null
+  } catch (error) {
+    console.log(`OFAC HEAD failed (${error.message}), fetching in full`)
+    return null
+  }
+}
+
 // Reads the document one chunk at a time, holding only the current entry.
-async function parseEntries(body) {
+export async function parseEntries(body) {
   const reader = body.pipeThrough(new TextDecoderStream()).getReader()
   const rows = []
   let buffer = ''

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 
-import { selectDueJobs, runJob, runDueJobs } from '../scheduler.js'
+import { selectDueJobs, runJob, runDueJobs, createTimeBudget } from '../scheduler.js'
 import { createSubrequestBudget, SubrequestBudgetError } from '../supabase.js'
 
 /**
@@ -166,6 +166,29 @@ describe('runJob', () => {
     expect(ctx.logDb.rows[0].records_failed).toBe(3)
   })
 
+  it('counts a feed that checked and found nothing new as a successful run', async () => {
+    // OFAC HEADs the list and returns without downloading when Last-Modified has
+    // not moved. Having checked is exactly what the feed asserts, so this must not
+    // be read as a skip - ofac-sdn is critical, and a skip would make feed_health
+    // call it stale and ingestion_is_healthy() answer false.
+    const ctx = context()
+    const result = await runJob(
+      job({
+        run: async () => ({
+          success: true,
+          source: 'ofac-sdn',
+          unchanged: true,
+          last_modified: 'Fri, 18 Sep 2026 14:01:54 GMT',
+          addresses: 1043,
+        }),
+      }),
+      ctx
+    )
+
+    expect(result.status).toBe('success')
+    expect(ctx.logDb.rows[0].status).toBe('success')
+  })
+
   it('records a reported failure as an error', async () => {
     const ctx = context()
     const result = await runJob(
@@ -254,6 +277,91 @@ describe('runDueJobs', () => {
 
     expect(summary.deferred).toEqual(['expensive'])
     expect(summary.ran.map(r => r.id)).toEqual(['cheap'])
+  })
+
+  it('will not start a job that only partly fits', async () => {
+    // The case NVD hit every run: admitted with a third of what it needed, it spent
+    // the rest of the invocation and wrote nothing for it. A job either has room to
+    // finish or waits for a trigger that has room.
+    const budget = createSubrequestBudget({ limit: 30, reserve: 18 }) // ceiling 12
+    const logDb = fakeLog()
+
+    const summary = await runDueJobs({
+      jobs: [job({ id: 'needs-20', cost: 20 })],
+      feedDb: {},
+      logDb,
+      healthDb: healthDb([]),
+      env: {},
+      budget,
+      trigger: 'test'
+    })
+
+    expect(summary.ran).toEqual([])
+    expect(summary.deferred).toEqual(['needs-20'])
+    expect(logDb.rows).toEqual([])
+  })
+
+  it('runs a job whose full cost is exactly what remains', async () => {
+    const budget = createSubrequestBudget({ limit: 30, reserve: 18 }) // ceiling 12
+    const logDb = fakeLog()
+
+    const summary = await runDueJobs({
+      jobs: [job({ id: 'needs-12', cost: 12 })],
+      feedDb: {},
+      logDb,
+      healthDb: healthDb([]),
+      env: {},
+      budget,
+      trigger: 'test'
+    })
+
+    expect(summary.ran.map(r => r.id)).toEqual(['needs-12'])
+  })
+
+  it('stops admitting jobs when the invocation is running out of wall clock', async () => {
+    // A Cron Trigger gets 15 minutes and is then cut off with no error to catch,
+    // which is how the 18:00 run of 20 Sep lost its summary row: ransomware.live
+    // alone took 239 seconds against a loaded database.
+    let now = 0
+    const clock = createTimeBudget({ limitMs: 1000, reserveMs: 400, now: () => now })
+    const logDb = fakeLog()
+
+    const summary = await runDueJobs({
+      jobs: [
+        job({ id: 'in-time', cost: 2, run: async () => { now = 700; return { success: true } } }),
+        job({ id: 'too-late', cost: 2 })
+      ],
+      feedDb: {},
+      logDb,
+      healthDb: healthDb([]),
+      env: {},
+      budget: createSubrequestBudget({ limit: 50, reserve: 18 }),
+      clock,
+      trigger: 'test'
+    })
+
+    expect(summary.ran.map(r => r.id)).toEqual(['in-time'])
+    expect(summary.deferred).toEqual(['too-late'])
+    expect(summary.stoppedEarly).toBe('time')
+  })
+
+  it('runs everything when the clock is not a constraint', async () => {
+    const clock = createTimeBudget({ limitMs: 900000, reserveMs: 300000 })
+    const logDb = fakeLog()
+
+    const summary = await runDueJobs({
+      jobs: [job({ id: 'one', cost: 2 }), job({ id: 'two', cost: 2 })],
+      feedDb: {},
+      logDb,
+      healthDb: healthDb([]),
+      env: {},
+      budget: createSubrequestBudget({ limit: 50, reserve: 18 }),
+      clock,
+      trigger: 'test'
+    })
+
+    expect(summary.ran.map(r => r.id)).toEqual(['one', 'two'])
+    expect(summary.stoppedEarly).toBeNull()
   })
 
   it('still runs when feed_health cannot be read, rather than running nothing', async () => {
