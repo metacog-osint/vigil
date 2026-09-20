@@ -91,9 +91,9 @@ async function fetchMissedAlerts(orgProfile, days = 7) {
     const vendorPattern = orgProfile.tech_vendors.slice(0, 5).join('|')
     const { data: kevs } = await supabase
       .from('vulnerabilities')
-      .select('cve_id, description, published_date')
-      .eq('in_kev', true)
-      .gte('published_date', cutoff.toISOString())
+      .select('cve_id, description, kev_date')
+      .not('kev_date', 'is', null)
+      .gte('kev_date', cutoff.toISOString().split('T')[0])
       .or(
         `description.ilike.%${vendorPattern}%,affected_products.cs.{${orgProfile.tech_vendors.join(',')}}`
       )
@@ -104,7 +104,7 @@ async function fetchMissedAlerts(orgProfile, days = 7) {
         type: 'kev',
         title: `Critical CVE affecting your stack`,
         description: kev.cve_id,
-        date: kev.published_date,
+        date: kev.kev_date,
         relevance: 'critical',
       })
     })
