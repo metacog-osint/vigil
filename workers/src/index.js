@@ -24,6 +24,7 @@ import { ingestCISAICS } from './feeds/cisa-ics.js'
 import { ingestRansomlook } from './feeds/ransomlook.js'
 import { ingestRansomwhere } from './feeds/ransomwhere.js'
 import { ingestRansomwareLive } from './feeds/ransomware-live.js'
+import { ingestOFAC } from './feeds/ofac-sdn.js'
 
 // Threat Actor Databases
 import { ingestMalpedia } from './feeds/malpedia.js'
@@ -117,6 +118,9 @@ export default {
 
           // Group profiles: ATT&CK techniques, tooling and leak sites
           results.ransomwareLive = await ingestRansomwareLive(supabase, env)
+
+          // Sanctions: OFAC-designated digital currency addresses
+          results.ofac = await ingestOFAC(supabase, env)
 
           // Enrichment
           results.censys = await enrichCensys(supabase, env)
@@ -230,6 +234,7 @@ export default {
                 '/ingest/ransomlook',
                 '/ingest/ransomwhere',
                 '/ingest/ransomware-live',
+                '/ingest/ofac',
                 '/ingest/urlhaus',
                 '/ingest/feodo',
                 '/ingest/vulncheck',
@@ -272,7 +277,8 @@ export default {
           mispGalaxy: await ingestMISPGalaxy(supabase, env),
           epss: await ingestEPSS(supabase, env),
           torExits: await ingestTorExits(supabase, env),
-          ransomwareLive: await ingestRansomwareLive(supabase, env)
+          ransomwareLive: await ingestRansomwareLive(supabase, env),
+          ofac: await ingestOFAC(supabase, env)
         }
         return jsonResponse(results)
       }
@@ -292,6 +298,7 @@ export default {
         '/ingest/ransomlook': () => ingestRansomlook(supabase, env),
         '/ingest/ransomwhere': () => ingestRansomwhere(supabase, env),
         '/ingest/ransomware-live': () => ingestRansomwareLive(supabase, env),
+        '/ingest/ofac': () => ingestOFAC(supabase, env),
         '/ingest/urlhaus': () => ingestURLhaus(supabase, env),
         '/ingest/feodo': () => ingestFeodo(supabase, env),
         '/ingest/malwarebazaar': () => ingestMalwareBazaar(supabase, env),
