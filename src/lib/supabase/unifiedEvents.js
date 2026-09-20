@@ -254,7 +254,7 @@ export const unifiedEvents = {
     if (activeTypes.includes('ioc')) {
       let q = supabase
         .from('iocs')
-        .select('*, threat_actor:threat_actors(id, name)')
+        .select('*, threat_actor:threat_actors!iocs_actor_id_fkey(id, name)')
         .order('created_at', { ascending: false })
         .limit(limit)
       if (cutoffDate) q = q.gte('created_at', cutoffDate)

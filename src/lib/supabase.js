@@ -413,7 +413,7 @@ export const iocs = {
       .select(
         `
         *,
-        threat_actor:threat_actors(id, name)
+        threat_actor:threat_actors!iocs_actor_id_fkey(id, name)
       `,
         { count: 'exact' }
       )
@@ -441,7 +441,7 @@ export const iocs = {
       .select(
         `
         *,
-        threat_actor:threat_actors(id, name)
+        threat_actor:threat_actors!iocs_actor_id_fkey(id, name)
       `
       )
       .ilike('value', `%${value}%`)
@@ -470,7 +470,7 @@ export const iocs = {
       .select(
         `
         *,
-        threat_actor:threat_actors(id, name)
+        threat_actor:threat_actors!iocs_actor_id_fkey(id, name)
       `
       )
       .order('created_at', { ascending: false })
@@ -488,7 +488,7 @@ export const iocs = {
         .select(
           `
           *,
-          threat_actor:threat_actors(id, name, trend_status)
+          threat_actor:threat_actors!iocs_actor_id_fkey(id, name, trend_status)
         `
         )
         .or(`value.eq.${value},value.ilike.%${value}%`)
@@ -2463,7 +2463,7 @@ export const unifiedEvents = {
     if (activeTypes.includes('ioc')) {
       let q = supabase
         .from('iocs')
-        .select('*, threat_actor:threat_actors(id, name)')
+        .select('*, threat_actor:threat_actors!iocs_actor_id_fkey(id, name)')
         .order('created_at', { ascending: false })
         .limit(limit)
       if (cutoffDate) q = q.gte('created_at', cutoffDate)
