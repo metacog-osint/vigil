@@ -531,7 +531,7 @@ Pattern-of-life analysis depends on the full record, so observations are only ev
 ### What Vigil does not claim
 
 - **Victim names** are shown as the leak site published them. Where a site redacted a name, Vigil leaves it redacted rather than guessing.
-- **Sector and country** are inferred from victim names by keyword where a source gives none. The coverage is partial and the inference is shallow; it is used for aggregate views, not for individual claims.
+- **Sector and country** come from the source where it supplies them, and are otherwise inferred from the victim's name by keyword. Coverage is partial and stated on every view that depends on it: a country is known for 29% of incidents, and no incident recorded since 29 May 2026 has one, because the feed that carried country stopped. Maps say so rather than showing an empty world.
 - **Leak-site reachability** reflects the last check by the upstream source, not a live probe.
 - **Claimed incidents are claims.** A ransomware group's post asserts a breach; Vigil records the assertion and its date, not a verified compromise.
     `,
