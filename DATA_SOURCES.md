@@ -12,6 +12,7 @@ This document provides a comprehensive overview of all threat intelligence data 
 |--------|----------|-----------|----------|--------|------|
 | RansomLook | `https://www.ransomlook.io/api` | Ransomware incidents, victim claims | Every 30min | `ingest-ransomlook.mjs` | None |
 | Ransomware.live | `https://api.ransomware.live/v2` | Victim claims, historical data (2020+) | Every 6h | `ingest-ransomware-live.mjs` | None |
+| Ransomware.live groups | `https://api.ransomware.live/v2/groups` | Group ATT&CK techniques, tooling, leak-site addresses | Daily 03:00 UTC | `workers/src/feeds/ransomware-live.js` | None |
 | Ransomwatch | `https://raw.githubusercontent.com/joshhighet/ransomwatch/main/` | Victim posts, group metadata | Every 6h | `ingest-ransomwatch.mjs` | None |
 
 ### Indicators of Compromise (IOCs)

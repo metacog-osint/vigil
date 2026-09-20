@@ -23,6 +23,7 @@ import { ingestCISAICS } from './feeds/cisa-ics.js'
 // Ransomware & Incidents
 import { ingestRansomlook } from './feeds/ransomlook.js'
 import { ingestRansomwhere } from './feeds/ransomwhere.js'
+import { ingestRansomwareLive } from './feeds/ransomware-live.js'
 
 // Threat Actor Databases
 import { ingestMalpedia } from './feeds/malpedia.js'
@@ -113,6 +114,9 @@ export default {
 
           // Ransomware payments
           results.ransomwhere = await ingestRansomwhere(supabase, env)
+
+          // Group profiles: ATT&CK techniques, tooling and leak sites
+          results.ransomwareLive = await ingestRansomwareLive(supabase, env)
 
           // Enrichment
           results.censys = await enrichCensys(supabase, env)
@@ -225,6 +229,7 @@ export default {
                 '/ingest/threatfox',
                 '/ingest/ransomlook',
                 '/ingest/ransomwhere',
+                '/ingest/ransomware-live',
                 '/ingest/urlhaus',
                 '/ingest/feodo',
                 '/ingest/vulncheck',
@@ -266,7 +271,8 @@ export default {
           malpedia: await ingestMalpedia(supabase, env),
           mispGalaxy: await ingestMISPGalaxy(supabase, env),
           epss: await ingestEPSS(supabase, env),
-          torExits: await ingestTorExits(supabase, env)
+          torExits: await ingestTorExits(supabase, env),
+          ransomwareLive: await ingestRansomwareLive(supabase, env)
         }
         return jsonResponse(results)
       }
@@ -285,6 +291,7 @@ export default {
         '/ingest/threatfox': () => ingestThreatFox(supabase, env),
         '/ingest/ransomlook': () => ingestRansomlook(supabase, env),
         '/ingest/ransomwhere': () => ingestRansomwhere(supabase, env),
+        '/ingest/ransomware-live': () => ingestRansomwareLive(supabase, env),
         '/ingest/urlhaus': () => ingestURLhaus(supabase, env),
         '/ingest/feodo': () => ingestFeodo(supabase, env),
         '/ingest/malwarebazaar': () => ingestMalwareBazaar(supabase, env),
