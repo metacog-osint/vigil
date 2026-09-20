@@ -7,9 +7,8 @@
  * - Attack attribution by nation
  */
 import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import { SkeletonTable } from '../../../components'
-import { ComposableMap, Geographies, Geography, Tooltip as MapTooltip } from 'react-simple-maps'
+import { ComposableMap, Geographies, Geography } from 'react-simple-maps'
 
 // ISO-2 to ISO-3 mapping for common countries
 const ISO2_TO_ISO3 = {
