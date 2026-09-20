@@ -11,7 +11,7 @@
  */
 
 import { JOBS, JOBS_BY_ID } from './feeds/registry.js'
-import { runDueJobs, runJob } from './lib/scheduler.js'
+import { runDueJobs, runJob, createTimeBudget } from './lib/scheduler.js'
 import { createSupabaseClient, createSubrequestBudget } from './lib/supabase.js'
 
 // Workers Free refuses the 51st subrequest of an invocation. The reserve covers
@@ -37,6 +37,11 @@ export default {
     const feedDb = createSupabaseClient(env, { budget })
     const logDb = createSupabaseClient(env)
 
+    // The other ceiling. A Cron Trigger gets 15 minutes of wall clock and is cut
+    // off without an error to catch, so the scheduler stops admitting jobs while
+    // there is still room to record the run.
+    const clock = createTimeBudget()
+
     console.log(`[${new Date().toISOString()}] Cron triggered: ${trigger}`)
 
     try {
@@ -47,12 +52,14 @@ export default {
         healthDb: logDb.from('feed_health'),
         env,
         budget,
+        clock,
         trigger
       })
 
       const duration = Date.now() - startTime
       console.log(`Ran ${summary.ran.length} job(s) in ${duration}ms; ` +
-        `${summary.deferred.length} deferred`)
+        `${summary.deferred.length} deferred` +
+        (summary.stoppedEarly ? ` (stopped early: ${summary.stoppedEarly})` : ''))
 
       // A run-level row, so "did the trigger fire at all" stays answerable even
       // when no job was due. The per-job rows are the record of the work itself.
@@ -64,6 +71,7 @@ export default {
           trigger,
           duration_ms: duration,
           subrequests_used: summary.subrequestsUsed,
+          stopped_early: summary.stoppedEarly,
           ran: summary.ran,
           deferred: summary.deferred
         }
@@ -153,6 +161,7 @@ export default {
           healthDb: logDb.from('feed_health'),
           env,
           budget,
+          clock: createTimeBudget(),
           trigger: 'http:/ingest/due'
         })
         return jsonResponse(summary)
