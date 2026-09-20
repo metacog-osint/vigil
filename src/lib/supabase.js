@@ -14,6 +14,7 @@ export { supabase, subscribeToTable }
 
 // Modules that live only in ./supabase/, re-exported so both import paths work
 export { profiles } from './supabase/profiles'
+export { landing } from './supabase/landing'
 
 // Threat Actors queries
 export const threatActors = {
