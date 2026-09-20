@@ -1,6 +1,7 @@
 // Change Summary Card - "What's New" since last period
 import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
+import { figure } from '../../lib/format'
 
 function StatItem({ label, value, icon, link, highlight }) {
   const content = (
@@ -14,7 +15,7 @@ function StatItem({ label, value, icon, link, highlight }) {
       <span className="text-xl">{icon}</span>
       <div className="flex-1">
         <div className={clsx('text-lg font-bold', highlight ? 'text-cyber-accent' : 'text-white')}>
-          {value}
+          {figure(value)}
         </div>
         <div className="text-xs text-gray-500">{label}</div>
       </div>
@@ -61,7 +62,7 @@ export function ChangeSummaryCard({ data, loading }) {
   return (
     <div className="cyber-card p-6">
       <h3 className="text-sm text-gray-400 mb-4">
-        What's Changed <span className="text-gray-600">(last {sinceDays} days)</span>
+        What&apos;s Changed <span className="text-gray-600">(last {sinceDays} days)</span>
       </h3>
 
       <div className="space-y-2">
