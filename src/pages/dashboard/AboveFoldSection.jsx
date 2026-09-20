@@ -10,6 +10,15 @@
 import { Link } from 'react-router-dom'
 import { StatCard, SmartTime } from '../../components'
 
+/**
+ * A count the database did not return is shown as an em dash, never as 0.
+ * getOverview returns null when a count query failed, and `|| 0` would turn
+ * that absence into a figure Vigil cannot back.
+ */
+function figure(n) {
+  return typeof n === 'number' ? n.toLocaleString() : '—'
+}
+
 export default function AboveFoldSection({ lastSync, aiSummary, escalatingActors, stats }) {
   return (
     <div className="space-y-4">
@@ -105,7 +114,7 @@ export default function AboveFoldSection({ lastSync, aiSummary, escalatingActors
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3" data-tour="dashboard-stats">
         <StatCard
           label="Active Actors"
-          value={stats?.totalActors || 0}
+          value={figure(stats?.totalActors)}
           trend="neutral"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,7 +129,7 @@ export default function AboveFoldSection({ lastSync, aiSummary, escalatingActors
         />
         <StatCard
           label="Incidents (30d)"
-          value={stats?.incidents30d || 0}
+          value={figure(stats?.incidents30d)}
           trend={stats?.incidents30d > 5 ? 'up' : 'neutral'}
           trendLabel={stats?.incidents30d > 5 ? 'elevated' : undefined}
           icon={
@@ -136,7 +145,7 @@ export default function AboveFoldSection({ lastSync, aiSummary, escalatingActors
         />
         <StatCard
           label="Total Incidents"
-          value={stats?.incidentsTotal || 0}
+          value={figure(stats?.incidentsTotal)}
           trend="neutral"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,7 +160,7 @@ export default function AboveFoldSection({ lastSync, aiSummary, escalatingActors
         />
         <StatCard
           label="Total KEVs"
-          value={stats?.kevTotal || 0}
+          value={figure(stats?.kevTotal)}
           trend="neutral"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +175,7 @@ export default function AboveFoldSection({ lastSync, aiSummary, escalatingActors
         />
         <StatCard
           label="Total IOCs"
-          value={stats?.iocTotal || 0}
+          value={figure(stats?.iocTotal)}
           trend="neutral"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -181,10 +181,6 @@ export default async function handler(req, res) {
           // Send payment failure notification email
           if (userSub?.billing_email && process.env.RESEND_API_KEY) {
             try {
-              const nextRetry = invoice.next_payment_attempt
-                ? new Date(invoice.next_payment_attempt * 1000).toISOString()
-                : null
-
               await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: {

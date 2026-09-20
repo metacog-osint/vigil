@@ -33,7 +33,8 @@ export async function getNewItemCounts(since) {
       // New KEVs
       supabase
         .from('vulnerabilities')
-        .select('id', { count: 'exact', head: true })
+        // vulnerabilities is keyed on cve_id and has no id column
+        .select('cve_id', { count: 'exact', head: true })
         .not('kev_date', 'is', null)
         .gte('kev_date', sinceISO.split('T')[0]),
 

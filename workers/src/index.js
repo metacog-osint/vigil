@@ -3,190 +3,80 @@
  *
  * Handles scheduled data ingestion via Cron Triggers.
  * Replaces GitHub Actions for $0 operating cost.
+ *
+ * Every trigger runs the same scheduler (lib/scheduler.js) over the job registry
+ * (feeds/registry.js). Which feeds run is decided by how overdue they are and how
+ * much of the invocation's subrequest budget is left, not by which cron they were
+ * listed under. See the registry for why.
  */
 
-// IOC Feeds
-import { ingestThreatFox } from './feeds/threatfox.js'
-import { ingestURLhaus } from './feeds/urlhaus.js'
-import { ingestFeodo } from './feeds/feodo.js'
-import { ingestMalwareBazaar } from './feeds/malwarebazaar.js'
-import { ingestPulsedive } from './feeds/pulsedive.js'
-import { ingestTorExits } from './feeds/tor-exits.js'
+import { JOBS, JOBS_BY_ID } from './feeds/registry.js'
+import { runDueJobs, runJob } from './lib/scheduler.js'
+import { createSupabaseClient, createSubrequestBudget } from './lib/supabase.js'
 
-// Vulnerability Feeds
-import { ingestCISAKEV } from './feeds/cisa-kev.js'
-import { ingestVulnCheck } from './feeds/vulncheck.js'
-import { ingestNVD } from './feeds/nvd.js'
-import { ingestEPSS } from './feeds/epss.js'
-import { ingestCISAICS } from './feeds/cisa-ics.js'
-
-// Ransomware & Incidents
-import { ingestRansomlook } from './feeds/ransomlook.js'
-import { ingestRansomwhere } from './feeds/ransomwhere.js'
-import { ingestRansomwareLive } from './feeds/ransomware-live.js'
-import { ingestOFAC } from './feeds/ofac-sdn.js'
-
-// Threat Actor Databases
-import { ingestMalpedia } from './feeds/malpedia.js'
-import { ingestMISPGalaxy } from './feeds/misp-galaxy.js'
-import { ingestMITRE } from './feeds/mitre.js'
-import { ingestMitreAtlas } from './feeds/mitre-atlas.js'
-
-// Network/Routing Intelligence
-import { ingestBGPStream } from './feeds/bgpstream.js'
-
-// Enrichment
-import { enrichCensys } from './feeds/censys.js'
-
-// Malware Intelligence
-import { ingestAnyRun } from './feeds/anyrun.js'
-
-// Supabase Client
-import { createSupabaseClient } from './lib/supabase.js'
+// Workers Free refuses the 51st subrequest of an invocation. The reserve covers
+// this run's own bookkeeping - reading feed_health, a sync_log row per job, the
+// summary row - plus the fetch() calls feeds make directly, which the client
+// cannot see and so cannot count.
+const SUBREQUEST_LIMIT = 50
+const SUBREQUEST_RESERVE = 18
 
 export default {
   // Cron trigger handler
   async scheduled(event, env, ctx) {
-    const cron = event.cron
-    const supabase = createSupabaseClient(env)
+    const trigger = event.cron
     const startTime = Date.now()
 
-    console.log(`[${new Date().toISOString()}] Cron triggered: ${cron}`)
+    // Two clients on purpose. Feeds get the budgeted one and are cut off before
+    // the platform cuts them off; recording what they did goes through the
+    // unbudgeted one, because that write must never be the one that is refused.
+    const budget = createSubrequestBudget({
+      limit: SUBREQUEST_LIMIT,
+      reserve: SUBREQUEST_RESERVE
+    })
+    const feedDb = createSupabaseClient(env, { budget })
+    const logDb = createSupabaseClient(env)
 
-    const results = {}
+    console.log(`[${new Date().toISOString()}] Cron triggered: ${trigger}`)
 
     try {
-      switch (cron) {
-        // =============================================
-        // HOURLY - Critical alerts (ransomware, fresh IOCs)
-        // =============================================
-        case '15 * * * *':
-          console.log('Running hourly critical ingestion...')
-          results.ransomlook = await ingestRansomlook(supabase, env)
-          results.threatfox = await ingestThreatFox(supabase, env)
-
-          // Data-quality review: merge safe actor duplicates, queue alias matches for
-          // review, link orphaned incidents, recompute trends
-          // (run_data_quality_checks, migrations 077/080). Result lands in sync_log.
-          {
-            const { data, error } = await supabase.rpc('run_data_quality_checks')
-            results.dataQuality = error ? { success: false, error: error.message } : { success: true, ...data }
-          }
-
-          // Actor status: a group whose infrastructure was seized is marked defunct
-          // once it has been silent for 180 days, and marked active again the moment
-          // it claims another victim (apply_actor_status, migration 096).
-          {
-            const { data, error } = await supabase.rpc('apply_actor_status')
-            results.actorStatus = error ? { success: false, error: error.message } : { success: true, ...data }
-          }
-
-          // Locate new IP indicators against the local range table (migration 097).
-          // No external call: the ranges live in the database.
-          {
-            const { data, error } = await supabase.rpc('resolve_ioc_geo', { p_limit: 20000 })
-            results.iocGeo = error ? { success: false, error: error.message } : { success: true, ...data }
-          }
-
-          break
-
-        // =============================================
-        // EVERY 6 HOURS - Main IOC and vulnerability feeds
-        // =============================================
-        case '0 */6 * * *':
-          console.log('Running 6-hourly main ingestion...')
-
-          // IOC feeds
-          results.urlhaus = await ingestURLhaus(supabase, env)
-          results.feodo = await ingestFeodo(supabase, env)
-          results.malwarebazaar = await ingestMalwareBazaar(supabase, env)
-          results.pulsedive = await ingestPulsedive(supabase, env)
-
-          // Vulnerability feeds
-          results.cisaKev = await ingestCISAKEV(supabase, env)
-          results.vulncheck = await ingestVulnCheck(supabase, env)
-          results.nvd = await ingestNVD(supabase, env)
-
-          break
-
-        // =============================================
-        // DAILY - Slow-changing sources and enrichment
-        // =============================================
-        case '0 3 * * *':
-          console.log('Running daily ingestion...')
-
-          // Actor databases
-          results.malpedia = await ingestMalpedia(supabase, env)
-          results.mispGalaxy = await ingestMISPGalaxy(supabase, env)
-
-          // Scoring
-          results.epss = await ingestEPSS(supabase, env)
-
-          // IP lists
-          results.torExits = await ingestTorExits(supabase, env)
-
-          // ICS/OT Advisories
-          results.cisaIcs = await ingestCISAICS(supabase, env)
-
-          // Ransomware payments
-          results.ransomwhere = await ingestRansomwhere(supabase, env)
-
-          // Group profiles: ATT&CK techniques, tooling and leak sites
-          results.ransomwareLive = await ingestRansomwareLive(supabase, env)
-
-          // Sanctions: OFAC-designated digital currency addresses
-          results.ofac = await ingestOFAC(supabase, env)
-
-          // Enrichment
-          results.censys = await enrichCensys(supabase, env)
-
-          // Network/Routing Intelligence
-          results.bgpstream = await ingestBGPStream(supabase, env)
-
-          // Malware Intelligence
-          results.anyrun = await ingestAnyRun(supabase, env)
-          break
-
-        // =============================================
-        // WEEKLY - Reference data (Sunday 4am UTC)
-        // =============================================
-        case '0 4 * * SUN':
-          console.log('Running weekly reference data ingestion...')
-          results.mitre = await ingestMITRE(supabase, env)
-          results.mitreAtlas = await ingestMitreAtlas(supabase, env)
-          break
-
-        default:
-          console.log(`Unknown cron schedule: ${cron}`)
-      }
+      const summary = await runDueJobs({
+        jobs: JOBS,
+        feedDb,
+        logDb: logDb.from('sync_log'),
+        healthDb: logDb.from('feed_health'),
+        env,
+        budget,
+        trigger
+      })
 
       const duration = Date.now() - startTime
-      console.log(`Ingestion completed in ${duration}ms`)
-      console.log('Results:', JSON.stringify(results, null, 2))
+      console.log(`Ran ${summary.ran.length} job(s) in ${duration}ms; ` +
+        `${summary.deferred.length} deferred`)
 
-      // Log to sync_log table
-      await supabase.from('sync_log').insert({
-        source: `cloudflare-worker`,
+      // A run-level row, so "did the trigger fire at all" stays answerable even
+      // when no job was due. The per-job rows are the record of the work itself.
+      await logDb.from('sync_log').insert({
+        source: 'worker-run',
         status: 'success',
         completed_at: new Date().toISOString(),
         metadata: {
-          cron,
+          trigger,
           duration_ms: duration,
-          results
+          subrequests_used: summary.subrequestsUsed,
+          ran: summary.ran,
+          deferred: summary.deferred
         }
       })
-
     } catch (error) {
-      console.error('Ingestion error:', error)
+      console.error('Scheduler error:', error)
 
-      await supabase.from('sync_log').insert({
-        source: `cloudflare-worker`,
+      await logDb.from('sync_log').insert({
+        source: 'worker-run',
         status: 'error',
         completed_at: new Date().toISOString(),
-        metadata: {
-          cron,
-          error: error.message
-        }
+        error_message: error.message,
+        metadata: { trigger, duration_ms: Date.now() - startTime }
       })
     }
   },
@@ -194,7 +84,15 @@ export default {
   // HTTP handler (for manual triggers and health checks)
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
-    const supabase = createSupabaseClient(env)
+
+    // Same limits as a cron invocation, so a manual trigger behaves and records
+    // itself exactly as the scheduled one does.
+    const budget = createSubrequestBudget({
+      limit: SUBREQUEST_LIMIT,
+      reserve: SUBREQUEST_RESERVE
+    })
+    const feedDb = createSupabaseClient(env, { budget })
+    const logDb = createSupabaseClient(env)
 
     // CORS headers
     const corsHeaders = {
@@ -238,102 +136,51 @@ export default {
           endpoints: {
             health: '/health',
             ingest: {
-              critical: '/ingest/critical',
-              main: '/ingest/main',
-              daily: '/ingest/daily',
-              weekly: '/ingest/weekly',
-              individual: [
-                '/ingest/kev',
-                '/ingest/cisa-ics',
-                '/ingest/threatfox',
-                '/ingest/ransomlook',
-                '/ingest/ransomwhere',
-                '/ingest/ransomware-live',
-                '/ingest/ofac',
-                '/ingest/urlhaus',
-                '/ingest/feodo',
-                '/ingest/vulncheck',
-                '/ingest/pulsedive',
-                '/ingest/malpedia',
-                '/ingest/misp-galaxy',
-                '/ingest/mitre',
-                '/ingest/tor-exits',
-                '/ingest/bgpstream',
-                '/ingest/anyrun'
-              ]
+              due: '/ingest/due  (runs whatever the scheduler says is overdue)',
+              feed: '/ingest/<feed-id>',
+              feeds: JOBS.map(job => job.id)
             }
           }
         })
       }
 
-      // Batch triggers
-      if (url.pathname === '/ingest/critical') {
-        const results = {
-          ransomlook: await ingestRansomlook(supabase, env),
-          threatfox: await ingestThreatFox(supabase, env)
-        }
-        return jsonResponse(results)
+      // Run whatever is overdue, exactly as a cron trigger would.
+      if (url.pathname === '/ingest/due') {
+        const summary = await runDueJobs({
+          jobs: JOBS,
+          feedDb,
+          logDb: logDb.from('sync_log'),
+          healthDb: logDb.from('feed_health'),
+          env,
+          budget,
+          trigger: 'http:/ingest/due'
+        })
+        return jsonResponse(summary)
       }
 
-      if (url.pathname === '/ingest/main') {
-        const results = {
-          urlhaus: await ingestURLhaus(supabase, env),
-          feodo: await ingestFeodo(supabase, env),
-          malwarebazaar: await ingestMalwareBazaar(supabase, env),
-          cisaKev: await ingestCISAKEV(supabase, env),
-          vulncheck: await ingestVulnCheck(supabase, env)
-        }
-        return jsonResponse(results)
+      // A single job by its registry id. It is run through the scheduler too, so
+      // a manual run lands in sync_log and counts towards the feed's freshness.
+      const feedId = url.pathname.startsWith('/ingest/')
+        ? url.pathname.slice('/ingest/'.length)
+        : null
+      const job = feedId ? JOBS_BY_ID[feedId] : null
+
+      if (job) {
+        const outcome = await runJob(job, {
+          feedDb,
+          logDb: logDb.from('sync_log'),
+          env,
+          budget,
+          trigger: `http:${url.pathname}`
+        })
+        return jsonResponse(outcome, outcome.status === 'success' ? 200 : 502)
       }
 
-      if (url.pathname === '/ingest/daily') {
-        const results = {
-          malpedia: await ingestMalpedia(supabase, env),
-          mispGalaxy: await ingestMISPGalaxy(supabase, env),
-          epss: await ingestEPSS(supabase, env),
-          torExits: await ingestTorExits(supabase, env),
-          ransomwareLive: await ingestRansomwareLive(supabase, env),
-          ofac: await ingestOFAC(supabase, env)
-        }
-        return jsonResponse(results)
-      }
-
-      if (url.pathname === '/ingest/weekly') {
-        const results = {
-          mitre: await ingestMITRE(supabase, env)
-        }
-        return jsonResponse(results)
-      }
-
-      // Individual feed triggers
-      const feedMap = {
-        '/ingest/kev': () => ingestCISAKEV(supabase, env),
-        '/ingest/cisa-ics': () => ingestCISAICS(supabase, env),
-        '/ingest/threatfox': () => ingestThreatFox(supabase, env),
-        '/ingest/ransomlook': () => ingestRansomlook(supabase, env),
-        '/ingest/ransomwhere': () => ingestRansomwhere(supabase, env),
-        '/ingest/ransomware-live': () => ingestRansomwareLive(supabase, env),
-        '/ingest/ofac': () => ingestOFAC(supabase, env),
-        '/ingest/urlhaus': () => ingestURLhaus(supabase, env),
-        '/ingest/feodo': () => ingestFeodo(supabase, env),
-        '/ingest/malwarebazaar': () => ingestMalwareBazaar(supabase, env),
-        '/ingest/vulncheck': () => ingestVulnCheck(supabase, env),
-        '/ingest/nvd': () => ingestNVD(supabase, env),
-        '/ingest/epss': () => ingestEPSS(supabase, env),
-        '/ingest/pulsedive': () => ingestPulsedive(supabase, env),
-        '/ingest/malpedia': () => ingestMalpedia(supabase, env),
-        '/ingest/misp-galaxy': () => ingestMISPGalaxy(supabase, env),
-        '/ingest/mitre': () => ingestMITRE(supabase, env),
-        '/ingest/mitre-atlas': () => ingestMitreAtlas(supabase, env),
-        '/ingest/tor-exits': () => ingestTorExits(supabase, env),
-        '/ingest/censys': () => enrichCensys(supabase, env),
-        '/ingest/bgpstream': () => ingestBGPStream(supabase, env),
-        '/ingest/anyrun': () => ingestAnyRun(supabase, env)
-      }
-
-      if (feedMap[url.pathname]) {
-        const result = await feedMap[url.pathname]()
-        return jsonResponse(result)
+      if (feedId) {
+        return jsonResponse(
+          { error: `Unknown feed '${feedId}'`, feeds: JOBS.map(j => j.id) },
+          404
+        )
       }
 
       return jsonResponse({ error: 'Not found' }, 404)

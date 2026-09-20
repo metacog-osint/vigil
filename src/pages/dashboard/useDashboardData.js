@@ -306,12 +306,14 @@ export default function useDashboardData() {
         const getValue = (result, defaultValue = null) =>
           result.status === 'fulfilled' ? result.value : defaultValue
 
+        // Null, not zero: if the overview query rejected outright we know
+        // nothing about these counts, and a zero would assert that we do.
         const statsData = getValue(results[0], {
-          totalActors: 0,
-          incidents30d: 0,
-          incidentsTotal: 0,
-          kevTotal: 0,
-          iocTotal: 0,
+          totalActors: null,
+          incidents30d: null,
+          incidentsTotal: null,
+          kevTotal: null,
+          iocTotal: null,
         })
         const incidentsData = getValue(results[1], { data: [] })
         const actorsData = getValue(results[2], { data: [] })
