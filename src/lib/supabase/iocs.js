@@ -83,11 +83,14 @@ export const iocs = {
    * users on a 3s timeout. The function fences the ordering and returns the
    * indicator's linked groups and any OFAC designation in the same round trip.
    */
-  async search(value, type = null) {
+  async search(value, type = null, country = null) {
     const { data, error } = await supabase.rpc('search_iocs', {
-      p_value: value,
+      p_value: value || '',
       p_type: type || null,
       p_limit: 100,
+      // A country on its own is a valid search: "what is hosted in RU" is the
+      // question the located indicators exist to answer (migration 114).
+      p_country: country || null,
     })
 
     if (error) return { data: null, error }
