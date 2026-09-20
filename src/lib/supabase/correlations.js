@@ -30,10 +30,12 @@ export const correlations = {
         )
         .eq('actor_id', actorId),
 
-      // Get IOCs
+      // Get IOCs. iocs.actor_id is never set by any feed - indicators arrive
+      // labelled with a malware family, not a group - so the link runs through
+      // ioc_actor_links, the reviewed family-to-actor mapping (migrations 083/084).
       supabase
-        .from('iocs')
-        .select('id, type, value, malware_family, confidence')
+        .from('ioc_actor_links')
+        .select('ioc_id, type, value, malware_family, ioc_source, relation, confidence, rationale')
         .eq('actor_id', actorId)
         .limit(50),
     ])
@@ -41,7 +43,16 @@ export const correlations = {
     return {
       techniques: techniques.data || [],
       vulnerabilities: vulnerabilities.data || [],
-      iocs: iocData.data || [],
+      iocs: (iocData.data || []).map((link) => ({
+        id: link.ioc_id,
+        type: link.type,
+        value: link.value,
+        malware_family: link.malware_family,
+        source: link.ioc_source,
+        confidence: link.confidence,
+        relation: link.relation,
+        rationale: link.rationale,
+      })),
     }
   },
 
