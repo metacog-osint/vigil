@@ -30,13 +30,15 @@ export async function ingestMISPGalaxy(supabase) {
       const batch = actors.slice(i, i + batchSize)
 
       const records = batch.map(actor => {
-        // Handle country - can be string or array
-        let targetCountries = []
-        if (actor.meta?.cfr_suspected_victims) {
-          targetCountries = actor.meta.cfr_suspected_victims
-        } else if (actor.meta?.country) {
-          targetCountries = Array.isArray(actor.meta.country) ? actor.meta.country : [actor.meta.country]
-        }
+        // Countries the group is reported to have attacked. meta.country is NOT
+        // one of them - it is where the group itself is attributed to, and using
+        // it here stated that the Equation Group targets the United States.
+        const victims = actor.meta?.cfr_suspected_victims || actor.meta?.['cfr-suspected-victims']
+        const targetCountries = Array.isArray(victims) ? victims : victims ? [victims] : []
+
+        // Origin travels in its own field, with the confidence the source gives it.
+        const origin = actor.meta?.country
+        const originCountry = Array.isArray(origin) ? origin[0] : origin
 
         return {
           name: actor.value,
@@ -47,6 +49,10 @@ export async function ingestMISPGalaxy(supabase) {
           description: actor.description || null,
           target_sectors: actor.meta?.['cfr-target-category'] || actor.meta?.cfr_target_category || [],
           target_countries: targetCountries,
+          origin_country: originCountry || null,
+          origin_confidence:
+            actor.meta?.['attribution-confidence'] || actor.meta?.attribution_confidence || null,
+          origin_source: originCountry ? 'misp-galaxy' : null,
           metadata: {
             uuid: actor.uuid,
             refs: actor.meta?.refs || [],
