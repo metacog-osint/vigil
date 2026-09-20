@@ -76,6 +76,14 @@ export const JOBS = [
   { id: 'actor-status', priority: 1, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'apply_actor_status') },
   { id: 'ioc-geo', priority: 1, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'resolve_ioc_geo', { p_limit: 5000 }) },
 
+  // --- Delivering what users asked to be told about ---
+  // The window is wider than the cadence on purpose. Matching is deduplicated per
+  // user and item (migration 104), so a run that covers ground an earlier run
+  // already covered delivers nothing twice - which means a skipped hour heals
+  // itself on the next run instead of leaving a gap in someone's alerts.
+  { id: 'alert-rules', priority: 2, cost: 2, intervalMinutes: HOUR,
+    run: (db) => rpc(db, 'evaluate_alert_rules', { p_since: '3 hours', p_max_matches: 5 }) },
+
   // --- Vulnerabilities: what R1/R2 in the offshoot spec depend on ---
   { id: 'cisa-kev', priority: 2, cost: 10, intervalMinutes: 6 * HOUR, run: (db, env) => ingestCISAKEV(db, env) },
   { id: 'vulncheck', priority: 3, cost: 6, intervalMinutes: 6 * HOUR, run: (db, env) => ingestVulnCheck(db, env) },
