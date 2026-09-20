@@ -170,8 +170,8 @@ export default function IOCSearchContent() {
         </div>
 
         <div className="mt-3 text-xs text-gray-500">
-          Examples: SHA256 hash, MD5 hash, IP address, domain name. A two-letter country
-          code searches by where the infrastructure is hosted, with or without a value.
+          Examples: SHA256 hash, MD5 hash, IP address, domain name. A two-letter country code
+          searches by where the infrastructure is hosted, with or without a value.
         </div>
       </form>
 
@@ -243,7 +243,10 @@ export default function IOCSearchContent() {
                       {/* Where the infrastructure sits, for the indicators that
                           resolve to an address (migration 097) */}
                       {ioc.country_code && (
-                        <span className="font-mono text-gray-300" title="Country the address is located in">
+                        <span
+                          className="font-mono text-gray-300"
+                          title="Country the address is located in"
+                        >
                           {ioc.country_code}
                         </span>
                       )}
