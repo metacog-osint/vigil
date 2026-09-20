@@ -316,7 +316,10 @@ const adminNavigationGroup = {
   name: 'Admin',
   defaultExpanded: true,
   adminOnly: true,
-  items: [{ name: 'Operations', href: '/ops', icon: icons.ops }],
+  items: [
+    { name: 'Review Queue', href: '/review', icon: icons.investigations },
+    { name: 'Operations', href: '/ops', icon: icons.ops },
+  ],
 }
 
 // Default pinned items for new users
