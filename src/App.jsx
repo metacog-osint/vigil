@@ -223,6 +223,8 @@ function ProtectedApp() {
                           <Route path="/" element={<Dashboard />} />
                           <Route path="/events" element={<Activity />} />
                           <Route path="/actors" element={<ThreatActors />} />
+                          {/* The panel is the detail view; the url selects which */}
+                          <Route path="/actors/:actorKey" element={<ThreatActors />} />
                           <Route
                             path="/ransomware"
                             element={<Navigate to="/events?view=ransomware" replace />}
@@ -271,6 +273,13 @@ function ProtectedApp() {
                           <Route path="/auth" element={<Navigate to="/" replace />} />
                           <Route path="/login" element={<Navigate to="/" replace />} />
                           <Route path="/register" element={<Navigate to="/" replace />} />
+                          {/*
+                            Without this, an unmatched path signed in matched no
+                            route and <main> rendered nothing at all: sidebar and
+                            header intact, content blank. A visitor cannot tell
+                            that apart from a page that failed to load.
+                          */}
+                          <Route path="*" element={<Navigate to="/" replace />} />
                         </Routes>
                       </Suspense>
                     </ErrorBoundary>
