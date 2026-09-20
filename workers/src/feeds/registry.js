@@ -58,6 +58,11 @@ import { ingestAnyRun } from './anyrun.js'
  * These come from what each feed does per run, not from how big its table is. The
  * hourly feeds are incremental: Ransomlook inserts the handful of posts it has not
  * seen, which is one or two batches, not a backfill.
+ *
+ * A number here can be measured rather than guessed: run the feed with a client
+ * built on createSubrequestBudget({ limit: 10000, reserve: 0 }) and read
+ * budget.used afterwards. That is how nvd's was found to be 40 against a ceiling
+ * of 32 - a feed that could never finish, quietly spending the tail of every run.
  */
 const HOUR = 60
 const DAY = 24 * HOUR
@@ -87,7 +92,7 @@ export const JOBS = [
   // --- Vulnerabilities: what R1/R2 in the offshoot spec depend on ---
   { id: 'cisa-kev', priority: 2, cost: 10, intervalMinutes: 6 * HOUR, run: (db, env) => ingestCISAKEV(db, env) },
   { id: 'vulncheck', priority: 3, cost: 6, intervalMinutes: 6 * HOUR, run: (db, env) => ingestVulnCheck(db, env) },
-  { id: 'nvd', priority: 3, cost: 10, intervalMinutes: 6 * HOUR, run: (db, env) => ingestNVD(db, env) },
+  { id: 'nvd', priority: 3, cost: 12, intervalMinutes: 6 * HOUR, run: (db, env) => ingestNVD(db, env) },
   { id: 'epss', priority: 3, cost: 10, intervalMinutes: DAY, run: (db, env) => ingestEPSS(db, env) },
   { id: 'cisa-ics', priority: 3, cost: 6, intervalMinutes: DAY, run: (db, env) => ingestCISAICS(db, env) },
 
@@ -99,7 +104,7 @@ export const JOBS = [
   { id: 'tor-exits', priority: 4, cost: 6, intervalMinutes: DAY, run: (db, env) => ingestTorExits(db, env) },
 
   // --- Sanctions, payments and group profiles ---
-  { id: 'ofac-sdn', priority: 2, cost: 6, intervalMinutes: DAY, run: (db, env) => ingestOFAC(db, env) },
+  { id: 'ofac-sdn', priority: 2, cost: 4, intervalMinutes: DAY, run: (db, env) => ingestOFAC(db, env) },
   { id: 'ransomware.live', priority: 3, cost: 12, intervalMinutes: DAY, run: (db, env) => ingestRansomwareLive(db, env) },
   { id: 'ransomwhere', priority: 4, cost: 10, intervalMinutes: DAY, run: (db, env) => ingestRansomwhere(db, env) },
 

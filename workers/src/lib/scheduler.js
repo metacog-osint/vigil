@@ -17,12 +17,61 @@
 import { SubrequestBudgetError } from './supabase.js'
 
 /**
- * A job is only started if a useful share of its declared cost is still available.
- * Requiring the full cost would leave cheap jobs waiting behind an expensive one
- * that will never fit; requiring none would start feeds that fail halfway and
- * write nothing useful.
+ * Cloudflare gives a Cron Trigger 15 minutes of wall clock. Unlike the subrequest
+ * cap there is no error to catch: the invocation is simply cut off, which takes the
+ * summary row with it.
  */
-const MIN_SHARE_OF_COST = 0.5
+const CRON_WALL_CLOCK_MS = 15 * 60 * 1000
+
+/**
+ * Held back so the job that is running when the clock runs low can finish and be
+ * recorded. Five minutes because the slowest run observed - ransomware.live, on a
+ * loaded database - took 239 seconds, and a feed that starts at minute 14 of 15
+ * finishes into a closed door.
+ */
+const TIME_RESERVE_MS = 5 * 60 * 1000
+
+/**
+ * The clock, in the same shape as the subrequest budget and for the same reason:
+ * stop before the platform stops you, so there is room left to say what happened.
+ *
+ * It governs admission only. A job already running cannot be interrupted, which is
+ * what the reserve is for.
+ *
+ * `now` is injectable so this can be tested without waiting a quarter of an hour.
+ */
+export function createTimeBudget({
+  limitMs = CRON_WALL_CLOCK_MS,
+  reserveMs = TIME_RESERVE_MS,
+  now = Date.now,
+} = {}) {
+  const startedAt = now()
+  const ceiling = limitMs - reserveMs
+
+  return {
+    get elapsedMs() { return now() - startedAt },
+    get remainingMs() { return Math.max(0, ceiling - (now() - startedAt)) },
+    get expired() { return now() - startedAt >= ceiling },
+  }
+}
+
+/**
+ * A job is started only when its whole declared cost is still available.
+ *
+ * This began as half the cost, on the reasoning that a job given most of what it
+ * needs would mostly finish. It does not work that way. A feed that runs out
+ * part-way has still spent everything it used getting there, and it writes nothing
+ * for it - the budget is gone and the work is not done. NVD did this on every run:
+ * admitted with a third of what it needed, it burned the rest of the invocation and
+ * was recorded as budget_exhausted, which is also why the feeds below it in the
+ * queue never got a slot.
+ *
+ * Nothing is starved by this. The admission loop skips a job it cannot afford and
+ * keeps looking, so a cheap job still runs behind an expensive one that was passed
+ * over, and the expensive one is picked up by a trigger with more room - the
+ * 6-hourly and daily ticks, where the hourly feeds are not due.
+ */
+const REQUIRE_FULL_COST = 1
 
 /**
  * Reads the last successful run of every job. `feed_health` (migration 101) does
@@ -136,24 +185,40 @@ export async function runJob(job, { feedDb, logDb, env, budget, trigger }) {
  * Runs due jobs until the subrequest budget runs low. Whatever does not fit is
  * left for the next trigger, which will find it further overdue and take it first.
  */
-export async function runDueJobs({ jobs, feedDb, logDb, healthDb, env, budget, trigger }) {
+export async function runDueJobs({ jobs, feedDb, logDb, healthDb, env, budget, clock, trigger }) {
   const health = await readFeedHealth(healthDb)
   const due = selectDueJobs(jobs, health)
 
   const ran = []
   const deferred = []
+  let stoppedEarly = null
 
   for (const job of due) {
-    // `continue`, not `break`: a cheap job further down the list can still run
-    // after an expensive one has been passed over.
-    if (budget.remaining < job.cost * MIN_SHARE_OF_COST) {
+    // Out of time stops everything: unlike the subrequest budget, waiting does not
+    // free any up, so there is no cheaper job further down that could still fit.
+    if (clock?.expired) {
+      stoppedEarly = 'time'
       deferred.push(job.id)
       continue
     }
+
+    // `continue`, not `break`: a cheap job further down the list can still run
+    // after an expensive one has been passed over.
+    if (budget.remaining < job.cost * REQUIRE_FULL_COST) {
+      deferred.push(job.id)
+      continue
+    }
+
     ran.push(await runJob(job, { feedDb, logDb, env, budget, trigger }))
   }
 
-  return { ran, deferred, subrequestsUsed: budget.used }
+  return {
+    ran,
+    deferred,
+    stoppedEarly,
+    subrequestsUsed: budget.used,
+    elapsedMs: clock?.elapsedMs ?? null,
+  }
 }
 
 /**
