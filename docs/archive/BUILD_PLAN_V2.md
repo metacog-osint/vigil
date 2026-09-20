@@ -1,5 +1,12 @@
 # Vigil Build Plan v2.0
 
+> **Archived 20 September 2026.** Kept because it records what was planned and why, which
+> is worth having. It is **not** current: it was last revised in January 2026 and
+> describes a smaller project than the one in this repository. Where it disagrees
+> with `README.md` or the migration headers, they are right and this is not.
+>
+> Superseded by the README and by `supabase/migrations/`, where the reasoning for each decision now lives.
+
 > Comprehensive development plan consolidating all roadmaps and technical debt items.
 >
 > **Created:** January 15, 2026
@@ -32,6 +39,7 @@
 This document is the **single source of truth** for all Vigil development planning.
 
 Previously consolidated from (now archived in `docs/archive/`):
+
 - `CORRECTIVE_ACTION_PLAN.md` - Technical debt and code quality
 - `SAAS_ROADMAP.md` - SaaS monetization features
 - `ALERTING_SYSTEM.md` - Real-time alerting architecture
@@ -39,12 +47,14 @@ Previously consolidated from (now archived in `docs/archive/`):
 - `PERFORMANCE_OPTIMIZATION_PLAN.md` - Bundle optimization
 
 Active reference documents in `docs/`:
+
 - `DATA_SOURCES.md` - Data integration roadmap (root)
 - `FEATURES.md` - Feature documentation
 - `DEPENDENCY_AUDIT.md` - Security tracking
 - `THREAT_COVERAGE_GAPS.md` - Strategic planning
 
 ### Key Stats
+
 - **Current Version:** 1.3.2
 - **Unit Tests:** 909 passing
 - **Test Coverage:** 50.7% statements, 43% branches
@@ -60,48 +70,52 @@ Active reference documents in `docs/`:
 ## What's Complete
 
 ### Corrective Action Plan (Phases 1-9)
-| Phase | Status | Notes |
-|-------|--------|-------|
-| Phase 1: Documentation | 90% | Minor cross-refs remaining |
-| Phase 2: Constants | 95% | Shared script utils deferred |
-| Phase 3: Supabase | 100% | 22 modules extracted |
-| Phase 4: Components | 100% | 39 components organized |
-| Phase 5: Large Pages | 100% | 6 pages refactored |
-| Phase 6: Large Components | 100% | Reviewed, acceptable |
-| Phase 7: CI/CD | 85% | E2E in CI deferred |
-| Phase 8: Testing | 100% | 909 tests, 50.7%+ coverage ✅ |
-| Phase 9: Performance/A11y | 95% | Bundle optimized ✅ |
+
+| Phase                     | Status | Notes                         |
+| ------------------------- | ------ | ----------------------------- |
+| Phase 1: Documentation    | 90%    | Minor cross-refs remaining    |
+| Phase 2: Constants        | 95%    | Shared script utils deferred  |
+| Phase 3: Supabase         | 100%   | 22 modules extracted          |
+| Phase 4: Components       | 100%   | 39 components organized       |
+| Phase 5: Large Pages      | 100%   | 6 pages refactored            |
+| Phase 6: Large Components | 100%   | Reviewed, acceptable          |
+| Phase 7: CI/CD            | 85%    | E2E in CI deferred            |
+| Phase 8: Testing          | 100%   | 909 tests, 50.7%+ coverage ✅ |
+| Phase 9: Performance/A11y | 95%    | Bundle optimized ✅           |
 
 ### Next Phase Plan (Phase 7)
-| Section | Status |
-|---------|--------|
+
+| Section                   | Status   |
+| ------------------------- | -------- |
 | Data Sources (Enrichment) | Complete |
-| Team Features | Complete |
-| Security (2FA, Sessions) | Complete |
-| Performance (Offline) | Complete |
-| Documentation (Help) | Complete |
+| Team Features             | Complete |
+| Security (2FA, Sessions)  | Complete |
+| Performance (Offline)     | Complete |
+| Documentation (Help)      | Complete |
 
 ### SaaS Roadmap (Phase 1)
-| Feature | Status |
-|---------|--------|
-| Scheduled Reports | Complete |
+
+| Feature            | Status   |
+| ------------------ | -------- |
+| Scheduled Reports  | Complete |
 | Alert Rules Engine | Complete |
-| Usage Analytics | Complete |
-| Feature Gating | Complete |
+| Usage Analytics    | Complete |
+| Feature Gating     | Complete |
 
 ### Real-Time Alerting System (v0.3.0)
+
 Fully documented in `ALERTING_SYSTEM.md`. Implementation status:
 
-| Component | File | Status |
-|-----------|------|--------|
-| Database migration | `supabase/migrations/028_realtime_alerts.sql` | Complete |
-| Push subscriptions | `src/lib/alerts.js` | Complete |
-| Webhook CRUD (Slack/Discord/Teams) | `src/lib/alerts.js` | Complete |
-| Email templates | `src/lib/email.js` (Resend API) | Complete |
-| Alert Settings UI | `src/components/AlertSettingsSection.jsx` | Complete |
-| Alert queue processor | `scripts/process-alerts.mjs` | Complete |
-| Push notification handlers | `public/sw.js` | Complete |
-| Fast ingestion workflow | `.github/workflows/critical-alerts-ingestion.yml` | Complete (30-min) |
+| Component                          | File                                              | Status            |
+| ---------------------------------- | ------------------------------------------------- | ----------------- |
+| Database migration                 | `supabase/migrations/028_realtime_alerts.sql`     | Complete          |
+| Push subscriptions                 | `src/lib/alerts.js`                               | Complete          |
+| Webhook CRUD (Slack/Discord/Teams) | `src/lib/alerts.js`                               | Complete          |
+| Email templates                    | `src/lib/email.js` (Resend API)                   | Complete          |
+| Alert Settings UI                  | `src/components/AlertSettingsSection.jsx`         | Complete          |
+| Alert queue processor              | `scripts/process-alerts.mjs`                      | Complete          |
+| Push notification handlers         | `public/sw.js`                                    | Complete          |
+| Fast ingestion workflow            | `.github/workflows/critical-alerts-ingestion.yml` | Complete (30-min) |
 
 Database tables: `push_subscriptions`, `alert_webhooks`, `alert_queue`, `alert_deliveries`
 Database triggers: `auto_queue_incident_alert`, `auto_queue_kev_alert`
@@ -115,25 +129,31 @@ Database triggers: `auto_queue_incident_alert`, `auto_queue_kev_alert`
 > Items remaining from CORRECTIVE_ACTION_PLAN.md
 
 ### A.1 Documentation Cleanup (LOW PRIORITY) ✅ COMPLETE
+
 - [x] Trim `CLAUDE.md` - remove duplicated schema/architecture content
 - [x] Update `docs/DATA_INGESTION.md` to reference `DATA_SOURCES.md`
 - [x] Update `README.md` to link to new docs structure
 - [x] Add consistent headers and last-updated dates to all docs
 
 ### A.2 Shared Script Utilities (LOW PRIORITY) ✅ COMPLETE
+
 - [x] Create `scripts/lib/http.mjs` with fetchJSON, fetchWithRetry, fetchWithAuth
 - [x] Update ingestion scripts to use shared HTTP module
 - [x] Remove inline sector classification from `ingest-ransomwatch.mjs`
 
 ### A.3 Custom Hooks (MEDIUM PRIORITY) ✅ COMPLETE
+
 Create standardized hooks for page components:
+
 - [x] `src/hooks/useFilters.js` - standardized filter state management, URL sync, search debounce
 - [x] `src/hooks/useDataLoading.js` - data fetching with caching, pagination, infinite scroll
 - [x] `src/hooks/useTableState.js` - sorting, selection, pagination, keyboard navigation
 - [x] `src/hooks/index.js` - barrel export updated
 
 ### A.4 Testing Improvements (HIGH PRIORITY) - PARTIAL ✅
+
 Unit tests for core modules:
+
 - [x] `src/lib/supabase/threatActors.js` tests (18 tests)
 - [x] `src/lib/supabase/incidents.js` tests (31 tests)
 - [x] `src/lib/supabase/iocs.js` tests (49 tests)
@@ -142,6 +162,7 @@ Unit tests for core modules:
 - [x] `src/lib/supabase.js` tests (71 tests - main exports)
 
 E2E test expansion:
+
 - [x] Add Firefox browser to Playwright config (already in matrix)
 - [x] Add Safari/WebKit browser to Playwright config (already in matrix)
 - [x] Add mobile viewport testing (`e2e/mobile.spec.js` + viewport tests in watchlists/export)
@@ -149,10 +170,12 @@ E2E test expansion:
 - [x] Add export functionality test (`e2e/export.spec.js` enhanced with STIX)
 
 Test infrastructure:
+
 - [x] Add test coverage reporting to CI (Codecov integration)
 - [x] Set coverage threshold (35% statements, 25% branches/functions)
 
 ### A.5 Performance & Accessibility (MEDIUM PRIORITY) ✅ MOSTLY COMPLETE
+
 - [x] Add React.memo to expensive components
   - SeverityBadge, SeverityDot, SeverityBar, EPSSBadge (badges)
   - TrendBadge, TrendIndicator (badges)
@@ -172,6 +195,7 @@ Test infrastructure:
   - Added aria-hidden to backdrop elements
 
 ### A.6 CI/CD Improvements (LOW PRIORITY) ✅ MOSTLY COMPLETE
+
 - [x] Fix Malpedia/MISP Galaxy trigger conditions in `data-ingestion.yml`
   - Malpedia now uses 'malpedia' filter option
   - MISP Galaxy now uses 'misp-galaxy' filter option
@@ -183,9 +207,11 @@ Test infrastructure:
 - [x] Change `no-unused-vars` from warn to error - `.eslintrc.cjs` line 30
 
 ### A.7 Ops Dashboard & Production Hardening (MEDIUM PRIORITY)
+
 Internal operational monitoring and Stripe edge cases:
 
 **Ops Dashboard** ✅ COMPLETE
+
 - [x] Create internal ops dashboard (`src/pages/admin/OpsDashboard.jsx`)
 - [x] Sync status monitoring (last successful ingest per source)
 - [x] Error rate tracking and alerts
@@ -194,6 +220,7 @@ Internal operational monitoring and Stripe edge cases:
 - [x] Route at `/ops` with sidebar navigation
 
 **Stripe Production Hardening** ✅ COMPLETE
+
 - [x] Payment failure handling (past_due status) - `api/stripe/webhook.js`
 - [x] Grace period logic for failed payments (14-day grace period)
 - [x] Dunning email sequence - `scripts/process-dunning.mjs` (days 3, 7, 10, 14)
@@ -202,6 +229,7 @@ Internal operational monitoring and Stripe edge cases:
 - [x] Payment failure email templates - `src/lib/email.js`
 
 **Tier Propagation Audit** ✅ COMPLETE
+
 - [x] Audit all pages for proper feature gating
 - [x] Added FeatureGate to Watchlists.jsx (professional: watchlist)
 - [x] Added FeatureGate to ThreatHunts.jsx (professional: threat_hunts)
@@ -218,58 +246,65 @@ Internal operational monitoring and Stripe edge cases:
 > Items from DATA_SOURCES.md revised rollout plan
 
 ### B.1 Critical Priority Data Sources ✅ COMPLETE
+
 **Must-have sources for core functionality**
 
-| Source | Script | Effort | Status |
-|--------|--------|--------|--------|
-| EPSS | `ingest-epss.mjs` | 3 hours | ✅ Complete |
+| Source      | Script            | Effort  | Status      |
+| ----------- | ----------------- | ------- | ----------- |
+| EPSS        | `ingest-epss.mjs` | 3 hours | ✅ Complete |
 | GitHub GHSA | `ingest-ghsa.mjs` | 4 hours | ✅ Complete |
 
 Database changes:
+
 - ✅ `epss_score` FLOAT exists in `vulnerabilities` table
 - ✅ `epss_percentile` FLOAT exists in `vulnerabilities` table
 - ✅ `advisories` table created (migration 029)
 - ✅ Advisories page added to UI
 
 ### B.2 High Priority Data Sources ✅ COMPLETE
+
 **Quick wins - free, simple JSON/text feeds**
 
-| Source | Script | Effort | Status |
-|--------|--------|--------|--------|
-| Tor Exit Nodes | `ingest-tor-exits.mjs` | 2 hours | ✅ Complete |
-| Firehol Level 1 | `ingest-firehol.mjs` | 2 hours | ✅ Complete |
-| OpenPhish | `ingest-openphish.mjs` | 2 hours | ✅ Complete |
-| C2-Tracker | `ingest-c2-tracker.mjs` | 4 hours | ✅ Complete |
-| crt.sh | `ingest-crtsh.mjs` | 4 hours | ✅ Complete |
-| Maltrail | `ingest-maltrail.mjs` | 3 hours | ✅ Complete |
+| Source          | Script                  | Effort  | Status      |
+| --------------- | ----------------------- | ------- | ----------- |
+| Tor Exit Nodes  | `ingest-tor-exits.mjs`  | 2 hours | ✅ Complete |
+| Firehol Level 1 | `ingest-firehol.mjs`    | 2 hours | ✅ Complete |
+| OpenPhish       | `ingest-openphish.mjs`  | 2 hours | ✅ Complete |
+| C2-Tracker      | `ingest-c2-tracker.mjs` | 4 hours | ✅ Complete |
+| crt.sh          | `ingest-crtsh.mjs`      | 4 hours | ✅ Complete |
+| Maltrail        | `ingest-maltrail.mjs`   | 3 hours | ✅ Complete |
 
 ### B.3 High-Value Additions
+
 **Exploit and attack intelligence**
 
-| Source | Script | Effort | Status |
-|--------|--------|--------|--------|
-| Exploit-DB | `ingest-exploitdb.mjs` | 6 hours | ✅ Complete |
-| Blocklist.de | `ingest-blocklist-de.mjs` | 3 hours | ✅ Complete |
-| Emerging Threats | `ingest-emerging-threats.mjs` | 4 hours | ✅ Complete |
-| Nuclei Templates | `ingest-nuclei-templates.mjs` | 5 hours | ✅ Complete |
-| Pulsedive | `ingest-pulsedive.mjs` | 4 hours | ✅ Ready (API key configured) |
+| Source           | Script                        | Effort  | Status                        |
+| ---------------- | ----------------------------- | ------- | ----------------------------- |
+| Exploit-DB       | `ingest-exploitdb.mjs`        | 6 hours | ✅ Complete                   |
+| Blocklist.de     | `ingest-blocklist-de.mjs`     | 3 hours | ✅ Complete                   |
+| Emerging Threats | `ingest-emerging-threats.mjs` | 4 hours | ✅ Complete                   |
+| Nuclei Templates | `ingest-nuclei-templates.mjs` | 5 hours | ✅ Complete                   |
+| Pulsedive        | `ingest-pulsedive.mjs`        | 4 hours | ✅ Ready (API key configured) |
 
 Database changes:
+
 - ✅ `exploits` table created (migration 031)
 - ✅ Added `exploit_count`, `exploit_types`, `exploit_platforms`, `has_public_exploit` to `vulnerabilities`
 - ✅ Added exploit filter and display to Vulnerabilities UI
 - Add `source_feed` tracking for IOC deduplication
 
 ### B.4 DNS & Certificate Intelligence ✅ MOSTLY COMPLETE
+
 **Domain monitoring capabilities**
 
-| Source | Script | Effort | Status |
-|--------|--------|--------|--------|
-| CIRCL Passive DNS | `enrich-circl-pdns.mjs` | 6 hours | ✅ Complete |
-| Censys Certificates | `ingest-censys.mjs` | 8 hours | ✅ Ready (API key configured) |
-| Certificate Alerting | `monitor-certificates.mjs` | 6 hours | ✅ Complete (via crt.sh) |
+| Source               | Script                     | Effort  | Status                        |
+| -------------------- | -------------------------- | ------- | ----------------------------- |
+| CIRCL Passive DNS    | `enrich-circl-pdns.mjs`    | 6 hours | ✅ Complete                   |
+| Censys Certificates  | `ingest-censys.mjs`        | 8 hours | ✅ Ready (API key configured) |
+| Certificate Alerting | `monitor-certificates.mjs` | 6 hours | ✅ Complete (via crt.sh)      |
 
 Database changes (migration 033):
+
 - ✅ `dns_records` table - CIRCL passive DNS data
 - ✅ `certificates` table - SSL/TLS certificate tracking
 - ✅ `certificate_hosts` table - IP/certificate associations
@@ -277,29 +312,33 @@ Database changes (migration 033):
 - ✅ `monitored_domains` table - User domain configuration
 
 ### B.5 Enhanced Sandbox Integration
+
 **Malware analysis expansion**
 
-| Source | Script | Effort | Status |
-|--------|--------|--------|--------|
-| ANY.RUN Trends | `workers/src/feeds/anyrun.js` | 4 hours | ✅ Complete (scraper) |
-| Triage | `ingest-triage.mjs` | 6 hours | ⏳ Awaiting API key |
-| Sandbox Correlation | `correlate-sandbox.mjs` | 8 hours | Pending |
+| Source              | Script                        | Effort  | Status                |
+| ------------------- | ----------------------------- | ------- | --------------------- |
+| ANY.RUN Trends      | `workers/src/feeds/anyrun.js` | 4 hours | ✅ Complete (scraper) |
+| Triage              | `ingest-triage.mjs`           | 6 hours | ⏳ Awaiting API key   |
+| Sandbox Correlation | `correlate-sandbox.mjs`       | 8 hours | Pending               |
 
 Database changes:
+
 - ✅ `malware_families` table (migration 058)
 - New `sandbox_reports` table (pending)
 
 **Note:** ANY.RUN no longer offers free API access. Implementation scrapes the public malware trends page with fallback data.
 
 ### B.6 Vulnerability Prioritization ✅ MOSTLY COMPLETE
+
 **Risk-based vulnerability scoring**
 
-| Source | Script | Effort | Status |
-|--------|--------|--------|--------|
-| VulnCheck KEV | `enrich-vulncheck.mjs` | 6 hours | ✅ Ready (API key configured) |
-| Vulnerability Prioritization | `prioritize-vulnerabilities.mjs` | 6 hours | ✅ Complete |
+| Source                       | Script                           | Effort  | Status                        |
+| ---------------------------- | -------------------------------- | ------- | ----------------------------- |
+| VulnCheck KEV                | `enrich-vulncheck.mjs`           | 6 hours | ✅ Ready (API key configured) |
+| Vulnerability Prioritization | `prioritize-vulnerabilities.mjs` | 6 hours | ✅ Complete                   |
 
 Database changes (migration 035):
+
 - ✅ `priority_score` - Weighted 0-100 score
 - ✅ `priority_level` - critical/high/medium/low/info
 - ✅ `priority_factors` - Breakdown of contributing factors
@@ -307,22 +346,24 @@ Database changes (migration 035):
 
 ### B.7 Future Considerations (Backlog)
 
-| Source | Value | Blocker | Status |
-|--------|-------|---------|--------|
-| MITRE ATLAS | AI/ML adversarial techniques | None | ✅ Complete |
-| UMD Cyber Events Database | Nation-state attribution | None | ✅ Complete |
-| GDELT Project | Real-time news monitoring | Complex implementation | 📋 Planned (complementary to UMD) |
-| IntelOwl Integration | Aggregated enrichment | Self-hosting | Pending |
-| Dark Web Monitoring | Early breach warning | Complex implementation | Not recommended |
-| Shodan Full API | Deep infrastructure intel | Paid tier | Pending |
+| Source                    | Value                        | Blocker                | Status                            |
+| ------------------------- | ---------------------------- | ---------------------- | --------------------------------- |
+| MITRE ATLAS               | AI/ML adversarial techniques | None                   | ✅ Complete                       |
+| UMD Cyber Events Database | Nation-state attribution     | None                   | ✅ Complete                       |
+| GDELT Project             | Real-time news monitoring    | Complex implementation | 📋 Planned (complementary to UMD) |
+| IntelOwl Integration      | Aggregated enrichment        | Self-hosting           | Pending                           |
+| Dark Web Monitoring       | Early breach warning         | Complex implementation | Not recommended                   |
+| Shodan Full API           | Deep infrastructure intel    | Paid tier              | Pending                           |
 
 **MITRE ATLAS Implementation:**
+
 - Feed: `workers/src/feeds/mitre-atlas.js` - Custom YAML parser for CF Workers
 - Migration: `060_atlas_support.sql` - Added framework column, case studies table
 - 182 AI/ML adversarial techniques imported (40 techniques + 142 sub-techniques)
 - Weekly sync on Sundays with MITRE ATT&CK
 
 **UMD Cyber Events Implementation:**
+
 - Script: `scripts/ingest-umd-cyber-events.mjs` - Excel parser with XLSX library
 - Migration: `061_cyber_events.sql` - Full schema with indexes, views, RLS
 - 16,104 structured cyber events (2014-2025)
@@ -339,7 +380,9 @@ Database changes (migration 035):
 ### C.1 Retention & Stickiness Features
 
 #### Investigation Notebooks Enhancement ✅ COMPLETE
+
 Current: Basic investigations page exists
+
 - [x] Rich text notes with markdown editor (migration 040)
 - [x] Entity attachment UI improvements (InvestigationNotebook.jsx)
 - [x] Timeline of investigation activity (investigation_activities table)
@@ -347,6 +390,7 @@ Current: Basic investigations page exists
 - [x] Export to PDF with formatting - `src/lib/investigationExport.js`
 
 #### Attack Surface Monitoring ✅ COMPLETE
+
 - [x] Asset inventory (domains, IPs, email domains) - Assets page + migration 017
 - [x] Continuous matching against IOC feeds - monitor-assets.mjs script
 - [x] Alerts when assets are mentioned - trigger + alert queue integration (migration 032)
@@ -354,7 +398,9 @@ Current: Basic investigations page exists
 - [ ] Certificate transparency monitoring
 
 #### Custom IOC Lists Enhancement ✅ COMPLETE
+
 Current: CustomIOCs page exists
+
 - [x] STIX/MISP JSON import support - `src/lib/iocImport.js`
 - [x] OpenIOC XML import - `src/lib/iocImport.js`
 - [x] IOC import UI in CustomIOCs page - Enhanced ImportModal with file upload
@@ -362,7 +408,9 @@ Current: CustomIOCs page exists
 - [x] Correlation with public IOCs visualization - IOCCorrelationGraph.jsx
 
 #### Saved Searches & Views ✅ COMPLETE
+
 Current: Basic saved searches exist with alerting
+
 - [x] Share views with team (migration 042)
 - [x] Set default view per page (user_default_views table)
 - [x] Quick access from sidebar (user_pinned_views table)
@@ -375,7 +423,9 @@ Current: Basic saved searches exist with alerting
 ### C.2 API & Webhooks ✅ COMPLETE
 
 #### Webhook System
+
 Current: `alert_webhooks` table and CRUD in `src/lib/alerts.js`
+
 - [x] Webhook URL registration UI in Settings
 - [x] Event type filtering UI
 - [x] Retry logic with exponential backoff (in migration 024)
@@ -384,6 +434,7 @@ Current: `alert_webhooks` table and CRUD in `src/lib/alerts.js`
 - [x] Signature verification (HMAC) - migration 030, UI for generic webhooks
 
 Webhook events:
+
 ```javascript
 const WEBHOOK_EVENTS = [
   'incident.created',
@@ -396,12 +447,14 @@ const WEBHOOK_EVENTS = [
 ```
 
 #### API Enhancements ✅ COMPLETE
+
 - [x] API versioning (v2) - migration 041, api_versions table
 - [x] Rate limit headers - check_api_rate_limit() function
 - [x] Pagination cursors in response - api_pagination_cursors table
 - [x] Bulk endpoints for efficiency - api_bulk_operations table
 
 ### C.3 Interactive Chat Bots ✅ COMPLETE
+
 - [x] Slack interactive commands (`/vigil search`, `/vigil actor`) - `src/lib/chatBots.js`
 - [x] Teams bot with card responses - Adaptive Cards formatting
 - [x] Discord bot support - Embed formatting
@@ -409,6 +462,7 @@ const WEBHOOK_EVENTS = [
 - [x] Platform-specific formatting (Slack Block Kit, Teams Adaptive Cards, Discord Embeds)
 
 ### C.4 Vendor Risk Monitoring ✅ COMPLETE
+
 - [x] Vendor inventory management - `src/lib/vendors.js` + migration 025
 - [x] Automatic breach monitoring per vendor - `monitor-vendors.mjs`
 - [x] Vulnerability correlation by vendor tech - `monitor-vendors.mjs`
@@ -417,6 +471,7 @@ const WEBHOOK_EVENTS = [
 - [x] Vendor management UI page - `src/pages/Vendors.jsx`
 
 ### C.5 Industry Benchmarking ✅ COMPLETE
+
 - [x] Anonymized aggregate statistics - migration 048, `src/lib/benchmarking.js`
 - [x] Sector comparison charts - `compareSectors()`, `getMetricTrend()`
 - [x] Trend analysis vs industry - `calculateComparisonStatus()`, percentile ranking
@@ -432,9 +487,11 @@ const WEBHOOK_EVENTS = [
 > Items from ROADMAP.md Phase 7 and SAAS_ROADMAP.md Phase 3
 
 ### D.1 SSO & Identity ✅ COMPLETE
+
 Current: Firebase Auth with Google SSO, SMS 2FA, TOTP
 
 **Complete:**
+
 - [x] SAML 2.0 support (Okta, Azure AD, OneLogin, Google Workspace, Generic SAML)
   - Full UI in `src/components/settings/SSOConfigSection.jsx` (757 lines)
   - Backend library in `src/lib/sso.js` (407 lines)
@@ -448,6 +505,7 @@ Current: Firebase Auth with Google SSO, SMS 2FA, TOTP
   - QR code generation for authenticator app enrollment
 
 **Enterprise Features:**
+
 - [x] SCIM 2.0 provisioning - `api/scim/users.js` + migration 059
   - Full CRUD operations (GET/POST/PUT/PATCH/DELETE)
   - SCIM-to-internal user format conversion
@@ -455,9 +513,11 @@ Current: Firebase Auth with Google SSO, SMS 2FA, TOTP
   - `scim_users` and `scim_tokens` tables
 
 ### D.2 Advanced Alerting Engine ✅ MOSTLY COMPLETE
+
 Current: Real-time alerting infrastructure complete (see ALERTING_SYSTEM.md)
 
 **Core Features (Complete):**
+
 - [x] Daily/weekly digest emails - `scripts/send-daily-digest.mjs` (347 lines)
   - Personalized digests based on org profile (sector, vendors)
   - Watchlist updates included
@@ -472,9 +532,11 @@ Current: Real-time alerting infrastructure complete (see ALERTING_SYSTEM.md)
 - [x] Email, push, and webhook delivery - `process-alerts.mjs` (598 lines)
 
 **Remaining (Optional/Enterprise):**
+
 - [ ] Mobile app push via FCM (requires mobile app - 20 hours)
 
 **Advanced Features (Future):**
+
 - [x] Complex alert rule builder (AND/OR conditions) - migration 043, AlertRuleBuilder.jsx
 - [x] Alert grouping and batching - alert_batch_queue table
 - [x] Escalation policies - migration 044, escalationPolicies.js
@@ -483,6 +545,7 @@ Current: Real-time alerting infrastructure complete (see ALERTING_SYSTEM.md)
 - [x] Alert analytics dashboard (open rates, click-through) - AlertAnalyticsDashboard.jsx
 
 ### D.3 Reporting Suite Enhancement ✅ COMPLETE
+
 Current: Scheduled reports with templates, branding, compliance sections
 
 - [x] Executive summary templates (6 pre-built templates)
@@ -492,6 +555,7 @@ Current: Scheduled reports with templates, branding, compliance sections
 - [x] Compliance report templates (SOC 2 Summary, PCI-DSS Summary sections)
 
 ### D.4 Audit Logs & Compliance ✅ MOSTLY COMPLETE
+
 Current: Team activity logging with compliance export
 
 - [x] Comprehensive audit log export (CSV/JSON)
@@ -501,6 +565,7 @@ Current: Team activity logging with compliance export
 - [x] SOC2 evidence collection (exportComplianceReport function)
 
 ### D.5 White-Label / Multi-Tenancy ✅ COMPLETE
+
 - [x] Custom logo and colors per tenant - migration 049, `tenant_branding` table
 - [x] Custom domain (CNAME) support - `tenant_domains` table with verification
 - [x] Remove Vigil branding option - `hide_powered_by` flag
@@ -512,6 +577,7 @@ Current: Team activity logging with compliance export
 - [x] Dynamic branding application - `branding.applyToDocument()` function
 
 ### D.6 SLA & Status ✅ COMPLETE
+
 - [x] Public status page - migration 050, `src/lib/statusPage.js`
 - [x] Historical uptime data - `status_uptime_records` table, `get_uptime_history()`
 - [x] Incident history - `status_incidents` with updates, `status_incident_updates` table
@@ -528,6 +594,7 @@ Current: Team activity logging with compliance export
 > Items from ROADMAP.md Phases 8-9
 
 ### E.1 Automated Enrichment Pipeline ✅ COMPLETE
+
 - [x] IP reputation scoring aggregation - `aggregate-ip-reputation.mjs` + migration 037
 - [x] IP reputation display in IOC details - ReputationSection in EnrichmentPanel.jsx
 - [x] Domain age and registration data - `enrich-domain-whois.mjs` RDAP lookup
@@ -536,6 +603,7 @@ Current: Team activity logging with compliance export
 - [x] Passive DNS history display - `enrich-passive-dns.mjs`
 
 ### E.2 Threat Scoring ✅ COMPLETE
+
 - [x] Custom risk scoring models - `src/lib/threatScoring.js`
 - [x] Industry-specific threat scores - orgProfile-based weighting
 - [x] Confidence-weighted scoring - per-factor weights with normalization
@@ -543,6 +611,7 @@ Current: Team activity logging with compliance export
 - [x] Scoring explanation UI - ScoringExplanation.jsx with gauge and breakdown
 
 ### E.3 AI-Powered Analysis Enhancement ✅ MOSTLY COMPLETE
+
 Current: Groq-powered BLUF generation exists
 
 - [x] Automated threat summaries per entity - EntityThreatSummary.jsx
@@ -559,6 +628,7 @@ Current: Groq-powered BLUF generation exists
   - Statistical methods: linear regression, EMA, seasonality detection
 
 ### E.4 SOAR Integration ✅ MOSTLY COMPLETE
+
 - [x] Playbook templates library - `src/data/soar-playbooks.js`
   - 5 complete playbook templates with detailed steps
   - Ransomware Initial Response
@@ -573,6 +643,7 @@ Current: Groq-powered BLUF generation exists
 - [ ] Integration with common SOAR platforms (future)
 
 ### E.5 Threat Intelligence Sharing ✅ MOSTLY COMPLETE
+
 - [x] TAXII server implementation - migration 046, `src/lib/taxii.js`
   - TAXII 2.1 protocol compliant (discovery, API roots, collections, objects, manifest)
   - Collection management with access controls
@@ -585,6 +656,7 @@ Current: Groq-powered BLUF generation exists
 - [ ] Contribution tracking (future)
 
 ### E.6 Asset Discovery ✅ COMPLETE
+
 - [x] Asset inventory integration - Assets page exists
 - [x] Attack surface mapping visualization - EntityRelationshipGraph.jsx
 - [x] Vulnerability-to-asset correlation - migration 045, `correlate-vulnerabilities-assets.mjs`
@@ -601,32 +673,35 @@ Current: Groq-powered BLUF generation exists
 
 ## Performance Targets
 
-| Metric | Current | Target | Priority |
-|--------|---------|--------|----------|
-| Page load (P95) | ~2.5s | <2s | HIGH |
-| Search latency | ~600ms | <500ms | MEDIUM |
-| Test coverage | 50.7% | 50%+ | ✅ ACHIEVED |
-| Bundle size | 1.2MB | <1MB | MEDIUM |
-| Data freshness | 6 hours | <6 hours | MAINTAIN |
-| API response (P95) | ~500ms | <500ms | MAINTAIN |
-| Uptime | 99.9% | 99.9% | MAINTAIN |
+| Metric             | Current | Target   | Priority    |
+| ------------------ | ------- | -------- | ----------- |
+| Page load (P95)    | ~2.5s   | <2s      | HIGH        |
+| Search latency     | ~600ms  | <500ms   | MEDIUM      |
+| Test coverage      | 50.7%   | 50%+     | ✅ ACHIEVED |
+| Bundle size        | 1.2MB   | <1MB     | MEDIUM      |
+| Data freshness     | 6 hours | <6 hours | MAINTAIN    |
+| API response (P95) | ~500ms  | <500ms   | MAINTAIN    |
+| Uptime             | 99.9%   | 99.9%    | MAINTAIN    |
 
 ---
 
 ## Priority Matrix
 
 ### CRITICAL (Do First)
+
 1. ~~**B.1 EPSS + GHSA**~~ ✅ COMPLETE
 2. ~~**A.4 Testing**~~ ✅ COMPLETE - 50.7% coverage achieved
 3. ~~**C.2 Webhooks**~~ ✅ COMPLETE
 
 ### HIGH PRIORITY
+
 1. ~~**B.2 Quick Win Data Sources**~~ ✅ COMPLETE (all 6 sources)
 2. ~~**B.3 Exploit-DB**~~ ✅ COMPLETE - CVE exploit correlation
 3. ~~**C.1 Attack Surface Monitoring**~~ ✅ COMPLETE - Asset monitoring + alerts
 4. ~~**D.1 SSO/SAML**~~ ✅ COMPLETE (SCIM optional)
 
 ### MEDIUM PRIORITY
+
 1. ~~**A.7 Ops Dashboard**~~ ✅ COMPLETE - Internal operational visibility
 2. ~~**A.7 Tier Propagation Audit**~~ ✅ COMPLETE - Proper feature gating
 3. ~~**A.3 Custom Hooks**~~ ✅ COMPLETE - Code maintainability
@@ -635,6 +710,7 @@ Current: Groq-powered BLUF generation exists
 6. ~~**B.4 DNS Intelligence**~~ ✅ MOSTLY COMPLETE - CIRCL PDNS, crt.sh monitoring
 
 ### LOW PRIORITY (Backlog)
+
 1. ~~**A.1 Documentation Cleanup**~~ ✅ COMPLETE
 2. ~~**A.2 Script Utilities**~~ ✅ COMPLETE
 3. ~~**B.3 Blocklist.de**~~ ✅ COMPLETE
@@ -644,6 +720,7 @@ Current: Groq-powered BLUF generation exists
 7. ~~**E.6 Asset Discovery**~~ ✅ COMPLETE
 
 ### ENTERPRISE FEATURES (Complete)
+
 1. ~~**C.3 Interactive Chat Bots**~~ ✅ COMPLETE
 2. ~~**C.5 Industry Benchmarking**~~ ✅ COMPLETE
 3. ~~**E.5 TAXII Server**~~ ✅ COMPLETE
@@ -655,18 +732,19 @@ Current: Groq-powered BLUF generation exists
 
 ### New Keys by Phase
 
-| Phase | Source | Variable |
-|-------|--------|----------|
-| B.1 | EPSS | None required |
-| B.1 | GitHub GHSA | `GITHUB_TOKEN` (optional, higher rate limits) |
-| B.3 | Pulsedive | `PULSEDIVE_API_KEY` |
-| B.4 | CIRCL | `CIRCL_API_KEY` |
-| B.4 | Censys | `CENSYS_API_ID`, `CENSYS_API_SECRET` |
-| B.5 | ANY.RUN | `ANYRUN_API_KEY` |
-| B.5 | Triage | `TRIAGE_API_KEY` |
-| B.6 | VulnCheck | `VULNCHECK_API_KEY` |
+| Phase | Source      | Variable                                      |
+| ----- | ----------- | --------------------------------------------- |
+| B.1   | EPSS        | None required                                 |
+| B.1   | GitHub GHSA | `GITHUB_TOKEN` (optional, higher rate limits) |
+| B.3   | Pulsedive   | `PULSEDIVE_API_KEY`                           |
+| B.4   | CIRCL       | `CIRCL_API_KEY`                               |
+| B.4   | Censys      | `CENSYS_API_ID`, `CENSYS_API_SECRET`          |
+| B.5   | ANY.RUN     | `ANYRUN_API_KEY`                              |
+| B.5   | Triage      | `TRIAGE_API_KEY`                              |
+| B.6   | VulnCheck   | `VULNCHECK_API_KEY`                           |
 
 ### Stripe Keys (Already Documented)
+
 ```
 VITE_STRIPE_PUBLISHABLE_KEY=pk_live_xxx
 VITE_STRIPE_PRICE_PRO_MONTHLY=price_xxx
@@ -682,22 +760,24 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 ## Success Metrics
 
 ### Product Metrics (6-Month Targets)
-| Metric | Target |
-|--------|--------|
-| Registered Users | 500 |
-| Paying Customers | 50 |
-| MRR | $5,000 |
-| DAU/MAU Ratio | 30% |
-| Churn Rate | <5%/mo |
+
+| Metric           | Target |
+| ---------------- | ------ |
+| Registered Users | 500    |
+| Paying Customers | 50     |
+| MRR              | $5,000 |
+| DAU/MAU Ratio    | 30%    |
+| Churn Rate       | <5%/mo |
 
 ### Feature Adoption (12-Month Targets)
-| Feature | Success Indicator |
-|---------|-------------------|
-| Scheduled Reports | >50% of paid users configure |
-| Alert Rules | Avg 3+ rules per paid user |
-| Watchlists | Avg 5+ items per user |
+
+| Feature            | Success Indicator             |
+| ------------------ | ----------------------------- |
+| Scheduled Reports  | >50% of paid users configure  |
+| Alert Rules        | Avg 3+ rules per paid user    |
+| Watchlists         | Avg 5+ items per user         |
 | Team Collaboration | >30% of teams have 3+ members |
-| API Usage | >20% of Team+ users active |
+| API Usage          | >20% of Team+ users active    |
 
 ---
 
@@ -717,6 +797,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 ## Changelog
 
 ### v2.20 (January 17, 2026)
+
 - ✅ B.7 MITRE ATLAS Integration
   - Created `workers/src/feeds/mitre-atlas.js` with custom YAML parser
   - Created migration `060_atlas_support.sql`
@@ -760,6 +841,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 - Data sources: 32 total (added MITRE ATLAS, ANY.RUN, BGPStream, UMD Cyber Events)
 
 ### v2.19 (January 16, 2026)
+
 - ✅ E.5 TAXII 2.1 Server Implementation
   - Created migration 046_taxii_server.sql
   - Added `taxii_api_roots`, `taxii_collections`, `taxii_objects` tables
@@ -839,6 +921,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 - Build successful with all new modules
 
 ### v2.18 (January 16, 2026)
+
 - ✅ D.2 Escalation Policies & On-Call Scheduling
   - Created migration 044_escalation_policies.sql
   - Added `escalation_policies` table with multi-level escalation chains
@@ -896,6 +979,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 - Supabase modules: 25 total (added escalationPolicies.js)
 
 ### v2.17 (January 16, 2026)
+
 - ✅ B.6 Exploit Maturity Enum
   - Created migration 039_exploit_maturity.sql with enum type
   - Added `exploit_maturity` field to vulnerabilities table
@@ -976,6 +1060,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 - Added npm scripts: `enrich:domain-whois`, `enrich:ssl`, `enrich:passive-dns`
 
 ### v2.16 (January 16, 2026)
+
 - ✅ A.4 AI Module Tests
   - Added 69 unit tests for `src/lib/ai.js`
   - Tests for `generateBLUF()`, `generateActorSummary()`, `parseNaturalQuery()`, `queryToFilters()`
@@ -991,6 +1076,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - Falls back to keyword parsing when Groq API unavailable
 
 ### v2.15 (January 16, 2026)
+
 - ✅ E.1 IP Reputation Aggregation
   - Created `aggregate-ip-reputation.mjs` with multi-source reputation scoring
   - Source weights: cisa_kev (25), blocklist_de (15), emerging_threats (15), etc.
@@ -1019,6 +1105,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 - Updated monitor-vendors.mjs to use correct table names from migration 025
 
 ### v2.14 (January 16, 2026)
+
 - ✅ B.3 Emerging Threats Data Source
   - Created `ingest-emerging-threats.mjs` with 5 feed types
   - Supports block_ips, compromised, tor_exit, botcc, ciarmy feeds
@@ -1045,6 +1132,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - Added Malpedia and MISP Galaxy to notification job dependencies
 
 ### v2.13 (January 16, 2026)
+
 - ✅ A.1 Documentation Cleanup
   - Trimmed CLAUDE.md - removed duplicated schema/data source content
   - Added cross-references to DATA_SOURCES.md and docs/DATA_INGESTION.md
@@ -1078,6 +1166,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - Support for selective feed ingestion
 
 ### v2.12 (January 16, 2026)
+
 - ✅ D.1 SSO/SAML audit - discovered implementation is ~85% complete
   - SAML 2.0: Full UI (757 lines) + library (407 lines) + migration
   - Supports: Okta, Azure AD, Google Workspace, OneLogin, Generic SAML
@@ -1101,6 +1190,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - **Remaining only:** Mobile FCM push (requires mobile app)
 
 ### v2.11 (January 16, 2026)
+
 - ✅ A.4 Testing COMPLETE: 563 tests, 50.7% coverage 🎯
   - Enhanced apiKeys.test.js with CRUD tests (51 tests total)
   - Enhanced integrations.test.js with CRUD tests (61 tests total)
@@ -1115,6 +1205,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - **50% coverage target achieved!**
 
 ### v2.10 (January 16, 2026)
+
 - ✅ A.4 Testing Progress: 489 tests, 42% coverage
   - Added vulnerabilities.test.js (25 tests)
   - Added watchlists.test.js (13 tests)
@@ -1124,6 +1215,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - Total tests increased from 419 to 489 (+70 tests)
 
 ### v2.9 (January 15, 2026)
+
 - ✅ Partial A.5: Accessibility Improvements
   - Added Escape key handlers to WatchButton and TagSelector dropdowns
   - Added ARIA attributes (aria-expanded, aria-haspopup, aria-label)
@@ -1133,6 +1225,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - Bundle size: 513 kB main chunk (gzip: 145 kB)
 
 ### v2.8 (January 15, 2026)
+
 - ✅ Completed A.7: Tier Propagation Audit
   - Added FeatureGate to Watchlists.jsx (professional: watchlist)
   - Added FeatureGate to ThreatHunts.jsx (professional: threat_hunts)
@@ -1143,6 +1236,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - All paid features now properly gated with upgrade prompts
 
 ### v2.7 (January 15, 2026)
+
 - ✅ Completed A.7: Ops Dashboard
   - Created src/pages/admin/OpsDashboard.jsx with full operational monitoring
   - Enhanced src/lib/supabase/syncLog.js with ops queries (getStatusSummary, getErrorRates, getDataFreshness)
@@ -1153,6 +1247,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - Added route at /ops with sidebar navigation
 
 ### v2.6 (January 15, 2026)
+
 - ✅ Completed A.3: Custom Hooks
   - Created useFilters.js with URL sync, search debounce, date range filtering
   - Created useDataLoading.js with caching, pagination, infinite scroll support
@@ -1160,6 +1255,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - Updated hooks/index.js barrel export
 
 ### v2.5 (January 15, 2026)
+
 - ✅ Completed C.1: Attack Surface Monitoring
   - Created supabase/assets.js module with CRUD operations
   - Created monitor-assets.mjs script for scheduled monitoring
@@ -1169,6 +1265,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - Supabase modules: 24 total
 
 ### v2.4 (January 15, 2026)
+
 - ✅ Completed B.3: Exploit-DB Integration
   - Created ingest-exploitdb.mjs script (GitLab mirror CSV)
   - Created migration 031_exploit_db.sql
@@ -1179,6 +1276,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - Data sources: 29 total
 
 ### v2.3 (January 15, 2026)
+
 - ✅ A.4 Testing improvements (partial)
   - Added 197 new tests (222 → 419 total)
   - Created iocs.test.js (49 tests)
@@ -1189,6 +1287,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - Coverage: 36% statements, 31% branches
 
 ### v2.2 (January 15, 2026)
+
 - ✅ Completed B.1: EPSS + GHSA integration
   - Created ingest-epss.mjs and ingest-ghsa.mjs scripts
   - Created Advisories page and supabase module
@@ -1207,6 +1306,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
   - Added all to CI workflow
 
 ### v2.1 (January 15, 2026)
+
 - Added Real-Time Alerting System to "What's Complete" section with full detail from ALERTING_SYSTEM.md
 - Added database triggers (`auto_queue_incident_alert`, `auto_queue_kev_alert`) documentation
 - Added A.7: Ops Dashboard & Production Hardening (from other session review)
@@ -1217,9 +1317,10 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 - Updated Priority Matrix with new items
 
 ### v2.0 (January 15, 2026)
+
 - Initial consolidated build plan from all roadmap documents
 
 ---
 
-*Last Updated: January 17, 2026*
-*Next Review: After completing UMD/GDELT integration or customer feedback*
+_Last Updated: January 17, 2026_
+_Next Review: After completing UMD/GDELT integration or customer feedback_
