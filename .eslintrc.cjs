@@ -36,5 +36,5 @@ module.exports = {
     'no-unsafe-optional-chaining': 'warn',
     'react-hooks/exhaustive-deps': 'warn',
   },
-  ignorePatterns: ['dist', 'node_modules', 'build', 'playwright-report', 'test-results', 'src/test', 'e2e', 'api', 'coverage', 'public'],
+  ignorePatterns: ['dist', 'node_modules', 'build', 'playwright-report', 'test-results', 'src/test', 'e2e', 'coverage', 'public'],
 }
