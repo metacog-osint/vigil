@@ -7,11 +7,11 @@
  * - Geographic targeting trends
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { correlations } from '../lib/supabase'
 import { TargetingHeatmap } from '../components/charts/TargetingHeatmap'
-import { SkeletonTable } from '../components'
+import { SkeletonTable, CoverageNote } from '../components'
 
 const ACTOR_TYPE_COLORS = {
   'Nation-State': 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -128,21 +128,21 @@ export default function GeographicAnalysis() {
     sector: '',
   })
 
-  useEffect(() => {
-    loadData()
-  }, [filters])
+  const [coverage, setCoverage] = useState(null)
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true)
     setError(null)
 
     try {
-      const [targetingResult, countryResult] = await Promise.all([
+      const [targetingResult, countryResult, coverageResult] = await Promise.all([
         correlations.getGeographicTargetingMatrix({
           actorType: filters.actorType || undefined,
           sector: filters.sector || undefined,
         }),
         correlations.getAllCountryThreats(50),
+        // How much of the incident data carries a country at all
+        correlations.getCountryCoverage().catch(() => null),
       ])
 
       if (targetingResult.error) throw targetingResult.error
@@ -150,13 +150,18 @@ export default function GeographicAnalysis() {
 
       setTargetingData(targetingResult.data || [])
       setCountryProfiles(countryResult.data || [])
+      setCoverage(coverageResult)
     } catch (err) {
       console.error('Error loading geographic data:', err)
       setError(err.message)
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   // Extract unique sectors and countries
   const { sectors, countries } = useMemo(() => {
@@ -193,6 +198,14 @@ export default function GeographicAnalysis() {
         <p className="text-gray-400 text-sm mt-1">
           Threat actor targeting patterns across sectors and countries
         </p>
+        {coverage && (
+          <CoverageNote
+            covered={coverage.covered}
+            total={coverage.total}
+            lastCovered={coverage.lastCovered}
+            className="mt-2"
+          />
+        )}
       </div>
 
       {/* Filters */}
