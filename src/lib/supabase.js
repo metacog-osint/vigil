@@ -884,38 +884,10 @@ export const watchlists = {
   },
 }
 
-// Saved Searches queries
-export const savedSearches = {
-  async getAll(userId = 'anonymous', searchType = null) {
-    let query = supabase
-      .from('saved_searches')
-      .select('*')
-      .eq('user_id', userId)
-      .order('use_count', { ascending: false })
-
-    if (searchType) {
-      query = query.eq('search_type', searchType)
-    }
-
-    return query
-  },
-
-  async create(search) {
-    return supabase.from('saved_searches').insert(search).select().single()
-  },
-
-  async update(id, updates) {
-    return supabase.from('saved_searches').update(updates).eq('id', id).select().single()
-  },
-
-  async delete(id) {
-    return supabase.from('saved_searches').delete().eq('id', id)
-  },
-
-  async incrementUseCount(id) {
-    return supabase.rpc('increment_search_use_count', { search_id: id })
-  },
-}
+// One implementation of the saved-search queries, not two. The copy that
+// used to live here was missing the five alert methods; nothing calls them
+// yet, which is precisely why it would have been found the hard way.
+export { savedSearches } from './supabase/savedSearches'
 
 // User Preferences queries
 export const userPreferences = {
@@ -1158,25 +1130,12 @@ export const malwareSamples = {
   },
 }
 
-// Sync log queries
-export const syncLog = {
-  async getRecent(limit = 20) {
-    return supabase
-      .from('sync_log')
-      .select('*')
-      .order('completed_at', { ascending: false })
-      .limit(limit)
-  },
-
-  async getBySource(source) {
-    return supabase
-      .from('sync_log')
-      .select('*')
-      .eq('source', source)
-      .order('completed_at', { ascending: false })
-      .limit(10)
-  },
-}
+// One implementation of the sync queries, not two. The copy that used to
+// live here had getRecent and getBySource and nothing else, while the
+// Operations page called getStatusSummary, getDataFreshness, getErrorRates
+// and getSourceHistory against it. All four were undefined, the page caught
+// the TypeError, and it reported no sync data beside a table of 15,068 rows.
+export { syncLog } from './supabase/syncLog'
 
 // AI Summaries - historical record of generated intelligence
 export const aiSummaries = {
