@@ -10,7 +10,6 @@ import {
   savedSearches,
   orgProfile,
   relevance,
-  watchlists,
 } from '../../lib/supabase'
 import { PAGE_SIZE, getTypeConfig } from './ActorConstants'
 import { useDemo } from '../../contexts/DemoContext'
@@ -106,7 +105,15 @@ export function useActorData(filters) {
         setLoadingMore(false)
       }
     },
-    [search, sectorFilter, trendFilter, typeFilter, statusFilter, originCountryFilter, actors.length]
+    [
+      search,
+      sectorFilter,
+      trendFilter,
+      typeFilter,
+      statusFilter,
+      originCountryFilter,
+      actors.length,
+    ]
   )
 
   // Load trend summary
@@ -334,7 +341,7 @@ export function useRelatedActors(selectedActor) {
   return relatedActors
 }
 
-export function useSavedFilters(applyFilter) {
+export function useSavedFilters(_applyFilter) {
   const [savedFiltersOpen, setSavedFiltersOpen] = useState(false)
   const [savedFiltersList, setSavedFiltersList] = useState([])
   const [saveFilterName, setSaveFilterName] = useState('')
