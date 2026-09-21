@@ -46,6 +46,7 @@ export { threatActors } from './threatActors'
 export { incidents } from './incidents'
 export { iocs, detectIOCType } from './iocs'
 export { countries } from './countries'
+export { sourceLicences } from './sourceLicences'
 export {
   attributedActivity,
   ATTRIBUTION_STRENGTHS,
