@@ -6,6 +6,21 @@
 import { supabase } from './client'
 
 export const incidents = {
+  /**
+   * Countries a victim filter can actually return something for, busiest
+   * first, with the count and the most recent incident for each.
+   *
+   * Reads incident_victim_countries (migration 128) rather than deriving the
+   * list from a page of results, which would offer only the countries that
+   * happened to be on screen.
+   */
+  async getVictimCountries() {
+    return supabase
+      .from('incident_victim_countries')
+      .select('country_code, incidents, most_recent')
+      .order('incidents', { ascending: false })
+  },
+
   async getAll(options = {}) {
     const {
       limit = 100,
@@ -14,6 +29,7 @@ export const incidents = {
       sector = '',
       status = '',
       actor_id = '',
+      country = '',
       days = 0,
     } = options
 
@@ -45,6 +61,16 @@ export const incidents = {
 
     if (status) {
       query = query.eq('status', status)
+    }
+
+    // Where the victim was, which is not where the group is from and not where
+    // its infrastructure sits. The column holds an ISO-2 code.
+    //
+    // This option is new; the page has passed `country` since the country
+    // buttons on the overview were added, and getAll quietly dropped it, so
+    // clicking a country switched to the table and filtered nothing.
+    if (country) {
+      query = query.eq('victim_country', country)
     }
 
     if (actor_id) {

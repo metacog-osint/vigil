@@ -52,6 +52,7 @@ export { threatActors } from './supabase/threatActors'
 export { incidents } from './supabase/incidents'
 
 export { iocs } from './supabase/iocs'
+export { countries } from './supabase/countries'
 
 // Helper to detect IOC type
 
