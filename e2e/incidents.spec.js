@@ -14,7 +14,9 @@ test.describe('Incidents Page', () => {
     await page.waitForLoadState('networkidle')
 
     // Look for sector filter dropdown or filter section
-    const sectorFilter = page.locator('select, button:has-text("sector")', { hasText: /sector|industry/i }).first()
+    const sectorFilter = page
+      .locator('select, button:has-text("sector")', { hasText: /sector|industry/i })
+      .first()
 
     if (await sectorFilter.isVisible({ timeout: 5000 }).catch(() => false)) {
       await expect(sectorFilter).toBeEnabled()
@@ -22,20 +24,21 @@ test.describe('Incidents Page', () => {
   })
 
   test('should display incident statistics', async ({ page }) => {
-    await page.waitForLoadState('networkidle')
-
-    // Check for stat cards or summary section
-    const hasStats = await page.locator('[class*="stat"], [class*="metric"], [class*="count"]').first().isVisible({ timeout: 10000 }).catch(() => false)
-    const hasTable = await page.locator('table').isVisible({ timeout: 5000 }).catch(() => false)
-
-    expect(hasStats || hasTable).toBeTruthy()
+    // isVisible() checks once and does not retry, and networkidle means
+    // nothing after openApp's in-app navigation. Assert and let Playwright
+    // wait - the page has landed when it shows either the table or the stats.
+    await expect(
+      page.locator('table, [class*="stat"], [class*="metric"], [class*="count"]').first()
+    ).toBeVisible({ timeout: 15000 })
   })
 
   test('should have time range filter', async ({ page }) => {
     await page.waitForLoadState('networkidle')
 
     // Look for time range buttons (7d, 30d, etc.) or date picker
-    const timeFilter = page.locator('button:has-text("7d"), button:has-text("30d"), [class*="time-range"]').first()
+    const timeFilter = page
+      .locator('button:has-text("7d"), button:has-text("30d"), [class*="time-range"]')
+      .first()
 
     if (await timeFilter.isVisible({ timeout: 5000 }).catch(() => false)) {
       await expect(timeFilter).toBeVisible()

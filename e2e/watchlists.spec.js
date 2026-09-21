@@ -21,6 +21,13 @@ test.describe('Watchlists Page', () => {
   })
 
   test('should offer a way to upgrade', async ({ page }) => {
+    // Wait for the gate itself before looking for its call to action. Without
+    // this the assertion could run against a page that had not navigated yet
+    // and report "no way to upgrade" when the real answer was "not there yet".
+    await expect(page.getByRole('heading', { name: /upgrade to professional/i })).toBeVisible({
+      timeout: 15000,
+    })
+
     const upgrade = page.getByRole('link', { name: /upgrade|pricing|plan|account/i }).first()
     await expect(upgrade).toBeVisible()
   })
@@ -70,7 +77,9 @@ test.describe('Watchlist Actions', () => {
     await openApp(page, '/actors')
 
     // Look for watched indicators
-    const watchedIndicator = page.locator('[data-watched="true"], .watched, [aria-pressed="true"]').first()
+    const watchedIndicator = page
+      .locator('[data-watched="true"], .watched, [aria-pressed="true"]')
+      .first()
     const hasWatched = await watchedIndicator.isVisible().catch(() => false)
 
     // This is informational - some actors may be watched
@@ -83,8 +92,13 @@ test.describe('Watchlist Filtering', () => {
     await openApp(page, '/actors')
 
     // Look for watchlist filter option
-    const filterButton = page.locator('button:has-text("Watchlist"), select option:has-text("Watchlist")')
-    const hasFilter = await filterButton.first().isVisible().catch(() => false)
+    const filterButton = page.locator(
+      'button:has-text("Watchlist"), select option:has-text("Watchlist")'
+    )
+    const hasFilter = await filterButton
+      .first()
+      .isVisible()
+      .catch(() => false)
 
     expect(typeof hasFilter).toBe('boolean')
   })
@@ -96,14 +110,20 @@ test.describe('Watchlist Management Flow', () => {
 
     // Find create button
     const createButton = page.locator('button:has-text("Create"), button:has-text("New")')
-    const hasCreate = await createButton.first().isVisible().catch(() => false)
+    const hasCreate = await createButton
+      .first()
+      .isVisible()
+      .catch(() => false)
 
     if (hasCreate) {
       await createButton.first().click()
 
       // Should show modal or form
       const modal = page.locator('[role="dialog"], .modal, form')
-      const hasModal = await modal.first().isVisible({ timeout: 2000 }).catch(() => false)
+      const hasModal = await modal
+        .first()
+        .isVisible({ timeout: 2000 })
+        .catch(() => false)
 
       expect(typeof hasModal).toBe('boolean')
     }
@@ -140,7 +160,10 @@ test.describe('Watchlist Mobile Experience', () => {
 
     // Check that navigation is accessible (hamburger menu)
     const menuButton = page.locator('[aria-label*="menu" i], button:has-text("Menu")')
-    const hasMenu = await menuButton.first().isVisible().catch(() => false)
+    const hasMenu = await menuButton
+      .first()
+      .isVisible()
+      .catch(() => false)
 
     // Either menu button or navigation should be visible
     expect(typeof hasMenu).toBe('boolean')
