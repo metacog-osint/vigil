@@ -82,6 +82,15 @@ Checks run hourly and split findings three ways:
 3. **Queued for review** — anything requiring judgment. These wait for a recorded verdict and are
    never applied on their own.
 
+Queued findings are reviewed in the product, at `/review`. Each one shows the question the check
+asked and everything it found, and a verdict cannot be recorded without the reasoning that supports
+it. Verdicts are kept permanently and append-only — a finding can be ruled on more than once and
+every ruling is retained. Recording one does not change the data: applying a decision is a separate
+act, so a verdict never silently rewrites an incident.
+
+A reviewer who cannot decide can say so. "Not enough evidence" leaves the finding queued with the
+reason on the record, because forcing a binary answer is how a queue gets cleared by guessing.
+
 Some findings stay queued on purpose. `babuk2`/`satanlock` are reported as linked operators rather
 than a shared brand; `ransomedvc2`/`rebornvc` is a successor claim resting on three incidents.
 Neither is guessed at.
@@ -106,11 +115,12 @@ As of 20 September 2026 — live figures are on the landing page:
 
 |                                  |          |
 | -------------------------------- | -------- |
-| Threat actors                    | ~4,510   |
+| Threat actors                    | ~4,500   |
 | Incidents (victim claims, 2020–) | ~39,500  |
-| Indicators                       | ~568,500 |
+| Indicators                       | ~570,000 |
 | CISA KEV entries                 | ~1,825   |
-| Database migrations              | 96       |
+| Sanctioned addresses (OFAC)      | 1,043    |
+| Database migrations              | 126      |
 
 Of those actors, roughly 380 carry a trend assessment. The rest are names seen too few times to
 say anything about — which the interface states rather than counting them as tracked groups.
@@ -125,8 +135,8 @@ attack surface and vendor monitoring; CSV/JSON/STIX 2.1 export; REST API.
 
 ```
 Public feeds ──► Cloudflare Worker (cron) ──► Supabase Postgres ──► React SPA on Vercel
-                       22 feeds                   RLS enforced          anon read-only
-                  hourly / 6h / daily / weekly    96 migrations
+                       26 feeds                   RLS enforced          anon read-only
+                  hourly / 6h / daily / weekly   126 migrations
 ```
 
 - **Ingestion** runs on a **Cloudflare Worker** with four cron schedules — hourly for ransomware
@@ -152,7 +162,7 @@ src/            React app — 159 components, 46 routes, lazy-loaded
 api/            Vercel functions — REST API v1, Stripe, SCIM, email
 workers/        Cloudflare Worker — 22 ingestion feeds
 supabase/
-  migrations/   96 migrations; the reasoning is in the headers
+  migrations/   126 migrations; the reasoning is in the headers
 scripts/        Node ingestion, enrichment, correlation and digest jobs
 docs/           architecture, database, API, auth, data ingestion
 e2e/            Playwright specs, run through demo mode

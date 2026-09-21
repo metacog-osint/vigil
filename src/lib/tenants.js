@@ -1,9 +1,37 @@
 /**
  * Multi-Tenancy / White-Label Module
  * API for managing tenants, branding, and membership
+ *
+ * DORMANT. The tables exist - tenants, tenant_branding, tenant_members,
+ * tenant_invitations - and every one of them has RLS enabled with no policy,
+ * which denies everybody. The three functions this module calls
+ * (get_tenant, get_user_tenants, is_tenant_admin) were never written.
+ *
+ * So the whole feature was a page load asking the database questions it has no
+ * way to answer. TenantProvider wraps the entire app, so a signed-in user sent
+ * one failing get_user_tenants request on every page load and got a console
+ * error for it - confirmed by counting the requests on the live site rather
+ * than from the shape of the code.
+ *
+ * Calling something that does not exist and swallowing the failure is the
+ * thing this project is against. So the module now knows it is not
+ * provisioned: it returns the defaults directly and touches no network.
+ *
+ * This is not a decision that multi-tenancy is unwanted. The tables and this
+ * API are left intact. Whoever writes the three functions and the policies
+ * flips TENANCY_PROVISIONED and everything below starts working.
  */
 
 import { supabase } from './supabase'
+
+/**
+ * Whether the database can actually answer a tenancy question.
+ *
+ * Flip to true once get_tenant, get_user_tenants and is_tenant_admin exist and
+ * the four tenant_* tables have policies. Until then, calling them produces a
+ * failure the caller cannot do anything with.
+ */
+export const TENANCY_PROVISIONED = false
 
 // Default branding (Vigil defaults)
 export const DEFAULT_BRANDING = {
@@ -37,6 +65,8 @@ export const tenants = {
    * Get tenant by slug or custom domain
    */
   async getByIdentifier(identifier) {
+    if (!TENANCY_PROVISIONED) return null
+
     try {
       const { data, error } = await supabase.rpc('get_tenant', { p_identifier: identifier })
 
@@ -75,6 +105,8 @@ export const tenants = {
    * Get current user's tenants
    */
   async getUserTenants(userId) {
+    if (!TENANCY_PROVISIONED) return []
+
     try {
       const { data, error } = await supabase.rpc('get_user_tenants', { p_user_id: userId })
 
@@ -206,6 +238,8 @@ export const tenantBranding = {
    * Get branding with defaults filled in
    */
   async getWithDefaults(tenantId) {
+    if (!TENANCY_PROVISIONED) return DEFAULT_BRANDING
+
     const branding = await this.get(tenantId)
     return { ...DEFAULT_BRANDING, ...branding }
   },
@@ -384,6 +418,8 @@ export const tenantMembers = {
    * Check if user is admin of tenant
    */
   async isAdmin(tenantId, userId) {
+    if (!TENANCY_PROVISIONED) return false
+
     const { data } = await supabase.rpc('is_tenant_admin', {
       p_user_id: userId,
       p_tenant_id: tenantId,

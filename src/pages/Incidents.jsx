@@ -4,7 +4,8 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { watchlists } from '../lib/supabase'
+import { watchlists, incidents, countries } from '../lib/supabase'
+import { CountryFilter, CountryCoverageNote } from '../components/common'
 import { Tooltip } from '../components/Tooltip'
 import { SECTORS, TIME_RANGES } from '../lib/constants'
 import {
@@ -26,6 +27,34 @@ export default function Incidents() {
   const [sectorFilter, setSectorFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [countryFilter, setCountryFilter] = useState('')
+  const [countryOptions, setCountryOptions] = useState([])
+  const [countryCoverage, setCountryCoverage] = useState(null)
+  const [countriesLoading, setCountriesLoading] = useState(true)
+
+  // The countries this dataset can actually be filtered by, and how much of it
+  // carries one at all. Both come from the database (migration 128) so the
+  // control never offers an option that returns nothing and the coverage note
+  // cannot drift from the rows.
+  useEffect(() => {
+    let cancelled = false
+
+    Promise.all([incidents.getVictimCountries(), countries.getCoverage()]).then(
+      ([countryResult, coverageResult]) => {
+        if (cancelled) return
+        setCountryOptions(countryResult?.data || [])
+        setCountryCoverage(
+          (coverageResult?.data || []).find(
+            (row) => row.dataset === 'incidents' && row.geography === 'victim'
+          ) || null
+        )
+        setCountriesLoading(false)
+      }
+    )
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
   const [timeRange, setTimeRange] = useState(30)
 
   // View state
@@ -471,6 +500,14 @@ export default function Incidents() {
             </option>
           ))}
         </select>
+        <CountryFilter
+          geography="victim"
+          value={countryFilter}
+          onChange={setCountryFilter}
+          options={countryOptions}
+          countKey="incidents"
+          loading={countriesLoading}
+        />
         <div className="flex gap-2">
           {TIME_RANGES.map((range) => (
             <button
@@ -503,6 +540,11 @@ export default function Incidents() {
           </button>
         )}
       </div>
+
+      {/* What a country filter can and cannot see here. Stated whether or not
+          one is applied: the gap is a fact about the dataset, not about the
+          current view. */}
+      <CountryCoverageNote coverage={countryCoverage} geography="victim" />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
