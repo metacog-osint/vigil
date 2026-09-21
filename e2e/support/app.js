@@ -84,6 +84,14 @@ export async function navigateTo(page, path) {
       // location.pathname equals the requested path fails on exactly the
       // routes most of these specs use.
       await expect(dashboardHeading).toHaveCount(0, { timeout: 4000 })
+
+      // Leaving is not arriving. The dashboard unmounting says the router
+      // moved; it does not say the destination has painted, and an assertion
+      // with Playwright's five-second default would then race the first
+      // render. Every route puts a heading in <main>, so wait for one.
+      await expect(page.locator('main').getByRole('heading').first()).toBeVisible({
+        timeout: 15000,
+      })
       return
     } catch {
       // The router did not pick the event up. Try again rather than let the
