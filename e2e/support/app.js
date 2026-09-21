@@ -43,10 +43,53 @@ export async function openApp(page, path = '/') {
   }
 }
 
-/** Move to another route without reloading, which would drop demo mode. */
+/**
+ * Move to another route without reloading, which would drop demo mode.
+ *
+ * The dispatch is not enough on its own. A synthetic popstate is a best-effort
+ * nudge to the router: if React is mid-render when it fires - which webkit on
+ * CI is, far more often than chromium, because it renders more slowly - the
+ * event is observed and nothing re-routes. The URL changes, the page does not,
+ * and every assertion afterwards fails against a dashboard that is still on
+ * screen. That is what "element(s) not found" meant in
+ * vulnerabilities.spec.js, incidents.spec.js and export.spec.js.
+ *
+ * So this waits for arrival and dispatches again if it did not happen. Leaving
+ * the dashboard is the signal, because only the dashboard renders that
+ * heading.
+ */
 export async function navigateTo(page, path) {
-  await page.evaluate((target) => {
-    window.history.pushState({}, '', target)
-    window.dispatchEvent(new PopStateEvent('popstate'))
-  }, path)
+  const dashboardHeading = page.getByRole('heading', { name: 'Vigil Dashboard' })
+
+  // Navigating to the dashboard has no "left the dashboard" signal to wait on.
+  if (path === '/') {
+    await page.evaluate((target) => {
+      window.history.pushState({}, '', target)
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    }, path)
+    await expect(dashboardHeading).toBeVisible({ timeout: 10000 })
+    return
+  }
+
+  for (let attempt = 0; attempt < 4; attempt++) {
+    await page.evaluate((target) => {
+      window.history.pushState({}, '', target)
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    }, path)
+
+    try {
+      // Leaving the dashboard is the whole signal. The destination's own
+      // pathname is not usable for this: /ransomware and /incidents are both
+      // <Navigate> redirects to /events?view=ransomware, so asserting that
+      // location.pathname equals the requested path fails on exactly the
+      // routes most of these specs use.
+      await expect(dashboardHeading).toHaveCount(0, { timeout: 4000 })
+      return
+    } catch {
+      // The router did not pick the event up. Try again rather than let the
+      // caller assert against the wrong page.
+    }
+  }
+
+  throw new Error(`navigateTo(${path}) never left the dashboard after 4 attempts`)
 }
