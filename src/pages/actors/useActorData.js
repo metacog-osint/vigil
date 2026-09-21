@@ -17,7 +17,8 @@ import { useDemo } from '../../contexts/DemoContext'
 import useDemoData from '../../hooks/useDemoData'
 
 export function useActorData(filters) {
-  const { search, sectorFilter, trendFilter, typeFilter, statusFilter } = filters
+  const { search, sectorFilter, trendFilter, typeFilter, statusFilter, originCountryFilter } =
+    filters
   const { isDemoMode } = useDemo()
   const demoData = useDemoData()
 
@@ -85,6 +86,7 @@ export function useActorData(filters) {
           trendStatus: trendFilter,
           actorType: typeFilter,
           status: statusFilter,
+          originCountry: originCountryFilter,
           limit: PAGE_SIZE,
           offset,
         })
@@ -104,7 +106,7 @@ export function useActorData(filters) {
         setLoadingMore(false)
       }
     },
-    [search, sectorFilter, trendFilter, typeFilter, statusFilter, actors.length]
+    [search, sectorFilter, trendFilter, typeFilter, statusFilter, originCountryFilter, actors.length]
   )
 
   // Load trend summary
@@ -146,7 +148,7 @@ export function useActorData(filters) {
     })
 
     return () => unsubscribe()
-  }, [isDemoMode, search, sectorFilter, trendFilter, typeFilter, statusFilter])
+  }, [isDemoMode, search, sectorFilter, trendFilter, typeFilter, statusFilter, originCountryFilter])
 
   // Calculate risk scores when org profile or actors change
   useEffect(() => {

@@ -5,7 +5,8 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { watchlists, threatActors } from '../lib/supabase'
+import { watchlists, threatActors, countries } from '../lib/supabase'
+import { CountryFilter, CountryCoverageNote } from '../components/common'
 import { Tooltip, FIELD_TOOLTIPS } from '../components/Tooltip'
 import { SECTORS } from '../lib/constants'
 
@@ -28,6 +29,10 @@ export default function ThreatActors() {
   const [trendFilter, setTrendFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [originCountryFilter, setOriginCountryFilter] = useState('')
+  const [countryOptions, setCountryOptions] = useState([])
+  const [countryCoverage, setCountryCoverage] = useState(null)
+  const [countriesLoading, setCountriesLoading] = useState(true)
 
   // UI state
   const { actorKey } = useParams()
@@ -41,7 +46,7 @@ export default function ThreatActors() {
   const tableRef = useRef(null)
 
   // Data hooks
-  const filters = { search, sectorFilter, trendFilter, typeFilter, statusFilter }
+  const filters = { search, sectorFilter, trendFilter, typeFilter, statusFilter, originCountryFilter }
   const {
     actors,
     loading,
@@ -58,6 +63,30 @@ export default function ThreatActors() {
   const { timelineEvents } = useActorIncidents(selectedActor)
   const relatedActors = useRelatedActors(selectedActor)
   const savedFiltersHook = useSavedFilters()
+
+  // Where a group is assessed to operate from - not where it attacks. The two
+  // are separate columns and separate filters, because a feed once conflated
+  // them and had Vigil asserting that the Equation Group targets the US.
+  useEffect(() => {
+    let cancelled = false
+
+    Promise.all([threatActors.getOriginCountries(), countries.getCoverage()]).then(
+      ([countryResult, coverageResult]) => {
+        if (cancelled) return
+        setCountryOptions(countryResult?.data || [])
+        setCountryCoverage(
+          (coverageResult?.data || []).find(
+            (row) => row.dataset === 'threat_actors' && row.geography === 'origin'
+          ) || null
+        )
+        setCountriesLoading(false)
+      }
+    )
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // The url selects the actor, not the click. A detail view nobody can link
   // to is the group profiles being built and then hidden.
@@ -230,11 +259,13 @@ export default function ThreatActors() {
     setTrendFilter('')
     setStatusFilter('')
     setSectorFilter('')
+    setOriginCountryFilter('')
     setSearch('')
     setSortConfig({ field: 'incidents_7d', direction: 'desc' })
   }
 
-  const hasActiveFilters = typeFilter || trendFilter || statusFilter || sectorFilter || search
+  const hasActiveFilters =
+    typeFilter || trendFilter || statusFilter || sectorFilter || originCountryFilter || search
 
   return (
     <div className="space-y-6">
@@ -499,6 +530,14 @@ export default function ThreatActors() {
             </option>
           ))}
         </select>
+        <CountryFilter
+          geography="origin"
+          value={originCountryFilter}
+          onChange={setOriginCountryFilter}
+          options={countryOptions}
+          countKey="actors"
+          loading={countriesLoading}
+        />
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
@@ -516,6 +555,10 @@ export default function ThreatActors() {
           </button>
         )}
       </div>
+
+      {/* Origin is an assessment, and a thin one. Said plainly rather than
+          letting a filtered list imply the other 4,021 groups have no origin. */}
+      <CountryCoverageNote coverage={countryCoverage} geography="origin" />
 
       {/* A url naming a group we do not hold is an answer, so give it. */}
       {actorNotFound && (
