@@ -299,6 +299,145 @@ function AlertVolumeTrend({ data }) {
   )
 }
 
+/**
+ * Turn the three raw tables into the numbers the dashboard renders.
+ *
+ * Hoisted out of the component and given `timeRange` as an argument rather
+ * than closing over it. Inside the component it was redefined on every render,
+ * which made it a missing dependency of the useCallback that calls it - a
+ * warning the pre-commit hook rejects, and the reason a one-line table rename
+ * in this file was handed over unfinished twice. It is pure, so out here it is
+ * both correct and testable.
+ */
+function processAnalytics(deliveries, alerts, rules, timeRange) {
+  // Channel effectiveness
+  const channelData = {}
+  CHANNELS.forEach((channel) => {
+    channelData[channel] = { delivered: 0, opened: 0, clicked: 0 }
+  })
+
+  deliveries.forEach((d) => {
+    const channel = d.channel || 'email'
+    if (channelData[channel]) {
+      channelData[channel].delivered++
+      if (d.opened_at) channelData[channel].opened++
+      if (d.clicked_at) channelData[channel].clicked++
+    }
+  })
+
+  // Response times by severity
+  const severityTimes = ['critical', 'high', 'medium', 'low', 'info'].map((severity) => {
+    const sevAlerts = alerts.filter((a) => a.severity === severity && a.acknowledged_at)
+    const avgTime =
+      sevAlerts.length > 0
+        ? sevAlerts.reduce((sum, a) => {
+            return sum + (new Date(a.acknowledged_at) - new Date(a.created_at)) / 60000
+          }, 0) / sevAlerts.length
+        : 0
+
+    const targets = { critical: 15, high: 60, medium: 240, low: 1440, info: 2880 }
+    return { severity, avgResponseTime: Math.round(avgTime), target: targets[severity] }
+  })
+
+  // Alert volume by day
+  const volumeByDay = {}
+  alerts.forEach((a) => {
+    const date = new Date(a.created_at).toISOString().split('T')[0]
+    volumeByDay[date] = (volumeByDay[date] || 0) + 1
+  })
+
+  const volumeTrend = []
+  for (let i = timeRange - 1; i >= 0; i--) {
+    const date = new Date()
+    date.setDate(date.getDate() - i)
+    const dateStr = date.toISOString().split('T')[0]
+    volumeTrend.push({ date: dateStr, count: volumeByDay[dateStr] || 0 })
+  }
+
+  // Noisy rules (high alert count, low acknowledgment)
+  const ruleAlertCounts = {}
+  alerts.forEach((a) => {
+    if (a.rule_id) {
+      if (!ruleAlertCounts[a.rule_id]) {
+        ruleAlertCounts[a.rule_id] = { total: 0, acked: 0 }
+      }
+      ruleAlertCounts[a.rule_id].total++
+      if (a.acknowledged_at) ruleAlertCounts[a.rule_id].acked++
+    }
+  })
+
+  const noisyRules = rules
+    .map((rule) => {
+      const counts = ruleAlertCounts[rule.id] || { total: 0, acked: 0 }
+      return {
+        id: rule.id,
+        // user_alert_rules names the column rule_name. Reading rule.name gave
+        // undefined, so every row in the noisy-rules panel would have been
+        // blank even once the table name was right.
+        name: rule.rule_name ?? rule.name ?? 'Unnamed rule',
+        alertCount: counts.total,
+        ackRate: counts.total > 0 ? counts.acked / counts.total : 1,
+      }
+    })
+    .filter((r) => r.alertCount > 10 && r.ackRate < 0.5)
+    .sort((a, b) => a.ackRate - b.ackRate)
+    .slice(0, 5)
+
+  // Fatigue indicators
+  const avgDailyAlerts = alerts.length / timeRange
+  const unackedAlerts = alerts.filter((a) => !a.acknowledged_at).length
+  const unackedRate = alerts.length > 0 ? unackedAlerts / alerts.length : 0
+
+  const fatigueScore = Math.min(
+    100,
+    Math.round(
+      (avgDailyAlerts > 50 ? 30 : avgDailyAlerts * 0.6) +
+        unackedRate * 50 +
+        (noisyRules.length > 0 ? 20 : 0)
+    )
+  )
+
+  const fatigueIndicators = [
+    {
+      label: 'Avg daily alerts',
+      value: Math.round(avgDailyAlerts),
+      isWarning: avgDailyAlerts > 50,
+    },
+    {
+      label: 'Unacknowledged rate',
+      value: formatPercent(unackedRate),
+      isWarning: unackedRate > 0.3,
+    },
+    { label: 'Noisy rules', value: noisyRules.length, isWarning: noisyRules.length > 3 },
+    {
+      label: 'Total alerts',
+      value: alerts.length,
+      isWarning: false,
+    },
+  ]
+
+  // Summary metrics
+  const totalDelivered = deliveries.length
+  const totalOpened = deliveries.filter((d) => d.opened_at).length
+  const totalClicked = deliveries.filter((d) => d.clicked_at).length
+
+  return {
+    summary: {
+      totalAlerts: alerts.length,
+      totalDelivered,
+      openRate: totalDelivered > 0 ? totalOpened / totalDelivered : 0,
+      clickRate: totalOpened > 0 ? totalClicked / totalOpened : 0,
+      avgResponseTime: severityTimes.reduce((sum, s) => sum + s.avgResponseTime, 0) / 5,
+    },
+    channelData,
+    severityTimes,
+    volumeTrend,
+    noisyRules,
+    fatigueScore,
+    fatigueIndicators,
+  }
+}
+
 // ============================================
 // MAIN COMPONENT
 // ============================================
@@ -327,11 +466,21 @@ export default function AlertAnalyticsDashboard({ teamId: _teamId }) {
         .select('*')
         .gte('created_at', startDate.toISOString())
 
-      // Fetch alert rules
-      const { data: rules } = await supabase.from('alert_rules').select('*').eq('enabled', true)
+      // Fetch alert rules. The table is user_alert_rules; `alert_rules` has
+      // never existed, so this query returned nothing and the "noisy rules"
+      // panel has always been empty rather than absent.
+      const { data: rules } = await supabase
+        .from('user_alert_rules')
+        .select('*')
+        .eq('enabled', true)
 
       // Process metrics
-      const processedMetrics = processAnalytics(deliveries || [], alerts || [], rules || [])
+      const processedMetrics = processAnalytics(
+        deliveries || [],
+        alerts || [],
+        rules || [],
+        timeRange
+      )
       setMetrics(processedMetrics)
     } catch (error) {
       console.error('Error fetching analytics:', error)
@@ -345,131 +494,6 @@ export default function AlertAnalyticsDashboard({ teamId: _teamId }) {
   }, [fetchAnalytics])
 
   // Process raw data into analytics
-  const processAnalytics = (deliveries, alerts, rules) => {
-    // Channel effectiveness
-    const channelData = {}
-    CHANNELS.forEach((channel) => {
-      channelData[channel] = { delivered: 0, opened: 0, clicked: 0 }
-    })
-
-    deliveries.forEach((d) => {
-      const channel = d.channel || 'email'
-      if (channelData[channel]) {
-        channelData[channel].delivered++
-        if (d.opened_at) channelData[channel].opened++
-        if (d.clicked_at) channelData[channel].clicked++
-      }
-    })
-
-    // Response times by severity
-    const severityTimes = ['critical', 'high', 'medium', 'low', 'info'].map((severity) => {
-      const sevAlerts = alerts.filter((a) => a.severity === severity && a.acknowledged_at)
-      const avgTime =
-        sevAlerts.length > 0
-          ? sevAlerts.reduce((sum, a) => {
-              return sum + (new Date(a.acknowledged_at) - new Date(a.created_at)) / 60000
-            }, 0) / sevAlerts.length
-          : 0
-
-      const targets = { critical: 15, high: 60, medium: 240, low: 1440, info: 2880 }
-      return { severity, avgResponseTime: Math.round(avgTime), target: targets[severity] }
-    })
-
-    // Alert volume by day
-    const volumeByDay = {}
-    alerts.forEach((a) => {
-      const date = new Date(a.created_at).toISOString().split('T')[0]
-      volumeByDay[date] = (volumeByDay[date] || 0) + 1
-    })
-
-    const volumeTrend = []
-    for (let i = timeRange - 1; i >= 0; i--) {
-      const date = new Date()
-      date.setDate(date.getDate() - i)
-      const dateStr = date.toISOString().split('T')[0]
-      volumeTrend.push({ date: dateStr, count: volumeByDay[dateStr] || 0 })
-    }
-
-    // Noisy rules (high alert count, low acknowledgment)
-    const ruleAlertCounts = {}
-    alerts.forEach((a) => {
-      if (a.rule_id) {
-        if (!ruleAlertCounts[a.rule_id]) {
-          ruleAlertCounts[a.rule_id] = { total: 0, acked: 0 }
-        }
-        ruleAlertCounts[a.rule_id].total++
-        if (a.acknowledged_at) ruleAlertCounts[a.rule_id].acked++
-      }
-    })
-
-    const noisyRules = rules
-      .map((rule) => {
-        const counts = ruleAlertCounts[rule.id] || { total: 0, acked: 0 }
-        return {
-          id: rule.id,
-          name: rule.name,
-          alertCount: counts.total,
-          ackRate: counts.total > 0 ? counts.acked / counts.total : 1,
-        }
-      })
-      .filter((r) => r.alertCount > 10 && r.ackRate < 0.5)
-      .sort((a, b) => a.ackRate - b.ackRate)
-      .slice(0, 5)
-
-    // Fatigue indicators
-    const avgDailyAlerts = alerts.length / timeRange
-    const unackedAlerts = alerts.filter((a) => !a.acknowledged_at).length
-    const unackedRate = alerts.length > 0 ? unackedAlerts / alerts.length : 0
-
-    const fatigueScore = Math.min(
-      100,
-      Math.round(
-        (avgDailyAlerts > 50 ? 30 : avgDailyAlerts * 0.6) +
-          unackedRate * 50 +
-          (noisyRules.length > 0 ? 20 : 0)
-      )
-    )
-
-    const fatigueIndicators = [
-      {
-        label: 'Avg daily alerts',
-        value: Math.round(avgDailyAlerts),
-        isWarning: avgDailyAlerts > 50,
-      },
-      {
-        label: 'Unacknowledged rate',
-        value: formatPercent(unackedRate),
-        isWarning: unackedRate > 0.3,
-      },
-      { label: 'Noisy rules', value: noisyRules.length, isWarning: noisyRules.length > 3 },
-      {
-        label: 'Total alerts',
-        value: alerts.length,
-        isWarning: false,
-      },
-    ]
-
-    // Summary metrics
-    const totalDelivered = deliveries.length
-    const totalOpened = deliveries.filter((d) => d.opened_at).length
-    const totalClicked = deliveries.filter((d) => d.clicked_at).length
-
-    return {
-      summary: {
-        totalAlerts: alerts.length,
-        totalDelivered,
-        openRate: totalDelivered > 0 ? totalOpened / totalDelivered : 0,
-        clickRate: totalOpened > 0 ? totalClicked / totalOpened : 0,
-        avgResponseTime: severityTimes.reduce((sum, s) => sum + s.avgResponseTime, 0) / 5,
-      },
-      channelData,
-      severityTimes,
-      volumeTrend,
-      noisyRules,
-      fatigueScore,
-      fatigueIndicators,
-    }
-  }
 
   const handleDisableRule = (ruleId) => {
     // Navigate to rule settings
