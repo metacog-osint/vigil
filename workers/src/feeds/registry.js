@@ -39,6 +39,7 @@ import { ingestThreatCluster } from './threatcluster.js'
 import { ingestSecDisclosures } from './sec-disclosures.js'
 import { ingestCisaAdvisories } from './cisa-advisories.js'
 import { ingestNcscAdvisories } from './ncsc-advisories.js'
+import { ingestEtdaActors } from './etda-actors.js'
 
 // Threat actor databases
 import { ingestMalpedia } from './malpedia.js'
@@ -79,64 +80,264 @@ const WEEK = 7 * DAY
  */
 export const JOBS = [
   // --- Leak sites and the checks that run against them ---
-  { id: 'ransomlook', priority: 1, cost: 8, intervalMinutes: HOUR, run: (db, env) => ingestRansomlook(db, env) },
-  { id: 'threatfox', priority: 1, cost: 6, intervalMinutes: HOUR, run: (db, env) => ingestThreatFox(db, env) },
-  { id: 'data-quality', priority: 1, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'run_data_quality_checks') },
+  {
+    id: 'ransomlook',
+    priority: 1,
+    cost: 8,
+    intervalMinutes: HOUR,
+    run: (db, env) => ingestRansomlook(db, env),
+  },
+  {
+    id: 'threatfox',
+    priority: 1,
+    cost: 6,
+    intervalMinutes: HOUR,
+    run: (db, env) => ingestThreatFox(db, env),
+  },
+  {
+    id: 'data-quality',
+    priority: 1,
+    cost: 2,
+    intervalMinutes: HOUR,
+    run: (db) => rpc(db, 'run_data_quality_checks'),
+  },
   // Queues leak-site posts that look like announcements rather than victim
   // claims. It has only ever run once, by hand, when migration 095 was
   // generalised; every post published since has gone unexamined. It only ever
   // queues a candidate and never moves a row, so running it hourly is safe.
-  { id: 'leak-site-notices', priority: 2, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'detect_leak_site_notices') },
-  { id: 'actor-status', priority: 1, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'apply_actor_status') },
-  { id: 'ioc-geo', priority: 1, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'resolve_ioc_geo', { p_limit: 5000 }) },
+  {
+    id: 'leak-site-notices',
+    priority: 2,
+    cost: 2,
+    intervalMinutes: HOUR,
+    run: (db) => rpc(db, 'detect_leak_site_notices'),
+  },
+  {
+    id: 'actor-status',
+    priority: 1,
+    cost: 2,
+    intervalMinutes: HOUR,
+    run: (db) => rpc(db, 'apply_actor_status'),
+  },
+  {
+    id: 'ioc-geo',
+    priority: 1,
+    cost: 2,
+    intervalMinutes: HOUR,
+    run: (db) => rpc(db, 'resolve_ioc_geo', { p_limit: 5000 }),
+  },
 
   // --- Delivering what users asked to be told about ---
   // The window is wider than the cadence on purpose. Matching is deduplicated per
   // user and item (migration 104), so a run that covers ground an earlier run
   // already covered delivers nothing twice - which means a skipped hour heals
   // itself on the next run instead of leaving a gap in someone's alerts.
-  { id: 'alert-rules', priority: 2, cost: 2, intervalMinutes: HOUR,
-    run: (db) => rpc(db, 'evaluate_alert_rules', { p_since: '3 hours', p_max_matches: 5 }) },
+  {
+    id: 'alert-rules',
+    priority: 2,
+    cost: 2,
+    intervalMinutes: HOUR,
+    run: (db) => rpc(db, 'evaluate_alert_rules', { p_since: '3 hours', p_max_matches: 5 }),
+  },
 
   // --- Vulnerabilities: what R1/R2 in the offshoot spec depend on ---
-  { id: 'cisa-kev', priority: 2, cost: 10, intervalMinutes: 6 * HOUR, run: (db, env) => ingestCISAKEV(db, env) },
-  { id: 'vulncheck', priority: 3, cost: 6, intervalMinutes: 6 * HOUR, run: (db, env) => ingestVulnCheck(db, env) },
-  { id: 'nvd', priority: 3, cost: 12, intervalMinutes: 6 * HOUR, run: (db, env) => ingestNVD(db, env) },
-  { id: 'epss', priority: 3, cost: 10, intervalMinutes: DAY, run: (db, env) => ingestEPSS(db, env) },
-  { id: 'cisa-ics', priority: 3, cost: 6, intervalMinutes: DAY, run: (db, env) => ingestCISAICS(db, env) },
+  {
+    id: 'cisa-kev',
+    priority: 2,
+    cost: 10,
+    intervalMinutes: 6 * HOUR,
+    run: (db, env) => ingestCISAKEV(db, env),
+  },
+  {
+    id: 'vulncheck',
+    priority: 3,
+    cost: 6,
+    intervalMinutes: 6 * HOUR,
+    run: (db, env) => ingestVulnCheck(db, env),
+  },
+  {
+    id: 'nvd',
+    priority: 3,
+    cost: 12,
+    intervalMinutes: 6 * HOUR,
+    run: (db, env) => ingestNVD(db, env),
+  },
+  {
+    id: 'epss',
+    priority: 3,
+    cost: 10,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestEPSS(db, env),
+  },
+  {
+    id: 'cisa-ics',
+    priority: 3,
+    cost: 6,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestCISAICS(db, env),
+  },
 
   // --- IOC feeds ---
-  { id: 'malwarebazaar', priority: 3, cost: 8, intervalMinutes: 6 * HOUR, run: (db, env) => ingestMalwareBazaar(db, env) },
-  { id: 'pulsedive', priority: 3, cost: 6, intervalMinutes: 6 * HOUR, run: (db, env) => ingestPulsedive(db, env) },
-  { id: 'urlhaus', priority: 3, cost: 10, intervalMinutes: 6 * HOUR, run: (db, env) => ingestURLhaus(db, env) },
-  { id: 'feodo', priority: 3, cost: 4, intervalMinutes: 6 * HOUR, run: (db, env) => ingestFeodo(db, env) },
-  { id: 'tor-exits', priority: 4, cost: 6, intervalMinutes: DAY, run: (db, env) => ingestTorExits(db, env) },
+  {
+    id: 'malwarebazaar',
+    priority: 3,
+    cost: 8,
+    intervalMinutes: 6 * HOUR,
+    run: (db, env) => ingestMalwareBazaar(db, env),
+  },
+  {
+    id: 'pulsedive',
+    priority: 3,
+    cost: 6,
+    intervalMinutes: 6 * HOUR,
+    run: (db, env) => ingestPulsedive(db, env),
+  },
+  {
+    id: 'urlhaus',
+    priority: 3,
+    cost: 10,
+    intervalMinutes: 6 * HOUR,
+    run: (db, env) => ingestURLhaus(db, env),
+  },
+  {
+    id: 'feodo',
+    priority: 3,
+    cost: 4,
+    intervalMinutes: 6 * HOUR,
+    run: (db, env) => ingestFeodo(db, env),
+  },
+  {
+    id: 'tor-exits',
+    priority: 4,
+    cost: 6,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestTorExits(db, env),
+  },
 
   // --- Sanctions, payments and group profiles ---
-  { id: 'ofac-sdn', priority: 2, cost: 1, intervalMinutes: DAY, run: (db, env) => ingestOFAC(db, env) },
-  { id: 'ransomware.live', priority: 3, cost: 12, intervalMinutes: DAY, run: (db, env) => ingestRansomwareLive(db, env) },
-  { id: 'threatcluster', priority: 2, cost: 1, intervalMinutes: DAY, run: (db, env) => ingestThreatCluster(db, env) },
-  { id: 'sec-edgar', priority: 3, cost: 1, intervalMinutes: DAY, run: (db, env) => ingestSecDisclosures(db, env) },
-  { id: 'cisa-advisories', priority: 2, cost: 1, intervalMinutes: 6 * HOUR, run: (db, env) => ingestCisaAdvisories(db, env) },
-  { id: 'ncsc-advisories', priority: 2, cost: 1, intervalMinutes: 6 * HOUR, run: (db, env) => ingestNcscAdvisories(db, env) },
-  { id: 'ransomwhere', priority: 4, cost: 10, intervalMinutes: DAY, run: (db, env) => ingestRansomwhere(db, env) },
+  {
+    id: 'ofac-sdn',
+    priority: 2,
+    cost: 1,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestOFAC(db, env),
+  },
+  {
+    id: 'ransomware.live',
+    priority: 3,
+    cost: 12,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestRansomwareLive(db, env),
+  },
+  {
+    id: 'threatcluster',
+    priority: 2,
+    cost: 1,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestThreatCluster(db, env),
+  },
+  {
+    id: 'sec-edgar',
+    priority: 3,
+    cost: 1,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestSecDisclosures(db, env),
+  },
+  {
+    id: 'cisa-advisories',
+    priority: 2,
+    cost: 1,
+    intervalMinutes: 6 * HOUR,
+    run: (db, env) => ingestCisaAdvisories(db, env),
+  },
+  {
+    id: 'ncsc-advisories',
+    priority: 2,
+    cost: 1,
+    intervalMinutes: 6 * HOUR,
+    run: (db, env) => ingestNcscAdvisories(db, env),
+  },
+  {
+    id: 'ransomwhere',
+    priority: 4,
+    cost: 10,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestRansomwhere(db, env),
+  },
 
   // --- Reference data ---
-  { id: 'malpedia', priority: 4, cost: 12, intervalMinutes: DAY, run: (db, env) => ingestMalpedia(db, env) },
-  { id: 'misp-galaxy', priority: 4, cost: 12, intervalMinutes: DAY, run: (db, env) => ingestMISPGalaxy(db, env) },
-  { id: 'bgpstream', priority: 4, cost: 4, intervalMinutes: DAY, run: (db, env) => ingestBGPStream(db, env) },
-  { id: 'anyrun-trends', priority: 4, cost: 4, intervalMinutes: DAY, run: (db, env) => ingestAnyRun(db, env) },
-  { id: 'censys', priority: 4, cost: 6, intervalMinutes: DAY, run: (db, env) => enrichCensys(db, env) },
-  { id: 'mitre', priority: 5, cost: 12, intervalMinutes: WEEK, run: (db, env) => ingestMITRE(db, env) },
+  {
+    id: 'malpedia',
+    priority: 4,
+    cost: 12,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestMalpedia(db, env),
+  },
+  {
+    id: 'misp-galaxy',
+    priority: 4,
+    cost: 12,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestMISPGalaxy(db, env),
+  },
+  {
+    id: 'bgpstream',
+    priority: 4,
+    cost: 4,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestBGPStream(db, env),
+  },
+  {
+    id: 'anyrun-trends',
+    priority: 4,
+    cost: 4,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestAnyRun(db, env),
+  },
+  {
+    id: 'censys',
+    priority: 4,
+    cost: 6,
+    intervalMinutes: DAY,
+    run: (db, env) => enrichCensys(db, env),
+  },
+  // Actor origin countries. Weekly because ETDA's own last-db-change was
+  // 2025-08-16 - a daily fetch would be 365 requests to observe one edit.
+  {
+    id: 'etda-actors',
+    priority: 4,
+    cost: 6,
+    intervalMinutes: WEEK,
+    run: (db, env) => ingestEtdaActors(db, env),
+  },
+  {
+    id: 'mitre',
+    priority: 5,
+    cost: 12,
+    intervalMinutes: WEEK,
+    run: (db, env) => ingestMITRE(db, env),
+  },
   // Resolves campaigns.actor_id from the names MITRE publishes. MITRE runs
   // weekly and new campaigns appear a few times a year, but this is one RPC,
   // and left unscheduled a new campaign sits unreachable for months - which is
   // how all 56 came to have a null actor_id in the first place.
-  { id: 'campaign-links', priority: 4, cost: 1, intervalMinutes: DAY, run: (db) => rpc(db, 'link_campaign_actors') },
-  { id: 'mitre-atlas', priority: 5, cost: 6, intervalMinutes: WEEK, run: (db, env) => ingestMitreAtlas(db, env) }
+  {
+    id: 'campaign-links',
+    priority: 4,
+    cost: 1,
+    intervalMinutes: DAY,
+    run: (db) => rpc(db, 'link_campaign_actors'),
+  },
+  {
+    id: 'mitre-atlas',
+    priority: 5,
+    cost: 6,
+    intervalMinutes: WEEK,
+    run: (db, env) => ingestMitreAtlas(db, env),
+  },
 ]
 
-export const JOBS_BY_ID = Object.fromEntries(JOBS.map(job => [job.id, job]))
+export const JOBS_BY_ID = Object.fromEntries(JOBS.map((job) => [job.id, job]))
 
 /**
  * The database-side jobs return their counts in `data`. Normalizing them here

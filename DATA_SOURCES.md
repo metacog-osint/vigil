@@ -10,19 +10,27 @@ What a source permits governs what Vigil may do with it, so it belongs here rath
 than in someone's memory.
 
 **Checked directly on 21 September 2026:** ThreatCluster, SEC EDGAR, OFAC, CISA,
-NCSC-UK.
+NCSC-UK, ETDA.
+
+**Licences now live in the database, not only here.** `source_licences`
+(migration 136) holds the same facts with a `commercial_use` flag, and
+`actor_origins_commercial` is the view a paid tier reads instead of
+`threat_actors`. Cutting a NonCommercial source is one `UPDATE`, not an audit.
+Verified on 21 September: 669 actor origins held, **483 sellable, 186
+withheld** — the 186 being exactly what ETDA added.
 **Carried from the project's own records and not re-checked:** Ransomware.live,
 DB-IP. Confirm those against the source before relying on them.
 
-| Source                         | Terms                                                                                | What that means here                                                                                                                                                                                                                                                 |
-| ------------------------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Ransomware.live**            | **Free tier is personal use only**                                                   | Documented as permitting personal use only, **which constrains any use beyond that**. It supplies all group profiles plus 11,256 of the victim countries. Every row carries `source = 'ransomware.live'`, so what would have to be replaced is identifiable exactly. |
-| ThreatCluster Ransomware-Intel | **TLP:CLEAR** — "free to use, redistribute, and integrate. Attribution appreciated." | No restriction on use or redistribution. Attributed anyway.                                                                                                                                                                                                          |
-| SEC EDGAR                      | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
-| OFAC SDN                       | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
-| CISA advisories                | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
-| NCSC-UK                        | **Open Government Licence v3.0**                                                     | Free to use and redistribute, **including commercially**, provided the source is acknowledged. Vigil stores the advisory URL and the publishing government on every row, which satisfies it.                                                                         |
-| DB-IP (indicator location)     | **CC BY 4.0**                                                                        | **Attribution is required wherever located data is shown** — currently the IOC search page and the Help methodology. Any new view showing country needs it too.                                                                                                      |
+| Source                                 | Terms                                                                                | What that means here                                                                                                                                                                                                                                                 |
+| -------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ransomware.live**                    | **Free tier is personal use only**                                                   | Documented as permitting personal use only, **which constrains any use beyond that**. It supplies all group profiles plus 11,256 of the victim countries. Every row carries `source = 'ransomware.live'`, so what would have to be replaced is identifiable exactly. |
+| ThreatCluster Ransomware-Intel         | **TLP:CLEAR** — "free to use, redistribute, and integrate. Attribution appreciated." | No restriction on use or redistribution. Attributed anyway.                                                                                                                                                                                                          |
+| SEC EDGAR                              | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
+| OFAC SDN                               | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
+| **ETDA / ThaiCERT Threat Group Cards** | **CC BY-NC-SA 4.0 — NonCommercial**                                                  | **Free to use now; must be removed from anything sold.** Supplies 186 actor origin countries, all carrying `origin_source = 'etda'`, and `actor_origins_commercial` already excludes them. The licence is re-read from the API response on every run.                |
+| CISA advisories                        | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
+| NCSC-UK                                | **Open Government Licence v3.0**                                                     | Free to use and redistribute, **including commercially**, provided the source is acknowledged. Vigil stores the advisory URL and the publishing government on every row, which satisfies it.                                                                         |
+| DB-IP (indicator location)             | **CC BY 4.0**                                                                        | **Attribution is required wherever located data is shown** — currently the IOC search page and the Help methodology. Any new view showing country needs it too.                                                                                                      |
 
 Sources not listed above have not been checked. That is a gap, not a statement
 that they are unrestricted.
@@ -125,6 +133,37 @@ was claimed by Qilin in July, which may well be two unrelated incidents.
 
 SEC asks for a User-Agent identifying the requester and no more than ten requests
 per second. This makes two, once a day.
+
+### Actor Attribution
+
+| Source                             | Endpoint                                                  | Data Type                | Schedule | Script                                                           | Auth |
+| ---------------------------------- | --------------------------------------------------------- | ------------------------ | -------- | ---------------------------------------------------------------- | ---- |
+| ETDA / ThaiCERT Threat Group Cards | `https://apt.etda.or.th/cgi-bin/getcard.cgi?g=all&o=json` | **Actor origin country** | Weekly   | `workers/src/feeds/etda-actors.js` → `etda-actors` Edge Function | None |
+
+**The gap it fills.** 483 of 4,504 threat actors had an origin country —
+10.7% — all of it from MISP Galaxy and MITRE ATT&CK, neither of which sets out
+to be an attribution register. ETDA is 503 actors with 1,788 names between
+them, each name recording who gave it: CrowdStrike, Microsoft, MITRE,
+SecureWorks, Kaspersky. Coverage is now **14.9%**.
+
+**Why it was trusted to write anything.** Measured before it was built and
+confirmed after: **433 agreements against 1 disagreement** with what Vigil
+already held. The corpora were assembled independently and they concur. The
+one dispute is OnionDog — Vigil says North Korea, ETDA says South Korea — and
+it is queued, not applied.
+
+**`[Unknown]` is an answer and it is kept.** 137 of ETDA's 503 entries record
+the country as `[Unknown]`, and 124 of those match an actor Vigil holds.
+Writing anything for them would convert a source's honest refusal into Vigil's
+silence. They stay null.
+
+**Confidence stays null.** `origin_confidence` means "confidence as published
+by the source". ETDA publishes none; inventing a 50 to match MISP's rows would
+render a number in a tooltip that no source ever said.
+
+**Alias collisions are refused, not resolved.** Five actors — among them
+Sandworm, whose alias `IRIDIUM` collides with another group — match entries
+naming two different countries. None was filled; all are queued.
 
 ### Government Attribution
 
