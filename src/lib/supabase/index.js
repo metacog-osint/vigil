@@ -51,6 +51,7 @@ export {
   ATTRIBUTION_STRENGTHS,
   ATTRIBUTION_STRENGTH_LABELS,
   ATTRIBUTION_STRENGTH_COLORS,
+  ATTRIBUTION_SOURCE_LABELS,
   strengthRank,
 } from './attributedActivity'
 export { vulnerabilities } from './vulnerabilities'

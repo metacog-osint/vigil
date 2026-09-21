@@ -6,6 +6,7 @@ import {
   ATTRIBUTION_STRENGTHS,
   ATTRIBUTION_STRENGTH_LABELS,
   ATTRIBUTION_STRENGTH_COLORS,
+  ATTRIBUTION_SOURCE_LABELS,
 } from '../lib/supabase'
 import { CoverageNote } from './common'
 import { geoToIso2 } from '../lib/countryCodes'
@@ -411,6 +412,7 @@ export default function ThreatAttributionMap({
         count: countryInfo.count,
         strongest: countryInfo.strongest,
         phrases: countryInfo.phrases || [],
+        sources: countryInfo.sources || [],
         advisories: (countryInfo.advisories || []).slice(0, 3),
       }
     }
@@ -626,6 +628,18 @@ export default function ThreatAttributionMap({
                       ))}
                     </div>
                   )}
+                  {tooltip.sources?.length > 0 && (
+                    <div className="mb-2 text-xs text-gray-400">
+                      {/* Two governments naming a country separately is a
+                          different position from one naming it twice. */}
+                      {tooltip.sources.length > 1
+                        ? `Attributed independently by ${tooltip.sources.length} governments: `
+                        : 'Attributed by '}
+                      {tooltip.sources
+                        .map((src) => ATTRIBUTION_SOURCE_LABELS[src] || src)
+                        .join(', ')}
+                    </div>
+                  )}
                   {tooltip.strongest && (
                     <div className="mb-2 flex items-center gap-1.5">
                       <span
@@ -646,7 +660,16 @@ export default function ThreatAttributionMap({
                       <div className="text-xs text-gray-500 mb-1">Advisories:</div>
                       {tooltip.advisories.map((a) => (
                         <div key={a.advisory_id} className="text-xs text-gray-300 mb-1">
-                          <span className="font-mono text-gray-500">{a.advisory_id}</span> {a.title}
+                          {/* CISA numbers its advisories and the number is worth
+                              showing. NCSC does not, so its id is the URL slug -
+                              a restatement of the title, forty characters wide.
+                              Show the date instead. */}
+                          <span className="font-mono text-gray-500">
+                            {/^AA?\d{2}-\d{3}[A-Z]?$/.test(a.advisory_id)
+                              ? a.advisory_id
+                              : a.published}
+                          </span>{' '}
+                          {a.title}
                         </div>
                       ))}
                     </div>

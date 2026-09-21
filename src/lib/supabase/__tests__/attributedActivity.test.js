@@ -44,6 +44,7 @@ const IRAN_PLC = {
   attributed_country: 'IR',
   attribution_phrase: 'Iranian-Affiliated Cyber Actors',
   attribution_strength: 'affiliated',
+  source: 'cisa',
 }
 
 const RUSSIA_STATE = {
@@ -53,6 +54,7 @@ const RUSSIA_STATE = {
   attributed_country: 'RU',
   attribution_phrase: 'Russian State-Sponsored Cyber Actors',
   attribution_strength: 'state',
+  source: 'cisa',
 }
 
 const RUSSIA_HACKTIVIST = {
@@ -62,6 +64,7 @@ const RUSSIA_HACKTIVIST = {
   attributed_country: 'RU',
   attribution_phrase: 'Pro-Russia Hacktivists',
   attribution_strength: 'aligned',
+  source: 'cisa',
 }
 
 const UNATTRIBUTED = {
@@ -185,6 +188,34 @@ describe('attributedActivity', () => {
 
       expect(Object.keys(data)).toEqual(['IR'])
       expect(data.IR.count).toBe(2)
+    })
+
+    it('records which governments attributed, not just how many advisories', async () => {
+      const NCSC_IRAN = {
+        advisory_id: 'NCSC-UK-ALLIES-EXPOSE-SPYWARE',
+        title: 'UK and allies expose spyware used by Iranian state actors',
+        published: '2026-09-15',
+        attributed_country: 'IR',
+        attribution_phrase: 'Iranian state actors',
+        attribution_strength: 'state',
+        source: 'ncsc-uk',
+      }
+      supabase.from.mockReturnValue(
+        queryReturning({ data: [IRAN_PLC, NCSC_IRAN, RUSSIA_STATE], error: null })
+      )
+
+      const { data } = await attributedActivity.getCountryIndex()
+
+      // Two allied governments naming Iran separately is a materially
+      // different position from the US naming it twice, and the count alone
+      // cannot tell them apart.
+      expect(data.IR.sources.sort()).toEqual(['cisa', 'ncsc-uk'])
+      expect(data.RU.sources).toEqual(['cisa'])
+
+      // NCSC says state where CISA said affiliated. The stronger claim wins
+      // the colour and both phrases survive.
+      expect(data.IR.strongest).toBe('state')
+      expect(data.IR.phrases).toHaveLength(2)
     })
 
     it('passes a read failure through rather than reporting an empty world', async () => {
