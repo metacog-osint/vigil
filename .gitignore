@@ -47,3 +47,6 @@ playwright-report/
 # Windows reserved names
 nul
 .env.vercel
+
+# Wrangler local state (workers/)
+.wrangler/

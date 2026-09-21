@@ -2,13 +2,21 @@
  * GeographyTab Component
  *
  * Dashboard tab showing geographic threat data:
- * - Global threat map with victim/attacker toggle
+ * - Global threat map with victim / attacker / attributed toggle
  * - Country attack panel for selected country
+ *
+ * The three layers answer three different questions and are deliberately not
+ * combinable. Victims counts who was hit, from claims the attacker published.
+ * Attackers counts groups said to originate somewhere. Attributed shows what a
+ * government said, in its own words, about activity it investigated - the only
+ * one of the three that can show a state operation nobody extorted anyone over.
  */
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ThreatAttributionMap, CountryAttackPanel } from '../../../components'
 
 export default function GeographyTab() {
+  const navigate = useNavigate()
   const [mapViewMode, setMapViewMode] = useState('victims')
   const [selectedCountry, setSelectedCountry] = useState(null)
 
@@ -20,7 +28,9 @@ export default function GeographyTab() {
           <div>
             <h2 className="text-lg font-semibold text-white">Global Threat Map</h2>
             <p className="text-sm text-gray-400 hidden sm:block">
-              Geographic distribution of attacks (30 days)
+              {mapViewMode === 'attributed'
+                ? 'Government-attributed activity, all advisories'
+                : 'Geographic distribution of attacks (30 days)'}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -44,6 +54,21 @@ export default function GeographyTab() {
             >
               Attackers
             </button>
+            <button
+              onClick={() => setMapViewMode('attributed')}
+              // The accessible name has to contain the visible label (WCAG
+              // 2.5.3); a bare title attribute replaced it, so the button
+              // announced as the tooltip and not as "Attributed".
+              aria-label="Attributed: what a government said it investigated, in its own words"
+              title="What a government said it investigated, in its own words"
+              className={`px-3 py-1.5 text-sm rounded transition-colors ${
+                mapViewMode === 'attributed'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
+              Attributed
+            </button>
           </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -61,7 +86,9 @@ export default function GeographyTab() {
               <CountryAttackPanel
                 country={selectedCountry}
                 days={30}
-                onActorClick={(actor) => console.log('Actor clicked:', actor.name)}
+                // The panel has always looked clickable and only logged to the
+                // console. /actors/:actorKey resolves by id or name.
+                onActorClick={(actor) => navigate(`/actors/${actor.id ?? actor.name}`)}
                 onClose={() => setSelectedCountry(null)}
               />
             ) : (

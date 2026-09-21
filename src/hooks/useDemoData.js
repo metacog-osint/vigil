@@ -379,6 +379,7 @@ const MOCK_VULNERABILITIES = [
 const MOCK_IOCS = [
   {
     id: 'demo-ioc-1',
+    country_code: 'NL',
     type: 'ip',
     value: '185.220.101.34',
     actor_id: 'demo-actor-lockbit',
@@ -415,6 +416,7 @@ const MOCK_IOCS = [
   },
   {
     id: 'demo-ioc-4',
+    country_code: 'RU',
     type: 'ip',
     value: '45.129.14.83',
     actor_id: 'demo-actor-apt29',
@@ -427,6 +429,7 @@ const MOCK_IOCS = [
   },
   {
     id: 'demo-ioc-5',
+    country_code: 'US',
     type: 'domain',
     value: 'update-microsoft-security.com',
     actor_id: 'demo-actor-apt29',
@@ -439,6 +442,7 @@ const MOCK_IOCS = [
   },
   {
     id: 'demo-ioc-6',
+    country_code: 'RU',
     type: 'ip',
     value: '91.215.85.142',
     actor_id: 'demo-actor-clop',
@@ -463,6 +467,7 @@ const MOCK_IOCS = [
   },
   {
     id: 'demo-ioc-8',
+    country_code: 'DE',
     type: 'url',
     value: 'hxxps://malicious-update[.]com/payload.exe',
     actor_id: 'demo-actor-lockbit',
