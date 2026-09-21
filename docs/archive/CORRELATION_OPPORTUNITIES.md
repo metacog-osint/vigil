@@ -1,32 +1,39 @@
 # Data Correlation Opportunities
 
+> **Archived 21 September 2026.** Kept because it records what was analysed and
+> why. It is **not** current — it was written in January 2026 and describes a
+> smaller project. Where it disagrees with `README.md`, `docs/SESSION_HANDOFF.md`
+> or the migration headers, they are right and this is not.
+>
+> An opportunities analysis from January. Several of its ideas shipped (correlation views, IOC clustering); the rest have not been reassessed against the schema as it now stands.
+
 > Analysis of cross-data-stream correlation possibilities for enhanced threat intelligence.
 > **Last Updated:** January 19, 2026
 
 ## Implementation Status
 
-| Opportunity | Status | Script/Module |
-|-------------|--------|---------------|
+| Opportunity              | Status          | Script/Module                                 |
+| ------------------------ | --------------- | --------------------------------------------- |
 | #1 Actor-IOC Attribution | **IMPLEMENTED** | `correlate-actor-iocs.mjs`, `correlations.js` |
-| #2 Actor-Vulnerability | **IMPLEMENTED** | `correlate-actor-cves.mjs`, `correlations.js` |
-| #3 Industry Targeting | **IMPLEMENTED** | Materialized views, `correlations.js` |
-| #4 Attack Chains | **IMPLEMENTED** | `build-attack-chains.mjs` |
-| #5 Temporal Patterns | **PARTIAL** | `weekly_activity_trends` view exists |
-| #6 Geographic Mapping | **IMPLEMENTED** | `country_threat_profile` view |
+| #2 Actor-Vulnerability   | **IMPLEMENTED** | `correlate-actor-cves.mjs`, `correlations.js` |
+| #3 Industry Targeting    | **IMPLEMENTED** | Materialized views, `correlations.js`         |
+| #4 Attack Chains         | **IMPLEMENTED** | `build-attack-chains.mjs`                     |
+| #5 Temporal Patterns     | **PARTIAL**     | `weekly_activity_trends` view exists          |
+| #6 Geographic Mapping    | **IMPLEMENTED** | `country_threat_profile` view                 |
 
 ## Current Data Inventory
 
-| Data Stream | Key Fields | Update Frequency |
-|------------|------------|------------------|
-| IOCs | type, value, source, tags | Hourly |
-| Incidents | actor, victim, sector, country | Hourly |
-| Cyber Events | actor, actor_type, motive, industry | Monthly |
-| Threat Actors | name, aliases, origin_country, ttps | Daily |
-| Vulnerabilities | cve_id, cvss, epss, kev_status | 6-hourly |
-| Techniques | mitre_id, name, tactics, platforms | Weekly |
-| Malware Families | name, type, actors | Daily |
+| Data Stream      | Key Fields                          | Update Frequency |
+| ---------------- | ----------------------------------- | ---------------- |
+| IOCs             | type, value, source, tags           | Hourly           |
+| Incidents        | actor, victim, sector, country      | Hourly           |
+| Cyber Events     | actor, actor_type, motive, industry | Monthly          |
+| Threat Actors    | name, aliases, origin_country, ttps | Daily            |
+| Vulnerabilities  | cve_id, cvss, epss, kev_status      | 6-hourly         |
+| Techniques       | mitre_id, name, tactics, platforms  | Weekly           |
+| Malware Families | name, type, actors                  | Daily            |
 
-*Note: Record counts change frequently. Query database for current counts.*
+_Note: Record counts change frequently. Query database for current counts._
 
 ---
 
@@ -35,11 +42,13 @@
 **Problem:** IOCs are collected from multiple feeds but rarely attributed to specific actors.
 
 **Solution:** Cross-reference IOCs with known actor infrastructure from:
+
 - Malpedia (actor → malware → IOCs)
 - MISP Galaxy (actor → infrastructure)
 - Cyber Events (actor → incident → potential IOCs in description)
 
 **Implementation:**
+
 ```sql
 -- Create actor_iocs junction table
 CREATE TABLE actor_iocs (
@@ -53,6 +62,7 @@ CREATE TABLE actor_iocs (
 ```
 
 **Customer Value:**
+
 - "These 5 IOCs are associated with APT29"
 - "Your blocked IP is known infrastructure for Lazarus Group"
 - Alert when known actor infrastructure appears in your logs
@@ -64,12 +74,14 @@ CREATE TABLE actor_iocs (
 **Problem:** We know CVEs exist, we know actors exist, but not which actors exploit which CVEs.
 
 **Data Sources:**
+
 - CISA KEV (exploited in wild, but no actor attribution)
 - NVD references (sometimes link to actor reports)
 - Cyber Events descriptions (often mention CVEs)
 - MITRE ATT&CK (some techniques reference CVEs)
 
 **Implementation:**
+
 ```sql
 -- Create actor_vulnerabilities junction table
 CREATE TABLE actor_vulnerabilities (
@@ -95,6 +107,7 @@ WHERE ce.description ~ 'CVE-\d{4}-\d+';
 ```
 
 **Customer Value:**
+
 - "CVE-2024-1234 is actively exploited by 3 nation-state actors"
 - Prioritize patching based on actor threat level, not just CVSS
 - "Actors targeting your sector exploit these 10 CVEs"
@@ -106,11 +119,13 @@ WHERE ce.description ~ 'CVE-\d{4}-\d+';
 **Problem:** Customers want to know "What threats target MY industry?"
 
 **Data Sources:**
+
 - Cyber Events: `target_industry` (NAICS codes), `actor_type`, `motive`
 - Incidents: `sector` field
 - Threat Actors: `target_sectors` array
 
 **Implementation:**
+
 ```sql
 -- Materialized view for industry threat landscape
 CREATE MATERIALIZED VIEW industry_threat_landscape AS
@@ -129,6 +144,7 @@ ORDER BY event_count DESC;
 ```
 
 **Customer Value:**
+
 - "Healthcare sector: 847 events, 23 unique actors, primarily Criminal (financial motive)"
 - Benchmark against industry peers
 - Executive briefing: "Your industry threat landscape this month"
@@ -142,6 +158,7 @@ ORDER BY event_count DESC;
 **Concept:** Link Technique → Vulnerability → IOC → Actor into attack chains.
 
 **Example Chain:**
+
 ```
 APT29 (Actor)
   └─→ Uses Technique T1566 (Phishing)
@@ -151,6 +168,7 @@ APT29 (Actor)
 ```
 
 **Implementation:**
+
 ```sql
 -- Attack chain table
 CREATE TABLE attack_chains (
@@ -169,6 +187,7 @@ CREATE TABLE attack_chains (
 ```
 
 **Customer Value:**
+
 - Visualize full attack paths
 - Understand "how would this actor attack us?"
 - Map defenses to each chain link
@@ -182,12 +201,14 @@ CREATE TABLE attack_chains (
 **Concept:** Analyze time-series patterns across data streams.
 
 **Patterns to Detect:**
+
 1. **IOC Surge → Incident Spike**: Do IOC increases precede incidents?
 2. **CVE Publication → Exploitation**: How fast are new CVEs exploited?
 3. **Actor Dormancy/Activity Cycles**: Are there patterns in actor activity?
 4. **Sector Targeting Waves**: Do actors rotate through industries?
 
 **Implementation:**
+
 ```sql
 -- Weekly activity aggregation
 CREATE MATERIALIZED VIEW weekly_activity AS
@@ -214,6 +235,7 @@ GROUP BY 1;
 ```
 
 **Customer Value:**
+
 - Predictive alerting: "IOC activity for LockBit increased 300% this week"
 - Trend analysis for executive reporting
 - Early warning before public incident disclosure
@@ -225,11 +247,13 @@ GROUP BY 1;
 **Problem:** Global threat data lacks geographic context for specific customers.
 
 **Data Sources:**
+
 - Cyber Events: `target_country`, `actor_country`, geopolitical flags
 - Incidents: `country` field
 - IOCs: Can be enriched with geolocation
 
 **Implementation:**
+
 ```sql
 -- Country threat profile
 CREATE MATERIALIZED VIEW country_threat_profile AS
@@ -249,6 +273,7 @@ GROUP BY target_country;
 ```
 
 **Customer Value:**
+
 - "Threats targeting organizations in your country"
 - Geopolitical risk assessment
 - "Nation-state actors from X are targeting Y sector in your region"
@@ -257,20 +282,21 @@ GROUP BY target_country;
 
 ## Implementation Priority
 
-| Opportunity | Effort | Customer Value | Priority |
-|------------|--------|----------------|----------|
-| #3 Industry Targeting | Low | High | **P1** |
-| #6 Geographic Mapping | Low | High | **P1** |
-| #1 Actor-IOC Attribution | Medium | Very High | **P2** |
-| #2 Actor-Vulnerability | Medium | Very High | **P2** |
-| #5 Temporal Patterns | Medium | High | **P3** |
-| #4 Attack Chains | High | Very High | **P3** |
+| Opportunity              | Effort | Customer Value | Priority |
+| ------------------------ | ------ | -------------- | -------- |
+| #3 Industry Targeting    | Low    | High           | **P1**   |
+| #6 Geographic Mapping    | Low    | High           | **P1**   |
+| #1 Actor-IOC Attribution | Medium | Very High      | **P2**   |
+| #2 Actor-Vulnerability   | Medium | Very High      | **P2**   |
+| #5 Temporal Patterns     | Medium | High           | **P3**   |
+| #4 Attack Chains         | High   | Very High      | **P3**   |
 
 ---
 
 ## Quick Wins (Can Implement Today)
 
 ### 1. Industry Threat Dashboard Query
+
 ```sql
 SELECT
   target_industry,
@@ -286,6 +312,7 @@ LIMIT 20;
 ```
 
 ### 2. Actor Activity Scoring
+
 ```sql
 SELECT
   ta.name,
@@ -304,7 +331,9 @@ LIMIT 50;
 ```
 
 ### 3. Sector-Specific IOC Feed
+
 For a healthcare customer, what IOCs are relevant?
+
 ```sql
 -- Find actors targeting healthcare
 WITH healthcare_actors AS (
@@ -342,14 +371,17 @@ To enable these correlations, we need:
 ## Implementation Status
 
 ### Phase 1: Foundation ✅ COMPLETE
+
 Correlation tables and materialized views created.
 
 **Tables (Implemented):**
+
 - `actor_iocs` - Actor to IOC attribution
 - `actor_vulnerabilities` - Actor to CVE exploitation mapping
 - `attack_chains` - Full attack chain documentation
 
 **Materialized Views (Implemented):**
+
 - `industry_threat_landscape` - Industry targeting aggregation
 - `country_threat_profile` - Geographic threat mapping
 - `weekly_activity_trends` - Temporal pattern analysis
@@ -357,21 +389,24 @@ Correlation tables and materialized views created.
 
 ### Phase 2: Data Population Scripts ✅ COMPLETE
 
-| Script | Status |
-|--------|--------|
-| `scripts/correlate-actor-iocs.mjs` | ✅ Implemented |
-| `scripts/correlate-actor-cves.mjs` | ✅ Implemented |
-| `scripts/build-attack-chains.mjs` | ✅ Implemented |
+| Script                                         | Status         |
+| ---------------------------------------------- | -------------- |
+| `scripts/correlate-actor-iocs.mjs`             | ✅ Implemented |
+| `scripts/correlate-actor-cves.mjs`             | ✅ Implemented |
+| `scripts/build-attack-chains.mjs`              | ✅ Implemented |
 | `scripts/correlate-vulnerabilities-assets.mjs` | ✅ Implemented |
 
 Run correlations: `npm run correlate:all`
 
 ### Phase 3: API Endpoints ✅ COMPLETE
+
 - `src/lib/supabase/correlations.js` - Query functions for correlations
 - Functions: `getIndustryThreats()`, `getActorIOCs()`, `getActorCVEs()`, `getActorCorrelations()`, etc.
 
 ### Phase 4: UI Components ✅ COMPLETE
+
 All UI components have been implemented:
+
 - [x] CVE → Actors Panel (Phase 1.1) - `VulnerabilityActorsPanel.jsx`
 - [x] Technique → Actors Panel (Phase 1.2) - `TechniqueActorsPanel.jsx`
 - [x] Industry Threat Dashboard Tab (Phase 1.3) - `IndustryThreatsTab.jsx`
@@ -387,17 +422,17 @@ All UI components have been implemented:
 
 ## Files Created
 
-| File | Purpose | Status |
-|------|---------|--------|
-| `supabase/migrations/062_correlations.sql` | Correlation tables and views | ✅ |
-| `scripts/correlate-actor-iocs.mjs` | Populate actor-IOC links | ✅ |
-| `scripts/correlate-actor-cves.mjs` | Extract CVE-actor relationships | ✅ |
-| `scripts/build-attack-chains.mjs` | Build attack chain records | ✅ |
-| `src/lib/supabase/correlations.js` | Query functions | ✅ |
+| File                                       | Purpose                         | Status |
+| ------------------------------------------ | ------------------------------- | ------ |
+| `supabase/migrations/062_correlations.sql` | Correlation tables and views    | ✅     |
+| `scripts/correlate-actor-iocs.mjs`         | Populate actor-IOC links        | ✅     |
+| `scripts/correlate-actor-cves.mjs`         | Extract CVE-actor relationships | ✅     |
+| `scripts/build-attack-chains.mjs`          | Build attack chain records      | ✅     |
+| `src/lib/supabase/correlations.js`         | Query functions                 | ✅     |
 
 ---
 
-*Document created: January 17, 2026*
-*Last updated: January 19, 2026*
-*Backend implementation: Complete*
-*UI implementation: Complete*
+_Document created: January 17, 2026_
+_Last updated: January 19, 2026_
+_Backend implementation: Complete_
+_UI implementation: Complete_
