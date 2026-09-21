@@ -54,6 +54,7 @@ export { incidents } from './supabase/incidents'
 export { iocs } from './supabase/iocs'
 export { countries } from './supabase/countries'
 export { sourceLicences } from './supabase/sourceLicences'
+export { vendorReports } from './supabase/vendorReports'
 export {
   attributedActivity,
   ATTRIBUTION_STRENGTHS,

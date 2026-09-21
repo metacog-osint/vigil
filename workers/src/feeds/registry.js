@@ -40,6 +40,7 @@ import { ingestSecDisclosures } from './sec-disclosures.js'
 import { ingestCisaAdvisories } from './cisa-advisories.js'
 import { ingestNcscAdvisories } from './ncsc-advisories.js'
 import { ingestEtdaActors } from './etda-actors.js'
+import { ingestVendorResearch } from './vendor-research.js'
 
 // Threat actor databases
 import { ingestMalpedia } from './malpedia.js'
@@ -309,6 +310,16 @@ export const JOBS = [
     cost: 6,
     intervalMinutes: WEEK,
     run: (db, env) => ingestEtdaActors(db, env),
+  },
+  // Eight vendor blogs in one Edge Function invocation. Never parses
+  // attribution - it stores reports and queues the judgment. Six hourly
+  // because these are blogs: a handful of posts a week between all eight.
+  {
+    id: 'vendor-research',
+    priority: 3,
+    cost: 8,
+    intervalMinutes: 6 * HOUR,
+    run: (db, env) => ingestVendorResearch(db, env),
   },
   {
     id: 'mitre',
