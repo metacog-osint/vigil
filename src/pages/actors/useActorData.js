@@ -2,7 +2,7 @@
  * Custom hook for loading and managing actor data
  * Supports demo mode with mock data
  */
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   threatActors,
   subscribeToTable,
@@ -68,6 +68,14 @@ export function useActorData(filters) {
   }, [isDemoMode, demoData, search, sectorFilter, trendFilter, typeFilter, statusFilter])
 
   // Load actors
+  // How many actors are already loaded, for the next page's offset. A ref
+  // rather than reading actors.length inside loadActors: see the dependency
+  // note on that callback.
+  const loadedCountRef = useRef(0)
+  useEffect(() => {
+    loadedCountRef.current = actors.length
+  }, [actors.length])
+
   const loadActors = useCallback(
     async (reset = false) => {
       if (reset) {
@@ -78,7 +86,7 @@ export function useActorData(filters) {
       }
 
       try {
-        const offset = reset ? 0 : actors.length
+        const offset = reset ? 0 : loadedCountRef.current
         const { data, error, count } = await threatActors.getAll({
           search,
           sector: sectorFilter,
@@ -105,15 +113,17 @@ export function useActorData(filters) {
         setLoadingMore(false)
       }
     },
-    [
-      search,
-      sectorFilter,
-      trendFilter,
-      typeFilter,
-      statusFilter,
-      originCountryFilter,
-      actors.length,
-    ]
+    // Deliberately not depending on actors.length.
+    //
+    // It used to, and that is why this file's three exhaustive-deps warnings
+    // were handed over twice unfixed: adding loadActors to the effect below -
+    // which is what the rule asks for - would have made the effect re-run on
+    // every change to `actors`, and the effect calls loadActors(true), which
+    // sets `actors`. An endless reload, on the page that already had four
+    // separate defects. The page count lives in a ref instead, so loadActors
+    // changes only when a filter does, and the effect's dependency list means
+    // exactly what it used to mean.
+    [search, sectorFilter, trendFilter, typeFilter, statusFilter, originCountryFilter]
   )
 
   // Load trend summary
@@ -155,7 +165,10 @@ export function useActorData(filters) {
     })
 
     return () => unsubscribe()
-  }, [isDemoMode, search, sectorFilter, trendFilter, typeFilter, statusFilter, originCountryFilter])
+    // loadActors carries the filters in its own dependency list, so naming the
+    // three callbacks here is equivalent to the filter list this used to hold -
+    // and now the rule can check it rather than being switched off.
+  }, [isDemoMode, loadActors, loadTrendSummary, loadOrgProfile])
 
   // Calculate risk scores when org profile or actors change
   useEffect(() => {
@@ -251,29 +264,36 @@ export function useActorIncidents(selectedActor) {
   const demoData = useDemoData()
   const [actorIncidents, setActorIncidents] = useState([])
 
+  // Declared above the effect and memoised so the effect can name it. As a
+  // bare function declaration it was rebuilt on every render, which is why the
+  // rule had to be suppressed here. useDemoData returns a memoised object, so
+  // this is stable unless demo mode itself changes.
+  const loadActorIncidents = useCallback(
+    async (actorId) => {
+      // Demo mode: use mock incidents
+      if (isDemoMode) {
+        const demoIncidents = demoData.incidents.filter((i) => i.actor_id === actorId)
+        setActorIncidents(demoIncidents)
+        return
+      }
+
+      try {
+        const { data } = await incidents.getRecent({ actor_id: actorId, limit: 20, days: 365 })
+        setActorIncidents(data || [])
+      } catch (error) {
+        console.error('Error loading actor incidents:', error)
+      }
+    },
+    [isDemoMode, demoData]
+  )
+
   useEffect(() => {
     if (selectedActor) {
       loadActorIncidents(selectedActor.id)
     } else {
       setActorIncidents([])
     }
-  }, [selectedActor])
-
-  async function loadActorIncidents(actorId) {
-    // Demo mode: use mock incidents
-    if (isDemoMode) {
-      const demoIncidents = demoData.incidents.filter((i) => i.actor_id === actorId)
-      setActorIncidents(demoIncidents)
-      return
-    }
-
-    try {
-      const { data } = await incidents.getRecent({ actor_id: actorId, limit: 20, days: 365 })
-      setActorIncidents(data || [])
-    } catch (error) {
-      console.error('Error loading actor incidents:', error)
-    }
-  }
+  }, [selectedActor, loadActorIncidents])
 
   // Convert incidents to timeline events
   const timelineEvents = actorIncidents.map((incident) => ({
@@ -293,50 +313,56 @@ export function useRelatedActors(selectedActor) {
   const demoData = useDemoData()
   const [relatedActors, setRelatedActors] = useState([])
 
+  // Memoised and declared above the effect, so the effect can name it rather
+  // than suppressing the rule. useDemoData returns a memoised object, so this
+  // is stable unless demo mode changes.
+  const loadRelatedActors = useCallback(
+    async (actor) => {
+      // Get all actors (demo or real)
+      let allActors
+      if (isDemoMode) {
+        allActors = demoData.actors
+      } else {
+        try {
+          const { data } = await threatActors.getAll({ limit: 100 })
+          allActors = data
+        } catch (error) {
+          console.error('Error loading related actors:', error)
+          return
+        }
+      }
+
+      if (!allActors) return
+
+      const related = allActors
+        .filter((a) => a.id !== actor.id)
+        .map((a) => {
+          let score = 0
+          if (a.actor_type === actor.actor_type) score += 20
+          const sharedSectors = (a.target_sectors || []).filter((s) =>
+            (actor.target_sectors || []).includes(s)
+          )
+          score += sharedSectors.length * 15
+          const sharedTTPs = (a.ttps || []).filter((t) => (actor.ttps || []).includes(t))
+          score += sharedTTPs.length * 10
+          return { ...a, similarityScore: score }
+        })
+        .filter((a) => a.similarityScore > 0)
+        .sort((a, b) => b.similarityScore - a.similarityScore)
+        .slice(0, 5)
+
+      setRelatedActors(related)
+    },
+    [isDemoMode, demoData]
+  )
+
   useEffect(() => {
     if (selectedActor) {
       loadRelatedActors(selectedActor)
     } else {
       setRelatedActors([])
     }
-  }, [selectedActor])
-
-  async function loadRelatedActors(actor) {
-    // Get all actors (demo or real)
-    let allActors
-    if (isDemoMode) {
-      allActors = demoData.actors
-    } else {
-      try {
-        const { data } = await threatActors.getAll({ limit: 100 })
-        allActors = data
-      } catch (error) {
-        console.error('Error loading related actors:', error)
-        return
-      }
-    }
-
-    if (!allActors) return
-
-    const related = allActors
-      .filter((a) => a.id !== actor.id)
-      .map((a) => {
-        let score = 0
-        if (a.actor_type === actor.actor_type) score += 20
-        const sharedSectors = (a.target_sectors || []).filter((s) =>
-          (actor.target_sectors || []).includes(s)
-        )
-        score += sharedSectors.length * 15
-        const sharedTTPs = (a.ttps || []).filter((t) => (actor.ttps || []).includes(t))
-        score += sharedTTPs.length * 10
-        return { ...a, similarityScore: score }
-      })
-      .filter((a) => a.similarityScore > 0)
-      .sort((a, b) => b.similarityScore - a.similarityScore)
-      .slice(0, 5)
-
-    setRelatedActors(related)
-  }
+  }, [selectedActor, loadRelatedActors])
 
   return relatedActors
 }
