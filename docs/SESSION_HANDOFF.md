@@ -95,6 +95,28 @@ suggests.
 
 ---
 
+## 2a-bis. Two things a future session must not undo
+
+**`source_licences` is the reason ETDA could be accepted.** Two of Vigil's
+sources are NonCommercial - ransomware.live and ETDA - and both are lawful
+today because Vigil is not sold. `source_licences.commercial_use` is the
+switch, `actor_origins_commercial` is the view a paid tier reads instead of
+`threat_actors`, and cutting a source is one UPDATE.
+
+Verified 21 September: **669 actor origins held, 483 sellable, 186 withheld**,
+the 186 being exactly what ETDA added. If a new source writes attribution, it
+must be registered in `source_licences` first - `apply_actor_origins` raises
+on an unregistered source rather than writing rows nobody can judge for
+resale.
+
+**A country nobody mapped is a country being dropped.** The ETDA function
+returns `unmapped_countries`, and the first run reported six - UK, UAE,
+Canada, Tunisia, Libya, Yemen, all short forms it had silently discarded.
+Keep that list in the response. Dropping it would turn the next unmapped
+country into silence.
+
+---
+
 ## 2b. What the overnight session of 21 September did
 
 **The map draws government attribution.** This was the one thing left half-done
@@ -535,8 +557,25 @@ toggle in the Auth dashboard. See §4.
   strict-mode failure. Measure the rest on CI, over several runs, one change at
   a time.
 
-- **13 open Dependabot PRs, and every one shows a red cross that means
-  nothing.** All were opened before PR #39, which is what took main from 21
+- **Dependabot: 13 PRs became 9, and the grouped ones are green.** The config
+  was the problem, not the bumps. `.github/dependabot.yml` grouped npm minor
+  and patch but left majors ungrouped (seven PRs) and had no grouping at all
+  for GitHub Actions (five PRs). Both are grouped now, and Dependabot
+  superseded the old ones within a minute:
+  - **#42** replaces #23 — 10 npm minor/patch updates, rebased onto current
+    main. **All checks green, webkit included.**
+  - **#43** replaces #1-#5 — 6 GitHub Actions bumps in one PR. **All green.**
+
+  Those two greens are the proof of the note below: the old PRs' red crosses
+  were inherited, not caused. Both are ready to merge whenever you want them.
+
+  The seven major-version PRs (#7, #8, #10-#14) are still individual; the
+  `major-updates` group collapses them on Dependabot's next scheduled run, or
+  sooner if they are closed. Each is a piece of work rather than a merge -
+  eslint 8->9 needs the flat-config migration, react-router 6->7 and react
+  18->19 change APIs the app uses.
+
+- **The historical note, kept because the mistake is easy to repeat:** All were opened before PR #39, which is what took main from 21
   failing tests to green, so their CI ran against a main that was already
   broken. The failures are inherited, not caused by the bumps. **Do not read
   them as "this bump breaks the build"** - `@dependabot rebase` on each is what
