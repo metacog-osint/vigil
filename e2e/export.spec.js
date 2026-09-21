@@ -22,7 +22,9 @@ test.describe('Export Button', () => {
       await page.waitForLoadState('networkidle')
 
       // Look for export button
-      const exportButton = page.locator('button:has-text("Export"), [aria-label*="export" i]').first()
+      const exportButton = page
+        .locator('button:has-text("Export"), [aria-label*="export" i]')
+        .first()
       const isVisible = await exportButton.isVisible().catch(() => false)
 
       // Export button should be present (may be in dropdown)
@@ -45,7 +47,10 @@ test.describe('Export Formats', () => {
 
       // Should show format options (CSV, JSON, etc)
       const formatOptions = page.locator('button:has-text("CSV"), button:has-text("JSON")')
-      const hasOptions = await formatOptions.first().isVisible({ timeout: 2000 }).catch(() => false)
+      const hasOptions = await formatOptions
+        .first()
+        .isVisible({ timeout: 2000 })
+        .catch(() => false)
 
       expect(typeof hasOptions).toBe('boolean')
     }
@@ -87,7 +92,9 @@ test.describe('Export Data Integrity', () => {
     await page.waitForLoadState('networkidle')
 
     // Apply a filter if available
-    const filterInput = page.locator('input[placeholder*="search" i], input[placeholder*="filter" i]').first()
+    const filterInput = page
+      .locator('input[placeholder*="search" i], input[placeholder*="filter" i]')
+      .first()
     const hasFilter = await filterInput.isVisible().catch(() => false)
 
     if (hasFilter) {
@@ -128,7 +135,7 @@ test.describe('Export Accessibility', () => {
 
     if (hasExport) {
       await exportButton.focus()
-      const isFocused = await exportButton.evaluate(el => el === document.activeElement)
+      const isFocused = await exportButton.evaluate((el) => el === document.activeElement)
       expect(typeof isFocused).toBe('boolean')
     }
   })
@@ -148,7 +155,10 @@ test.describe('STIX 2.1 Export', () => {
 
       // Look for STIX option
       const stixOption = page.locator('button:has-text("STIX"), [data-format="stix"]')
-      const hasStix = await stixOption.first().isVisible({ timeout: 2000 }).catch(() => false)
+      const hasStix = await stixOption
+        .first()
+        .isVisible({ timeout: 2000 })
+        .catch(() => false)
 
       expect(typeof hasStix).toBe('boolean')
     }
@@ -190,16 +200,18 @@ test.describe('Export Mobile Experience', () => {
 
   test('should show export button on mobile', async ({ page }) => {
     await openApp(page, '/actors')
-    await page.waitForLoadState('networkidle')
 
-    // Export may be in overflow menu on mobile
-    const exportButton = page.locator('button:has-text("Export"), [aria-label*="export" i]').first()
-    const overflowMenu = page.locator('button:has-text("More"), [aria-label*="more" i]').first()
-
-    const hasExport = await exportButton.isVisible().catch(() => false)
-    const hasOverflow = await overflowMenu.isVisible().catch(() => false)
-
-    // Either export button or overflow menu should be visible
-    expect(hasExport || hasOverflow).toBeTruthy()
+    // isVisible() checks once and does not retry, and the pushState navigation
+    // openApp uses does no network work, so waitForLoadState('networkidle')
+    // returned before React had rendered the route. Assert on the element and
+    // let Playwright wait. Export may sit in an overflow menu on a narrow
+    // viewport, so either is a pass.
+    await expect(
+      page
+        .locator(
+          'button:has-text("Export"), [aria-label*="export" i], button:has-text("More"), [aria-label*="more" i]'
+        )
+        .first()
+    ).toBeVisible({ timeout: 15000 })
   })
 })

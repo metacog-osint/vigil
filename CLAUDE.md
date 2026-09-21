@@ -1,6 +1,6 @@
 # CLAUDE.md - AI Assistant Context
 
-> **Last Updated:** 20 September 2026 | **Version:** 2.2.0
+> **Last Updated:** 21 September 2026 | **Version:** 2.3.0
 >
 > **Parts of this file are dated.** Read
 > [`docs/SESSION_HANDOFF.md`](./docs/SESSION_HANDOFF.md) first: it carries current
@@ -11,19 +11,20 @@ Essential context for AI assistants. **For detailed docs, see the `docs/` folder
 
 ## Documentation Index
 
-| Document                     | Description                                              |
-| ---------------------------- | -------------------------------------------------------- |
-| `docs/ARCHITECTURE.md`       | System architecture overview                             |
-| `docs/DATABASE.md`           | Table definitions and relationships                      |
-| `docs/API.md`                | REST API reference                                       |
-| `docs/AUTH.md`               | Authentication & authorization (Supabase)                |
-| `docs/TERMS_AND_SESSIONS.md` | Terms acceptance & session timeouts                      |
-| `docs/DATA_INGESTION.md`     | Scripts, scheduling, troubleshooting                     |
-| `docs/FEATURES.md`           | Feature documentation                                    |
-| `docs/UX_IMPROVEMENTS.md`    | UX system (Focus Mode, Digests, etc.)                    |
-| `DATA_SOURCES.md`            | All threat intel feeds                                   |
-| `docs/SESSION_HANDOFF.md`    | **Start here** — current state, open work, working rules |
-| `docs/INGESTION_HANDOVER.md` | The worker, the feed registry, feed health               |
+| Document                       | Description                                               |
+| ------------------------------ | --------------------------------------------------------- |
+| `docs/ARCHITECTURE.md`         | System architecture overview                              |
+| `docs/DATABASE.md`             | Table definitions and relationships                       |
+| `docs/API.md`                  | REST API reference                                        |
+| `docs/AUTH.md`                 | Authentication & authorization (Supabase)                 |
+| `docs/TERMS_AND_SESSIONS.md`   | Terms acceptance & session timeouts                       |
+| `docs/DATA_INGESTION.md`       | Scripts, scheduling, troubleshooting                      |
+| `docs/FEATURES.md`             | Feature documentation                                     |
+| `docs/UX_IMPROVEMENTS.md`      | UX system (Focus Mode, Digests, etc.)                     |
+| `DATA_SOURCES.md`              | All threat intel feeds                                    |
+| `docs/SESSION_HANDOFF.md`      | **Start here** — current state, open work, working rules  |
+| `docs/INGESTION_HANDOVER.md`   | The worker, the feed registry, feed health                |
+| `docs/THREAT_COVERAGE_GAPS.md` | What Vigil does not cover, and who else records an attack |
 
 ---
 
@@ -63,18 +64,16 @@ import { threatActors, incidents, iocs, correlations } from '../lib/supabase'
 const { data } = await threatActors.getAll({ trendStatus: 'ESCALATING' })
 ```
 
-⚠️ **There are two query layers, and this is the most expensive trap in the
-repo.** `src/lib/supabase.js` and `src/lib/supabase/*.js` define the same
-objects. Most pages import the monolith. Fixing the module alone changes
-nothing on screen — this produced four separate user-visible defects on
-20 September, including a page that reported no data beside a table of 15,068
-rows.
+⚠️ **There used to be two query layers, and it was the most expensive trap in
+this repo.** `src/lib/supabase.js` defined the same objects a second time
+alongside `src/lib/supabase/*.js`, and most pages imported the monolith — so
+fixing a module changed nothing on screen. That produced four separate
+user-visible defects on 20 September, including a page that reported no sync
+data beside a table of 15,068 rows.
 
-A missing method is not an error anyone sees: it is `undefined`, it throws at
-the call site, a `try/catch` swallows it, and the page renders an empty state
-that reads like "there is nothing here".
-
-**Re-export the module from the monolith for any object you touch:**
+The monolith is now 126 lines of pure re-exports and nothing else. **Keep it
+that way.** Any new object goes in `src/lib/supabase/`, is exported from
+`src/lib/supabase/index.js`, and is re-exported from the monolith:
 
 ```javascript
 // in src/lib/supabase.js
@@ -82,6 +81,11 @@ export { threatActors } from './supabase/threatActors'
 ```
 
 `src/lib/__tests__/queryLayerSurface.test.js` fails if the two drift apart.
+
+The reason this mattered is worth keeping even though the duplication is gone:
+**a missing method is not an error anyone sees.** It is `undefined`, it throws
+at the call site, a `try/catch` swallows it, and the page renders an empty
+state that reads exactly like "there is nothing here".
 
 ### Component Imports (Barrel Exports)
 
@@ -129,9 +133,21 @@ VAPID_PUBLIC_KEY             # Push notifications
 
 ### Add a data source
 
-1. Script in `scripts/ingest-{source}.mjs`
-2. npm script in `package.json`
-3. Query functions in `src/lib/supabase/`
+`scripts/ingest-{source}.mjs` is the old pattern. New sources run on the
+Cloudflare worker, and the fetch and parse happen in a Supabase Edge Function
+where there is CPU for them.
+
+1. Edge Function in `supabase/functions/{source}/index.ts`, deployed
+2. Thin caller in `workers/src/feeds/{source}.js` — one subrequest, no parsing
+3. Entry in `workers/src/feeds/registry.js`
+4. Row in `feed_expectations` via a migration. **Without one the feed is not
+   watched and can stop with nothing saying so.** Not `critical` until it has
+   run at least once.
+5. Query functions in `src/lib/supabase/`, exported from `index.js` **and
+   re-exported from the monolith**
+6. Licence and reasoning in `DATA_SOURCES.md`
+7. **`cd workers && npm run deploy`** — there is no CI deploy for the worker,
+   so a source that is merged is not a source that runs
 
 ### Modify schema
 
@@ -145,10 +161,12 @@ VAPID_PUBLIC_KEY             # Push notifications
 ```bash
 npm run dev                 # Dev server
 npm run build               # Production build
-npm run lint                # ESLint
-npm run ingest              # All data sources
+npm run lint                # ESLint (325-warning ceiling, set in package.json only)
+npm run ingest              # All data sources (legacy scripts/ path)
 npm run process:alerts      # Alert queue
 npm run send:digests        # Email digests
+
+cd workers && npm run deploy   # The scheduled feeds. NOT run by CI.
 ```
 
 ---
@@ -160,6 +178,12 @@ npm run send:digests        # Email digests
 3. **Barrel exports** - Components organized in subdirectories with `index.js` files
 4. **Pre-commit hooks** - Husky runs ESLint/Prettier on staged files
 5. **Trend status**: ESCALATING (>25% increase), DECLINING (>25% decrease), STABLE (else)
+6. **The worker has no CI deploy.** Merging a feed does not schedule it; only
+   `cd workers && npm run deploy` does. This has been missed in three sessions.
+7. **Judgment calls are queued, never guessed.** `record_finding(...)` puts the
+   question in `data_quality_findings` for a person. A regular expression
+   deciding whether "Pro-Russia hacktivists" means the Russian state is how
+   two false attributions reached the database.
 
 ---
 
