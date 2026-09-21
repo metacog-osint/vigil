@@ -46,7 +46,14 @@ export default function ThreatActors() {
   const tableRef = useRef(null)
 
   // Data hooks
-  const filters = { search, sectorFilter, trendFilter, typeFilter, statusFilter, originCountryFilter }
+  const filters = {
+    search,
+    sectorFilter,
+    trendFilter,
+    typeFilter,
+    statusFilter,
+    originCountryFilter,
+  }
   const {
     actors,
     loading,

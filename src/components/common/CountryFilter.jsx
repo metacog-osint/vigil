@@ -101,14 +101,12 @@ export function CountryCoverageNote({ coverage, geography }) {
   if (typeof withCountry !== 'number' || typeof total !== 'number' || total === 0) return null
 
   const percent = Math.round((withCountry / total) * 100)
-  const stale =
-    mostRecent && Date.now() - new Date(mostRecent).getTime() > 60 * 24 * 60 * 60 * 1000
+  const stale = mostRecent && Date.now() - new Date(mostRecent).getTime() > 60 * 24 * 60 * 60 * 1000
 
   return (
     <p className="text-xs text-gray-500">
-      {GEOGRAPHY_LABELS[geography] || 'Country'} is recorded for{' '}
-      {withCountry.toLocaleString()} of {total.toLocaleString()} ({percent}%). Filtering by
-      country hides the rest.
+      {GEOGRAPHY_LABELS[geography] || 'Country'} is recorded for {withCountry.toLocaleString()} of{' '}
+      {total.toLocaleString()} ({percent}%). Filtering by country hides the rest.
       {stale && mostRecent && (
         <>
           {' '}
