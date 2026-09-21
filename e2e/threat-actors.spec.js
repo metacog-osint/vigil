@@ -7,8 +7,14 @@ test.describe('Threat Actors Page', () => {
   })
 
   test('should display threat actors page', async ({ page }) => {
-    // Check page heading
-    await expect(page.getByRole('heading', { name: /actor/i })).toBeVisible()
+    // .first() matters: /actor/i matches the page's own heading and any card
+    // heading containing the word, and a locator resolving to two elements is
+    // a strict-mode failure rather than a slow one. Which headings are mounted
+    // varies with render timing, so without this the test fails only under
+    // load - which is exactly how it behaved.
+    await expect(page.getByRole('heading', { name: /actor/i }).first()).toBeVisible({
+      timeout: 15000,
+    })
   })
 
   test('should display page controls', async ({ page }) => {
@@ -16,7 +22,9 @@ test.describe('Threat Actors Page', () => {
     await page.waitForLoadState('networkidle')
 
     // Verify the page has the main heading (indicates page loaded correctly)
-    await expect(page.getByRole('heading', { name: /actor/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /actor/i }).first()).toBeVisible({
+      timeout: 15000,
+    })
 
     // Verify there's some content on the page (table, cards, etc.)
     const mainContent = page.locator('main')
