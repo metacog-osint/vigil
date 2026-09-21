@@ -117,6 +117,39 @@ country into silence.
 
 ---
 
+## 2a-ter. Attribution sources, 21 September evening
+
+**Actor origin coverage 10.7% -> 14.9%** via ETDA/ThaiCERT (186 actors, 433
+agreements to 1 disagreement). NonCommercial, and cuttable: see 2a-bis.
+
+**Vendor research is ingested as questions, not answers.** Eight feeds -
+GreyNoise, Acronis TRU, ESET, Unit 42, Talos, Microsoft, Securelist, Check
+Point - 285 reports, 21 actor links proposed, 8 attribution questions queued.
+
+**The measurement that decided the design, and it should not be re-litigated:**
+across 279 vendor titles, **zero** carried an attribution a parser could read,
+and all six that named a nationality named a _victim_ or a _language_. A
+nationality regex over vendor titles is wrong six times out of six.
+
+`linguistic` is the sixth `attribution_strength`, below `aligned`, for
+GreyNoise's "a suspected Chinese speaker possibly working in UTC+8". Nothing
+writes it automatically; a person sets it from the queue.
+
+**What is queued for you right now:** Acronis's "Red Heron exploits Gitea
+n-day flaw", flagged on the phrase "Chinese-speaking", `attributed_country`
+null. That is the Dataminr alert of 21 September, recorded honestly.
+
+**Two traps the matcher already learned, both in migration 139:**
+
+- Matching every actor name linked "NightEagle targets **Russian** companies"
+  to a ransomware brand named `Russian` - a report about Russian _victims_.
+- "**Mirage** Kitten targeting aviation" matched a Ke3chang alias and proposed
+  an Iranian group's campaign as two Chinese actors. The fix reads the title,
+  not the word list, because a compound name and a headline colon look
+  identical once punctuation is thrown away.
+
+---
+
 ## 2b. What the overnight session of 21 September did
 
 **The map draws government attribution.** This was the one thing left half-done
