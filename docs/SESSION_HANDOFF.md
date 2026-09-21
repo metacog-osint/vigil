@@ -502,9 +502,24 @@ toggle in the Auth dashboard. See §4.
 - `mitre` and `mitre-atlas` have still never recorded a run. They are priority
   4-5 weeklies, so this may simply be their turn not arriving - the campaign
   data itself was last written on 20 September, so something ran.
-- `settings.spec.js:46` is selector soup that failed on three browsers on
-  20 September. The same class of problem in `vulnerabilities.spec.js` and
-  `export.spec.js` was fixed on 21 September; this one was not touched.
+- **The webkit e2e suite is flaky under load, and this is not fixed.** Four
+  specs were repaired on 21 September - `vulnerabilities`, `export`,
+  `incidents`, `watchlists` - and `navigateTo` now retries a missed popstate
+  and throws with the path rather than letting assertions run against the
+  dashboard. That is a real improvement and it is not a cure.
+
+  The numbers, measured rather than guessed: run in full on a busy machine, the
+  suite fails **5** tests without the `navigateTo` change and **6** with it, in
+  different sets each run. The four targeted specs pass 33/33 when run
+  together. So the change is not a regression, and the remaining class is the
+  same shape - an assertion with a five-second default running against a
+  destination that has not finished rendering.
+
+  CI is less loaded and usually passes. **A red webkit job is therefore not
+  automatically a real failure, and not automatically noise.** Read which tests
+  failed before deciding. `settings.spec.js:46` and `threat-actors.spec.js:9`
+  are the two most frequent.
+
 - 13 open Dependabot PRs, two with conflicts. Mostly major-version bumps -
   vite 5→7, eslint 8→9, react-router 6→7, react 18→19 - which is why they are
   still open. Not something to merge unattended.
