@@ -101,6 +101,26 @@ OFAC designations are ingested for addresses. Not done: DOJ press releases and
 indictments, which name both actor and victim; Europol operations; Treasury
 cyber designations as attribution rather than as wallet lists.
 
+### 3a. Who a named actor is, as opposed to what they did
+
+_Added 21 September 2026, after the question "should a suspected Chinese threat
+actor connect to China in Vigil" turned out to have a more interesting answer
+than yes._
+
+The four categories above are all about **events**. This one is about the
+**actor record** an event hangs off, and it was the larger gap: only 10.7% of
+Vigil's 4,504 threat actors had an origin country at all, so the map's
+Attackers layer drew a tenth of the corpus.
+
+| Source                             | Status                          | Notes                                                                                                         |
+| ---------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| MISP Galaxy, MITRE ATT&CK          | **Done**, and was all there was | 483 actors. Neither sets out to be an attribution register.                                                   |
+| ETDA / ThaiCERT Threat Group Cards | **Done** (`etda-actors`)        | 503 actors, 1,788 names each recording who gave it. +186, coverage to 14.9%. **CC BY-NC-SA — NonCommercial.** |
+| Malpedia                           | Already ingested, stale         | Carries actor country. Last success 30 May 2026. Cheaper than a new source: already licensed and wired.       |
+
+**The next move here is Malpedia, not a new source.** It is already in the
+registry, already licensed, and has not run since May.
+
 ### 4. Vendor threat research
 
 Microsoft MSTIC, Mandiant, Talos, Unit 42, Secureworks — all publish free RSS
@@ -108,10 +128,41 @@ and all attribute. The attribution is in prose rather than a field, so this
 belongs in the review queue rather than a parser: ingest the report, queue the
 attribution for a verdict.
 
-Note what the national-CERT exercise above says about this one. Vendor prose is
-_harder_ to read correctly than a CISA title, not easier, and the failure mode
-is silent — a parser that turns a vendor's hedged "consistent with" into
-`state` produces a confident falsehood. Queue it.
+**This was measured on 21 September, not assumed.** Across **279 titles from
+eight vendor feeds** — Unit 42, Talos, Microsoft, Securelist, SentinelOne,
+ESET, Check Point and GreyNoise — **zero carried attribution a parser could
+read.** Six named a nationality at all, and every one of those named it as a
+victim or a language:
+
+- "NightEagle targets **Russian** companies" — Russia is the target
+- "targeted spyware campaign in **Pakistan**" — Pakistan is the target
+- "how a **Chinese-speaking** actor turned Brazilian government sites into an
+  SEO weapon" — a language, and Brazil is the target
+
+A nationality regex over vendor titles would have been wrong six times out of
+six. Vendor prose is harder to read correctly than a CISA title, not easier,
+and the failure mode is silent.
+
+**What vendor titles do carry reliably is the actor's name and the target.**
+Acronis publishes "Mustang Panda targets India's government and energy
+sectors"; Vigil already knows Mustang Panda is CN from MITRE. That join —
+event from the vendor, country from the actor record — is how a vendor report
+becomes country-attributed activity without the vendor ever having named a
+country. It is also why §3a matters more than this section.
+
+| Vendor                             | Feed                                                                 | Items   | Note                                                                        |
+| ---------------------------------- | -------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------- |
+| GreyNoise                          | `greynoise.io/blog/rss.xml`                                          | 100     | Where the 21 Sep "Kapibala" story came from                                 |
+| ESET                               | `welivesecurity.com/en/rss/feed/`                                    | 100     | Largest archive of the eight                                                |
+| Acronis TRU                        | `acronis.com/en-us/tru/feed.xml`                                     | 20      | Named "Red Heron", which GreyNoise then cited. Mixed with MSP product posts |
+| Unit 42, Check Point               | `unit42.paloaltonetworks.com/feed/`, `research.checkpoint.com/feed/` | 15 each |                                                                             |
+| Microsoft, Securelist, SentinelOne | vendor `/feed/` paths                                                | 10 each |                                                                             |
+| Talos                              | `blog.talosintelligence.com/rss/`                                    | 6       |                                                                             |
+
+**GreyNoise's API is not this.** `api.greynoise.io` returns an IP's
+classification and geolocation — where the box is, not who rented it. Checking
+the API and concluding "GreyNoise does not attribute" was wrong about the
+company: the research blog does, in prose.
 
 ### Nearly free, and already half-built — now done
 
