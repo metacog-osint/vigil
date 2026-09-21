@@ -9,7 +9,8 @@ This document provides a comprehensive overview of all threat intelligence data 
 What a source permits governs what Vigil may do with it, so it belongs here rather
 than in someone's memory.
 
-**Checked directly on 21 September 2026:** ThreatCluster, SEC EDGAR, OFAC.
+**Checked directly on 21 September 2026:** ThreatCluster, SEC EDGAR, OFAC, CISA,
+NCSC-UK.
 **Carried from the project's own records and not re-checked:** Ransomware.live,
 DB-IP. Confirm those against the source before relying on them.
 
@@ -19,6 +20,8 @@ DB-IP. Confirm those against the source before relying on them.
 | ThreatCluster Ransomware-Intel | **TLP:CLEAR** — "free to use, redistribute, and integrate. Attribution appreciated." | No restriction on use or redistribution. Attributed anyway.                                                                                                                                                                                                          |
 | SEC EDGAR                      | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
 | OFAC SDN                       | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
+| CISA advisories                | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
+| NCSC-UK                        | **Open Government Licence v3.0**                                                     | Free to use and redistribute, **including commercially**, provided the source is acknowledged. Vigil stores the advisory URL and the publishing government on every row, which satisfies it.                                                                         |
 | DB-IP (indicator location)     | **CC BY 4.0**                                                                        | **Attribution is required wherever located data is shown** — currently the IOC search page and the Help methodology. Any new view showing country needs it too.                                                                                                      |
 
 Sources not listed above have not been checked. That is a gap, not a statement
@@ -122,6 +125,43 @@ was claimed by Qilin in July, which may well be two unrelated incidents.
 
 SEC asks for a User-Agent identifying the requester and no more than ten requests
 per second. This makes two, once a day.
+
+### Government Attribution
+
+| Source                    | Endpoint                                                     | Data Type                                      | Schedule | Script                                                                   | Auth |
+| ------------------------- | ------------------------------------------------------------ | ---------------------------------------------- | -------- | ------------------------------------------------------------------------ | ---- |
+| CISA AA-series advisories | `https://www.cisa.gov/cybersecurity-advisories/*.xml`        | State-attributed activity, in CISA's own words | Every 6h | `workers/src/feeds/cisa-advisories.js` → `cisa-advisories` Edge Function | None |
+| NCSC-UK news              | `https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml` | UK attributions and joint statements           | Every 6h | `workers/src/feeds/ncsc-advisories.js` → `ncsc-advisories` Edge Function | None |
+
+**What these add that nothing else here can.** Every other incident source is a
+ransomware leak site, so Vigil could only record an attack the attacker chose to
+publish for extortion. Sixty threat actors are attributed to Iran and fifty-nine
+have no incidents at all. A government advisory is the opposite kind of evidence:
+an investigation, published, naming who it blames.
+
+**The words are kept, not summarised.** CISA writes "Iranian-Affiliated",
+"Russian State-Sponsored", "China-Nexus" and "Pro-Russia Hacktivists" and means
+four different things. `attribution_phrase` stores the source's exact wording and
+`attribution_strength` records which of `state | affiliated | nexus | aligned |
+criminal` it is. The first parser read summaries as well as titles and turned
+"Pro-Russia Hacktivists" into a Russian state attribution, which is false — the
+tables are tested against the real titles in
+`workers/src/feeds/__tests__/attribution.test.js`.
+
+**Two governments, not one.** With CISA alone, "attributed to Russia" means "the
+United States said so". Iran is now named independently by both: CISA as
+"Iranian-Affiliated", NCSC as "Iranian state actors". The map says which.
+
+**NCSC only reads `/news/`.** Its feed carries everything NCSC publishes — 13 blog
+posts, 6 news items and 1 guidance page in the sample checked. A title naming a
+country without stating the relationship ("Iranian cyber targeting of dissidents")
+is stored unattributed and queued for a person, never guessed.
+
+**Four other national CERTs were checked on 21 September 2026 and rejected**, with
+the evidence in migration 132: CERT-EU publishes vulnerability notices and monthly
+digests, CCCS publishes vendor patch advisories, JPCERT publishes Japanese-language
+vulnerability alerts, and ACSC refused every request. A feed returning HTTP 200 and
+ten items is not a feed that says who did it.
 
 ### Breach Data
 
