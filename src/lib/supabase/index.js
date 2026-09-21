@@ -46,6 +46,13 @@ export { threatActors } from './threatActors'
 export { incidents } from './incidents'
 export { iocs, detectIOCType } from './iocs'
 export { countries } from './countries'
+export {
+  attributedActivity,
+  ATTRIBUTION_STRENGTHS,
+  ATTRIBUTION_STRENGTH_LABELS,
+  ATTRIBUTION_STRENGTH_COLORS,
+  strengthRank,
+} from './attributedActivity'
 export { vulnerabilities } from './vulnerabilities'
 export { techniques } from './techniques'
 export { advisories, ECOSYSTEMS } from './advisories'
