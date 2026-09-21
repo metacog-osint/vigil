@@ -53,6 +53,14 @@ export { incidents } from './supabase/incidents'
 
 export { iocs } from './supabase/iocs'
 export { countries } from './supabase/countries'
+export {
+  attributedActivity,
+  ATTRIBUTION_STRENGTHS,
+  ATTRIBUTION_STRENGTH_LABELS,
+  ATTRIBUTION_STRENGTH_COLORS,
+  ATTRIBUTION_SOURCE_LABELS,
+  strengthRank,
+} from './supabase/attributedActivity'
 
 // Helper to detect IOC type
 
