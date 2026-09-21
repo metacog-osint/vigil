@@ -38,6 +38,73 @@ Vigil currently provides intelligence across these domains:
 
 ---
 
+## The gap this document does not name
+
+_Added 21 September 2026._
+
+Everything below this heading, and the "Proposed New Data Sources" list in
+`DATA_SOURCES.md`, is about **indicators and telemetry** — blocklists,
+sandboxes, passive DNS, scanning. Adding all of it would make Vigil a richer
+IOC aggregator. None of it changes what Vigil can say happened.
+
+Until 21 September every one of the 39,534 incidents came from a ransomware
+leak-site tracker. That means Vigil could only record an attack **the attacker
+chose to publish for extortion**. Sixty actors are attributed to Iran and
+fifty-nine have no incidents at all; the only one with any posts to leak sites.
+
+The useful question is not "what other indicators exist" but **who else records
+an attack**. There are four answers.
+
+### 1. Governments attributing campaigns
+
+| Source                                  | Status                       | Notes                                                                                  |
+| --------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------- |
+| CISA AA-series                          | **Done** (`cisa-advisories`) | 10 advisories, 5 attributed                                                            |
+| NCSC-UK                                 | Not done                     | `https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml` — **verified, 20 items**  |
+| CERT-EU                                 | Not done                     | `https://cert.europa.eu/publications/security-advisories-rss` — **verified, 10 items** |
+| ACSC (Australia), CCCS (Canada), JPCERT | Not done                     | Feeds exist; the obvious URLs returned nothing, so they need finding                   |
+
+The first two are the cheapest work available: same RSS shape as CISA, so
+`cisa-advisories` generalises rather than being rewritten. Attribution wording
+differs by country, and the phrase table would need extending — NCSC does not
+write "Iranian-Affiliated".
+
+### 2. Victims disclosing to a regulator
+
+| Source                  | Status                 | Notes                                                                                                                                                                                                        |
+| ----------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SEC 8-K Item 1.05       | **Done** (`sec-edgar`) | 83 filings, 16 matched to claims                                                                                                                                                                             |
+| HHS OCR breach portal   | Not done               | ~7,876 US healthcare breaches since 2009, 500+ individuals each. **High value and awkward**: the official portal is a session-based JSF page that 302s, not an API. Needs a scraper or a third-party mirror. |
+| State AG breach notices | Not done               | California, Maine, Washington, Texas. Free, but each is a separate scraper.                                                                                                                                  |
+| EU GDPR notifications   | Not done               | Fragmented across supervisory authorities.                                                                                                                                                                   |
+
+This is the richest untapped vein. A regulator-held breach register is the
+victim's own account, which is the only thing that can turn a claim into a
+corroborated event.
+
+### 3. Law enforcement and sanctions
+
+OFAC designations are ingested for addresses. Not done: DOJ press releases and
+indictments, which name both actor and victim; Europol operations; Treasury
+cyber designations as attribution rather than as wallet lists.
+
+### 4. Vendor threat research
+
+Microsoft MSTIC, Mandiant, Talos, Unit 42, Secureworks — all publish free RSS
+and all attribute. The attribution is in prose rather than a field, so this
+belongs in the review queue rather than a parser: ingest the report, queue the
+attribution for a verdict.
+
+### Nearly free, and already half-built
+
+`campaigns` holds 56 MITRE ATT&CK campaigns with **no target countries and no
+actor links**, last updated December 2025, and the `mitre` feed has never run
+under the current scheduler. Named campaigns — Salt Typhoon, Volt Typhoon — are
+exactly the non-ransomware activity this document's §7 asks for, and the table
+for them already exists.
+
+---
+
 ## Identified Coverage Gaps
 
 ### 1. Supply Chain & Software Composition Security
