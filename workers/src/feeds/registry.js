@@ -36,6 +36,7 @@ import { ingestRansomwhere } from './ransomwhere.js'
 import { ingestRansomwareLive } from './ransomware-live.js'
 import { ingestOFAC } from './ofac-sdn.js'
 import { ingestThreatCluster } from './threatcluster.js'
+import { ingestSecDisclosures } from './sec-disclosures.js'
 
 // Threat actor databases
 import { ingestMalpedia } from './malpedia.js'
@@ -108,6 +109,7 @@ export const JOBS = [
   { id: 'ofac-sdn', priority: 2, cost: 1, intervalMinutes: DAY, run: (db, env) => ingestOFAC(db, env) },
   { id: 'ransomware.live', priority: 3, cost: 12, intervalMinutes: DAY, run: (db, env) => ingestRansomwareLive(db, env) },
   { id: 'threatcluster', priority: 2, cost: 1, intervalMinutes: DAY, run: (db, env) => ingestThreatCluster(db, env) },
+  { id: 'sec-edgar', priority: 3, cost: 1, intervalMinutes: DAY, run: (db, env) => ingestSecDisclosures(db, env) },
   { id: 'ransomwhere', priority: 4, cost: 10, intervalMinutes: DAY, run: (db, env) => ingestRansomwhere(db, env) },
 
   // --- Reference data ---
