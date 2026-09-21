@@ -1,8 +1,11 @@
-# Session handoff — 20 September 2026
+# Session handoff — 20–21 September 2026
 
 Written at the end of a long working session so the next one can pick up without
 re-deriving anything. Read this, then `README.md`, then the migration headers for
 whatever you are about to touch.
+
+Start with §2a: there are three things to do before anything else, one of which
+is a single command.
 
 ---
 
@@ -42,21 +45,81 @@ Do not collapse them:
 
 ## 2. Where things stand
 
-- **Branch:** `main`. PRs #35-#38 landed the evening of 20 September; every P0
-  from that evening's list is merged, deployed and checked in production.
-- **Supabase project:** `faqazkwdkajhxmwxchop`
-- **Migrations:** repo has 124 files, numbered to `126`. Live DB numbers by
-  timestamp, so repo filenames are for humans only.
-- **Tests:** ~1,032 unit tests passing. Count drifts as sessions edit specs.
-- **Lint:** ~338 warnings against a CI ceiling of 500. `npm run lint` still says
-  `--max-warnings 0` and therefore fails; two numbers claim to be the standard.
+_Last updated 21 September 2026, 04:00 UTC._
 
-**Tables the frontend queries that the live database lacks: 62 → 32** over this
-session. Every remaining one is listed in §4.
+- **Branch:** `main`. PRs #35-#39 are merged. **PR #40 is open and unmerged** -
+  the CISA advisory source; see §2a.
+- **Supabase project:** `faqazkwdkajhxmwxchop`
+- **Migrations:** repo has 131 files, numbered to `131`, all applied. Live DB
+  numbers by timestamp, so repo filenames are for humans only.
+- **Tests:** ~1,046 passing (1,000 unit, 47 worker). Count drifts as sessions
+  edit specs.
+- **Lint:** 328 warnings against a threshold of **350, now set in one place**
+  (`package.json`); CI no longer overrides it. `npm run lint` passes.
+- **`ingestion_is_healthy()` is `false`**, for exactly one reason: see §2a.
+
+**Tables the frontend queries that the live database lacks: 62 → 32** as of
+20 September. Every remaining one is listed in §4.
+
+## 2a. The three things to do first
+
+**1. Deploy the worker.** `cd workers && npm run deploy`
+
+Three feeds were added on 20-21 September - `threatcluster`, `sec-edgar`,
+`cisa-advisories` - and the worker has not been redeployed since the last of
+them. Their data is present because the Edge Functions were invoked by hand;
+the scheduled jobs are not live.
+
+`cisa-advisories` is marked critical, so until it runs once
+`ingestion_is_healthy()` returns false. That is accurate rather than broken -
+a declared critical feed has never run - but it is the only thing red.
+
+Whether a brand-new feed should be marked critical before it has ever run is a
+fair question. It was marked critical because its absence is invisible: without
+it the map shows one Iranian event and nothing indicates anything is missing.
+
+**2. Merge or close PR #40.** It is green and complete; it was left open only
+because the session ended.
+
+**3. Use the review queue.** 63 findings are open and **no verdict has ever
+been recorded through the page**. The write path has been exercised against the
+live database in a transaction that rolled back, and the page has been driven
+signed-out and under test, but nobody has yet ruled on a real finding. Doing so
+is both the highest-value work left and the only way to know the page is right.
 
 ---
 
-## 3. What this session changed
+## 3. What the 20-21 September sessions changed
+
+### The night of 20-21 September (PRs #35-#40)
+
+**Sources.** Vigil ingested nothing but ransomware leak sites. It now has three
+more kinds of evidence:
+
+| Source                         | What it gives                                | Licence                    |
+| ------------------------------ | -------------------------------------------- | -------------------------- |
+| ThreatCluster Ransomware-Intel | victim country - filled 6,042 incidents      | TLP:CLEAR, redistributable |
+| SEC EDGAR 8-K Item 1.05        | the victim's own disclosure to its regulator | US public domain           |
+| CISA AA-series advisories      | government-attributed state activity         | US public domain           |
+
+Victim country went from 28.6% to **43.9%** and from four months stale to
+current. ransomware.live had been its sole supplier and stopped on 29 May;
+ransomlook carries none.
+
+**The review queue exists** (`/review`, migration 126). Verdicts are recorded
+from the product, append-only, reviewer taken from the JWT, rationale required.
+
+**Five defects with one root cause.** `src/lib/supabase.js` defined the query
+objects a second time alongside `src/lib/supabase/*.js`. See §6 - it is the
+most expensive thing in this repository's history and it is now guarded.
+
+**Security.** Six SECURITY DEFINER functions were callable without signing in
+(125); 66 functions had no pinned `search_path` (127).
+
+**The e2e suite no longer touches production** (§6), and main's CI went from 21
+failing tests to green.
+
+### Earlier on 20 September
 
 **Honesty on surfaces a visitor sees**
 
@@ -270,14 +333,93 @@ activity to every user. New views get `WITH (security_invoker = true)`.
 will not run. Use a `SECURITY DEFINER` lookup function — see
 `can_see_investigation()` and `is_team_member()`.
 
+**Attribution language is not decoration.** CISA writes "Iranian-Affiliated",
+"Russian State-Sponsored", "China-Nexus" and "Pro-Russia Hacktivists" and means
+four different things. The first version of the advisory parser read the summary
+as well as the title, and turned "Pro-Russia Hacktivists" into `state` and
+"China-Nexus" into `state`, because the body text mentioned state-sponsored
+actors elsewhere. Read the title; it is where the care is.
+
+**`format:check` reports ~300 files locally and 3 in CI.** The working tree has
+CRLF endings and Prettier expects LF, so a local run flags almost everything. CI
+checks out with LF and sees the truth. Do not "fix" the other 300.
+
+**The pre-commit hook lints staged files at zero warnings.** Touching a file with
+pre-existing debt means clearing all of it or using `--no-verify`. Going around
+it is how three files reached CI unformatted on 21 September. If you use
+`--no-verify`, run `npx prettier --write` on what you staged.
+
+**Do not poll production.** A monitor checking the deployed site every 30 seconds
+tripped Vercel's bot protection on 21 September, and the browser used for testing
+began getting "Vercel Security Checkpoint" instead of the site. Attack Challenge
+Mode was _not_ enabled - checked via the API, which returns
+`Seawall Config not found` - so it was a client-level challenge rather than a
+project setting, but it cost the session its ability to test against production.
+Watch the Vercel dashboard or the GitHub deployment, not the site itself.
+
+---
+
+## 6a. Open work, 21 September
+
+### Started and not finished
+
+**The map does not draw the advisory data.** This is the one thing left
+half-done. `attributed_activity` holds ten CISA advisories, five with
+attribution, and `attributed_activity_by_country` aggregates them - but
+`ThreatAttributionMap.jsx` still draws only two layers: victim country from
+incidents, and a count of _actors_ per origin country. Neither shows that a
+government attributed activity to Iran.
+
+The session stopped before this deliberately. It is a visible change to how
+attribution is presented and deserves a fresh start rather than being tacked
+onto a long session's end.
+
+When building it, the thing to preserve: `attribution_strength` is
+`state | affiliated | nexus | aligned | criminal`, and those are not
+interchangeable. A map rendering "Pro-Russia hacktivists" the same as "Russian
+state-sponsored actors" would undo the reason the column exists.
+
+**The IOC country filter has never been confirmed by eye.** The wiring, the RPC
+and the data are verified - `search_iocs('', null, 100, 'IR')` returns 100 rows
+
+- but nobody has typed a country into the live page and watched rows filter. It
+  had never once worked before 20 September, so it deserves a look.
+
+### Owner decisions, unchanged
+
+VulnCheck's key (401 on every run), the six empty feature groups, the
+ransomware.live licence, Pricing, and the leaked-password toggle in the Auth
+dashboard. See §4.
+
+### Small and known
+
+- `ofac-reachability-probe` Edge Function is emptied and returns 410. It can be
+  deleted from the dashboard; there is no delete API.
+- `mitre` and `mitre-atlas` have still never run. They are priority 4-5
+  weeklies, so this may simply be their turn not arriving.
+- `campaigns` holds 56 MITRE campaigns with **no target countries and no actor
+  links**, last updated December 2025. It looks like a usable source of
+  attributed operations and is not one.
+
 ---
 
 ## 7. If you only do one thing
 
-**Use the review queue.** It exists now, at `/review`. Twenty-one findings are
-waiting on a verdict, and every one of them is a judgment call that no amount of
-engineering will settle - which two names are one group, whether a post is a
-victim claim, whether 100 duplicate vulnerability rows should go.
+**Use the review queue.** It exists now, at `/review`. Sixty-three findings are
+waiting on a verdict, and every one is a judgment call no amount of engineering
+will settle - which two names are one group, whether a post is a victim claim,
+whether 100 duplicate vulnerability rows should go.
+
+Two groups are worth starting with. **Seventeen SEC candidates**: a company
+filed an 8-K Item 1.05 saying a material cybersecurity incident occurred, and a
+ransomware group claimed an organisation of the same name. Ruling on those turns
+"claimed by Qilin" into "claimed by Qilin, and the company told the SEC" - the
+only corroboration a leak-site feed cannot buy. **Twenty-five country
+disagreements**, where two sources name different countries for the same victim
+and neither was applied.
+
+Both groups exist because the new sources refused to guess. That is the
+mechanism working, and it produces work rather than removing it.
 
 Clearing them through the page is also the only way to know the page is right.
 It has been driven signed-out and under test, and its write path has been
