@@ -24,6 +24,12 @@ import { supabase } from './client'
  */
 export const ATTRIBUTION_STRENGTHS = ['criminal', 'aligned', 'nexus', 'affiliated', 'state']
 
+/** The governments that write into this table, as they should be named. */
+export const ATTRIBUTION_SOURCE_LABELS = {
+  cisa: 'CISA (US)',
+  'ncsc-uk': 'NCSC (UK)',
+}
+
 /** How each kind should be described where there is room to describe it. */
 export const ATTRIBUTION_STRENGTH_LABELS = {
   state: 'State-sponsored',
@@ -78,7 +84,9 @@ export const attributedActivity = {
   async getByCountry() {
     return supabase
       .from('attributed_activity_by_country')
-      .select('country_code, advisories, state_attributed, earliest, latest, phrases_used')
+      .select(
+        'country_code, advisories, state_attributed, earliest, latest, phrases_used, sources, sources_used'
+      )
       .order('advisories', { ascending: false })
   },
 
@@ -105,6 +113,7 @@ export const attributedActivity = {
           count: 0,
           advisories: [],
           phrases: new Set(),
+          sources: new Set(),
           strongest: null,
         }
       }
@@ -113,6 +122,7 @@ export const attributedActivity = {
       entry.count++
       entry.advisories.push(row)
       if (row.attribution_phrase) entry.phrases.add(row.attribution_phrase)
+      if (row.source) entry.sources.add(row.source)
       if (strengthRank(row.attribution_strength) > strengthRank(entry.strongest)) {
         entry.strongest = row.attribution_strength
       }
@@ -120,6 +130,10 @@ export const attributedActivity = {
 
     for (const entry of Object.values(byCountry)) {
       entry.phrases = Array.from(entry.phrases)
+      // Two governments naming a country independently is a materially
+      // stronger position than one naming it twice, and nothing else on the
+      // map distinguishes them.
+      entry.sources = Array.from(entry.sources)
       entry.advisories.sort((a, b) => (a.published < b.published ? 1 : -1))
     }
 
