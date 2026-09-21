@@ -517,8 +517,23 @@ toggle in the Auth dashboard. See §4.
 
   CI is less loaded and usually passes. **A red webkit job is therefore not
   automatically a real failure, and not automatically noise.** Read which tests
-  failed before deciding. `settings.spec.js:46` and `threat-actors.spec.js:9`
-  are the two most frequent.
+  failed before deciding. `settings.spec.js:46`, `threat-actors.spec.js:9` and
+  `vulnerabilities.spec.js:9` are the most frequent.
+
+  **Do not try to tune this locally.** Four full-suite runs on the same machine
+  and the same commit produced 2, 5, 6 and 6 failures in different
+  combinations. The run-to-run variance is larger than the effect of any change
+  being tested, so a local run cannot tell you whether a fix worked. Raising
+  Playwright's assertion timeout from 5s to 12s was tried and reverted on
+  exactly this basis: the run after it was worse, which proves nothing either
+  way, and keeping an unproven change that makes flakiness quieter is the
+  wrong trade for this project.
+
+  What was kept is what could be proven: the four specs whose assertions were
+  genuinely wrong, `navigateTo`'s retry-and-arrival check, and a missing
+  `.first()` in `threat-actors.spec.js` that made a two-heading page a
+  strict-mode failure. Measure the rest on CI, over several runs, one change at
+  a time.
 
 - **13 open Dependabot PRs, and every one shows a red cross that means
   nothing.** All were opened before PR #39, which is what took main from 21
