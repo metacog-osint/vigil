@@ -551,9 +551,25 @@ toggle in the Auth dashboard. See §4.
 
 ### Small and known
 
-- `ofac-reachability-probe` Edge Function is emptied and returns 410. Confirmed
-  again on 21 September that there is no delete API and the MCP has no delete
-  tool, so this needs a click in the Supabase dashboard.
+- ~~`ofac-reachability-probe` Edge Function~~ **Deleted 21 September.** It
+  needed a Supabase management token, which neither the MCP nor the environment
+  had; `npx supabase login` once was enough. Checked first that nothing
+  referenced it - no caller, no registry entry, no row in `feed_expectations`,
+  `feed_health` or `sync_log`.
+
+- **Edge Functions and the repo have drifted, in both directions.** Found while
+  deleting the probe; nothing is broken, so this is tidying rather than a bug.
+
+  Deployed and orphaned: **`ingest-ransomwatch`** - two runs ever, both on
+  13 January, no caller. `scripts/ingest-ransomwatch.mjs` is a standalone local
+  script and does not invoke it. Its source is in the repo, so deleting the
+  deployment loses nothing.
+
+  In the repo and never deployed: `calculate-trends`, `ingest-abusech`,
+  `ingest-cisa-kev`. The last is the one worth understanding rather than
+  removing - `cisa-kev` is a critical feed and it works, because the worker
+  fetches KEV directly and has never used that function.
+
 - `mitre` and `mitre-atlas` have still never recorded a run. They are priority
   4-5 weeklies, so this may simply be their turn not arriving - the campaign
   data itself was last written on 20 September, so something ran.
