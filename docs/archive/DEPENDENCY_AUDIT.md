@@ -1,5 +1,12 @@
 # Dependency Audit
 
+> **Archived 21 September 2026.** Kept because it records what was analysed and
+> why. It is **not** current — it was written in January 2026 and describes a
+> smaller project. Where it disagrees with `README.md`, `docs/SESSION_HANDOFF.md`
+> or the migration headers, they are right and this is not.
+>
+> A point-in-time audit of dependencies as they stood on 17 January. Thirteen dependabot PRs have opened since; run `npm audit` rather than reading this.
+
 > Security vulnerabilities and update recommendations for project dependencies.
 >
 > **Created:** January 17, 2026
@@ -11,14 +18,15 @@
 
 ## Summary
 
-| Severity | Count | Status |
-|----------|-------|--------|
-| Critical | 0 | - |
-| High | 1 | Pending (xlsx - no fix available) |
-| Moderate | 2 | Pending (esbuild/vite) |
-| Low | 0 | - |
+| Severity | Count | Status                            |
+| -------- | ----- | --------------------------------- |
+| Critical | 0     | -                                 |
+| High     | 1     | Pending (xlsx - no fix available) |
+| Moderate | 2     | Pending (esbuild/vite)            |
+| Low      | 0     | -                                 |
 
 ### Completed Fixes
+
 - **d3-color ReDoS** - Fixed via package.json override
 - **undici vulnerabilities** - Fixed by upgrading Firebase to v12.8.0
 
@@ -34,6 +42,7 @@
 **Status:** Fixed via package.json override to ^3.1.0
 
 **Dependency Chain:**
+
 ```
 react-simple-maps@3.x
 └── d3-zoom@2.x
@@ -44,19 +53,24 @@ react-simple-maps@3.x
 ```
 
 **Fix Options:**
+
 1. **Option A (Breaking Change):** Downgrade react-simple-maps to v1.0.0
+
    ```bash
    npm audit fix --force
    ```
+
    ⚠️ This is a major version change - may break map functionality
 
 2. **Option B (Recommended):** Wait for react-simple-maps update or use override
+
    ```json
    // package.json
    "overrides": {
      "d3-color": "^3.1.0"
    }
    ```
+
    ⚠️ Test thoroughly - may have compatibility issues
 
 3. **Option C:** Replace react-simple-maps with alternative
@@ -69,6 +83,7 @@ react-simple-maps@3.x
 ### 2. undici - MODERATE Severity (Multiple CVEs) - FIXED
 
 **Advisories:**
+
 - [GHSA-c76h-2ccp-4975](https://github.com/advisories/GHSA-c76h-2ccp-4975) - Insufficiently Random Values
 - [GHSA-cxrh-j4jr-qwg3](https://github.com/advisories/GHSA-cxrh-j4jr-qwg3) - DoS via bad certificate
 - [GHSA-g9mf-h72j-4rw9](https://github.com/advisories/GHSA-g9mf-h72j-4rw9) - Unbounded decompression
@@ -77,6 +92,7 @@ react-simple-maps@3.x
 **Status:** Fixed by upgrading Firebase from v10.14.1 to v12.8.0
 
 **Previous Dependency Chain (now resolved):**
+
 ```
 firebase@10.x -> firebase@12.8.0 (fixed)
 ```
@@ -90,12 +106,14 @@ firebase@10.x -> firebase@12.8.0 (fixed)
 **Affected Versions:** <= 0.24.2
 
 **Dependency Chain:**
+
 ```
 vite@5.x - 6.1.x
 └── esbuild@0.24.x (vulnerable)
 ```
 
 **Fix Options:**
+
 1. **Wait for Vite patch** (if using Vite 5.x)
 2. **Upgrade to Vite 7.x** (breaking change)
    ```bash
@@ -109,6 +127,7 @@ vite@5.x - 6.1.x
 ### 4. xlsx - HIGH Severity - NO FIX AVAILABLE
 
 **Advisories:**
+
 - [GHSA-4r6h-8v6p-xvw6](https://github.com/advisories/GHSA-4r6h-8v6p-xvw6) - Prototype Pollution
 - [GHSA-5pgg-2g8v-p4x9](https://github.com/advisories/GHSA-5pgg-2g8v-p4x9) - ReDoS
 
@@ -116,11 +135,13 @@ vite@5.x - 6.1.x
 **Status:** No fix available from upstream
 
 **Usage in Vigil:**
+
 - Dev dependency only (`scripts/ingest-umd-cyber-events.mjs`)
 - Not included in production bundle
 - Only processes trusted UMD data files
 
 **Mitigation Options:**
+
 1. Replace with `exceljs` or `@sheet/community`
 2. Accept risk (dev-only, trusted input)
 3. Isolate script execution
@@ -151,14 +172,15 @@ vite@5.x - 6.1.x
 ### Ongoing
 
 5. **Enable Dependabot** (if not already)
+
    ```yaml
    # .github/dependabot.yml
    version: 2
    updates:
-     - package-ecosystem: "npm"
-       directory: "/"
+     - package-ecosystem: 'npm'
+       directory: '/'
        schedule:
-         interval: "weekly"
+         interval: 'weekly'
        open-pull-requests-limit: 10
    ```
 
@@ -190,15 +212,15 @@ npm audit fix --dry-run --force
 
 ### Production Dependencies to Monitor
 
-| Package | Current | Latest | Notes |
-|---------|---------|--------|-------|
-| firebase | 12.8.0 | 12.8.0 | Updated - undici fixed |
-| @supabase/supabase-js | 2.39.0 | Check | Regular updates |
-| react | 18.2.0 | 18.2.0 | Stable |
-| recharts | 2.10.0 | Check | D3 dependency chain |
-| react-simple-maps | 3.0.0 | 3.0.0 | d3-color fixed via override |
-| vite | 5.0.0 | 7.x | Breaking changes - esbuild vuln |
-| firebase-admin | 13.0.2 | 13.0.2 | NEW - for API endpoints |
+| Package               | Current | Latest | Notes                           |
+| --------------------- | ------- | ------ | ------------------------------- |
+| firebase              | 12.8.0  | 12.8.0 | Updated - undici fixed          |
+| @supabase/supabase-js | 2.39.0  | Check  | Regular updates                 |
+| react                 | 18.2.0  | 18.2.0 | Stable                          |
+| recharts              | 2.10.0  | Check  | D3 dependency chain             |
+| react-simple-maps     | 3.0.0   | 3.0.0  | d3-color fixed via override     |
+| vite                  | 5.0.0   | 7.x    | Breaking changes - esbuild vuln |
+| firebase-admin        | 13.0.2  | 13.0.2 | NEW - for API endpoints         |
 
 ### Useful Commands
 
@@ -224,4 +246,4 @@ npx bundle-phobia <package-name>
 
 ---
 
-*Last Updated: January 17, 2026 (session 2)*
+_Last Updated: January 17, 2026 (session 2)_

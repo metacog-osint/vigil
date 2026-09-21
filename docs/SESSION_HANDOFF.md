@@ -50,7 +50,7 @@ _Last updated 21 September 2026, 04:00 UTC._
 - **Branch:** `main`. PRs #35-#39 are merged. **PR #40 is open and unmerged** -
   the CISA advisory source; see §2a.
 - **Supabase project:** `faqazkwdkajhxmwxchop`
-- **Migrations:** repo has 131 files, numbered to `131`, all applied. Live DB
+- **Migrations:** repo has 129 files, numbered to `131`, all applied. Live DB
   numbers by timestamp, so repo filenames are for humans only.
 - **Tests:** ~1,046 passing (1,000 unit, 47 worker). Count drifts as sessions
   edit specs.
@@ -390,6 +390,19 @@ and the data are verified - `search_iocs('', null, 100, 'IR')` returns 100 rows
 VulnCheck's key (401 on every run), the six empty feature groups, the
 ransomware.live licence, Pricing, and the leaked-password toggle in the Auth
 dashboard. See §4.
+
+### Needs a decision, not a tidy-up
+
+**`docs/PRICING_ANALYSIS.md` is money content in a public repository.** It holds
+competitor pricing, Vigil's own tier table and competitive positioning. This
+repository is public, and the standing rule is that commercial material stays
+out of it - the same rule that had the handover documents scrubbed before they
+were first pushed on 20 September.
+
+Archiving it does not help: `docs/archive/` is just as public. The real options
+are to delete it from the tree, or move it to wherever the downstream product's
+documents live. Both are decisions about the business rather than the code, so
+it was left exactly where it is and flagged here instead.
 
 ### Small and known
 

@@ -1,5 +1,15 @@
 # Vigil Corrective Action Plan
 
+> **Archived 21 September 2026.** Kept because it records what was remediated and
+> why. It is **not** current — written 20 January 2026, and its own header says
+> "Status: Complete (Phase 1-4)". The work it plans was done.
+>
+> Filed under a distinguishing name because `docs/archive/CORRECTIVE_ACTION_PLAN.md`
+> is a _different, earlier_ document with the same title. Both are kept.
+>
+> Where it disagrees with `README.md`, `docs/SESSION_HANDOFF.md` or the migration
+> headers, they are right and this is not.
+
 > **Created:** January 20, 2026
 > **Status:** Complete (Phase 1-4)
 > **Purpose:** Systematic remediation of schema-code mismatches and documentation gaps
@@ -38,16 +48,19 @@ These issues cause queries to fail and return zero results.
 ### 1.2 Resolve `malware` vs `malware_samples` Table Name
 
 **Issue:** Two different table definitions exist:
+
 - Migration 001: `malware` table
 - Migration 005: `malware_samples` table
 
 **Code expects:** `malware_samples`
 
 **Files affected:**
+
 - `src/lib/supabase/malwareSamples.js` - queries `malware_samples`
 - `src/lib/supabase/iocs.js` - quickLookup queries `malware_samples`
 
 **Resolution:** Verify which table exists in production database, then:
+
 - Option A: If `malware_samples` exists → No code changes needed
 - Option B: If only `malware` exists → Update code to use `malware`
 - Option C: If both exist → Consolidate to one table
@@ -61,6 +74,7 @@ These issues cause queries to fail and return zero results.
 **Issue:** Some files may still use `discovered_at` instead of `discovered_date`
 
 **Already fixed:**
+
 - [x] `src/lib/supabase/compare.js`
 - [x] `src/lib/chatBots.js`
 - [x] `src/lib/patternDetection.js`
@@ -71,6 +85,7 @@ These issues cause queries to fail and return zero results.
 - [x] `src/components/upgrade/MissedAlertsWidget.jsx`
 
 **Verified correct:**
+
 - [x] Demo/mock data files - use `discovered_date` or `discovered_at` for appropriate tables
 - [x] `shadowIT.js` - uses `discovered_at` but queries `discovered_assets` table which has that column
 
@@ -83,10 +98,12 @@ These issues cause queries to fail and return zero results.
 **Issue:** Code inconsistently uses short names vs full column names
 
 **Correct columns (per schema):**
+
 - `victim_sector` (not `sector`)
 - `victim_country` (not `country`)
 
 **Already fixed:**
+
 - [x] `src/lib/supabase/compare.js`
 - [x] `src/lib/predictiveModeling.js`
 - [x] `src/lib/missedAlertsEmail.js`
@@ -94,6 +111,7 @@ These issues cause queries to fail and return zero results.
 - [x] `src/lib/predictions.js` - fixed lines 101, 409, 415 (2026-01-20)
 
 **Verified correct (query different tables with `sector` column):**
+
 - [x] `src/lib/benchmarks.js` - queries `sector_benchmarks` table
 - [x] `src/lib/benchmarking.js` - queries `benchmark_metrics`, `benchmark_reports` tables
 - [x] `src/lib/supabase/correlations.js` - queries `sector_technique_correlation` table
@@ -109,6 +127,7 @@ These issues cause queries to fail and return zero results.
 **Issue:** API endpoints use Firebase terminology (`uid`) but Supabase returns `id`
 
 **Already fixed:**
+
 - [x] `api/generate-summary.js` - line 114
 - [x] `api/send-email.js` - line 67
 
@@ -124,6 +143,7 @@ These issues cause queries to fail and return zero results.
 
 **Verified Implementation (2026-01-20):**
 All 5 functions ARE fully implemented in `src/lib/predictions.js`:
+
 1. `getActorEscalationRisk()` - lines 24-73 ✓
 2. `getSectorTargetingPrediction()` - lines 81-133 ✓
 3. `getVulnExploitationPrediction()` - lines 141-216 ✓
@@ -139,10 +159,12 @@ All 5 functions ARE fully implemented in `src/lib/predictions.js`:
 ### 3.2 Remove Cloudflare Workers Migration Claims
 
 **Issue:** DATA_SOURCES.md claims migration to Cloudflare Workers is complete, but:
+
 - No Cloudflare Workers code exists
 - GitHub Actions still handles all ingestion
 
 **Resolution:** Updated DATA_SOURCES.md (2026-01-20):
+
 - Changed "Ingestion Flow (Cloudflare Workers)" to "Ingestion Flow (GitHub Actions)"
 - Updated architecture diagram to reference GitHub Actions + Node.js scripts
 - Changed all `workers/src/feeds/*.js` paths to actual `scripts/ingest-*.mjs` paths
@@ -157,17 +179,17 @@ All 5 functions ARE fully implemented in `src/lib/predictions.js`:
 
 **Features implemented but not documented:**
 
-| Feature | Files | Priority |
-|---------|-------|----------|
-| Asset Monitoring | `src/lib/assets.js`, `Assets.jsx` | High |
-| Custom IOCs | `src/lib/customIocs.js`, `CustomIOCs.jsx` | High |
-| Threat Hunts | `src/pages/ThreatHunts.jsx` | Medium |
-| Investigations | `src/pages/Investigations.jsx` | Medium |
-| Benchmarking | `src/pages/Benchmarks.jsx` | Medium |
-| Multi-tenancy/SCIM | `src/lib/multitenancy.js`, `api/scim/` | Medium |
-| Team Collaboration | `src/lib/supabase/teams.js` | Medium |
-| API Key Rotation | `src/lib/apiKeys.js` | Low |
-| Chat Integration | `src/lib/chat.js` | Low |
+| Feature            | Files                                     | Priority |
+| ------------------ | ----------------------------------------- | -------- |
+| Asset Monitoring   | `src/lib/assets.js`, `Assets.jsx`         | High     |
+| Custom IOCs        | `src/lib/customIocs.js`, `CustomIOCs.jsx` | High     |
+| Threat Hunts       | `src/pages/ThreatHunts.jsx`               | Medium   |
+| Investigations     | `src/pages/Investigations.jsx`            | Medium   |
+| Benchmarking       | `src/pages/Benchmarks.jsx`                | Medium   |
+| Multi-tenancy/SCIM | `src/lib/multitenancy.js`, `api/scim/`    | Medium   |
+| Team Collaboration | `src/lib/supabase/teams.js`               | Medium   |
+| API Key Rotation   | `src/lib/apiKeys.js`                      | Low      |
+| Chat Integration   | `src/lib/chat.js`                         | Low      |
 
 **Resolution:** Created `docs/ADVANCED_FEATURES.md` covering all 9 feature areas
 
@@ -182,10 +204,12 @@ All 5 functions ARE fully implemented in `src/lib/predictions.js`:
 **Issue:** Not all ingestion scripts apply sector classification
 
 **Scripts WITH classification:**
+
 - [x] `ingest-ransomwatch.mjs`
 - [x] `ingest-ransomlook.mjs`
 
 **Verified (2026-01-20):**
+
 - [x] `ingest-ransomware-live.mjs` - Already has `classifySector()` integrated
 - [x] Edge function `ingest-ransomwatch/index.ts` - Added simplified inline classifier
 
@@ -202,6 +226,7 @@ All 5 functions ARE fully implemented in `src/lib/predictions.js`:
 **Command:** `npm run reclassify:sectors`
 
 **Results (2026-01-20):**
+
 - Total incidents: 52,656
 - Updated: 4,410 (8.4%)
 - Improved from Other/Unknown: 3,504 (6.7%)
@@ -218,6 +243,7 @@ All 5 functions ARE fully implemented in `src/lib/predictions.js`:
 **Issue:** 0% test coverage documented
 
 **Priority tests needed:**
+
 1. Schema validation tests (column names match)
 2. API endpoint tests
 3. Data ingestion integration tests
@@ -244,19 +270,19 @@ Phase 5.1 (future)
 
 ## Progress Tracking
 
-| Phase | Task | Status | Date |
-|-------|------|--------|------|
-| 1.1 | Fix threat_actor_id | [x] Complete | 2026-01-20 |
-| 1.2 | Resolve malware table | [x] Complete | 2026-01-20 |
-| 1.3 | Audit discovered_at | [x] Complete | 2026-01-20 |
-| 1.4 | Audit sector/country | [x] Complete | 2026-01-20 |
-| 2.1 | Fix user.uid | [x] Complete | 2026-01-20 |
-| 3.1 | Update predictions docs | [x] Complete | 2026-01-20 |
-| 3.2 | Remove Workers claims | [x] Complete | 2026-01-20 |
-| 3.3 | Document features | [x] Complete | 2026-01-20 |
-| 4.1 | Sector classification | [x] Complete | 2026-01-20 |
-| 4.2 | Reclassify sectors | [x] Complete | 2026-01-20 |
-| 5.1 | Add tests | [ ] Future | |
+| Phase | Task                    | Status       | Date       |
+| ----- | ----------------------- | ------------ | ---------- |
+| 1.1   | Fix threat_actor_id     | [x] Complete | 2026-01-20 |
+| 1.2   | Resolve malware table   | [x] Complete | 2026-01-20 |
+| 1.3   | Audit discovered_at     | [x] Complete | 2026-01-20 |
+| 1.4   | Audit sector/country    | [x] Complete | 2026-01-20 |
+| 2.1   | Fix user.uid            | [x] Complete | 2026-01-20 |
+| 3.1   | Update predictions docs | [x] Complete | 2026-01-20 |
+| 3.2   | Remove Workers claims   | [x] Complete | 2026-01-20 |
+| 3.3   | Document features       | [x] Complete | 2026-01-20 |
+| 4.1   | Sector classification   | [x] Complete | 2026-01-20 |
+| 4.2   | Reclassify sectors      | [x] Complete | 2026-01-20 |
+| 5.1   | Add tests               | [ ] Future   |            |
 
 ---
 
@@ -279,6 +305,7 @@ After all fixes:
 This section will be updated as work progresses.
 
 ### Modified (Previous Session):
+
 - `api/generate-summary.js` - user.uid → user.id
 - `api/send-email.js` - user.uid → user.id
 - `src/lib/supabase/compare.js` - discovered_at → discovered_date, sector fixes
@@ -292,6 +319,7 @@ This section will be updated as work progresses.
 - `src/components/patterns/TemporalClusterChart.jsx` - added fallback
 
 ### Modified (This Session - 2026-01-20):
+
 - `src/lib/supabase/compare.js` - threat_actor_id → actor_id
 - `src/lib/predictions.js` - sector → victim_sector (lines 101, 409, 415)
 - `src/lib/predictiveModeling.js` - threat_actor_id → actor_id (lines 232, 234, 244)
@@ -304,5 +332,5 @@ This section will be updated as work progresses.
 - `supabase/functions/ingest-ransomwatch/index.ts` - added sector classifier
 
 ### Created (This Session - 2026-01-20):
-- `docs/ADVANCED_FEATURES.md` - documented 9 undocumented feature areas
 
+- `docs/ADVANCED_FEATURES.md` - documented 9 undocumented feature areas
