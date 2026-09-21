@@ -1,36 +1,53 @@
 version: 2
 updates:
   # Enable version updates for npm
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: 'weekly'
+      day: 'monday'
     open-pull-requests-limit: 10
     labels:
-      - "dependencies"
-      - "automated"
+      - 'dependencies'
+      - 'automated'
     commit-message:
-      prefix: "chore(deps)"
+      prefix: 'chore(deps)'
     groups:
       # Group minor and patch updates together
       minor-and-patch:
         patterns:
-          - "*"
+          - '*'
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
+      # Majors were ungrouped, so each one opened its own PR and they piled up:
+      # seven were open at once on 21 September - vite 5->7, eslint 8->9,
+      # react 18->19, react-router 6->7 and so on. None of those is a merge;
+      # each is a piece of work. One PR to look at is more useful than seven to
+      # ignore, and it stops the count growing every Monday.
+      major-updates:
+        patterns:
+          - '*'
+        update-types:
+          - 'major'
 
   # Enable version updates for GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: 'weekly'
+      day: 'monday'
     open-pull-requests-limit: 5
     labels:
-      - "dependencies"
-      - "github-actions"
-      - "automated"
+      - 'dependencies'
+      - 'github-actions'
+      - 'automated'
     commit-message:
-      prefix: "chore(ci)"
+      prefix: 'chore(ci)'
+    groups:
+      # No grouping at all here until 21 September, which is why five separate
+      # PRs were open to bump five `uses:` lines. They only touch CI and they
+      # move together, so they are one PR.
+      github-actions:
+        patterns:
+          - '*'
