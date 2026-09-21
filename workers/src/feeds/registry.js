@@ -38,6 +38,7 @@ import { ingestOFAC } from './ofac-sdn.js'
 import { ingestThreatCluster } from './threatcluster.js'
 import { ingestSecDisclosures } from './sec-disclosures.js'
 import { ingestCisaAdvisories } from './cisa-advisories.js'
+import { ingestNcscAdvisories } from './ncsc-advisories.js'
 
 // Threat actor databases
 import { ingestMalpedia } from './malpedia.js'
@@ -81,6 +82,11 @@ export const JOBS = [
   { id: 'ransomlook', priority: 1, cost: 8, intervalMinutes: HOUR, run: (db, env) => ingestRansomlook(db, env) },
   { id: 'threatfox', priority: 1, cost: 6, intervalMinutes: HOUR, run: (db, env) => ingestThreatFox(db, env) },
   { id: 'data-quality', priority: 1, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'run_data_quality_checks') },
+  // Queues leak-site posts that look like announcements rather than victim
+  // claims. It has only ever run once, by hand, when migration 095 was
+  // generalised; every post published since has gone unexamined. It only ever
+  // queues a candidate and never moves a row, so running it hourly is safe.
+  { id: 'leak-site-notices', priority: 2, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'detect_leak_site_notices') },
   { id: 'actor-status', priority: 1, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'apply_actor_status') },
   { id: 'ioc-geo', priority: 1, cost: 2, intervalMinutes: HOUR, run: (db) => rpc(db, 'resolve_ioc_geo', { p_limit: 5000 }) },
 
@@ -112,6 +118,7 @@ export const JOBS = [
   { id: 'threatcluster', priority: 2, cost: 1, intervalMinutes: DAY, run: (db, env) => ingestThreatCluster(db, env) },
   { id: 'sec-edgar', priority: 3, cost: 1, intervalMinutes: DAY, run: (db, env) => ingestSecDisclosures(db, env) },
   { id: 'cisa-advisories', priority: 2, cost: 1, intervalMinutes: 6 * HOUR, run: (db, env) => ingestCisaAdvisories(db, env) },
+  { id: 'ncsc-advisories', priority: 2, cost: 1, intervalMinutes: 6 * HOUR, run: (db, env) => ingestNcscAdvisories(db, env) },
   { id: 'ransomwhere', priority: 4, cost: 10, intervalMinutes: DAY, run: (db, env) => ingestRansomwhere(db, env) },
 
   // --- Reference data ---
@@ -121,6 +128,11 @@ export const JOBS = [
   { id: 'anyrun-trends', priority: 4, cost: 4, intervalMinutes: DAY, run: (db, env) => ingestAnyRun(db, env) },
   { id: 'censys', priority: 4, cost: 6, intervalMinutes: DAY, run: (db, env) => enrichCensys(db, env) },
   { id: 'mitre', priority: 5, cost: 12, intervalMinutes: WEEK, run: (db, env) => ingestMITRE(db, env) },
+  // Resolves campaigns.actor_id from the names MITRE publishes. MITRE runs
+  // weekly and new campaigns appear a few times a year, but this is one RPC,
+  // and left unscheduled a new campaign sits unreachable for months - which is
+  // how all 56 came to have a null actor_id in the first place.
+  { id: 'campaign-links', priority: 4, cost: 1, intervalMinutes: DAY, run: (db) => rpc(db, 'link_campaign_actors') },
   { id: 'mitre-atlas', priority: 5, cost: 6, intervalMinutes: WEEK, run: (db, env) => ingestMitreAtlas(db, env) }
 ]
 

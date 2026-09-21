@@ -20,17 +20,10 @@
  *
  * ATTRIBUTION IS READ FROM THE TITLE ONLY
  *
- * CISA states attribution in the title, precisely and deliberately. Summaries
- * mention other things in passing, and reading them produced exactly the
- * conflation this project exists to avoid. On the first run, with the body
- * text included:
- *
- *   "Pro-Russia Hacktivists Conduct Opportunistic Attacks"  ->  RU, state
- *   "Defending Against China-Nexus Covert Networks"         ->  CN, state
- *
- * Both wrong. A pro-Russia hacktivist collective and a Russian state-sponsored
- * actor are different people, and CISA is careful to say which it means. The
- * title is where that care lives, so the title is what is read.
+ * The attribution table now lives in ../_shared/attribution.ts, so that vitest
+ * can test it - see workers/src/feeds/__tests__/attribution.test.js. It had
+ * been wrong once and nothing could reach it where it was; the reasoning for
+ * reading titles and not summaries is in that file's header.
  *
  * Verified against all ten advisories the live feeds return:
  *
@@ -51,48 +44,15 @@
  */
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+// The attribution table moved to _shared so vitest can reach it. It had been
+// wrong once already and nothing could test it where it was.
+import { attributeCisa } from '../_shared/attribution.ts'
 
 const FEEDS = [
   'https://www.cisa.gov/cybersecurity-advisories/cybersecurity-advisories.xml',
   'https://www.cisa.gov/cybersecurity-advisories/analysis-reports.xml',
 ]
 const UA = 'Vigil Threat Intelligence metacog@theintelligence.company'
-
-type Strength = 'state' | 'affiliated' | 'nexus' | 'aligned' | 'criminal'
-
-/**
- * CISA's own phrasings. Order matters: the explicit state formulations are
- * tested first, then the deliberately weaker ones, so "Pro-Russia" is never
- * read as "Russian state-sponsored".
- */
-const ATTRIBUTION: Array<{ re: RegExp; country: string | null; strength: Strength }> = [
-  { re: /\b(russian|russia)[- ]state[- ](sponsored|supported|affiliated)\b/i, country: 'RU', strength: 'state' },
-  { re: /\b(chinese|china)[- ]state[- ](sponsored|supported|affiliated)\b/i, country: 'CN', strength: 'state' },
-  { re: /\b(iranian|iran)[- ]state[- ](sponsored|supported|affiliated)\b/i, country: 'IR', strength: 'state' },
-  { re: /\b(north korean|dprk)[- ]state[- ](sponsored|supported|affiliated)\b/i, country: 'KP', strength: 'state' },
-
-  // Explicitly not the state. Tested before the affiliation patterns.
-  { re: /\bpro[- ]russia[n]?\b/i, country: 'RU', strength: 'aligned' },
-  { re: /\bpro[- ]iran(ian)?\b/i, country: 'IR', strength: 'aligned' },
-  { re: /\bpro[- ](china|chinese)\b/i, country: 'CN', strength: 'aligned' },
-
-  { re: /\biranian[- ]affiliated\b/i, country: 'IR', strength: 'affiliated' },
-  { re: /\brussian[- ]affiliated\b/i, country: 'RU', strength: 'affiliated' },
-  { re: /\bchinese[- ]affiliated\b/i, country: 'CN', strength: 'affiliated' },
-  { re: /\b(north korean|dprk)[- ]affiliated\b/i, country: 'KP', strength: 'affiliated' },
-
-  { re: /\bchina[- ]nexus\b/i, country: 'CN', strength: 'nexus' },
-  { re: /\brussia[- ]nexus\b/i, country: 'RU', strength: 'nexus' },
-  { re: /\biran[- ]nexus\b/i, country: 'IR', strength: 'nexus' },
-
-  { re: /\biranian cyber actors\b/i, country: 'IR', strength: 'affiliated' },
-  { re: /\brussian cyber actors\b/i, country: 'RU', strength: 'affiliated' },
-  { re: /\bchinese cyber actors\b/i, country: 'CN', strength: 'affiliated' },
-  { re: /\b(north korean|dprk) cyber actors\b/i, country: 'KP', strength: 'affiliated' },
-
-  // Criminal, and CISA names no state. Country stays null on purpose.
-  { re: /#StopRansomware/i, country: null, strength: 'criminal' },
-]
 
 const SECTORS: Array<{ re: RegExp; sector: string }> = [
   { re: /water and wastewater|water systems/i, sector: 'water' },
@@ -105,14 +65,6 @@ const SECTORS: Array<{ re: RegExp; sector: string }> = [
   { re: /critical manufacturing/i, sector: 'manufacturing' },
   { re: /defense industrial base/i, sector: 'defense' },
 ]
-
-export function attribute(title: string) {
-  for (const a of ATTRIBUTION) {
-    const m = title.match(a.re)
-    if (m) return { country: a.country, phrase: m[0], strength: a.strength }
-  }
-  return { country: null, phrase: null, strength: null }
-}
 
 export function sectorsIn(title: string): string[] {
   return SECTORS.filter((s) => s.re.test(title)).map((s) => s.sector)
@@ -158,7 +110,7 @@ export function parseFeed(xml: string) {
     const published = new Date(pub)
     if (Number.isNaN(published.getTime())) continue
 
-    const { country, phrase, strength } = attribute(title)
+    const { country, phrase, strength } = attributeCisa(title)
 
     out.push({
       advisory_id: idMatch[1].toUpperCase(),
@@ -202,7 +154,13 @@ Deno.serve(async () => {
       throw new Error('no advisories parsed, which these feeds never legitimately return')
     }
 
-    const { data, error } = await supabase.rpc('apply_attributed_activity', { p_rows: rows })
+    // p_source is required as of migration 132: two governments write into
+    // this table now and a row whose origin defaulted silently would be
+    // unjudgeable.
+    const { data, error } = await supabase.rpc('apply_attributed_activity', {
+      p_rows: rows,
+      p_source: 'cisa',
+    })
     if (error) throw new Error(`apply_attributed_activity failed: ${error.message}`)
 
     return json({

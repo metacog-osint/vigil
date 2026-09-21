@@ -1,6 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
-import { supabase } from '../lib/supabase'
+import {
+  supabase,
+  attributedActivity,
+  ATTRIBUTION_STRENGTHS,
+  ATTRIBUTION_STRENGTH_LABELS,
+  ATTRIBUTION_STRENGTH_COLORS,
+  ATTRIBUTION_SOURCE_LABELS,
+} from '../lib/supabase'
 import { CoverageNote } from './common'
 import { geoToIso2 } from '../lib/countryCodes'
 
@@ -206,13 +213,16 @@ const _ISO2_TO_ISO3 = Object.fromEntries(
 
 export default function ThreatAttributionMap({
   days = 30,
-  viewMode = 'victims', // 'victims' | 'attackers' | 'industry'
+  viewMode = 'victims', // 'victims' | 'attackers' | 'attributed' | 'industry'
   onCountryClick,
   selectedCountry = null,
   height = 400,
 }) {
   const [countryData, setCountryData] = useState({})
   const [actorOrigins, setActorOrigins] = useState({})
+  // Government advisories, keyed by the country the advisory blames.
+  const [attributed, setAttributed] = useState({})
+  const [attributedCoverage, setAttributedCoverage] = useState(null)
   const [coverage, setCoverage] = useState(null)
   const [loading, setLoading] = useState(true)
   const [tooltip, setTooltip] = useState(null)
@@ -321,18 +331,43 @@ export default function ThreatAttributionMap({
         setActorOrigins(origins)
       }
 
+      // Government attribution. Not filtered by `days`: there are ten
+      // advisories in total and a 30-day window would usually show none, which
+      // would read as "no state activity" rather than "none announced this
+      // month". The footer says which period is actually on screen.
+      const [{ data: index }, { data: advisoryCoverage }] = await Promise.all([
+        attributedActivity.getCountryIndex(),
+        attributedActivity.getCoverage(),
+      ])
+      if (index) setAttributed(index)
+      if (advisoryCoverage) setAttributedCoverage(advisoryCoverage)
+
       setLoading(false)
     }
 
     fetchData()
   }, [days])
 
+  // Which dataset this view draws from. Three layers now answer three
+  // different questions, and nothing may average across them.
+  const activeData =
+    viewMode === 'attackers' ? actorOrigins : viewMode === 'attributed' ? attributed : countryData
+
   // Calculate color intensity based on count
   const getColor = (countryCode) => {
-    const data = viewMode === 'attackers' ? actorOrigins : countryData
+    const data = activeData
     // geoToIso2 has already resolved the atlas's numeric id to ISO-2
     const countryInfo = data[countryCode]
     if (!countryInfo) return '#1f2937' // Default dark gray
+
+    // Attribution is not a quantity. Three advisories calling a country's
+    // actors "pro-Russia hacktivists" are not a stronger claim than one
+    // calling them "state-sponsored", so this layer colours by the kind of
+    // claim rather than by how many were made. A shaded ramp here would say
+    // the opposite of what the advisories say.
+    if (viewMode === 'attributed') {
+      return ATTRIBUTION_STRENGTH_COLORS[countryInfo.strongest] || '#4b5563'
+    }
 
     const count = countryInfo.count || 0
     const maxCount = Math.max(...Object.values(data).map((d) => d.count || 0), 1)
@@ -362,12 +397,24 @@ export default function ThreatAttributionMap({
 
   // Get tooltip content
   const getTooltipContent = (countryCode, countryName) => {
-    const data = viewMode === 'attackers' ? actorOrigins : countryData
+    const data = activeData
     // geoToIso2 has already resolved the atlas's numeric id to ISO-2
     const countryInfo = data[countryCode]
 
     if (!countryInfo || countryInfo.count === 0) {
       return { name: countryName, count: 0 }
+    }
+
+    if (viewMode === 'attributed') {
+      // The advisory's own words, not a paraphrase and not a country flag.
+      return {
+        name: countryName,
+        count: countryInfo.count,
+        strongest: countryInfo.strongest,
+        phrases: countryInfo.phrases || [],
+        sources: countryInfo.sources || [],
+        advisories: (countryInfo.advisories || []).slice(0, 3),
+      }
     }
 
     if (viewMode === 'attackers') {
@@ -413,7 +460,7 @@ export default function ThreatAttributionMap({
   const handleClick = (geo) => {
     const countryCode = geoToIso2(geo)
     const countryName = getCountryName(geo)
-    const data = viewMode === 'attackers' ? actorOrigins : countryData
+    const data = activeData
     // geoToIso2 has already resolved the atlas's numeric id to ISO-2
     const countryInfo = data[countryCode]
 
@@ -428,13 +475,19 @@ export default function ThreatAttributionMap({
 
   // Stats summary
   const stats = useMemo(() => {
-    const data = viewMode === 'attackers' ? actorOrigins : countryData
+    const data =
+      viewMode === 'attackers' ? actorOrigins : viewMode === 'attributed' ? attributed : countryData
     const totalCountries = Object.keys(data).length
     const totalIncidents = Object.values(data).reduce((sum, d) => sum + (d.count || 0), 0)
     const topCountry = Object.entries(data).sort((a, b) => (b[1].count || 0) - (a[1].count || 0))[0]
 
     return { totalCountries, totalIncidents, topCountry }
-  }, [countryData, actorOrigins, viewMode])
+  }, [countryData, actorOrigins, attributed, viewMode])
+
+  // What the unit on screen is called. Saying "incidents" over a layer of
+  // government advisories would be the conflation this table exists to avoid.
+  const unitLabel =
+    viewMode === 'attackers' ? 'actors' : viewMode === 'attributed' ? 'advisories' : 'incidents'
 
   return (
     <div className="relative">
@@ -443,7 +496,7 @@ export default function ThreatAttributionMap({
         <div className="flex gap-4">
           <span>{stats.totalCountries} countries</span>
           <span>
-            {stats.totalIncidents} {viewMode === 'attackers' ? 'actors' : 'incidents'}
+            {stats.totalIncidents} {unitLabel}
           </span>
           {stats.topCountry && (
             <span>
@@ -514,7 +567,12 @@ export default function ThreatAttributionMap({
                         style={{
                           default: { outline: 'none' },
                           hover: {
-                            fill: viewMode === 'attackers' ? '#f87171' : '#22d3ee',
+                            fill:
+                              viewMode === 'attackers'
+                                ? '#f87171'
+                                : viewMode === 'attributed'
+                                  ? '#f59e0b'
+                                  : '#22d3ee',
                             outline: 'none',
                             cursor: 'pointer',
                           },
@@ -547,8 +605,77 @@ export default function ThreatAttributionMap({
           {tooltip.count > 0 ? (
             <>
               <div className="text-cyan-400 text-sm mb-2">
-                {tooltip.count} {viewMode === 'attackers' ? 'threat actors' : 'incidents'}
+                {tooltip.count}{' '}
+                {viewMode === 'attackers'
+                  ? 'threat actors'
+                  : viewMode === 'attributed'
+                    ? tooltip.count === 1
+                      ? 'government advisory'
+                      : 'government advisories'
+                    : 'incidents'}
               </div>
+              {viewMode === 'attributed' && (
+                <>
+                  {/* The source's exact wording. Vigil did not decide this and
+                      does not paraphrase it. */}
+                  {tooltip.phrases?.length > 0 && (
+                    <div className="mb-2">
+                      <div className="text-xs text-gray-500 mb-1">Attributed as:</div>
+                      {tooltip.phrases.map((phrase) => (
+                        <div key={phrase} className="text-xs text-gray-200 italic">
+                          &ldquo;{phrase}&rdquo;
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {tooltip.sources?.length > 0 && (
+                    <div className="mb-2 text-xs text-gray-400">
+                      {/* Two governments naming a country separately is a
+                          different position from one naming it twice. */}
+                      {tooltip.sources.length > 1
+                        ? `Attributed independently by ${tooltip.sources.length} governments: `
+                        : 'Attributed by '}
+                      {tooltip.sources
+                        .map((src) => ATTRIBUTION_SOURCE_LABELS[src] || src)
+                        .join(', ')}
+                    </div>
+                  )}
+                  {tooltip.strongest && (
+                    <div className="mb-2 flex items-center gap-1.5">
+                      <span
+                        className="inline-block w-2 h-2 rounded-sm"
+                        style={{
+                          backgroundColor:
+                            ATTRIBUTION_STRENGTH_COLORS[tooltip.strongest] || '#4b5563',
+                        }}
+                      />
+                      <span className="text-xs text-gray-400">
+                        Strongest claim:{' '}
+                        {ATTRIBUTION_STRENGTH_LABELS[tooltip.strongest] || tooltip.strongest}
+                      </span>
+                    </div>
+                  )}
+                  {tooltip.advisories?.length > 0 && (
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Advisories:</div>
+                      {tooltip.advisories.map((a) => (
+                        <div key={a.advisory_id} className="text-xs text-gray-300 mb-1">
+                          {/* CISA numbers its advisories and the number is worth
+                              showing. NCSC does not, so its id is the URL slug -
+                              a restatement of the title, forty characters wide.
+                              Show the date instead. */}
+                          <span className="font-mono text-gray-500">
+                            {/^AA?\d{2}-\d{3}[A-Z]?$/.test(a.advisory_id)
+                              ? a.advisory_id
+                              : a.published}
+                          </span>{' '}
+                          {a.title}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
               {tooltip.topActors && tooltip.topActors.length > 0 && (
                 <div className="mb-2">
                   <div className="text-xs text-gray-500 mb-1">Top Actors:</div>
@@ -587,36 +714,53 @@ export default function ThreatAttributionMap({
       )}
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
-        <div className="flex items-center gap-1">
-          <div
-            className="w-3 h-3 rounded"
-            style={{ backgroundColor: viewMode === 'attackers' ? '#fca5a5' : '#67e8f9' }}
-          />
-          <span>Low</span>
+      {viewMode === 'attributed' ? (
+        /* Not a scale. Five kinds of claim, in the order of how much state
+           involvement the source asserts - and "aligned" explicitly denies it.
+           Rendering these as one gradient would say they differ by degree. */
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-gray-400">
+          {[...ATTRIBUTION_STRENGTHS].reverse().map((strength) => (
+            <div key={strength} className="flex items-center gap-1">
+              <div
+                className="w-3 h-3 rounded"
+                style={{ backgroundColor: ATTRIBUTION_STRENGTH_COLORS[strength] }}
+              />
+              <span>{ATTRIBUTION_STRENGTH_LABELS[strength]}</span>
+            </div>
+          ))}
         </div>
-        <div className="flex items-center gap-1">
-          <div
-            className="w-3 h-3 rounded"
-            style={{ backgroundColor: viewMode === 'attackers' ? '#f87171' : '#22d3ee' }}
-          />
-          <span>Medium</span>
+      ) : (
+        <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+          <div className="flex items-center gap-1">
+            <div
+              className="w-3 h-3 rounded"
+              style={{ backgroundColor: viewMode === 'attackers' ? '#fca5a5' : '#67e8f9' }}
+            />
+            <span>Low</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div
+              className="w-3 h-3 rounded"
+              style={{ backgroundColor: viewMode === 'attackers' ? '#f87171' : '#22d3ee' }}
+            />
+            <span>Medium</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div
+              className="w-3 h-3 rounded"
+              style={{ backgroundColor: viewMode === 'attackers' ? '#ef4444' : '#06b6d4' }}
+            />
+            <span>High</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div
+              className="w-3 h-3 rounded"
+              style={{ backgroundColor: viewMode === 'attackers' ? '#dc2626' : '#0891b2' }}
+            />
+            <span>Critical</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <div
-            className="w-3 h-3 rounded"
-            style={{ backgroundColor: viewMode === 'attackers' ? '#ef4444' : '#06b6d4' }}
-          />
-          <span>High</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div
-            className="w-3 h-3 rounded"
-            style={{ backgroundColor: viewMode === 'attackers' ? '#dc2626' : '#0891b2' }}
-          />
-          <span>Critical</span>
-        </div>
-      </div>
+      )}
 
       {/* What the map can and cannot show for this window */}
       {!loading && coverage && viewMode === 'victims' && (
@@ -632,6 +776,17 @@ export default function ThreatAttributionMap({
           Attributed country of origin for{' '}
           {Object.values(actorOrigins).reduce((n, o) => n + o.count, 0)} groups, as published by
           MISP galaxy with its own confidence score. Attribution is a claim, not an observation.
+        </p>
+      )}
+      {!loading && viewMode === 'attributed' && (
+        <p className="text-xs text-gray-500 mt-2">
+          {attributedCoverage
+            ? `${attributedCoverage.attributed} of ${attributedCoverage.total} government advisories name a country`
+            : 'Government advisories'}
+          , in the words the advisory used. Unlike the other two layers this one ignores the {days}
+          -day window: advisories are published a few a month and a short window would read as an
+          absence of state activity rather than an absence of announcements. These are not incidents
+          and are never counted alongside them.
         </p>
       )}
     </div>

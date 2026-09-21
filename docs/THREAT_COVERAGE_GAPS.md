@@ -40,7 +40,8 @@ Vigil currently provides intelligence across these domains:
 
 ## The gap this document does not name
 
-_Added 21 September 2026._
+_Added 21 September 2026. Rewritten the same night, after the feeds below were
+actually read rather than only fetched._
 
 Everything below this heading, and the "Proposed New Data Sources" list in
 `DATA_SOURCES.md`, is about **indicators and telemetry** — blocklists,
@@ -55,21 +56,37 @@ fifty-nine have no incidents at all; the only one with any posts to leak sites.
 The useful question is not "what other indicators exist" but **who else records
 an attack**. There are four answers.
 
+> **A feed returning HTTP 200 and ten items is not a feed that says who did
+> it.** The first version of this section listed NCSC-UK and CERT-EU as the two
+> cheapest wins, "the same RSS shape as CISA, so `cisa-advisories` generalises
+> rather than being rewritten". The fetch had been verified. The content had
+> not. One of the two carries attribution; the other carries vulnerability
+> notices, and `cisa-advisories` did not generalise to it either. The table
+> below now records what each feed actually contains.
+
 ### 1. Governments attributing campaigns
 
-| Source                                  | Status                       | Notes                                                                                  |
-| --------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------- |
-| CISA AA-series                          | **Done** (`cisa-advisories`) | 10 advisories, 5 attributed                                                            |
-| NCSC-UK                                 | Not done                     | `https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml` — **verified, 20 items**  |
-| CERT-EU                                 | Not done                     | `https://cert.europa.eu/publications/security-advisories-rss` — **verified, 10 items** |
-| ACSC (Australia), CCCS (Canada), JPCERT | Not done                     | Feeds exist; the obvious URLs returned nothing, so they need finding                   |
+| Source           | Status                       | What it actually contains                                                                                                                                                                                                                                                                                   |
+| ---------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CISA AA-series   | **Done** (`cisa-advisories`) | 10 advisories, 5 attributed                                                                                                                                                                                                                                                                                 |
+| NCSC-UK          | **Done** (`ncsc-advisories`) | 6 news items, 3 attributed, 1 queued. Needed its own parser: no advisory id, a feed that is mostly blogs, and "Iranian state actors" where CISA writes "Iranian-Affiliated"                                                                                                                                 |
+| CERT-EU          | **Rejected**                 | `security-advisories` is vulnerability notices — "2026-012: Critical Vulnerabilities in Check Point Products" — with no attribution in any of them. `threat-intelligence` is monthly Cyber Brief round-ups covering dozens of unrelated events; filing a digest as one attributed event is a category error |
+| CCCS (Canada)    | **Rejected**                 | Feed found at `cyber.gc.ca/api/cccs/atom/v1/get?feed=alerts_advisories&lang=en`. Entirely vendor patch notices: "SolarWinds security advisory (AV26-941)"                                                                                                                                                   |
+| JPCERT           | **Rejected**                 | `jpcert.or.jp/rss/jpcert.rdf`, 29 items, Japanese-language vulnerability alerts                                                                                                                                                                                                                             |
+| ACSC (Australia) | Not found                    | cyber.gov.au refused every request                                                                                                                                                                                                                                                                          |
 
-The first two are the cheapest work available: same RSS shape as CISA, so
-`cisa-advisories` generalises rather than being rewritten. Attribution wording
-differs by country, and the phrase table would need extending — NCSC does not
-write "Iranian-Affiliated".
+Evidence for each rejection is in `supabase/migrations/132_attributed_activity_sources.sql`,
+so the same five feeds do not have to be re-checked to reach the same answer.
+
+Two governments is the point rather than the count: with CISA alone,
+"attributed to Russia" means "the United States said so". Iran is now named
+independently by both.
 
 ### 2. Victims disclosing to a regulator
+
+**This is the richest untapped vein**, and the one to do next. A
+regulator-held breach register is the victim's own account, which is the only
+thing that turns a claim into a corroborated event.
 
 | Source                  | Status                 | Notes                                                                                                                                                                                                        |
 | ----------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -77,10 +94,6 @@ write "Iranian-Affiliated".
 | HHS OCR breach portal   | Not done               | ~7,876 US healthcare breaches since 2009, 500+ individuals each. **High value and awkward**: the official portal is a session-based JSF page that 302s, not an API. Needs a scraper or a third-party mirror. |
 | State AG breach notices | Not done               | California, Maine, Washington, Texas. Free, but each is a separate scraper.                                                                                                                                  |
 | EU GDPR notifications   | Not done               | Fragmented across supervisory authorities.                                                                                                                                                                   |
-
-This is the richest untapped vein. A regulator-held breach register is the
-victim's own account, which is the only thing that can turn a claim into a
-corroborated event.
 
 ### 3. Law enforcement and sanctions
 
@@ -95,13 +108,24 @@ and all attribute. The attribution is in prose rather than a field, so this
 belongs in the review queue rather than a parser: ingest the report, queue the
 attribution for a verdict.
 
-### Nearly free, and already half-built
+Note what the national-CERT exercise above says about this one. Vendor prose is
+_harder_ to read correctly than a CISA title, not easier, and the failure mode
+is silent — a parser that turns a vendor's hedged "consistent with" into
+`state` produces a confident falsehood. Queue it.
 
-`campaigns` holds 56 MITRE ATT&CK campaigns with **no target countries and no
-actor links**, last updated December 2025, and the `mitre` feed has never run
-under the current scheduler. Named campaigns — Salt Typhoon, Volt Typhoon — are
-exactly the non-ransomware activity this document's §7 asks for, and the table
-for them already exists.
+### Nearly free, and already half-built — now done
+
+`campaigns` held 56 MITRE ATT&CK campaigns with no actor links: 25 named their
+actor in a text array and all 56 had `actor_id` null, so nothing could navigate
+from Volt Typhoon to the KV Botnet activity or from Sandworm to the 2022
+Ukraine Electric Power Attack. Migration 134 links the 24 unambiguous ones and
+queues the rest. `link_campaign_actors` runs daily.
+
+**`target_countries` is still empty on every campaign, and that is correct.**
+MITRE does not publish a target country for a campaign object, and reading one
+out of a campaign name — "2022 Ukraine Electric Power Attack" — would be Vigil
+asserting what its source did not. The column is empty because the data is
+absent, which is a different answer from zero.
 
 ---
 
@@ -574,7 +598,9 @@ GDELT and the UMD Cyber Events Database together address several critical gaps:
 ## Related Documentation
 
 - **[ALERTING.md](./ALERTING.md)** - Real-time alerting system
-- **[PRICING_ANALYSIS.md](./PRICING_ANALYSIS.md)** - Infrastructure cost breakdown and projections
+- Infrastructure cost breakdown and projections — moved out of this public
+  repository on 21 September 2026 along with the other commercial material.
+  See the removal commit for where it went.
 - **[../DATA_SOURCES.md](../DATA_SOURCES.md)** - Current and proposed data source inventory
 
 ---

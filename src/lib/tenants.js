@@ -430,8 +430,17 @@ export const tenantMembers = {
 
   /**
    * Check if user can access tenant
+   *
+   * The only one of these four that was missing the provisioning guard, so it
+   * was the only one that would have reached a `can_access_tenant` function
+   * the database does not have. Nothing calls it today - the `canAccess` used
+   * around Settings comes from useSubscription and is unrelated - but an
+   * unguarded call here would have failed closed in a way that reads as "you
+   * have no access" rather than "this feature is not provisioned".
    */
   async canAccess(tenantId, userId) {
+    if (!TENANCY_PROVISIONED) return false
+
     const { data } = await supabase.rpc('can_access_tenant', {
       p_user_id: userId,
       p_tenant_id: tenantId,

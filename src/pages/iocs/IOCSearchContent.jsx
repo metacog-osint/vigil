@@ -56,6 +56,15 @@ export default function IOCSearchContent() {
       if (typeFilter) {
         filtered = filtered.filter((ioc) => ioc.type === typeFilter)
       }
+      // Demo mode used to drop countryFilter on the floor. Typing a country
+      // returned every sample indicator, presented as though it had been
+      // filtered - and with an empty search box it returned the whole set,
+      // because ''.includes('') is true for everything. The field was on
+      // screen making a claim the results did not honour.
+      const country = countryFilter.trim().toUpperCase()
+      if (country) {
+        filtered = filtered.filter((ioc) => ioc.country_code === country)
+      }
       setResults(filtered)
       setLoading(false)
       return
