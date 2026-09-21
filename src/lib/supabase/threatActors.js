@@ -15,6 +15,8 @@ export const threatActors = {
       trendStatus = '',
       actorType = '',
       status = '',
+      originCountry = '',
+      targetCountry = '',
     } = options
 
     let query = supabase
@@ -44,7 +46,39 @@ export const threatActors = {
       query = query.eq('status', status)
     }
 
+    // Where the group is from. Deliberately not the same question as where it
+    // attacks: a feed once wrote origin into target_countries, which had Vigil
+    // asserting that the Equation Group targets the United States. The two
+    // filters stay separate and are labelled separately in the interface.
+    if (originCountry) {
+      query = query.eq('origin_country', originCountry)
+    }
+
+    if (targetCountry) {
+      query = query.contains('target_countries', [targetCountry])
+    }
+
     return query
+  },
+
+  /**
+   * Countries a group is recorded as operating from, with how many groups
+   * each has. Attribution carries a confidence rating on the actor row; the
+   * filter offers the countries, not a verdict on them.
+   */
+  async getOriginCountries() {
+    return supabase
+      .from('actor_origin_countries')
+      .select('country_code, actors, active_actors')
+      .order('actors', { ascending: false })
+  },
+
+  /** Countries groups are recorded as targeting. A different question. */
+  async getTargetCountries() {
+    return supabase
+      .from('actor_target_countries')
+      .select('country_code, actors')
+      .order('actors', { ascending: false })
   },
 
   async getById(id) {

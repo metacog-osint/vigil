@@ -25,7 +25,12 @@ jobs:
         run: npm ci
 
       - name: Run linter
-        run: npm run lint -- --max-warnings 500
+        # No override: the threshold lives in package.json so the command a
+        # person runs and the one CI runs cannot disagree. It was 0 locally and
+        # 500 in CI against a real count of 328 - two numbers both claiming to
+        # be the standard, and neither of them true. 350 leaves a little room
+        # and ratchets: bring the count down and lower it again.
+        run: npm run lint
 
       - name: Check formatting
         run: npm run format:check
@@ -102,11 +107,18 @@ jobs:
           name: dist
           path: dist/
 
+      # Deliberately not the real project. e2e/support/supabase.js intercepts
+      # every Supabase request and demo mode supplies the fixtures, so the suite
+      # needs no database - and pointing it at an address that cannot resolve
+      # means a stub that is ever missed fails loudly here rather than making
+      # the run depend on live data. Before this, every test loaded the landing
+      # page against production and the suite's result depended on what else was
+      # touching Supabase: three merge cycles were lost to it on 20 September.
       - name: Run E2E tests (${{ matrix.browser }})
         run: npx playwright test --project=${{ matrix.browser }}
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: https://e2e-must-not-reach-production.invalid
+          VITE_SUPABASE_ANON_KEY: e2e-placeholder-not-a-real-key
 
       - name: Upload Playwright report (${{ matrix.browser }})
         uses: actions/upload-artifact@v4

@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test'
+import { stubSupabase } from './supabase.js'
 
 /**
  * Open the application.
@@ -13,6 +14,10 @@ import { expect } from '@playwright/test'
  * full reload; navigate within the app rather than calling page.goto() again.
  */
 export async function openApp(page, path = '/') {
+  // Nothing in this suite may reach the live project. The landing page queries
+  // it on load, so this has to be in place before the first navigation.
+  await stubSupabase(page)
+
   // The onboarding tour covers the app with a full-screen overlay that swallows
   // clicks, and it only stays down once this flag is set.
   await page.addInitScript(() => {
