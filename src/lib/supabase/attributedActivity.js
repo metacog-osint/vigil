@@ -22,7 +22,19 @@ import { supabase } from './client'
  * map and any future consumer rank the same way rather than each inventing an
  * order — and so that adding a sixth kind is one edit, not a search.
  */
-export const ATTRIBUTION_STRENGTHS = ['criminal', 'aligned', 'nexus', 'affiliated', 'state']
+export const ATTRIBUTION_STRENGTHS = [
+  // Weakest first. `linguistic` sits below `aligned` because `aligned` at
+  // least asserts sympathy with a country, and this asserts only what language
+  // someone writes their code comments in. GreyNoise, 21 September: "a
+  // suspected Chinese speaker possibly working in UTC+8" - which spans China,
+  // Taiwan, Singapore, Malaysia, the Philippines and the diaspora.
+  'linguistic',
+  'criminal',
+  'aligned',
+  'nexus',
+  'affiliated',
+  'state',
+]
 
 /** The governments that write into this table, as they should be named. */
 export const ATTRIBUTION_SOURCE_LABELS = {
@@ -32,6 +44,7 @@ export const ATTRIBUTION_SOURCE_LABELS = {
 
 /** How each kind should be described where there is room to describe it. */
 export const ATTRIBUTION_STRENGTH_LABELS = {
+  linguistic: 'Language or timezone only',
   state: 'State-sponsored',
   affiliated: 'State-affiliated',
   nexus: 'State-nexus',
@@ -45,6 +58,9 @@ export const ATTRIBUTION_STRENGTH_LABELS = {
  * one. See the legend in ThreatAttributionMap.
  */
 export const ATTRIBUTION_STRENGTH_COLORS = {
+  // Deliberately the faintest of the six: a language observation should not
+  // look like an accusation.
+  linguistic: '#64748b',
   state: '#b91c1c',
   affiliated: '#ea580c',
   nexus: '#a16207',

@@ -165,6 +165,45 @@ render a number in a tooltip that no source ever said.
 Sandworm, whose alias `IRIDIUM` collides with another group — match entries
 naming two different countries. None was filled; all are queued.
 
+### Vendor Threat Research
+
+| Source                                                                           | Endpoint             | Data Type                               | Schedule | Script                                                                   | Auth |
+| -------------------------------------------------------------------------------- | -------------------- | --------------------------------------- | -------- | ------------------------------------------------------------------------ | ---- |
+| GreyNoise, Acronis TRU, ESET, Unit 42, Talos, Microsoft, Securelist, Check Point | eight RSS/Atom feeds | Research reports, actor link candidates | Every 6h | `workers/src/feeds/vendor-research.js` → `vendor-research` Edge Function | None |
+
+**Nothing here is parsed for attribution, and that was measured.** Across
+**279 titles from these eight feeds, zero** carried an attribution a parser
+could read. Six named a nationality, and every one named a _victim_ or a
+_language_: "NightEagle targets Russian companies", "targeted spyware campaign
+in Pakistan", "how a Chinese-speaking actor turned Brazilian government sites
+into an SEO weapon". A nationality regex would have been wrong six times out of
+six.
+
+**What the titles do carry is the actor's name.** "Mustang Panda targets
+India's government and energy sectors" links to Mustang Panda, which Vigil
+already knows is CN from MITRE. Event from the vendor, country from the actor
+record — each half sourced to something that actually claimed it. Alias
+matching works: Sednit → APT28, ScarCruft → APT37, OceanLotus → APT32, Silk
+Typhoon → HAFNIUM.
+
+**Links are proposed, never applied.** `vendor_report_actors.confirmed` stays
+null until a person rules. Two rules keep the proposals honest, both learned
+from real false positives:
+
+- Matching every actor name linked "An AI-Orchestrated **Global** Campaign" to
+  a ransomware brand named `global`, and "NightEagle targets **Russian**
+  companies" to one named `Russian` — a report about Russian _victims_.
+  Matching is restricted to named groups.
+- A one-word match followed by whitespace and a capital is dropped: "**Mirage**
+  Kitten targeting aviation" matched `Mirage`, a Ke3chang alias, and proposed
+  an Iranian group's campaign as the work of two Chinese actors. A headline
+  colon is not the same thing — "Webworm: New burrowing techniques" is kept.
+
+**Licence: all eight are the vendors' copyright.** Vigil stores the title, URL
+and a short RSS summary — never the article body — and all eight are registered
+in `source_licences` as **not sellable**, because nobody has read their terms
+against this use.
+
 ### Government Attribution
 
 | Source                    | Endpoint                                                     | Data Type                                      | Schedule | Script                                                                   | Auth |

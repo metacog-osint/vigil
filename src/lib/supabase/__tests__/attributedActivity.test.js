@@ -99,14 +99,25 @@ describe('attribution strengths', () => {
     expect(new Set(labels).size).toBe(ATTRIBUTION_STRENGTHS.length)
   })
 
-  it('matches the five values the database check constraint allows', () => {
+  it('matches the six values the database check constraint allows', () => {
     expect([...ATTRIBUTION_STRENGTHS].sort()).toEqual([
       'affiliated',
       'aligned',
       'criminal',
+      'linguistic',
       'nexus',
       'state',
     ])
+  })
+
+  it('ranks a language observation below every other claim', () => {
+    // "A suspected Chinese speaker possibly working in UTC+8" is not an
+    // accusation against China. It must never outrank a claim that actually
+    // names a state's involvement, and it must not outrank `aligned` either -
+    // that at least asserts sympathy with a country.
+    for (const stronger of ['criminal', 'aligned', 'nexus', 'affiliated', 'state']) {
+      expect(strengthRank(stronger)).toBeGreaterThan(strengthRank('linguistic'))
+    }
   })
 })
 
