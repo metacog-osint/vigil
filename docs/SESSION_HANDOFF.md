@@ -520,9 +520,25 @@ toggle in the Auth dashboard. See §4.
   failed before deciding. `settings.spec.js:46` and `threat-actors.spec.js:9`
   are the two most frequent.
 
-- 13 open Dependabot PRs, two with conflicts. Mostly major-version bumps -
-  vite 5→7, eslint 8→9, react-router 6→7, react 18→19 - which is why they are
-  still open. Not something to merge unattended.
+- **13 open Dependabot PRs, and every one shows a red cross that means
+  nothing.** All were opened before PR #39, which is what took main from 21
+  failing tests to green, so their CI ran against a main that was already
+  broken. The failures are inherited, not caused by the bumps. **Do not read
+  them as "this bump breaks the build"** - `@dependabot rebase` on each is what
+  produces a real signal, and none had been rebased as of 21 September.
+
+  Five are CI-only `uses:` version bumps and genuinely low risk: #1 codecov
+  4→5, #2 checkout 4→6, #3 setup-node 4→6, #4 codeql 3→4, #5 upload-artifact
+  4→6.
+
+  Seven are major framework versions and are not a merge, they are a piece of
+  work: #11 eslint 8→9 needs the flat-config migration and would take the lint
+  gate with it; #12 react-router 6→7 and #8/#13 react 18→19 change APIs the app
+  uses; #10 vite 5→7 and #14 @vitejs/plugin-react 4→5 go together; #7 date-fns
+  3→4 changes the export shape.
+
+  #23 is the one with actual security value - 13 grouped patch updates - and it
+  is conflicting, so it needs the rebase most.
 
 ### Where to take the sources next
 
