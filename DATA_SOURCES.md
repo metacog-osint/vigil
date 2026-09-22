@@ -21,17 +21,17 @@ withheld** — the 186 being exactly what ETDA added.
 **Carried from the project's own records and not re-checked:** Ransomware.live,
 DB-IP. Confirm those against the source before relying on them.
 
-| Source                                 | Terms                                                                                | What that means here                                                                                                                                                                                                                                                 |
-| -------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Ransomware.live**                    | **Free tier is personal use only**                                                   | Documented as permitting personal use only, **which constrains any use beyond that**. It supplies all group profiles plus 11,256 of the victim countries. Every row carries `source = 'ransomware.live'`, so what would have to be replaced is identifiable exactly. |
-| ThreatCluster Ransomware-Intel         | **TLP:CLEAR** — "free to use, redistribute, and integrate. Attribution appreciated." | No restriction on use or redistribution. Attributed anyway.                                                                                                                                                                                                          |
-| SEC EDGAR                              | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
-| OFAC SDN                               | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
-| **ETDA / ThaiCERT Threat Group Cards** | **CC BY-NC-SA 4.0 — NonCommercial**                                                  | **Free to use now; must be removed from anything sold.** Supplies 186 actor origin countries, all carrying `origin_source = 'etda'`, and `actor_origins_commercial` already excludes them. The licence is re-read from the API response on every run.                |
-| California AG breach notices           | **US state government public record**                                                | Filed under Civil Code 1798.29/1798.82 and published as a public record. Sellable.                                                                                                                                                                                   |
-| CISA advisories                        | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
-| NCSC-UK                                | **Open Government Licence v3.0**                                                     | Free to use and redistribute, **including commercially**, provided the source is acknowledged. Vigil stores the advisory URL and the publishing government on every row, which satisfies it.                                                                         |
-| DB-IP (indicator location)             | **CC BY 4.0**                                                                        | **Attribution is required wherever located data is shown** — currently the IOC search page and the Help methodology. Any new view showing country needs it too.                                                                                                      |
+| Source                                  | Terms                                                                                | What that means here                                                                                                                                                                                                                                                 |
+| --------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ransomware.live**                     | **Free tier is personal use only**                                                   | Documented as permitting personal use only, **which constrains any use beyond that**. It supplies all group profiles plus 11,256 of the victim countries. Every row carries `source = 'ransomware.live'`, so what would have to be replaced is identifiable exactly. |
+| ThreatCluster Ransomware-Intel          | **TLP:CLEAR** — "free to use, redistribute, and integrate. Attribution appreciated." | No restriction on use or redistribution. Attributed anyway.                                                                                                                                                                                                          |
+| SEC EDGAR                               | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
+| OFAC SDN                                | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
+| **ETDA / ThaiCERT Threat Group Cards**  | **CC BY-NC-SA 4.0 — NonCommercial**                                                  | **Free to use now; must be removed from anything sold.** Supplies 186 actor origin countries, all carrying `origin_source = 'etda'`, and `actor_origins_commercial` already excludes them. The licence is re-read from the API response on every run.                |
+| State AG breach registries (CA, WA, OR) | **US state government public record**                                                | Filed under Civil Code 1798.29/1798.82 and published as a public record. Sellable.                                                                                                                                                                                   |
+| CISA advisories                         | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
+| NCSC-UK                                 | **Open Government Licence v3.0**                                                     | Free to use and redistribute, **including commercially**, provided the source is acknowledged. Vigil stores the advisory URL and the publishing government on every row, which satisfies it.                                                                         |
+| DB-IP (indicator location)              | **CC BY 4.0**                                                                        | **Attribution is required wherever located data is shown** — currently the IOC search page and the Help methodology. Any new view showing country needs it too.                                                                                                      |
 
 Sources not listed above have not been checked. That is a gap, not a statement
 that they are unrestricted.
@@ -108,10 +108,10 @@ contradicting itself rather than reporting a disagreement.
 
 ### Regulatory Disclosures
 
-| Source                       | Endpoint                                                           | Data Type                                                    | Schedule | Script                                                                         | Auth                       |
-| ---------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------ | -------------------------- |
-| SEC EDGAR 8-K Item 1.05      | `https://efts.sec.gov/LATEST/search-index?q="Item 1.05"&forms=8-K` | Material cybersecurity incidents **disclosed by the victim** | Daily    | `workers/src/feeds/sec-disclosures.js` → `sec-cyber-disclosures` Edge Function | None (User-Agent required) |
-| California AG breach notices | `https://oag.ca.gov/privacy/databreach/list`                       | **5,302 breach notifications, every cause**                  | Daily    | `workers/src/feeds/ca-breach-notices.js` → `ca-breach-notices` Edge Function   | None                       |
+| Source                                  | Endpoint                                                           | Data Type                                                    | Schedule | Script                                                                             | Auth                       |
+| --------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------- | -------------------------- |
+| SEC EDGAR 8-K Item 1.05                 | `https://efts.sec.gov/LATEST/search-index?q="Item 1.05"&forms=8-K` | Material cybersecurity incidents **disclosed by the victim** | Daily    | `workers/src/feeds/sec-disclosures.js` → `sec-cyber-disclosures` Edge Function     | None (User-Agent required) |
+| State AG breach registries (CA, WA, OR) | `oag.ca.gov`, `atg.wa.gov`, `justice.oregon.gov`                   | **8,812 breach notifications, every cause**                  | Daily    | `workers/src/feeds/state-breach-notices.js` → `state-breach-notices` Edge Function | None                       |
 
 **The California source is the one that stops Vigil being a ransomware-only
 platform.** All 39,575 incidents it holds are ransomware leak-site claims;
@@ -120,10 +120,29 @@ because the other sources were missing but because one table outnumbered
 everything else eighty to one, and a feed of a hundred rows could not change
 it.
 
-5,302 notifications filed under Civil Code 1798.29 and 1798.82, back to
-20 January 2012, covering intrusion, insider, lost device, misdirected mail and
-vendor compromise. 2,841 carry the date of the breach as well as the date it
-was reported; the rest are null because California published no incident date.
+8,812 notifications back to 20 January 2012, covering intrusion, insider, lost
+device, misdirected mail and vendor compromise:
+
+| State      | Notices | From     | Also publishes                                                 |
+| ---------- | ------: | -------- | -------------------------------------------------------------- |
+| California |   5,302 | Jan 2012 | —                                                              |
+| Washington |   1,871 | Aug 2015 | Residents affected, **categories of data exposed** (all 1,871) |
+| Oregon     |   1,639 | Oct 2015 | Breach date range, **discovery date**, people affected         |
+
+**`persons_affected` means different things in different states, and the schema
+says which.** Washington's column is "Number of Washingtonians Affected";
+Oregon's is "Number Affected" and its largest row is Marriott at 500,000,000 —
+the global figure. `persons_affected_scope` is `state_residents` or `total`,
+and `breach_notices_by_state` reports the two separately rather than summing
+them. Adding them would produce a number about nobody, and the first version of
+the view did exactly that.
+
+**"All fifty states" is not available**, checked 22 September: Texas is a
+Salesforce portal behind auth (401), New Hampshire blocks non-browser clients
+(403), Maine, Montana, Indiana and Vermont 404 at their documented paths, and
+Iowa's page carries no table. About a dozen states publish a list a machine can
+read; these are the three largest. Adding the next is a `REGISTRIES` entry in
+the Edge Function — a URL, its pagination and which column means what.
 
 It shares `victim_disclosures` with the SEC filings deliberately. An 8-K and a
 California notice are the _same_ kind of claim — the victim telling a regulator
