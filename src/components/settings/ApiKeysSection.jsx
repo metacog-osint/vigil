@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import { apiKeys } from '../../lib/apiKeys'
-import { useSubscription } from '../../contexts/SubscriptionContext'
 
 export default function ApiKeysSection({ userId }) {
-  const { canAccess } = useSubscription()
   const [keys, setKeys] = useState([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -15,16 +13,14 @@ export default function ApiKeysSection({ userId }) {
   const [usageStats, setUsageStats] = useState(null)
   const [copiedKey, setCopiedKey] = useState(null)
 
-  const hasApiAccess = canAccess('api_access')
-
   useEffect(() => {
-    if (hasApiAccess && userId) {
+    if (userId) {
       loadKeys()
       loadUsageStats()
     } else {
       setLoading(false)
     }
-  }, [userId, hasApiAccess])
+  }, [userId])
 
   async function loadKeys() {
     try {
@@ -98,45 +94,6 @@ export default function ApiKeysSection({ userId }) {
     navigator.clipboard.writeText(text)
     setCopiedKey(keyId)
     setTimeout(() => setCopiedKey(null), 2000)
-  }
-
-  // If user doesn't have API access, show upgrade prompt
-  if (!hasApiAccess) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-medium text-white">API Access</h3>
-            <p className="text-sm text-gray-400">Programmatic access to Vigil data</p>
-          </div>
-        </div>
-        <div className="bg-gray-800/50 rounded-lg p-6 text-center">
-          <svg
-            className="w-12 h-12 text-gray-600 mx-auto mb-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-            />
-          </svg>
-          <h4 className="text-white font-medium mb-2">API Access Available on Team Plan</h4>
-          <p className="text-gray-400 text-sm mb-4">
-            Get programmatic access to threat actors, incidents, vulnerabilities, and IOCs.
-          </p>
-          <a
-            href="/pricing"
-            className="inline-block px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors"
-          >
-            Upgrade to Team
-          </a>
-        </div>
-      </div>
-    )
   }
 
   return (

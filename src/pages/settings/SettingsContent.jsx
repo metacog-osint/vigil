@@ -29,7 +29,6 @@ import {
   CreateTagModal,
   SyncLogList,
 } from './SettingsComponents.jsx'
-import SubscriptionSection from './SubscriptionSection.jsx'
 import { useSettingsData, useSettingsActions } from './useSettingsData'
 
 export default function SettingsContent() {
@@ -48,7 +47,6 @@ export default function SettingsContent() {
     syncLogs,
     orgProfile,
     setOrgProfile,
-    subscription,
     isLoading,
     error,
     setError,
@@ -99,11 +97,6 @@ export default function SettingsContent() {
       )}
 
       <div className="space-y-6">
-        {/* Subscription */}
-        <SettingSection title="Subscription" description="Manage your Vigil subscription plan">
-          <SubscriptionSection subscription={subscription} userId={user?.id} onError={setError} />
-        </SettingSection>
-
         {/* API Keys */}
         <SettingSection
           title="API Access"

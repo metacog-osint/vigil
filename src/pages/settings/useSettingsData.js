@@ -9,7 +9,6 @@ import {
   syncLog as syncLogApi,
   orgProfile as orgProfileApi,
 } from '../../lib/supabase'
-import { getUserSubscription } from '../../lib/stripe'
 
 export function useSettingsData(user) {
   const [preferences, setPreferences] = useState(null)
@@ -17,7 +16,6 @@ export function useSettingsData(user) {
   const [tags, setTags] = useState([])
   const [syncLogs, setSyncLogs] = useState([])
   const [orgProfile, setOrgProfile] = useState(null)
-  const [subscription, setSubscription] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -39,11 +37,6 @@ export function useSettingsData(user) {
       setTags(tagsResult.data || [])
       setSyncLogs(syncResult.data || [])
       setOrgProfile(profileResult || null)
-
-      if (user?.id) {
-        const sub = await getUserSubscription(user.id)
-        setSubscription(sub)
-      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -65,7 +58,6 @@ export function useSettingsData(user) {
     syncLogs,
     orgProfile,
     setOrgProfile,
-    subscription,
     isLoading,
     error,
     setError,

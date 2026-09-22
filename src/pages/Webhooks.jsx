@@ -8,7 +8,6 @@ import {
   getEventsByCategory,
   validateWebhookUrl,
 } from '../lib/webhooks'
-import { canAccess } from '../lib/features'
 import { SmartTime } from '../components/TimeDisplay'
 
 const STATUS_COLORS = {
@@ -19,21 +18,18 @@ const STATUS_COLORS = {
 }
 
 export default function Webhooks() {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const [hookList, setHookList] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedHook, setSelectedHook] = useState(null)
   const [showCreate, setShowCreate] = useState(false)
   const [view, setView] = useState('list') // list | deliveries
 
-  // Feature check
-  const hasAccess = canAccess(profile?.tier, 'api_access')
-
   useEffect(() => {
-    if (user?.id && hasAccess) {
+    if (user?.id) {
       loadWebhooks()
     }
-  }, [user?.id, hasAccess])
+  }, [user?.id])
 
   async function loadWebhooks() {
     setLoading(true)
@@ -76,32 +72,6 @@ export default function Webhooks() {
     } catch (err) {
       alert('Failed to create webhook: ' + err.message)
     }
-  }
-
-  if (!hasAccess) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-              />
-            </svg>
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2">Team Feature</h2>
-          <p className="text-gray-400 mb-4">Webhooks are available on the Team plan and above.</p>
-        </div>
-      </div>
-    )
   }
 
   return (

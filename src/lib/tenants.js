@@ -433,8 +433,7 @@ export const tenantMembers = {
    *
    * The only one of these four that was missing the provisioning guard, so it
    * was the only one that would have reached a `can_access_tenant` function
-   * the database does not have. Nothing calls it today - the `canAccess` used
-   * around Settings comes from useSubscription and is unrelated - but an
+   * the database does not have. Nothing calls it today, but an
    * unguarded call here would have failed closed in a way that reads as "you
    * have no access" rather than "this feature is not provisioned".
    */
