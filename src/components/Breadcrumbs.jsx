@@ -26,7 +26,6 @@ const routeLabels = {
   assets: 'Assets',
   settings: 'Settings',
   help: 'Help',
-  pricing: 'Pricing',
   'api-docs': 'API Docs',
   'audit-logs': 'Audit Logs',
   status: 'Status',

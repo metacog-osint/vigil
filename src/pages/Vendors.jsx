@@ -10,7 +10,6 @@ import {
   EVENT_TYPES,
   getRiskColor,
 } from '../lib/vendors'
-import { canAccess } from '../lib/features'
 import { SmartTime } from '../components/TimeDisplay'
 
 const RISK_COLORS = {
@@ -28,7 +27,7 @@ const RISK_TEXT_COLORS = {
 }
 
 export default function Vendors() {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const [vendorList, setVendorList] = useState([])
   const [openEvents, setOpenEvents] = useState([])
   const [summary, setSummary] = useState(null)
@@ -38,13 +37,11 @@ export default function Vendors() {
   const [showCreate, setShowCreate] = useState(false)
   const [filter, setFilter] = useState({ risk: '', category: '' })
 
-  const hasAccess = canAccess(profile?.tier, 'attack_surface')
-
   useEffect(() => {
-    if (user?.id && hasAccess) {
+    if (user?.id) {
       loadData()
     }
-  }, [user?.id, hasAccess])
+  }, [user?.id])
 
   async function loadData() {
     setLoading(true)
@@ -90,34 +87,6 @@ export default function Vendors() {
     if (filter.category && v.category !== filter.category) return false
     return true
   })
-
-  if (!hasAccess) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-              />
-            </svg>
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2">Professional Feature</h2>
-          <p className="text-gray-400 mb-4">
-            Vendor Risk Monitoring is available on Professional and above.
-          </p>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6">

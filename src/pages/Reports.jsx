@@ -12,8 +12,6 @@ import {
   DAY_OPTIONS,
 } from '../lib/scheduledReports'
 import { useAuth } from '../hooks/useAuth'
-import { useSubscription } from '../contexts/SubscriptionContext'
-import { UpgradePrompt } from '../components/UpgradePrompt'
 import { format, formatDistanceToNow } from 'date-fns'
 
 const TIMEZONES = [
@@ -30,7 +28,6 @@ const TIMEZONES = [
 
 export default function Reports() {
   const { user } = useAuth()
-  const { canAccess, tier } = useSubscription()
   const userId = user?.id || 'anonymous'
 
   const [reports, setReports] = useState([])
@@ -41,15 +38,9 @@ export default function Reports() {
   const [selectedReport, setSelectedReport] = useState(null)
   const [error, setError] = useState(null)
 
-  const hasReportAccess = canAccess('scheduled_reports')
-
   useEffect(() => {
-    if (hasReportAccess) {
-      loadData()
-    } else {
-      setLoading(false)
-    }
-  }, [userId, hasReportAccess])
+    loadData()
+  }, [userId])
 
   async function loadData() {
     setLoading(true)
@@ -104,21 +95,6 @@ export default function Reports() {
     } catch (err) {
       setError(err.message)
     }
-  }
-
-  // Check access
-  if (!hasReportAccess) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">Scheduled Reports</h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Automated threat intelligence digests delivered to your inbox
-          </p>
-        </div>
-        <UpgradePrompt feature="scheduled_reports" currentTier={tier} />
-      </div>
-    )
   }
 
   if (loading) {
@@ -248,7 +224,6 @@ export default function Reports() {
           onSave={
             editingReport ? (updates) => handleUpdate(editingReport.id, updates) : handleCreate
           }
-          tier={tier}
         />
       )}
 
@@ -356,7 +331,7 @@ function StatusBadge({ status }) {
   )
 }
 
-function ReportModal({ report, onClose, onSave, tier }) {
+function ReportModal({ report, onClose, onSave }) {
   const [step, setStep] = useState(report ? 'configure' : 'template') // template or configure
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [name, setName] = useState(report?.name || '')
@@ -373,13 +348,7 @@ function ReportModal({ report, onClose, onSave, tier }) {
   )
   const [saving, setSaving] = useState(false)
 
-  // Frequency limits by tier
-  const allowedFrequencies =
-    tier === 'enterprise'
-      ? ['daily', 'weekly', 'monthly']
-      : tier === 'team'
-        ? ['daily', 'weekly', 'monthly']
-        : ['weekly', 'monthly'] // Professional
+  const allowedFrequencies = ['daily', 'weekly', 'monthly']
 
   const handleSelectTemplate = (template) => {
     setSelectedTemplate(template)
@@ -623,49 +592,42 @@ function ReportModal({ report, onClose, onSave, tier }) {
                 </div>
               </div>
 
-              {/* Branding (Enterprise only) */}
-              {tier === 'enterprise' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3">
-                    Report Branding
-                    <span className="ml-2 text-xs text-cyan-400">Enterprise</span>
-                  </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1">Logo URL</label>
+              {/* Branding */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-3">
+                  Report Branding
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Logo URL</label>
+                    <input
+                      type="url"
+                      value={branding.logoUrl || ''}
+                      onChange={(e) => setBranding({ ...branding, logoUrl: e.target.value })}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500"
+                      placeholder="https://company.com/logo.png"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Primary Color</label>
+                    <div className="flex gap-2">
                       <input
-                        type="url"
-                        value={branding.logoUrl || ''}
-                        onChange={(e) => setBranding({ ...branding, logoUrl: e.target.value })}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500"
-                        placeholder="https://company.com/logo.png"
+                        type="color"
+                        value={branding.primaryColor || '#06b6d4'}
+                        onChange={(e) => setBranding({ ...branding, primaryColor: e.target.value })}
+                        className="h-10 w-14 rounded cursor-pointer border border-gray-700"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1">Primary Color</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={branding.primaryColor || '#06b6d4'}
-                          onChange={(e) =>
-                            setBranding({ ...branding, primaryColor: e.target.value })
-                          }
-                          className="h-10 w-14 rounded cursor-pointer border border-gray-700"
-                        />
-                        <input
-                          type="text"
-                          value={branding.primaryColor || '#06b6d4'}
-                          onChange={(e) =>
-                            setBranding({ ...branding, primaryColor: e.target.value })
-                          }
-                          className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500"
-                          placeholder="#06b6d4"
-                        />
-                      </div>
+                      <input
+                        type="text"
+                        value={branding.primaryColor || '#06b6d4'}
+                        onChange={(e) => setBranding({ ...branding, primaryColor: e.target.value })}
+                        className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500"
+                        placeholder="#06b6d4"
+                      />
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Recipients */}
               <div>
