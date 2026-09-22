@@ -659,11 +659,6 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 
-# Firebase
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-
 # Abuse.ch APIs (ThreatFox, URLhaus, MalwareBazaar)
 ABUSECH_API_KEY=              # Required since 2025 - get from https://abuse.ch/api/#auth
 

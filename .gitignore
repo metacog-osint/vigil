@@ -33,9 +33,6 @@ Thumbs.db
 supabase/.branches
 supabase/.temp
 
-# Firebase
-.firebase/
-firebase-debug.log
 
 .vercel
 
