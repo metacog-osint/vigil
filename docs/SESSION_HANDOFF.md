@@ -117,6 +117,31 @@ country into silence.
 
 ---
 
+## 2a-quinquies. Free-tier headroom, measured 22 September
+
+Asked because the answer matters and had never been written down.
+
+|                                  |                                               |
+| -------------------------------- | --------------------------------------------- |
+| Database                         | **2,642 MB of 8,192 MB** (Supabase Pro) — 32% |
+| Everything added 21-22 September | **~9 MB**                                     |
+| Worker cron triggers             | **4 of 5** allowed on Workers Free            |
+| Cron invocations                 | ~29/day against 100,000/day                   |
+
+**The growth is not the feeds.** `entity_changelog` is 1,197 MB — 45% of the
+whole database — and `iocs` another 827 MB. Together they add roughly
+**95 MB/month and the IOC rate is rising** (15k rows in May, 37k in
+September). That is about four years of headroom at the current rate.
+
+**Nothing may be pruned to buy room.** The standing rule is that history is the
+product. So when this does become a problem the answer is a storage plan, not a
+DELETE, and it is worth starting that conversation well before 8 GB.
+
+All three state registries together are ~9 MB. A dozen more states would be
+tens of megabytes. The feeds are not the constraint and are not going to be.
+
+---
+
 ## 2a-quater. The ransomware-heaviness problem, and where it stands
 
 _22 September. The owner's instruction: "I do not want a ransomware-heavy
@@ -143,14 +168,27 @@ class Vigil holds.
 
 **What would move it further, in order:**
 
-1. **HHS OCR** - ~7,876 US healthcare breaches. Still the largest prize and
+1. ~~**More state AGs**~~ Done 22 September: Washington (1,871) and Oregon
+   (1,639) joined California, via one Edge Function with a per-state
+   `REGISTRIES` entry. **"All fifty" is not available** - Texas is Salesforce
+   behind auth, New Hampshire blocks non-browser clients, Maine/Montana/
+   Indiana/Vermont 404, Iowa has no table. About a dozen states publish a
+   readable list. Adding the next is a URL, its pagination and a column map.
+2. **HHS OCR** - ~7,876 US healthcare breaches. Still the largest prize and
    still out of reach: a session-based JSF portal with no export. Days of
-   scraper work, not an afternoon. Checked again on 22 September.
-2. **More state AGs** - Maine, Washington, Texas. California took an afternoon
-   and returned 5,302; the others are the same shape of work.
-3. **Presenting by class rather than by count.** Even at 87%, a dashboard that
-   ranks by row count will always look like a ransomware product. That is a
-   product decision, not a feed.
+   scraper work, not an afternoon. Checked again on 22 September. **The owner
+   has agreed this waits for its own session.**
+3. **Presenting by class rather than by count**, and letting the _user_ choose
+   the presentation rather than fixing one. Agreed as wanted; not started. Even
+   at 87%, a dashboard that ranks by row count will always look like a
+   ransomware product.
+
+**The trap in this data, which cost a wrong number before it was caught:**
+`persons_affected` is not comparable between states. Washington publishes
+"Number of Washingtonians Affected"; Oregon publishes "Number Affected", and
+its largest row is Marriott at 500,000,000 worldwide. `persons_affected_scope`
+says which, and `breach_notices_by_state` reports them separately. **Never sum
+that column across states.**
 
 **DOJ press releases were checked and rejected, and should not be re-tried
 without reading this.** Real JSON API, law enforcement, names actor and victim,
