@@ -1,11 +1,12 @@
-# Session handoff — 20–21 September 2026
+# Session handoff — 20–22 September 2026
 
-Written at the end of a long working session so the next one can pick up without
-re-deriving anything. Read this, then `README.md`, then the migration headers for
-whatever you are about to touch.
+Written so the next session can pick up without re-deriving anything. Read
+this, then `README.md`, then the migration headers for whatever you are about
+to touch — those headers carry the reasoning and are the strongest
+documentation in this repository.
 
-Start with §2a: there are three things to do before anything else, one of which
-is a single command.
+**Start with §2a.** Then read **§2b** before building any page: most of what
+was built on 21–22 September is in the database and invisible in the product.
 
 ---
 
@@ -45,410 +46,273 @@ Do not collapse them:
 
 ## 2. Where things stand
 
-_Last updated 21 September 2026, 04:20 UTC._
+_Last updated 22 September 2026._
 
-- **Branch:** `main`. PRs #35-#41 are merged. No feature branch is outstanding.
+- **Branch:** `main`. Everything is merged; no feature branch is outstanding.
 - **Supabase project:** `faqazkwdkajhxmwxchop`
-- **Migrations:** repo has 133 files, numbered to `135`, all applied. Live DB
-  numbers by timestamp, so repo filenames are for humans only.
-- **Tests:** ~1,081 passing (1,015 unit, 66 worker). Count drifts as sessions
-  edit specs.
-- **Lint:** 321 warnings against a threshold of **325**, ratcheted down from 350
-  and set in one place (`package.json`). `npm run lint` passes.
-- **The worker is deployed.** 21 September 04:13 UTC, 32 jobs. This had been
-  outstanding for three feeds across three sessions.
-- **Sources:** 30 feeds, of which two are governments attributing activity.
+- **Migrations:** numbered to `144`, all applied. The live DB numbers by
+  timestamp, so repo filenames are for humans only.
+- **Tests:** ~1,100 passing (1,018 unit, 82 worker).
+- **Lint:** 321 warnings against a ceiling of **325**, set only in
+  `package.json`.
+- **Worker:** deployed, 36 feeds watched, `ingestion_is_healthy()` true.
+- **Edge Functions:** 9, and the deployment now matches the repo exactly.
+- **Database:** 2,642 MB of 8,192 MB (32%). See §2c.
 
-**Tables the frontend queries that the live database lacks: 62 → 32** as of
-20 September. Every remaining one is listed in §4.
+### What the corpus is made of
 
-## 2a. The one thing to do first
+The reason this section exists: the owner's instruction on 22 September was
+"I do not want a ransomware-heavy platform, there are equal to more critical
+threats out there."
 
-**Use the review queue.** It is at `/review`. Sixty-five findings are open and
-**no verdict has ever been recorded through the page**. The write path has been
-exercised against the live database in a transaction that rolled back, and the
-page has been driven signed-out and under test, but nobody has yet ruled on a
-real finding. Doing so is both the highest-value work left and the only way to
-know the page is right.
+| Corpus                                     |   Rows |     Share |
+| ------------------------------------------ | -----: | --------: |
+| Ransomware leak-site claims                | 39,575 | **80.8%** |
+| Regulator breach notices (CA, WA, OR, SEC) |  8,895 | **18.2%** |
+| Vendor research reports                    |    286 |      0.6% |
+| ICS/OT advisories                          |    148 |      0.3% |
+| MITRE campaigns                            |     56 |      0.1% |
+| Government attribution advisories          |     16 |      0.0% |
 
-The other two items that stood here on 21 September are done: the worker is
-deployed and PRs #40 and #41 are merged.
-
-### What is in the queue now
-
-| Check                         | Count | What it asks                                                          |
-| ----------------------------- | ----- | --------------------------------------------------------------------- |
-| `victim_country_disagreement` | 25    | Two sources name different countries for one victim                   |
-| `sec_disclosure_candidate`    | 16    | A company filed an 8-K and a group claimed a company of that name     |
-| `leak_site_notice_candidate`  | 12    | A leak-site post that reads as an announcement, not a victim claim    |
-| `attribution_unstated`        | 1     | NCSC named Iran without saying what its relationship to the actors is |
-| `campaign_multiple_actors`    | 1     | MITRE attributes C0052 to two groups; `actor_id` holds one            |
-| others                        | 10    | Alias reviews, audit-log trust, vulnerability key quality             |
-
-**Start with the 16 SEC candidates.** Ruling on those turns "claimed by Qilin"
-into "claimed by Qilin, and the company told the SEC" - the only corroboration
-a leak-site feed cannot buy.
-
-Do not clear them quickly. "Not enough evidence" is a verdict, it keeps the
-finding queued, and it is the correct answer more often than the queue's length
-suggests.
+Ransomware was ~98.7% of this on 21 September. The diagnosis mattered more than
+any single feed: Vigil was never short of non-ransomware _sources_, it was that
+one table outnumbered all the others eighty to one, so only a high-volume
+non-ransomware source could move it.
 
 ---
 
-## 2a-bis. Two things a future session must not undo
+## 2a. Do these first
 
-**`source_licences` is the reason ETDA could be accepted.** Two of Vigil's
-sources are NonCommercial - ransomware.live and ETDA - and both are lawful
-today because Vigil is not sold. `source_licences.commercial_use` is the
-switch, `actor_origins_commercial` is the view a paid tier reads instead of
-`threat_actors`, and cutting a source is one UPDATE.
+**1. Use the review queue.** `/review`. **80 findings open, and no verdict has
+ever been recorded through the page.** It is the product's central claim and it
+has never been exercised for real. Everything else on this list is optional;
+this is not.
 
-Verified 21 September: **669 actor origins held, 483 sellable, 186 withheld**,
-the 186 being exactly what ETDA added. If a new source writes attribution, it
-must be registered in `source_licences` first - `apply_actor_origins` raises
-on an unregistered source rather than writing rows nobody can judge for
-resale.
+| Check                          | Count | What it asks                                                                                                  |
+| ------------------------------ | ----: | ------------------------------------------------------------------------------------------------------------- |
+| `victim_country_disagreement`  |    25 | Two sources name different countries for one victim                                                           |
+| `sec_disclosure_candidate`     |    16 | A company filed an 8-K and a group claimed a company of that name                                             |
+| `leak_site_notice_candidate`   |    13 | A leak-site post that reads as an announcement, not a victim claim                                            |
+| `vendor_attribution_candidate` |     8 | A vendor report whose wording may be an attribution                                                           |
+| `actor_origin_ambiguous`       |     5 | An actor matching ETDA entries that name two different countries                                              |
+| `leak_site_notice_review`      |     3 | Ruled once, queued again                                                                                      |
+| `actor_alias_review`           |     2 | Two names, one group?                                                                                         |
+| `attribution_unstated`         |     1 | NCSC named Iran without saying what its relationship to it is                                                 |
+| `campaign_multiple_actors`     |     1 | MITRE attributes C0052 to two groups; `actor_id` holds one                                                    |
+| `actor_origin_disagreement`    |     1 | OnionDog: Vigil says KP, ETDA says KR                                                                         |
+| five others                    |     5 | Audit-log trust, victim and vulnerability key quality, review authority, an actor that resumed after takedown |
 
-**A country nobody mapped is a country being dropped.** The ETDA function
-returns `unmapped_countries`, and the first run reported six - UK, UAE,
-Canada, Tunisia, Libya, Yemen, all short forms it had silently discarded.
-Keep that list in the response. Dropping it would turn the next unmapped
-country into silence.
+Start with the **16 SEC candidates**: ruling on those turns "claimed by Qilin"
+into "claimed by Qilin, and the company told the SEC".
+
+**2. Merge #42 and #43.** Both green including webkit, both supersede the old
+stale PRs. See §2d.
+
+**3. Read §2b before building any page.** Most of what was built on 21–22
+September is invisible in the product.
 
 ---
 
-## 2a-quinquies. Free-tier headroom, measured 22 September
+## 2b. What exists in the database and not on screen
 
-Asked because the answer matters and had never been written down.
+This is the largest gap in the project right now, and it is not a data gap.
 
-|                                  |                                               |
-| -------------------------------- | --------------------------------------------- |
-| Database                         | **2,642 MB of 8,192 MB** (Supabase Pro) — 32% |
-| Everything added 21-22 September | **~9 MB**                                     |
-| Worker cron triggers             | **4 of 5** allowed on Workers Free            |
-| Cron invocations                 | ~29/day against 100,000/day                   |
+| Data                       |   Rows | Query layer             | On screen           |
+| -------------------------- | -----: | ----------------------- | ------------------- |
+| `victim_disclosures`       |  8,895 | **none**                | **no**              |
+| `breach_notices_by_state`  | 3 rows | **none**                | **no**              |
+| `vendor_reports`           |    286 | `vendorReports.js`      | **no**              |
+| `vendor_report_actors`     |     21 | `vendorReports.js`      | **no**              |
+| `source_licences`          |     19 | `sourceLicences.js`     | **no**              |
+| `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**              |
+| `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer |
+
+Only the map's Attributed layer renders any of it. **8,895 regulator
+disclosures — 18% of the entire corpus, and the strongest evidence class Vigil
+holds — cannot be seen by a user at all.**
+
+Three things follow, in order of value:
+
+1. **A page for the breach notices**, with the state filter and map the owner
+   asked for on 22 September. `breach_notices_by_state` exists for exactly
+   this. There is no query module yet; write one in `src/lib/supabase/` and
+   re-export it from the monolith (see CLAUDE.md).
+2. **A review surface for vendor reports.** 21 actor links proposed and 8
+   attribution questions queued, none of them rulable through the product. This
+   is also what would finally write `linguistic` — the sixth
+   `attribution_strength` exists and nothing has ever set it.
+3. **Presentation the user controls.** Agreed with the owner on 22 September:
+   _the user_ decides how the data is presented rather than a fixed view. Even
+   at 80.8%, any dashboard that ranks by row count will look like a ransomware
+   product. This is the piece that actually delivers what was asked for.
+
+---
+
+## 2c. Free-tier headroom, measured 22 September
+
+|                                  |                                         |
+| -------------------------------- | --------------------------------------- |
+| Database                         | **2,642 MB of 8,192 MB** (Supabase Pro) |
+| Everything added 21–22 September | **~9 MB**                               |
+| Worker cron triggers             | **4 of 5** allowed on Workers Free      |
+| Cron invocations                 | ~29/day against 100,000/day             |
 
 **The growth is not the feeds.** `entity_changelog` is 1,197 MB — 45% of the
-whole database — and `iocs` another 827 MB. Together they add roughly
-**95 MB/month and the IOC rate is rising** (15k rows in May, 37k in
-September). That is about four years of headroom at the current rate.
+whole database — and `iocs` another 827 MB. Together about **95 MB/month, with
+the IOC rate rising** (15k rows in May, 37k in September). Roughly four years
+of headroom.
 
-**Nothing may be pruned to buy room.** The standing rule is that history is the
-product. So when this does become a problem the answer is a storage plan, not a
-DELETE, and it is worth starting that conversation well before 8 GB.
-
-All three state registries together are ~9 MB. A dozen more states would be
-tens of megabytes. The feeds are not the constraint and are not going to be.
+**Nothing may be pruned to buy room.** History is the product. So when this
+becomes a problem the answer is a storage plan, not a `DELETE`, and that
+conversation should start well before 8 GB rather than at it.
 
 ---
 
-## 2a-quater. The ransomware-heaviness problem, and where it stands
+## 2d. Dependabot
 
-_22 September. The owner's instruction: "I do not want a ransomware-heavy
-platform, there are equal to more critical threats out there."_
+The config was the problem, not the bumps. `.github/dependabot.yml` now groups
+npm majors and GitHub Actions, and Dependabot superseded the old PRs within a
+minute.
 
-**The diagnosis mattered more than the fix.** Vigil was not missing
-non-ransomware sources - it had ICS advisories, MITRE campaigns, vendor
-research and government attribution already. It was that `incidents` held
-39,575 rows and everything else held about 500, so one table outnumbered the
-rest eighty to one. A feed of a hundred rows could not have moved it.
+- **#42** — 10 npm minor/patch updates, rebased onto current main. **All checks
+  green, webkit included. Ready to merge.**
+- **#43** — 6 GitHub Actions bumps in one PR. **All green. Ready to merge.**
 
-| Corpus                                      |   Rows |     Share |
-| ------------------------------------------- | -----: | --------: |
-| Ransomware leak-site claims                 | 39,575 | **87.0%** |
-| Regulator breach notices (California + SEC) |  5,385 | **11.8%** |
-| Vendor research reports                     |    286 |      0.6% |
-| ICS/OT advisories                           |    148 |      0.3% |
-| MITRE campaigns                             |     56 |      0.1% |
-| Government attribution advisories           |     16 |      0.0% |
+Those two greens are the proof of something worth remembering: **the thirteen
+older PRs' red crosses were inherited, not caused.** Every one predated PR #39,
+which is what took main from 21 failing tests to green, so their CI ran against
+a main that was already broken.
 
-Ransomware was ~98.7% of the event corpus. It is 87% now, and the second
-category is the victim's own account to a regulator - the strongest evidence
-class Vigil holds.
-
-**What would move it further, in order:**
-
-1. ~~**More state AGs**~~ Done 22 September: Washington (1,871) and Oregon
-   (1,639) joined California, via one Edge Function with a per-state
-   `REGISTRIES` entry. **"All fifty" is not available** - Texas is Salesforce
-   behind auth, New Hampshire blocks non-browser clients, Maine/Montana/
-   Indiana/Vermont 404, Iowa has no table. About a dozen states publish a
-   readable list. Adding the next is a URL, its pagination and a column map.
-2. **HHS OCR** - ~7,876 US healthcare breaches. Still the largest prize and
-   still out of reach: a session-based JSF portal with no export. Days of
-   scraper work, not an afternoon. Checked again on 22 September. **The owner
-   has agreed this waits for its own session.**
-3. **Presenting by class rather than by count**, and letting the _user_ choose
-   the presentation rather than fixing one. Agreed as wanted; not started. Even
-   at 87%, a dashboard that ranks by row count will always look like a
-   ransomware product.
-
-**The trap in this data, which cost a wrong number before it was caught:**
-`persons_affected` is not comparable between states. Washington publishes
-"Number of Washingtonians Affected"; Oregon publishes "Number Affected", and
-its largest row is Marriott at 500,000,000 worldwide. `persons_affected_scope`
-says which, and `breach_notices_by_state` reports them separately. **Never sum
-that column across states.**
-
-**DOJ press releases were checked and rejected, and should not be re-tried
-without reading this.** Real JSON API, law enforcement, names actor and victim,
-US public domain - everything suggests it should work. It does not. DOJ's topic
-taxonomy is administrative: "Cybercrime" includes child exploitation and
-misbranded drug sales; "Countering Nation-State Threats" includes transporting
-defendants from Haiti. **Across 549 releases over two weeks, 14 matched those
-topics and zero were genuine cyber events.**
+**Seven major-version PRs remain** (#7, #8, #10–#14). Each is a piece of work
+rather than a merge: eslint 8→9 needs the flat-config migration and would take
+the lint gate with it; react-router 6→7 and react 18→19 change APIs the app
+uses; vite 5→7 and `@vitejs/plugin-react` 4→5 move together. They collapse into
+one `major-updates` PR on Dependabot's next scheduled run.
 
 ---
 
-## 2a-ter. Attribution sources, 21 September evening
+## 3. What the 20–22 September sessions built
 
-**Actor origin coverage 10.7% -> 14.9%** via ETDA/ThaiCERT (186 actors, 433
-agreements to 1 disagreement). NonCommercial, and cuttable: see 2a-bis.
+Kept short. The reasoning lives in the migration headers, which are the
+strongest documentation in this repository.
 
-**Vendor research is ingested as questions, not answers.** Eight feeds -
-GreyNoise, Acronis TRU, ESET, Unit 42, Talos, Microsoft, Securelist, Check
-Point - 285 reports, 21 actor links proposed, 8 attribution questions queued.
+**Evidence that is not a ransomware leak-site claim.** Vigil ingested nothing
+else until 21 September. It now has five more kinds:
 
-**The measurement that decided the design, and it should not be re-litigated:**
-across 279 vendor titles, **zero** carried an attribution a parser could read,
-and all six that named a nationality named a _victim_ or a _language_. A
-nationality regex over vendor titles is wrong six times out of six.
+| Source                                       | What it gives                                  | Licence                         |
+| -------------------------------------------- | ---------------------------------------------- | ------------------------------- |
+| CISA AA-series (`cisa-advisories`)           | Government-attributed state activity           | US public domain                |
+| NCSC-UK (`ncsc-advisories`)                  | A second government, attributing independently | OGL v3.0                        |
+| SEC EDGAR 8-K (`sec-edgar`)                  | The victim's own disclosure to its regulator   | US public domain                |
+| State AGs CA/WA/OR (`state-breach-notices`)  | 8,812 breach notices, every cause              | US state public record          |
+| Vendor research, 8 feeds (`vendor-research`) | Reports and the questions they raise           | Vendor copyright, not sellable  |
+| ETDA/ThaiCERT (`etda-actors`)                | Actor origin countries, 10.7% → 14.9%          | **CC BY-NC-SA — NonCommercial** |
 
-`linguistic` is the sixth `attribution_strength`, below `aligned`, for
-GreyNoise's "a suspected Chinese speaker possibly working in UTC+8". Nothing
-writes it automatically; a person sets it from the queue.
+**The map draws government attribution.** A third layer beside Victims and
+Attackers, coloured by `attribution_strength` rather than by count, because
+three advisories calling a country's actors "pro-Russia hacktivists" are not a
+stronger claim than one calling them "state-sponsored". Iran is now named
+independently by CISA and NCSC.
 
-**What is queued for you right now:** Acronis's "Red Heron exploits Gitea
-n-day flaw", flagged on the phrase "Chinese-speaking", `attributed_country`
-null. That is the Dataminr alert of 21 September, recorded honestly.
+**A licence switch that works.** `source_licences` records what every source
+permits; `actor_origins_commercial` is the view a paid tier reads instead of
+`threat_actors`. Verified: 669 actor origins held, **483 sellable, 186
+withheld** — exactly what ETDA added. Cutting a NonCommercial source is one
+`UPDATE`.
 
-**Two traps the matcher already learned, both in migration 139:**
+**24 MITRE campaigns linked** to their actors — Volt Typhoon to the KV Botnet
+activity, Sandworm to the 2022 Ukraine power attack.
 
-- Matching every actor name linked "NightEagle targets **Russian** companies"
-  to a ransomware brand named `Russian` - a report about Russian _victims_.
-- "**Mirage** Kitten targeting aviation" matched a Ke3chang alias and proposed
-  an Iranian group's campaign as two Chinese actors. The fix reads the title,
-  not the word list, because a compound name and a headline colon look
-  identical once punctuation is thrown away.
+**Three hand-overs unblocked**, all stuck behind an exhaustive-deps warning
+that was itself guarding a real render loop. Two further defects fell out:
+`alert_rules` has never existed under that name, and `user_alert_rules` names
+the column `rule_name`.
 
----
-
-## 2b. What the overnight session of 21 September did
-
-**The map draws government attribution.** This was the one thing left half-done
-at 04:00 and it is the visible change. A third layer on the Geography tab -
-Victims, Attackers, **Attributed** - coloured by `attribution_strength` and not
-by count, because three advisories calling a country's actors "pro-Russia
-hacktivists" are not a stronger claim than one calling them "state-sponsored",
-and a gradient would have said they were. The tooltip lists every phrase the
-advisories used, verbatim, alongside which is strongest and which governments
-said it.
-
-**A second government.** NCSC-UK, via `ncsc-advisories`. Iran is now named
-independently by CISA ("Iranian-Affiliated") and NCSC ("Iranian state actors"),
-which raises its strongest claim from `affiliated` to `state`.
-
-Four other national CERTs were checked and rejected with evidence: CERT-EU
-publishes vulnerability notices and monthly digests, CCCS publishes vendor patch
-advisories, JPCERT publishes Japanese-language vulnerability alerts, and ACSC
-refused every request. **A feed returning HTTP 200 and ten items is not a feed
-that says who did it** - the 21 September coverage note had verified the fetch
-and not the content, and called NCSC and CERT-EU the two cheapest wins. One of
-the two was.
-
-**The attribution table is testable.** It lived inside a Deno Edge Function
-where nothing could reach it, and the only record it worked was a paragraph
-saying a person had checked - after it had already been wrong twice. It is now
-`supabase/functions/_shared/attribution.ts`, which has no Deno imports, so
-vitest loads it under Node. Fourteen tests against real advisory titles.
-
-**24 MITRE campaigns link to their actors.** They named the actor in a text
-array and `actor_id` was null on all 56, so nothing could navigate from Volt
-Typhoon to the KV Botnet activity or from Sandworm to the 2022 Ukraine Electric
-Power Attack. One campaign is queued because MITRE names two groups for it.
-
-**Three hand-overs unblocked**, all stuck behind the same knot: an
-exhaustive-deps warning the commit hook rejects, guarding a real render loop.
-`useActorData`'s `loadActors` depended on `actors.length`, so doing what the
-rule asked would have made the effect re-run on every change to `actors` -
-and the effect sets `actors`. The count moved to a ref.
-
-Two defects fell out of the `alert_rules` rename that was called a one-liner:
-the table has never existed under that name, so the noisy-rules panel has
-always rendered empty rather than absent; and `user_alert_rules` names the
-column `rule_name`, so even with the right table every row would have been
-blank.
-
-**The IOC country filter was ignored in demo mode.** Typing a country returned
-unfiltered results with the field on screen claiming otherwise, and with an
-empty search box it returned every indicator, because `''.includes('')` is true
-for all of them. Now confirmed on the page rather than in the query layer -
-which is what the handover asked for, and is how this was found.
-
-**Commercial material is out of the public repository.** Three files, not the
-one the handover named: `PRICING_ANALYSIS.md`, and `SAAS_ROADMAP.md` and
-`COST_ANALYSIS.md` which were in `docs/archive/` - just as public. Preserved at
-`D:\Projects\Vigil-commercial`. **The git history still contains all three**,
-and `/pricing` is still a live route; both are noted in §4 as owner decisions.
+**Commercial material out of the public repository** — three files, not the one
+the handover named.
 
 ---
 
-## 3. What the 20-21 September sessions changed
+## 4. Everything outstanding
 
-### The night of 20-21 September (PRs #35-#40)
+### 4a. Needs a person, not a session
 
-**Sources.** Vigil ingested nothing but ransomware leak sites. It now has three
-more kinds of evidence:
+- **80 review-queue findings, zero verdicts ever recorded.** §2a.
+- **21 vendor→actor link proposals, none confirmed.** `vendor_report_actors`.
+- **8,879 of 8,895 regulator disclosures unreviewed.** Whether a California
+  notice and a leak-site claim describe one event is a judgment; `match_status`
+  stays `unreviewed` by design.
 
-| Source                         | What it gives                                | Licence                    |
-| ------------------------------ | -------------------------------------------- | -------------------------- |
-| ThreatCluster Ransomware-Intel | victim country - filled 6,042 incidents      | TLP:CLEAR, redistributable |
-| SEC EDGAR 8-K Item 1.05        | the victim's own disclosure to its regulator | US public domain           |
-| CISA AA-series advisories      | government-attributed state activity         | US public domain           |
+### 4b. Owner decisions, unchanged
 
-Victim country went from 28.6% to **43.9%** and from four months stale to
-current. ransomware.live had been its sole supplier and stopped on 29 May;
-ransomlook carries none.
+- **`/pricing` is a live route** with tiers and Subscribe buttons, and the
+  ~91-file monetization layer is still committed and public.
+- **The git history still holds the three commercial documents**, readable at
+  any commit before 21 September. Removing them means `git filter-repo` and a
+  force-push that breaks every clone and open PR.
+- **ransomware.live is personal-use-only** and supplies all group profiles plus
+  11,256 victim countries — the largest commercial exposure in the project.
+- **VulnCheck's key 401s on every run**; the feed has never succeeded.
+- **The six empty feature groups** — status page, chat integrations,
+  escalation/on-call, SSO, benchmarks, usage analytics. The test is: would you
+  demo it?
+- **Leaked-password protection** is off, in the Auth dashboard.
+- **12 of 19 registered sources have an unchecked licence**, including
+  `misp-galaxy` and `mitre-attack`, which between them supply most of the actor
+  origins Vigil holds. An unchecked licence is not a permissive one.
 
-**The review queue exists** (`/review`, migration 126). Verdicts are recorded
-from the product, append-only, reviewer taken from the JWT, rationale required.
+### 4c. Ready to build, no decision needed
 
-**Five defects with one root cause.** `src/lib/supabase.js` defined the query
-objects a second time alongside `src/lib/supabase/*.js`. See §6 - it is the
-most expensive thing in this repository's history and it is now guarded.
+- **The three pages in §2b.** Highest value.
+- **Malpedia is stale since 30 May.** Already ingested, already licensed,
+  already in the registry, and it carries actor country — the cheapest
+  remaining win on attribution coverage.
+- **`mitre` and `mitre-atlas` have never recorded a run.** Priority 4–5
+  weeklies; the campaign data was last written 20 September, so something ran.
+- **Team watchlists** have a schema and a query layer and no interface.
+- **`investigation_entities` is read-only** — the tab lists linked entities and
+  nothing writes one.
+- **`settings.spec.js:46`** is selector soup that has failed on three browsers.
 
-**Security.** Six SECURITY DEFINER functions were callable without signing in
-(125); 66 functions had no pinned `search_path` (127).
+### 4d. Sources: what to do next, and what not to re-try
 
-**The e2e suite no longer touches production** (§6), and main's CI went from 21
-failing tests to green.
+**Do next, in order:**
 
-### Earlier on 20 September
+1. **HHS OCR** — ~7,876 US healthcare breaches, the victim's own account to a
+   regulator. **The owner has agreed this gets its own session.** Re-checked
+   22 September: a session-based JSF portal with ViewState and no export. Days
+   of scraper work.
+2. **More state AGs.** About a dozen publish a readable list; three are in.
+   Adding one is a `REGISTRIES` entry in `state-breach-notices` — a URL, its
+   pagination and a column map.
+3. **Connecting breach notices to existing sources** — the owner's idea on
+   22 September. A California notice and a leak-site claim for the same
+   organisation is a candidate, not a fact, so it belongs in the queue.
 
-**Honesty on surfaces a visitor sees**
+**Checked and rejected. Do not re-try without reading the evidence:**
 
-- Landing page 500 handling: a failed count rendered `0`. It renders `—` now.
-  Both copies of `getOverview` collapsed into one. (`05396e5`)
-- 24 leak-site posts that were not victim claims moved to `leak_site_notices`,
-  generalising 095 beyond LockBit. `detect_leak_site_notices()` queues future
-  candidates and never moves a row. (`e685b8e`, applied)
-- Play redacts victim names with `?` where other groups use `*`; 39 rows were
-  reading as ordinary victims. (`70a4fe5`, applied)
+| Source                                  | Why not                                                                                                                                                                                                                                                            |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **DOJ press releases**                  | Real JSON API, looks ideal. **549 releases over two weeks: 14 topic matches, zero genuine cyber events.** Its taxonomy is administrative — "Cybercrime" includes child exploitation, "Countering Nation-State Threats" includes transporting defendants from Haiti |
+| **CERT-EU**                             | Security advisories are vulnerability notices with no attribution; threat-intelligence is monthly digests covering dozens of unrelated events                                                                                                                      |
+| **CCCS (Canada)**                       | Entirely vendor patch notices: "SolarWinds security advisory (AV26-941)"                                                                                                                                                                                           |
+| **JPCERT**                              | 29 Japanese-language vulnerability alerts, no attribution                                                                                                                                                                                                          |
+| **ACSC (Australia)**                    | cyber.gov.au refused every request                                                                                                                                                                                                                                 |
+| **Texas AG**                            | HTTP 401 — Salesforce portal behind auth                                                                                                                                                                                                                           |
+| **New Hampshire AG**                    | HTTP 403 — blocks non-browser clients                                                                                                                                                                                                                              |
+| **Maine, Montana, Indiana, Vermont AG** | 404 at their documented paths                                                                                                                                                                                                                                      |
+| **Iowa AG**                             | HTTP 200, but the page carries no table                                                                                                                                                                                                                            |
+| **GreyNoise API**                       | Returns an IP's classification and geolocation — where the box is, not who rented it. Its _research blog_ is ingested and is a different thing                                                                                                                     |
 
-**Queries that had never once succeeded**
+### 4e. Never started
 
-- `vulnerabilities` has no `id` column (key is `cve_id`) — fixed in `compare.js`,
-  `whatsNew.js` and later `sharedWatchlists.js`. (`47c25ec`, `07ded75`)
-- `saved_searches` was missing 9 columns its own UI writes; the table held zero
-  rows because nothing could ever be saved. (`47c25ec`, migration 100)
-
-**Features the sidebar linked to that had no tables**
-
-- Investigations (8 tables + view) — `117`
-- Attack surface / Assets (4 tables + 2 views) — `118`
-- Custom IOC lists (3 tables + view) — `119`
-- Teams (4 tables) — `120` ← **product decision: Vigil has teams**
-- Audit log unified and completed — `121`
-- Vendor risk (4 tables, 2 views, scoring RPC) — `122`
-- Team watchlists repointed and completed — `123`
-
-**Repository hygiene**
-
-- Deleted 20 unimported `src/lib` modules and all Firebase remnants; 10,470 lines,
-  and a 55.6 kB `vendor-firebase` chunk left the production bundle. (`0c608bb`)
-- `api/` brought into the lint path — the Stripe webhook, SCIM and auth helpers
-  had never been statically analysed. (`6b6bc06`)
-- README rewritten around the methodology. (`4b67040`)
-
----
-
-## 4. What is left
-
-### Needs a decision from the owner
-
-Nothing below is blocked on engineering. Each is "finish it / hide it / leave it",
-and the test is **would you demo it?**
-
-| Feature                  | Missing                        | Note                                     |
-| ------------------------ | ------------------------------ | ---------------------------------------- |
-| **Status page**          | 5 tables + `get_system_status` | Matters once customers watch uptime      |
-| **Chat integrations**    | 4 tables + 1 view              | Slack/Teams is how an MSP consumes this  |
-| **Escalation / on-call** | 6 tables + 5 RPCs              | Needs a working alert sender first       |
-| **SSO**                  | 3 tables                       | Enterprise sales gate                    |
-| **Benchmarks**           | 3 tables                       | Needs a customer base to compare against |
-| **Usage analytics**      | 4 tables + 3 views             | Internal only, low stakes                |
-
-### Belongs to another session's lane
-
-- **`webhooks` / `webhook_deliveries`** (2 tables). Schema is a one-hour job, but
-  nothing _sends_ webhooks. Attach to whatever the alert-delivery work lands
-  (`104_alert_delivery.sql`) rather than building it in isolation.
-- ~~**`alert_rules` → `user_alert_rules`**~~ Done 21 September, and it was not
-  a one-line rename: see §2b and the trap in §6. `processAnalytics` hoisted out
-  of the component, and two further defects found in the doing.
-
-### Done the evening of 20 September
-
-Left here because the reasoning is worth keeping, not because there is work in it.
-
-- **The review queue exists** (`/review`, migration 126). Verdicts are recorded
-  from the product, append-only, with the reviewer taken from the JWT and a
-  rationale the database insists on. §7 used to say build this.
-- **Group profiles are reachable.** There was no `/actors/:id` route, and the
-  protected route group had no catch-all, so any unmatched path rendered an
-  empty `<main>` - indistinguishable from a page that failed to load.
-- **The dashboard no longer contradicts itself.** The week-over-week tile
-  compared a partial calendar week against a full one; on a Sunday that was one
-  day against seven, reported as a 94% fall beside a rolling seven-day figure.
-- **Six SECURITY DEFINER functions were callable without signing in**
-  (migration 125). Revoking from `anon` alone would have done nothing - the
-  grant was to PUBLIC, and `anon` is a member of it.
-- **OFAC fetches from a Supabase Edge Function.** Cloudflare's edge could not
-  complete the handshake with Treasury (HTTP 525, nine attempts); Supabase's
-  network does it in 672 ms for all 29 MB. **Inert until `npm run deploy` is run
-  from `workers/`** - there is no CI deploy for the worker.
-
-### Ready to do, no decision needed
-
-- ~~**`TenantProvider` calls four RPCs that do not exist**~~ Stale as written.
-  `TENANCY_PROVISIONED = false` already guarded three of the four, and a page
-  load was checked in the browser on 21 September: **no RPC request is made at
-  all**. The fourth, `tenantMembers.canAccess`, was unguarded and had no
-  callers; it is guarded now. Nothing to do.
-- **Team watchlists have a schema and a query layer and no interface.** Nothing
-  renders `sharedWatchlists`. Small feature build.
-- **`investigation_entities` is read-only.** The Entities tab lists linked
-  entities; nothing writes one. The table exists and is empty, so the tab says
-  "No linked entities", which is true.
-- ~~**`detect_leak_site_notices()` is not scheduled**~~ Hourly since
-  21 September (`leak-site-notices` in the registry, migration 133).
-- ~~**`npm run lint` vs CI disagree**~~ One number, in `package.json`, ratcheted
-  to 325 on 21 September against an actual 321.
-- ~~**`CLAUDE.md` is dated January**~~ Updated 21 September. "Add a data source"
-  described `scripts/ingest-{source}.mjs`, which is not how any source added in
-  the last two days works; it now describes the Edge Function → worker →
-  registry → `feed_expectations` → deploy path.
-
-### Open review-queue items (analyst judgment, not code)
-
-In `data_quality_findings`, waiting on a recorded verdict:
-
-- `babuk2` / `satanlock` — reported as linked operators, not a shared brand
-- `ransomedvc2` / `rebornvc` — successor claim resting on three incidents
-- Monti's 19 `"<victim> - Press Release"` rows — 11 duplicate an existing row,
-  **8 are the only record of that victim and must not be removed**
-- `radiant` / "Dutch ???" and `arcusmedia` / "New .Gov ?" — claims with the
-  victim name withheld; redaction or notice?
-- 6 incidents whose `victim_name` is the leak site's HTML block — **5 name the
-  victim inside the markup**, so they must not be hidden
-- 11 `leak_site_notice_candidate` rows, mostly Ragnar Locker
-  `"Announcement: <company> going to be leaked"`, which _do_ name a victim
-- `audit_log_trust` — browser-written audit entries are self-reported
-
-**None of these have a UI.** The only way a verdict has ever been recorded is a
-hand-written migration. Building that page is the single highest-value feature
-left: it is the product's central claim, and it currently has no product behind
-it.
+Shadow mode · victim identity resolution · lead time as a statistic (the SEC
+and state data make this computable — Krispy Kreme 8 days, Key Tronic 21) ·
+provenance on every number · AI summaries into the queue · regression suite ·
+daily test alert · drift checks · indicator data-quality debt · database
+performance baseline · engine contract views · `webhooks` /
+`webhook_deliveries` (attach to whatever alert-delivery work lands) · the
+offshoot items.
 
 ---
 
@@ -581,9 +445,46 @@ them. When a filter is added, add it to both paths.
 migration that hit this rolled back cleanly, which was checked before retrying -
 as `§5` says to.
 
+**The same column name can mean two different quantities.** Washington's breach
+registry publishes "Number of Washingtonians Affected". Oregon's publishes
+"Number Affected", and its largest row is Marriott at 500,000,000 — the global
+figure. Both landed in `persons_affected`, and the first version of
+`breach_notices_by_state` summed them, reporting "1,397,860,427 people affected
+in Oregon" beside a Washington figure that was a real fact about Washington.
+
+`persons_affected_scope` now says which is which and the view reports them
+separately. **Never sum that column across states.** It was caught by reading
+the largest row rather than the row count, which is the general lesson: a
+column full of plausible numbers hides this, and the extremes do not.
+
+**`create or replace view` cannot rename a column either**, not just insert
+one. It fails with "cannot change name of view column". Drop and recreate, and
+check what depends on the view first.
+
 **`create or replace view` cannot insert a column in the middle.** New columns
 go last, or the statement fails with "cannot change name of view column". The
 frontend selects by name, so last is fine.
+
+**A name match is not a mention.** Matching every actor name against vendor
+report titles linked "An AI-Orchestrated **Global** Campaign" to a ransomware
+brand named `global`, and "NightEagle targets **Russian** companies" to one
+named `Russian` — a report about Russian _victims_. Restricting to named groups
+fixed both.
+
+Then "**Mirage** Kitten targeting aviation" matched `Mirage`, a Ke3chang alias,
+proposing an Iranian group's campaign as the work of two Chinese actors. The
+obvious fix — drop a one-word match whose next word is capitalised — also
+removed four true positives, because the word splitter had discarded
+punctuation and "Mirage Kitten" looked identical to "Webworm: New burrowing
+techniques". **Read the original text, not the tokenised version**, when the
+distinction you need is punctuation.
+
+**Regex-per-name does not scale; n-grams do.** Testing 2,322 actor names
+against every title timed out on six of eight feeds. Splitting titles into 1-,
+2- and 3-word n-grams normalised with `actor_key` and joining on an index took
+it from 67.8s and six failures to 4.9s and none. The same shape of fix applied
+to `apply_actor_origins`, which hit the statement timeout at 11 seconds by
+unnesting aliases in a correlated subquery.
 
 **`format:check` reports ~300 files locally and 3 in CI.** The working tree has
 CRLF endings and Prettier expects LF, so a local run flags almost everything. CI
@@ -604,166 +505,28 @@ Watch the Vercel dashboard or the GitHub deployment, not the site itself.
 
 ---
 
-## 6a. Open work, as of 04:20 on 21 September
-
-### Started and not finished
-
-Nothing. The map layer, the second government, the campaign links, the IOC
-country filter and the three blocked hand-overs all landed in PR #40.
-
-### Needs a person, not a session
-
-**Sixty-five findings, no verdict ever recorded.** See §2a. This is the only
-item that is both high-value and completely unblocked.
-
-### Owner decisions, unchanged
-
-VulnCheck's key (401 on every run - the feed has still never succeeded), the
-six empty feature groups, the ransomware.live licence, and the leaked-password
-toggle in the Auth dashboard. See §4.
-
-**Two new ones, both about material that is already public:**
-
-- **The git history still holds the three commercial documents**, readable at
-  any commit before 21 September. Removing them means `git filter-repo` and a
-  force-push that breaks every clone and every open PR, so it was deliberately
-  not done. The alternative is to treat the content as disclosed and move on.
-- **`/pricing` is still a live route** on vigil.theintelligence.company showing
-  tiers and Subscribe buttons. Taking a public pricing page down is a
-  commercial decision.
-
-### Small and known
-
-- ~~`ofac-reachability-probe` Edge Function~~ **Deleted 21 September.** It
-  needed a Supabase management token, which neither the MCP nor the environment
-  had; `npx supabase login` once was enough. Checked first that nothing
-  referenced it - no caller, no registry entry, no row in `feed_expectations`,
-  `feed_health` or `sync_log`.
-
-- **Edge Functions and the repo have drifted, in both directions.** Found while
-  deleting the probe; nothing is broken, so this is tidying rather than a bug.
-
-  Deployed and orphaned: **`ingest-ransomwatch`** - two runs ever, both on
-  13 January, no caller. `scripts/ingest-ransomwatch.mjs` is a standalone local
-  script and does not invoke it. Its source is in the repo, so deleting the
-  deployment loses nothing.
-
-  In the repo and never deployed: `calculate-trends`, `ingest-abusech`,
-  `ingest-cisa-kev`. The last is the one worth understanding rather than
-  removing - `cisa-kev` is a critical feed and it works, because the worker
-  fetches KEV directly and has never used that function.
-
-- `mitre` and `mitre-atlas` have still never recorded a run. They are priority
-  4-5 weeklies, so this may simply be their turn not arriving - the campaign
-  data itself was last written on 20 September, so something ran.
-- **The webkit e2e suite is flaky under load, and this is not fixed.** Four
-  specs were repaired on 21 September - `vulnerabilities`, `export`,
-  `incidents`, `watchlists` - and `navigateTo` now retries a missed popstate
-  and throws with the path rather than letting assertions run against the
-  dashboard. That is a real improvement and it is not a cure.
-
-  The numbers, measured rather than guessed: run in full on a busy machine, the
-  suite fails **5** tests without the `navigateTo` change and **6** with it, in
-  different sets each run. The four targeted specs pass 33/33 when run
-  together. So the change is not a regression, and the remaining class is the
-  same shape - an assertion with a five-second default running against a
-  destination that has not finished rendering.
-
-  CI is less loaded and usually passes. **A red webkit job is therefore not
-  automatically a real failure, and not automatically noise.** Read which tests
-  failed before deciding. `settings.spec.js:46`, `threat-actors.spec.js:9` and
-  `vulnerabilities.spec.js:9` are the most frequent.
-
-  **Do not try to tune this locally.** Four full-suite runs on the same machine
-  and the same commit produced 2, 5, 6 and 6 failures in different
-  combinations. The run-to-run variance is larger than the effect of any change
-  being tested, so a local run cannot tell you whether a fix worked. Raising
-  Playwright's assertion timeout from 5s to 12s was tried and reverted on
-  exactly this basis: the run after it was worse, which proves nothing either
-  way, and keeping an unproven change that makes flakiness quieter is the
-  wrong trade for this project.
-
-  What was kept is what could be proven: the four specs whose assertions were
-  genuinely wrong, `navigateTo`'s retry-and-arrival check, and a missing
-  `.first()` in `threat-actors.spec.js` that made a two-heading page a
-  strict-mode failure. Measure the rest on CI, over several runs, one change at
-  a time.
-
-- **Dependabot: 13 PRs became 9, and the grouped ones are green.** The config
-  was the problem, not the bumps. `.github/dependabot.yml` grouped npm minor
-  and patch but left majors ungrouped (seven PRs) and had no grouping at all
-  for GitHub Actions (five PRs). Both are grouped now, and Dependabot
-  superseded the old ones within a minute:
-  - **#42** replaces #23 — 10 npm minor/patch updates, rebased onto current
-    main. **All checks green, webkit included.**
-  - **#43** replaces #1-#5 — 6 GitHub Actions bumps in one PR. **All green.**
-
-  Those two greens are the proof of the note below: the old PRs' red crosses
-  were inherited, not caused. Both are ready to merge whenever you want them.
-
-  The seven major-version PRs (#7, #8, #10-#14) are still individual; the
-  `major-updates` group collapses them on Dependabot's next scheduled run, or
-  sooner if they are closed. Each is a piece of work rather than a merge -
-  eslint 8->9 needs the flat-config migration, react-router 6->7 and react
-  18->19 change APIs the app uses.
-
-- **The historical note, kept because the mistake is easy to repeat:** All were opened before PR #39, which is what took main from 21
-  failing tests to green, so their CI ran against a main that was already
-  broken. The failures are inherited, not caused by the bumps. **Do not read
-  them as "this bump breaks the build"** - `@dependabot rebase` on each is what
-  produces a real signal, and none had been rebased as of 21 September.
-
-  Five are CI-only `uses:` version bumps and genuinely low risk: #1 codecov
-  4→5, #2 checkout 4→6, #3 setup-node 4→6, #4 codeql 3→4, #5 upload-artifact
-  4→6.
-
-  Seven are major framework versions and are not a merge, they are a piece of
-  work: #11 eslint 8→9 needs the flat-config migration and would take the lint
-  gate with it; #12 react-router 6→7 and #8/#13 react 18→19 change APIs the app
-  uses; #10 vite 5→7 and #14 @vitejs/plugin-react 4→5 go together; #7 date-fns
-  3→4 changes the export shape.
-
-  #23 is the one with actual security value - 13 grouped patch updates - and it
-  is conflicting, so it needs the rebase most.
-
-### Where to take the sources next
-
-`docs/THREAT_COVERAGE_GAPS.md` has the ranked list, rewritten on 21 September
-after the feeds were read rather than only fetched. The short version:
-
-**HHS OCR is the richest thing left.** ~7,876 US healthcare breaches since
-2009, each 500+ individuals, each the victim's own account to a regulator. High
-value and awkward: the official portal is a session-based JSF page that 302s,
-so it needs a scraper or a third-party mirror, not an afternoon.
-
-Then state AG breach notices (California, Maine, Washington, Texas - free, one
-scraper each), then DOJ indictments, then vendor research into the review queue
-rather than a parser.
-
 ---
 
 ## 7. If you only do one thing
 
-**Use the review queue**, at `/review`. Sixty-five findings are waiting on a
-verdict and not one has ever been recorded through the page. Every one is a
-judgment call no amount of engineering will settle — which two names are one
-group, whether a post is a victim claim, whether an advisory naming Iran
-without saying how means state or something weaker.
+**Use the review queue**, at `/review`. Eighty findings are waiting and not one
+verdict has ever been recorded through the page.
 
-Two groups are worth starting with. **Sixteen SEC candidates**: a company filed
-an 8-K Item 1.05 saying a material cybersecurity incident occurred, and a
-ransomware group claimed an organisation of the same name. Ruling on those
-turns "claimed by Qilin" into "claimed by Qilin, and the company told the SEC" —
-the only corroboration a leak-site feed cannot buy. **Twenty-five country
-disagreements**, where two sources name different countries for the same victim
-and neither was applied.
+Every one is a judgment no amount of engineering will settle — which two names
+are one group, whether a post is a victim claim, whether an advisory naming
+Iran without saying how means state or something weaker. **Sixteen SEC
+candidates** are the place to start: a company filed an 8-K Item 1.05 saying a
+material incident occurred, and a ransomware group claimed an organisation of
+the same name. Ruling on those turns "claimed by Qilin" into "claimed by Qilin,
+and the company told the SEC" — the only corroboration a leak-site feed cannot
+buy.
 
-Both groups exist because the sources refused to guess, and the queue grew
-again overnight for the same reason: NCSC published "Iranian cyber targeting of
-dissidents", which names a country and not the relationship, and MITRE
-attributes one campaign to two groups where the schema holds one. Neither was
-resolved by a regular expression. That is the mechanism working, and it
-produces work rather than removing it.
+The queue grew by 22 between 20 and 22 September, and every addition was a
+source refusing to guess: NCSC naming Iran without saying how, MITRE
+attributing one campaign to two groups, ETDA disagreeing with Vigil about
+OnionDog, GreyNoise calling someone "a suspected Chinese speaker". **That is
+the mechanism working. It produces work rather than removing it, and the work
+has never once been done.**
 
 Clearing them through the page is also the only way to know the page is right.
 It has been driven signed-out and under test, and its write path has been
