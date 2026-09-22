@@ -1,6 +1,6 @@
 # CLAUDE.md - AI Assistant Context
 
-> **Last Updated:** 21 September 2026 | **Version:** 2.3.0
+> **Last Updated:** 22 September 2026 | **Version:** 2.4.0
 >
 > **Parts of this file are dated.** Read
 > [`docs/SESSION_HANDOFF.md`](./docs/SESSION_HANDOFF.md) first: it carries current
@@ -184,6 +184,15 @@ cd workers && npm run deploy   # The scheduled feeds. NOT run by CI.
    question in `data_quality_findings` for a person. A regular expression
    deciding whether "Pro-Russia hacktivists" means the Russian state is how
    two false attributions reached the database.
+8. **A new source must be registered in `source_licences` first.**
+   `apply_actor_origins` and `apply_vendor_research` raise on an unregistered
+   source rather than writing rows nobody can judge for resale. Two sources are
+   NonCommercial; `actor_origins_commercial` is how they come out of a paid
+   tier.
+9. **Building a page? Read `docs/SESSION_HANDOFF.md` §2b first.** 8,895
+   regulator disclosures, 286 vendor reports and the whole licence layer are in
+   the database with no page rendering them. That gap is larger than any
+   remaining data gap.
 
 ---
 
