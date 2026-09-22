@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { watchlists as watchlistsApi } from '../lib/supabase'
 import { EmptyState, SkeletonCard, ErrorMessage, TimeAgo } from '../components'
-import { FeatureGate } from '../components/UpgradePrompt'
 
 const ENTITY_TYPES = [
   { value: 'actor', label: 'Threat Actors', icon: '👤', color: 'bg-red-500' },
@@ -227,63 +226,60 @@ export default function Watchlists() {
   }
 
   return (
-    <FeatureGate feature="watchlist">
-      <div className="p-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Watchlists</h1>
-            <p className="text-gray-400 mt-1">Track entities of interest</p>
-          </div>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-cyber-accent text-white rounded-lg hover:bg-cyber-accent/80 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            New Watchlist
-          </button>
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Watchlists</h1>
+          <p className="text-gray-400 mt-1">Track entities of interest</p>
         </div>
-
-        {error && <ErrorMessage message={error} className="mb-4" />}
-
-        {/* Content */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <SkeletonCard key={i} />
-            ))}
-          </div>
-        ) : watchlists.length === 0 ? (
-          <EmptyState
-            title="No watchlists yet"
-            description="Create a watchlist to start tracking threat actors, vulnerabilities, or IOCs"
-            action={{
-              label: 'Create Watchlist',
-              onClick: () => setIsCreateModalOpen(true),
-            }}
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {watchlists.map((watchlist) => (
-              <WatchlistCard key={watchlist.id} watchlist={watchlist} onDelete={handleDelete} />
-            ))}
-          </div>
-        )}
-
-        {/* Create Modal */}
-        <CreateWatchlistModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onCreate={handleCreate}
-        />
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-cyber-accent text-white rounded-lg hover:bg-cyber-accent/80 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          New Watchlist
+        </button>
       </div>
-    </FeatureGate>
+
+      {error && <ErrorMessage message={error} className="mb-4" />}
+
+      {/* Content */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      ) : watchlists.length === 0 ? (
+        <EmptyState
+          title="No watchlists yet"
+          description="Create a watchlist to start tracking threat actors, vulnerabilities, or IOCs"
+          action={
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="px-4 py-2 bg-cyber-accent text-white rounded-lg hover:bg-cyber-accent/80 transition-colors"
+            >
+              Create Watchlist
+            </button>
+          }
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {watchlists.map((watchlist) => (
+            <WatchlistCard key={watchlist.id} watchlist={watchlist} onDelete={handleDelete} />
+          ))}
+        </div>
+      )}
+
+      {/* Create Modal */}
+      <CreateWatchlistModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreate={handleCreate}
+      />
+    </div>
   )
 }

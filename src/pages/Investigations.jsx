@@ -12,8 +12,6 @@
  */
 import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
-import { useSubscription } from '../contexts/SubscriptionContext'
-import { UpgradePrompt } from '../components/UpgradePrompt'
 import {
   useInvestigationData,
   useInvestigationActions,
@@ -29,10 +27,7 @@ import {
 
 export default function Investigations() {
   const { user } = useAuth()
-  const { canAccess, tier } = useSubscription()
   const userId = user?.id || 'anonymous'
-
-  const hasAccess = canAccess('investigations') || canAccess('threat_hunts')
 
   // Filters state
   const [filters, setFilters] = useState({ status: '', category: '', search: '' })
@@ -54,7 +49,7 @@ export default function Investigations() {
     setError,
     loadData,
     loadInvestigation,
-  } = useInvestigationData(userId, hasAccess, filters)
+  } = useInvestigationData(userId, filters)
 
   // Actions
   const { handleCreate, handleUpdateStatus, handleDelete } = useInvestigationActions(
@@ -66,21 +61,6 @@ export default function Investigations() {
     loadData,
     loadInvestigation
   )
-
-  // Check access
-  if (!hasAccess) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">Investigations</h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Document and track your threat investigations
-          </p>
-        </div>
-        <UpgradePrompt feature="investigations" currentTier={tier} />
-      </div>
-    )
-  }
 
   if (loading && investigationList.length === 0) {
     return (

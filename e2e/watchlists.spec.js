@@ -16,28 +16,19 @@ test.describe('Watchlists Page', () => {
     await openApp(page, '/watchlists')
   })
 
-  test('should gate the page behind an upgrade for a free user', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: /upgrade to professional/i })).toBeVisible()
-  })
-
-  test('should offer a way to upgrade', async ({ page }) => {
-    // Wait for the gate itself before looking for its call to action. Without
-    // this the assertion could run against a page that had not navigated yet
-    // and report "no way to upgrade" when the real answer was "not there yet".
-    await expect(page.getByRole('heading', { name: /upgrade to professional/i })).toBeVisible({
-      timeout: 15000,
-    })
-
-    const upgrade = page.getByRole('link', { name: /upgrade|pricing|plan|account/i }).first()
-    await expect(upgrade).toBeVisible()
+  test('should render the page rather than an upgrade gate', async ({ page }) => {
+    await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15000 })
+    await expect(page.getByRole('heading', { name: /upgrade to professional/i })).toHaveCount(0)
   })
 
   test('should have create watchlist button', async ({ page }) => {
     const createButton = page.getByRole('button', { name: /create|add|new/i })
-    // Button may be hidden behind feature gate
-    const isVisible = await createButton.isVisible().catch(() => false)
+    const isVisible = await createButton
+      .first()
+      .isVisible()
+      .catch(() => false)
     if (isVisible) {
-      await expect(createButton).toBeEnabled()
+      await expect(createButton.first()).toBeEnabled()
     }
   })
 
@@ -129,22 +120,21 @@ test.describe('Watchlist Management Flow', () => {
     }
   })
 
-  test('should show watchlist details when clicked', async ({ page }) => {
+  // Demo mode has no account, so there is never a watchlist here to open. What
+  // this can check is that the page reaches its empty state rather than the
+  // error boundary — which is what it did before, when EmptyState was handed an
+  // object as its action and React refused to render it.
+  test('should reach the empty state rather than the error boundary', async ({ page }) => {
     await openApp(page, '/watchlists')
 
-    // Find a watchlist item to click
-    const watchlistItem = page.locator('.cyber-card, [data-testid="watchlist-item"]').first()
-    const hasItem = await watchlistItem.isVisible().catch(() => false)
-
-    if (hasItem) {
-      await watchlistItem.click()
-
-      // Should show details or expand
-      await page.waitForTimeout(500)
-    }
+    await expect(page.getByRole('heading', { name: 'No watchlists yet' })).toBeVisible({
+      timeout: 15000,
+    })
+    await expect(page.getByRole('button', { name: 'Create Watchlist' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /page error/i })).toHaveCount(0)
   })
 
-  // Persistence needs a Professional account; demo mode cannot create a watchlist,
+  // Persistence needs a signed-in account; demo mode cannot create a watchlist,
   // and a reload would drop demo mode in any case.
   test.skip('should persist watchlist after page reload', async () => {})
 })
@@ -155,8 +145,7 @@ test.describe('Watchlist Mobile Experience', () => {
   test('should display properly on mobile viewport', async ({ page }) => {
     await openApp(page, '/watchlists')
 
-    // The upgrade gate is what a free user sees, on mobile as on desktop.
-    await expect(page.getByRole('heading', { name: /upgrade to professional/i })).toBeVisible()
+    await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15000 })
 
     // Check that navigation is accessible (hamburger menu)
     const menuButton = page.locator('[aria-label*="menu" i], button:has-text("Menu")')
