@@ -11,8 +11,7 @@ Thank you for your interest in contributing to Vigil! This document provides gui
 - Node.js 18+
 - npm or yarn
 - Git
-- Supabase account (for database)
-- Firebase account (for auth)
+- Supabase account (for database and auth)
 
 ### Local Setup
 
@@ -41,9 +40,6 @@ Required variables (see `.env.example`):
 ```bash
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
 ```
 
 ---
