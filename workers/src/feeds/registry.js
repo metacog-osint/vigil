@@ -41,7 +41,7 @@ import { ingestCisaAdvisories } from './cisa-advisories.js'
 import { ingestNcscAdvisories } from './ncsc-advisories.js'
 import { ingestEtdaActors } from './etda-actors.js'
 import { ingestVendorResearch } from './vendor-research.js'
-import { ingestCaBreachNotices } from './ca-breach-notices.js'
+import { ingestStateBreachNotices } from './state-breach-notices.js'
 
 // Threat actor databases
 import { ingestMalpedia } from './malpedia.js'
@@ -322,14 +322,15 @@ export const JOBS = [
     intervalMinutes: 6 * HOUR,
     run: (db, env) => ingestVendorResearch(db, env),
   },
-  // California AG breach notifications. Reads the four newest pages; the
-  // 108-page backfill is a manual call with {"backfill": true}.
+  // California, Washington and Oregon AG breach registries in one Edge
+  // Function. Reads the newest pages of each; the full backfill is a manual
+  // call with {"backfill": true}.
   {
-    id: 'ca-ag',
+    id: 'state-breach-notices',
     priority: 2,
-    cost: 6,
+    cost: 10,
     intervalMinutes: DAY,
-    run: (db, env) => ingestCaBreachNotices(db, env),
+    run: (db, env) => ingestStateBreachNotices(db, env),
   },
   {
     id: 'mitre',
