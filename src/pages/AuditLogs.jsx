@@ -7,9 +7,7 @@ import {
   EVENT_TYPES,
   ACTIONS,
 } from '../lib/auditLogs'
-import { canAccess } from '../lib/features'
 import { SmartTime } from '../components/TimeDisplay'
-import { FeatureGate } from '../components/UpgradePrompt'
 
 const TIME_RANGES = [
   { value: 7, label: '7 days' },
@@ -43,14 +41,11 @@ export default function AuditLogs() {
   // Export state
   const [exporting, setExporting] = useState(false)
 
-  // Feature check
-  const hasAccess = canAccess(profile?.tier, 'audit_logs')
-
   useEffect(() => {
-    if (user?.id && hasAccess) {
+    if (user?.id) {
       loadData()
     }
-  }, [user?.id, hasAccess, days, category, status, search])
+  }, [user?.id, days, category, status, search])
 
   async function loadData() {
     setLoading(true)
@@ -225,335 +220,329 @@ export default function AuditLogs() {
   }, [summary])
 
   return (
-    <FeatureGate feature="audit_logs">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Audit Logs</h1>
-            <p className="text-gray-400 text-sm mt-1">
-              Comprehensive activity logs for compliance and security monitoring
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex bg-gray-800 rounded-lg p-1">
-              <button
-                onClick={() => setView('table')}
-                className={`px-3 py-1.5 text-sm rounded ${view === 'table' ? 'bg-cyber-accent text-black' : 'text-gray-400 hover:text-white'}`}
-              >
-                Table
-              </button>
-              <button
-                onClick={() => setView('overview')}
-                className={`px-3 py-1.5 text-sm rounded ${view === 'overview' ? 'bg-cyber-accent text-black' : 'text-gray-400 hover:text-white'}`}
-              >
-                Overview
-              </button>
-            </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Audit Logs</h1>
+          <p className="text-gray-400 text-sm mt-1">
+            Comprehensive activity logs for compliance and security monitoring
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex bg-gray-800 rounded-lg p-1">
+            <button
+              onClick={() => setView('table')}
+              className={`px-3 py-1.5 text-sm rounded ${view === 'table' ? 'bg-cyber-accent text-black' : 'text-gray-400 hover:text-white'}`}
+            >
+              Table
+            </button>
+            <button
+              onClick={() => setView('overview')}
+              className={`px-3 py-1.5 text-sm rounded ${view === 'overview' ? 'bg-cyber-accent text-black' : 'text-gray-400 hover:text-white'}`}
+            >
+              Overview
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Time Range */}
-          <div className="flex bg-gray-800/50 rounded-lg p-1">
-            {TIME_RANGES.map((range) => (
-              <button
-                key={range.value}
-                onClick={() => setDays(range.value)}
-                className={`px-3 py-1.5 text-sm rounded transition-colors ${
-                  days === range.value
-                    ? 'bg-cyber-accent text-black'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                {range.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Category Filter */}
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="cyber-input text-sm"
-          >
-            <option value="">All Categories</option>
-            {Object.entries(EVENT_CATEGORIES).map(([key, cat]) => (
-              <option key={key} value={key}>
-                {cat.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Status Filter */}
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="cyber-input text-sm"
-          >
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Search */}
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search logs..."
-              className="cyber-input text-sm w-48"
-            />
-            <button type="submit" className="cyber-button text-sm">
-              Search
-            </button>
-          </form>
-
-          {/* Export */}
-          <div className="ml-auto flex items-center gap-2">
-            <div className="relative group">
-              <button disabled={exporting} className="cyber-button text-sm flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                Export
-              </button>
-              <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg hidden group-hover:block z-10 min-w-48">
-                <div className="py-1">
-                  <div className="px-3 py-1 text-xs text-gray-500 uppercase">Standard Export</div>
-                  <button
-                    onClick={() => handleExport('csv')}
-                    disabled={exporting}
-                    className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700"
-                  >
-                    Export to CSV
-                  </button>
-                  <button
-                    onClick={() => handleExport('json')}
-                    disabled={exporting}
-                    className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700"
-                  >
-                    Export to JSON
-                  </button>
-                  <div className="border-t border-gray-700 my-1"></div>
-                  <div className="px-3 py-1 text-xs text-gray-500 uppercase">
-                    Compliance Reports
-                  </div>
-                  <button
-                    onClick={() => handleComplianceExport('soc2')}
-                    disabled={exporting}
-                    className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700"
-                  >
-                    SOC 2 Evidence (12 mo)
-                  </button>
-                  <button
-                    onClick={() => handleComplianceExport('pci')}
-                    disabled={exporting}
-                    className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700"
-                  >
-                    PCI-DSS Evidence (90 days)
-                  </button>
-                </div>
-              </div>
-            </div>
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Time Range */}
+        <div className="flex bg-gray-800/50 rounded-lg p-1">
+          {TIME_RANGES.map((range) => (
             <button
-              onClick={() => setShowSettings(true)}
-              className="cyber-button text-sm"
-              title="Audit Log Settings"
+              key={range.value}
+              onClick={() => setDays(range.value)}
+              className={`px-3 py-1.5 text-sm rounded transition-colors ${
+                days === range.value
+                  ? 'bg-cyber-accent text-black'
+                  : 'text-gray-400 hover:text-white'
+              }`}
             >
+              {range.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Category Filter */}
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="cyber-input text-sm"
+        >
+          <option value="">All Categories</option>
+          {Object.entries(EVENT_CATEGORIES).map(([key, cat]) => (
+            <option key={key} value={key}>
+              {cat.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Status Filter */}
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="cyber-input text-sm"
+        >
+          {STATUS_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Search */}
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search logs..."
+            className="cyber-input text-sm w-48"
+          />
+          <button type="submit" className="cyber-button text-sm">
+            Search
+          </button>
+        </form>
+
+        {/* Export */}
+        <div className="ml-auto flex items-center gap-2">
+          <div className="relative group">
+            <button disabled={exporting} className="cyber-button text-sm flex items-center gap-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
+              Export
             </button>
+            <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg hidden group-hover:block z-10 min-w-48">
+              <div className="py-1">
+                <div className="px-3 py-1 text-xs text-gray-500 uppercase">Standard Export</div>
+                <button
+                  onClick={() => handleExport('csv')}
+                  disabled={exporting}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700"
+                >
+                  Export to CSV
+                </button>
+                <button
+                  onClick={() => handleExport('json')}
+                  disabled={exporting}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700"
+                >
+                  Export to JSON
+                </button>
+                <div className="border-t border-gray-700 my-1"></div>
+                <div className="px-3 py-1 text-xs text-gray-500 uppercase">Compliance Reports</div>
+                <button
+                  onClick={() => handleComplianceExport('soc2')}
+                  disabled={exporting}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700"
+                >
+                  SOC 2 Evidence (12 mo)
+                </button>
+                <button
+                  onClick={() => handleComplianceExport('pci')}
+                  disabled={exporting}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700"
+                >
+                  PCI-DSS Evidence (90 days)
+                </button>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="cyber-button text-sm"
+            title="Audit Log Settings"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Summary Stats */}
+      {summary && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="cyber-card p-4">
+            <div className="text-2xl font-bold text-white">{summary.total.toLocaleString()}</div>
+            <div className="text-gray-400 text-sm">Total Events</div>
+          </div>
+          <div className="cyber-card p-4">
+            <div className="text-2xl font-bold text-green-400">
+              {summary.byStatus.success?.toLocaleString() || 0}
+            </div>
+            <div className="text-gray-400 text-sm">Successful</div>
+          </div>
+          <div className="cyber-card p-4">
+            <div className="text-2xl font-bold text-red-400">
+              {summary.byStatus.failure?.toLocaleString() || 0}
+            </div>
+            <div className="text-gray-400 text-sm">Failed</div>
+          </div>
+          <div className="cyber-card p-4">
+            <div className="text-2xl font-bold text-yellow-400">
+              {Object.keys(summary.byCategory).length}
+            </div>
+            <div className="text-gray-400 text-sm">Categories</div>
           </div>
         </div>
+      )}
 
-        {/* Summary Stats */}
-        {summary && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="cyber-card p-4">
-              <div className="text-2xl font-bold text-white">{summary.total.toLocaleString()}</div>
-              <div className="text-gray-400 text-sm">Total Events</div>
-            </div>
-            <div className="cyber-card p-4">
-              <div className="text-2xl font-bold text-green-400">
-                {summary.byStatus.success?.toLocaleString() || 0}
+      {/* Content */}
+      {view === 'table' ? (
+        <div className="flex gap-6">
+          {/* Table */}
+          <div className="flex-1 cyber-card overflow-hidden">
+            {loading ? (
+              <div className="p-8 text-center text-gray-400">Loading audit logs...</div>
+            ) : logs.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                No audit logs found for the selected filters.
               </div>
-              <div className="text-gray-400 text-sm">Successful</div>
-            </div>
-            <div className="cyber-card p-4">
-              <div className="text-2xl font-bold text-red-400">
-                {summary.byStatus.failure?.toLocaleString() || 0}
-              </div>
-              <div className="text-gray-400 text-sm">Failed</div>
-            </div>
-            <div className="cyber-card p-4">
-              <div className="text-2xl font-bold text-yellow-400">
-                {Object.keys(summary.byCategory).length}
-              </div>
-              <div className="text-gray-400 text-sm">Categories</div>
-            </div>
-          </div>
-        )}
-
-        {/* Content */}
-        {view === 'table' ? (
-          <div className="flex gap-6">
-            {/* Table */}
-            <div className="flex-1 cyber-card overflow-hidden">
-              {loading ? (
-                <div className="p-8 text-center text-gray-400">Loading audit logs...</div>
-              ) : logs.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  No audit logs found for the selected filters.
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="cyber-table w-full">
-                    <thead>
-                      <tr>
-                        <th className="text-left">Timestamp</th>
-                        <th className="text-left">Event</th>
-                        <th className="text-left">User</th>
-                        <th className="text-left">Resource</th>
-                        <th className="text-left">Status</th>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="cyber-table w-full">
+                  <thead>
+                    <tr>
+                      <th className="text-left">Timestamp</th>
+                      <th className="text-left">Event</th>
+                      <th className="text-left">User</th>
+                      <th className="text-left">Resource</th>
+                      <th className="text-left">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {logs.map((log) => (
+                      <tr
+                        key={log.id}
+                        onClick={() => setSelectedLog(log)}
+                        className={`cursor-pointer hover:bg-gray-800/50 ${selectedLog?.id === log.id ? 'bg-gray-800/70' : ''}`}
+                      >
+                        <td className="text-gray-400 text-sm whitespace-nowrap">
+                          <SmartTime date={log.created_at} />
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <CategoryBadge category={log.event_category} />
+                            <span className="text-white text-sm">
+                              {EVENT_TYPES[log.event_type]?.label || log.event_type}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="text-gray-300 text-sm">{log.user_email || '-'}</td>
+                        <td className="text-gray-400 text-sm max-w-xs truncate">
+                          {log.resource_name || log.resource_type || '-'}
+                        </td>
+                        <td>
+                          <StatusBadge status={log.status} />
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {logs.map((log) => (
-                        <tr
-                          key={log.id}
-                          onClick={() => setSelectedLog(log)}
-                          className={`cursor-pointer hover:bg-gray-800/50 ${selectedLog?.id === log.id ? 'bg-gray-800/70' : ''}`}
-                        >
-                          <td className="text-gray-400 text-sm whitespace-nowrap">
-                            <SmartTime date={log.created_at} />
-                          </td>
-                          <td>
-                            <div className="flex items-center gap-2">
-                              <CategoryBadge category={log.event_category} />
-                              <span className="text-white text-sm">
-                                {EVENT_TYPES[log.event_type]?.label || log.event_type}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="text-gray-300 text-sm">{log.user_email || '-'}</td>
-                          <td className="text-gray-400 text-sm max-w-xs truncate">
-                            {log.resource_name || log.resource_type || '-'}
-                          </td>
-                          <td>
-                            <StatusBadge status={log.status} />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* Detail Panel */}
-            {selectedLog && (
-              <div className="w-96 flex-shrink-0">
-                <LogDetailPanel log={selectedLog} onClose={() => setSelectedLog(null)} />
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
-        ) : (
-          /* Overview View */
-          <div className="space-y-6">
-            {/* Activity Timeline */}
-            <div className="cyber-card p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Activity Timeline</h3>
-              {dailyData.length > 0 ? (
-                <div className="h-48">
-                  <ActivityChart data={dailyData} />
-                </div>
-              ) : (
-                <div className="h-48 flex items-center justify-center text-gray-500">
-                  No activity data available
-                </div>
-              )}
-            </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Events by Category */}
-              <div className="cyber-card p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Events by Category</h3>
-                <div className="space-y-3">
-                  {categoryStats.map((cat) => (
-                    <div key={cat.category} className="flex items-center gap-3">
-                      <CategoryBadge category={cat.category} />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm text-gray-300">{cat.label}</span>
-                          <span className="text-sm text-gray-400">
-                            {cat.count.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full bg-${cat.color}-500 rounded-full`}
-                            style={{ width: `${(cat.count / summary.total) * 100}%` }}
-                          />
-                        </div>
+          {/* Detail Panel */}
+          {selectedLog && (
+            <div className="w-96 flex-shrink-0">
+              <LogDetailPanel log={selectedLog} onClose={() => setSelectedLog(null)} />
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Overview View */
+        <div className="space-y-6">
+          {/* Activity Timeline */}
+          <div className="cyber-card p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Activity Timeline</h3>
+            {dailyData.length > 0 ? (
+              <div className="h-48">
+                <ActivityChart data={dailyData} />
+              </div>
+            ) : (
+              <div className="h-48 flex items-center justify-center text-gray-500">
+                No activity data available
+              </div>
+            )}
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Events by Category */}
+            <div className="cyber-card p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Events by Category</h3>
+              <div className="space-y-3">
+                {categoryStats.map((cat) => (
+                  <div key={cat.category} className="flex items-center gap-3">
+                    <CategoryBadge category={cat.category} />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm text-gray-300">{cat.label}</span>
+                        <span className="text-sm text-gray-400">{cat.count.toLocaleString()}</span>
+                      </div>
+                      <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full bg-${cat.color}-500 rounded-full`}
+                          style={{ width: `${(cat.count / summary.total) * 100}%` }}
+                        />
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
+            </div>
 
-              {/* Events by Action */}
-              <div className="cyber-card p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Events by Action</h3>
-                <div className="space-y-2">
-                  {actionStats.slice(0, 8).map((item) => (
-                    <div
-                      key={item.action}
-                      className="flex items-center justify-between py-2 border-b border-gray-800 last:border-0"
-                    >
-                      <span className="text-sm text-gray-300 capitalize">{item.action}</span>
-                      <span className="text-sm font-medium text-white">
-                        {item.count.toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+            {/* Events by Action */}
+            <div className="cyber-card p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Events by Action</h3>
+              <div className="space-y-2">
+                {actionStats.slice(0, 8).map((item) => (
+                  <div
+                    key={item.action}
+                    className="flex items-center justify-between py-2 border-b border-gray-800 last:border-0"
+                  >
+                    <span className="text-sm text-gray-300 capitalize">{item.action}</span>
+                    <span className="text-sm font-medium text-white">
+                      {item.count.toLocaleString()}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Settings Modal */}
-        {showSettings && (
-          <AuditSettingsModal
-            userId={user?.id}
-            teamId={profile?.team_id}
-            onClose={() => setShowSettings(false)}
-          />
-        )}
-      </div>
-    </FeatureGate>
+      {/* Settings Modal */}
+      {showSettings && (
+        <AuditSettingsModal
+          userId={user?.id}
+          teamId={profile?.team_id}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+    </div>
   )
 }
 

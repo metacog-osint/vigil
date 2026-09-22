@@ -40,13 +40,9 @@ test.describe('Settings Page', () => {
     })
   })
 
-  test.describe('Settings a free user can see', () => {
-    // Profile and account forms belong to a signed-in account; demo mode has none,
-    // so what Settings offers here is the plan and the workspace configuration.
-    test('should show the subscription section', async ({ page }) => {
-      await expect(page.getByText(/subscription/i).first()).toBeVisible({ timeout: 10000 })
-    })
-
+  test.describe('Settings without an account', () => {
+    // Profile and account forms belong to a signed-in account; demo mode has
+    // none, so what Settings offers here is the workspace configuration.
     test('should offer the tabs that do not need an account', async ({ page }) => {
       for (const name of ['General', 'Webhooks', 'API Docs']) {
         await expect(page.getByRole('button', { name, exact: true }).first()).toBeVisible()
@@ -171,22 +167,13 @@ test.describe('Settings Page', () => {
     })
   })
 
-  test.describe('Subscription/Billing', () => {
-    test('should show subscription status', async ({ page }) => {
-      const subscriptionSection = page.locator(
-        'text=Subscription, text=Plan, text=Billing, [data-testid="subscription"]'
-      )
-
-      if ((await subscriptionSection.count()) > 0) {
-        await expect(subscriptionSection.first()).toBeVisible()
-      }
-    })
-
-    test('should have upgrade/manage button', async ({ page }) => {
-      const upgradeButton = page.locator(
-        'button:has-text("Upgrade"), button:has-text("Manage"), a:has-text("Billing")'
-      )
-      // Upgrade or manage button should exist
+  test.describe('No plan or billing surface', () => {
+    // Vigil has no tiers. These assert the absence deliberately, so a
+    // reintroduced upsell fails the build rather than appearing unnoticed.
+    test('should not offer a plan, billing or upgrade control', async ({ page }) => {
+      await expect(
+        page.locator('button:has-text("Upgrade"), a:has-text("Billing"), a[href="/pricing"]')
+      ).toHaveCount(0)
     })
   })
 })

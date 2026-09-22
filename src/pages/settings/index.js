@@ -16,7 +16,6 @@ export {
 } from './SettingsComponents.jsx'
 
 // Subscription section
-export { default as SubscriptionSection } from './SubscriptionSection.jsx'
 
 // Data hooks
 export { useSettingsData, useSettingsActions } from './useSettingsData'

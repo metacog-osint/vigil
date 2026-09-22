@@ -17,7 +17,6 @@ import {
   SeverityBadge,
   ExportButton,
 } from '../components'
-import { FeatureGate } from '../components/UpgradePrompt'
 
 const ENTITY_TYPES = [
   { value: 'actors', label: 'Threat Actors', table: 'threat_actors' },
@@ -115,161 +114,159 @@ export default function AdvancedSearch() {
   const totalPages = Math.ceil(totalCount / pageSize)
 
   return (
-    <FeatureGate feature="advanced_search">
-      <div className="p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">Advanced Search</h1>
-          <p className="text-gray-400 mt-1">
-            Use the query language to search across all threat data
-          </p>
+    <div className="p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white">Advanced Search</h1>
+        <p className="text-gray-400 mt-1">
+          Use the query language to search across all threat data
+        </p>
+      </div>
+
+      {/* Search Form */}
+      <form onSubmit={handleSubmit} className="space-y-4 mb-6">
+        <div className="flex gap-4">
+          <select
+            value={entityType}
+            onChange={(e) => setEntityType(e.target.value)}
+            className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyber-accent"
+          >
+            {ENTITY_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="type:ip confidence:high first_seen:>2024-01-01"
+              className={clsx(
+                'w-full bg-gray-800 border rounded px-4 py-2 text-white font-mono text-sm focus:outline-none',
+                validation.valid ? 'border-gray-700 focus:border-cyber-accent' : 'border-red-500'
+              )}
+            />
+            {!validation.valid && validation.message && (
+              <div className="absolute top-full mt-1 text-xs text-red-400">
+                {validation.message}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading || !validation.valid}
+            className="px-6 py-2 bg-cyber-accent text-white rounded hover:bg-cyber-accent/80 transition-colors disabled:opacity-50"
+          >
+            {isLoading ? 'Searching...' : 'Search'}
+          </button>
         </div>
 
-        {/* Search Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 mb-6">
-          <div className="flex gap-4">
-            <select
-              value={entityType}
-              onChange={(e) => setEntityType(e.target.value)}
-              className="bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyber-accent"
-            >
-              {ENTITY_TYPES.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="type:ip confidence:high first_seen:>2024-01-01"
-                className={clsx(
-                  'w-full bg-gray-800 border rounded px-4 py-2 text-white font-mono text-sm focus:outline-none',
-                  validation.valid ? 'border-gray-700 focus:border-cyber-accent' : 'border-red-500'
-                )}
-              />
-              {!validation.valid && validation.message && (
-                <div className="absolute top-full mt-1 text-xs text-red-400">
-                  {validation.message}
-                </div>
-              )}
-            </div>
-
+        {/* Query Examples */}
+        <div className="flex flex-wrap gap-2 text-sm">
+          <span className="text-gray-500">Examples:</span>
+          {EXAMPLE_QUERIES.map((ex, i) => (
             <button
-              type="submit"
-              disabled={isLoading || !validation.valid}
-              className="px-6 py-2 bg-cyber-accent text-white rounded hover:bg-cyber-accent/80 transition-colors disabled:opacity-50"
+              key={i}
+              type="button"
+              onClick={() => handleExampleClick(ex.query)}
+              className="text-cyber-accent hover:underline"
+              title={ex.description}
             >
-              {isLoading ? 'Searching...' : 'Search'}
+              {ex.query}
             </button>
-          </div>
+          ))}
+        </div>
+      </form>
 
-          {/* Query Examples */}
-          <div className="flex flex-wrap gap-2 text-sm">
-            <span className="text-gray-500">Examples:</span>
-            {EXAMPLE_QUERIES.map((ex, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => handleExampleClick(ex.query)}
-                className="text-cyber-accent hover:underline"
-                title={ex.description}
-              >
-                {ex.query}
-              </button>
-            ))}
-          </div>
-        </form>
+      {/* Query Syntax Help */}
+      <details className="mb-6">
+        <summary className="text-sm text-gray-400 cursor-pointer hover:text-white">
+          Query syntax help
+        </summary>
+        <div className="mt-2 p-4 bg-gray-800/50 rounded text-sm text-gray-400 space-y-2">
+          <p>
+            <code className="text-cyber-accent">field:value</code> - Exact match
+          </p>
+          <p>
+            <code className="text-cyber-accent">field:&gt;value</code> - Greater than
+            (dates/numbers)
+          </p>
+          <p>
+            <code className="text-cyber-accent">field:&gt;=value</code> - Greater than or equal
+          </p>
+          <p>
+            <code className="text-cyber-accent">field:*value*</code> - Contains
+          </p>
+          <p>
+            <code className="text-cyber-accent">AND / OR</code> - Boolean operators
+          </p>
+          <p>
+            <code className="text-cyber-accent">NOT field:value</code> - Negation
+          </p>
+          <p className="pt-2 border-t border-gray-700">
+            <strong>Fields:</strong> type, source, tags, confidence, cvss, severity, kev, sector,
+            trend, country
+          </p>
+        </div>
+      </details>
 
-        {/* Query Syntax Help */}
-        <details className="mb-6">
-          <summary className="text-sm text-gray-400 cursor-pointer hover:text-white">
-            Query syntax help
-          </summary>
-          <div className="mt-2 p-4 bg-gray-800/50 rounded text-sm text-gray-400 space-y-2">
-            <p>
-              <code className="text-cyber-accent">field:value</code> - Exact match
-            </p>
-            <p>
-              <code className="text-cyber-accent">field:&gt;value</code> - Greater than
-              (dates/numbers)
-            </p>
-            <p>
-              <code className="text-cyber-accent">field:&gt;=value</code> - Greater than or equal
-            </p>
-            <p>
-              <code className="text-cyber-accent">field:*value*</code> - Contains
-            </p>
-            <p>
-              <code className="text-cyber-accent">AND / OR</code> - Boolean operators
-            </p>
-            <p>
-              <code className="text-cyber-accent">NOT field:value</code> - Negation
-            </p>
-            <p className="pt-2 border-t border-gray-700">
-              <strong>Fields:</strong> type, source, tags, confidence, cvss, severity, kev, sector,
-              trend, country
-            </p>
-          </div>
-        </details>
+      {error && <ErrorMessage message={error} className="mb-4" />}
 
-        {error && <ErrorMessage message={error} className="mb-4" />}
-
-        {/* Results Header */}
-        {results.length > 0 && (
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-gray-400">
-              Showing {page * pageSize + 1}-{Math.min((page + 1) * pageSize, totalCount)} of{' '}
-              {totalCount} results
-            </div>
-            <ExportButton
-              data={results}
-              entityType={entityType}
-              filename={`vigil-search-${entityType}`}
-            />
+      {/* Results Header */}
+      {results.length > 0 && (
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-sm text-gray-400">
+            Showing {page * pageSize + 1}-{Math.min((page + 1) * pageSize, totalCount)} of{' '}
+            {totalCount} results
           </div>
-        )}
+          <ExportButton
+            data={results}
+            entityType={entityType}
+            filename={`vigil-search-${entityType}`}
+          />
+        </div>
+      )}
 
-        {/* Results */}
-        {isLoading ? (
-          <SkeletonTable rows={5} />
-        ) : results.length === 0 && query ? (
-          <EmptySearch query={query} />
-        ) : (
-          <div className="space-y-2">
-            {results.map((item, i) => (
-              <ResultCard key={item.id || i} item={item} entityType={entityType} />
-            ))}
-          </div>
-        )}
+      {/* Results */}
+      {isLoading ? (
+        <SkeletonTable rows={5} />
+      ) : results.length === 0 && query ? (
+        <EmptySearch query={query} />
+      ) : (
+        <div className="space-y-2">
+          {results.map((item, i) => (
+            <ResultCard key={item.id || i} item={item} entityType={entityType} />
+          ))}
+        </div>
+      )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
-            <button
-              onClick={() => executeSearch(page - 1)}
-              disabled={page === 0}
-              className="px-3 py-1.5 text-sm text-gray-400 hover:text-white disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-gray-500">
-              Page {page + 1} of {totalPages}
-            </span>
-            <button
-              onClick={() => executeSearch(page + 1)}
-              disabled={page >= totalPages - 1}
-              className="px-3 py-1.5 text-sm text-gray-400 hover:text-white disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        )}
-      </div>
-    </FeatureGate>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <button
+            onClick={() => executeSearch(page - 1)}
+            disabled={page === 0}
+            className="px-3 py-1.5 text-sm text-gray-400 hover:text-white disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-gray-500">
+            Page {page + 1} of {totalPages}
+          </span>
+          <button
+            onClick={() => executeSearch(page + 1)}
+            disabled={page >= totalPages - 1}
+            className="px-3 py-1.5 text-sm text-gray-400 hover:text-white disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 

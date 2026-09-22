@@ -4,7 +4,6 @@
  * Extracted components in ./settings/:
  * - SettingsConstants.js: TIME_RANGES, ITEMS_PER_PAGE, TAG_COLORS
  * - SettingsComponents.jsx: SettingSection, Toggle, SavedSearchesList, TagsList, CreateTagModal, SyncLogList
- * - SubscriptionSection.jsx: Subscription management
  * - useSettingsData.js: Data hooks
  */
 import { useState } from 'react'
@@ -35,7 +34,6 @@ import {
   CreateTagModal,
   SyncLogList,
 } from './settings/SettingsComponents.jsx'
-import SubscriptionSection from './settings/SubscriptionSection.jsx'
 import { useSettingsData, useSettingsActions } from './settings/useSettingsData'
 
 export default function Settings() {
@@ -54,7 +52,6 @@ export default function Settings() {
     syncLogs,
     orgProfile,
     setOrgProfile,
-    subscription,
     isLoading,
     error,
     setError,
@@ -110,11 +107,6 @@ export default function Settings() {
       )}
 
       <div className="space-y-6">
-        {/* Subscription */}
-        <SettingSection title="Subscription" description="Manage your Vigil subscription plan">
-          <SubscriptionSection subscription={subscription} userId={user?.id} onError={setError} />
-        </SettingSection>
-
         {/* API Keys */}
         <SettingSection
           title="API Access"

@@ -6,7 +6,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { useSubscription } from '../contexts/SubscriptionContext'
 
 const API_BASE = 'https://vigil.theintelligence.company/api/v1'
 
@@ -272,8 +271,6 @@ function EndpointCard({ endpoint }) {
 
 export default function ApiDocs() {
   const { user } = useAuth()
-  const { tier, canAccess } = useSubscription()
-  const hasApiAccess = canAccess('api_access')
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -282,37 +279,6 @@ export default function ApiDocs() {
         <h1 className="text-2xl font-bold text-white">API Documentation</h1>
         <p className="text-gray-400 mt-1">Programmatic access to Vigil threat intelligence data</p>
       </div>
-
-      {/* Access Notice */}
-      {!hasApiAccess && (
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <svg
-              className="w-5 h-5 text-yellow-400 mt-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <div>
-              <h3 className="text-yellow-400 font-medium">API Access Required</h3>
-              <p className="text-gray-400 text-sm mt-1">
-                REST API access is available on Team and Enterprise plans.{' '}
-                <Link to="/pricing" className="text-cyan-400 hover:underline">
-                  Upgrade your plan
-                </Link>{' '}
-                to get programmatic access to Vigil data.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Quick Start */}
       <section className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">

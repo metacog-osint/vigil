@@ -13,7 +13,6 @@ import {
   validateCertificate,
 } from '../../lib/sso'
 import { useTenant } from '../../contexts/TenantContext'
-import { useSubscription } from '../../contexts/SubscriptionContext'
 
 // Provider icons (simplified inline SVGs)
 const ProviderIcon = ({ provider, className = 'w-8 h-8' }) => {
@@ -428,7 +427,6 @@ function AdvancedSettings({ config, onChange }) {
 
 export default function SSOConfigSection() {
   const { currentTenant, isAdmin } = useTenant()
-  const { canAccess } = useSubscription()
   const [config, setConfig] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -437,17 +435,16 @@ export default function SSOConfigSection() {
   const [step, setStep] = useState('provider') // provider, config, advanced
   const [testResult, setTestResult] = useState(null)
 
-  const hasSSOAccess = canAccess('sso_saml')
   const tenantSlug = currentTenant?.slug || currentTenant?.identifier || 'default'
   const spMetadata = generateSpMetadata(tenantSlug)
 
   useEffect(() => {
-    if (currentTenant?.id && hasSSOAccess) {
+    if (currentTenant?.id) {
       loadConfig()
     } else {
       setLoading(false)
     }
-  }, [currentTenant?.id, hasSSOAccess])
+  }, [currentTenant?.id])
 
   const loadConfig = async () => {
     setLoading(true)
@@ -534,36 +531,6 @@ export default function SSOConfigSection() {
     } finally {
       setSaving(false)
     }
-  }
-
-  // Not on enterprise tier
-  if (!hasSSOAccess) {
-    return (
-      <div className="text-center py-8">
-        <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg
-            className="w-8 h-8 text-gray-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-            />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-white mb-2">Enterprise SSO</h3>
-        <p className="text-gray-400 text-sm mb-4">
-          Single Sign-On with Okta, Azure AD, Google Workspace, and more
-        </p>
-        <a href="/pricing" className="text-cyber-accent hover:underline text-sm">
-          Upgrade to Enterprise →
-        </a>
-      </div>
-    )
   }
 
   // No tenant context

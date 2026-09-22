@@ -10,7 +10,6 @@ import {
   NOTIFICATION_EVENTS,
   webhooks,
 } from '../../lib/integrations'
-import { useSubscription } from '../../contexts/SubscriptionContext'
 
 // Integration icons
 const IntegrationIcon = ({ type, className = 'w-8 h-8' }) => {
@@ -340,22 +339,19 @@ function WebhookModal({ webhook, onSave, onClose }) {
 
 // Main integrations section component
 export default function IntegrationsSection({ userId }) {
-  const { canAccess } = useSubscription()
   const [userIntegrations, setUserIntegrations] = useState([])
   const [userWebhooks, setUserWebhooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeModal, setActiveModal] = useState(null) // { type: 'integration'|'webhook', data: ... }
   const [error, setError] = useState(null)
 
-  const hasIntegrationAccess = canAccess('siem_integration')
-
   useEffect(() => {
-    if (userId && hasIntegrationAccess) {
+    if (userId) {
       loadData()
     } else {
       setLoading(false)
     }
-  }, [userId, hasIntegrationAccess])
+  }, [userId])
 
   const loadData = async () => {
     try {
@@ -427,37 +423,6 @@ export default function IntegrationsSection({ userId }) {
     } catch (err) {
       setError(err.message)
     }
-  }
-
-  // Check access
-  if (!hasIntegrationAccess) {
-    return (
-      <div className="bg-gray-800/50 rounded-lg p-6 text-center">
-        <svg
-          className="w-12 h-12 text-gray-600 mx-auto mb-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-          />
-        </svg>
-        <h4 className="text-white font-medium mb-2">Integrations Available on Enterprise Plan</h4>
-        <p className="text-gray-400 text-sm mb-4">
-          Connect Vigil to your SIEM, ticketing system, and communication tools.
-        </p>
-        <a
-          href="/pricing"
-          className="inline-block px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors"
-        >
-          Upgrade to Enterprise
-        </a>
-      </div>
-    )
   }
 
   if (loading) {

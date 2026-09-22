@@ -159,7 +159,7 @@ Public feeds ──► Cloudflare Worker (cron) ──► Supabase Postgres ─�
 src/            React app — 159 components, 46 routes, lazy-loaded
   lib/supabase/   query modules, one per entity
   pages/          route pages
-api/            Vercel functions — REST API v1, Stripe, SCIM, email
+api/            Vercel functions — REST API v1, SCIM, email
 workers/        Cloudflare Worker — 22 ingestion feeds
 supabase/
   migrations/   126 migrations; the reasoning is in the headers

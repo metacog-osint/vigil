@@ -4,10 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useSubscription } from '../../contexts/SubscriptionContext'
 import { useTenant } from '../../contexts/TenantContext'
 import { tenantBranding, DEFAULT_BRANDING } from '../../lib/tenants'
-import { UpgradePrompt } from '../UpgradePrompt'
 
 const COLOR_PRESETS = [
   { name: 'Cyber (Default)', primary: '#00ff9d', dark: '#00cc7d' },
@@ -19,7 +17,6 @@ const COLOR_PRESETS = [
 ]
 
 export default function BrandingConfigSection() {
-  const { canAccess, tier } = useSubscription()
   const { currentTenant, refreshBranding, isAdmin } = useTenant()
 
   const [branding, setBranding] = useState(DEFAULT_BRANDING)
@@ -28,13 +25,11 @@ export default function BrandingConfigSection() {
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
 
-  const hasBrandingAccess = canAccess('white_label')
-
   useEffect(() => {
-    if (currentTenant?.id && hasBrandingAccess) {
+    if (currentTenant?.id) {
       loadBranding()
     }
-  }, [currentTenant?.id, hasBrandingAccess])
+  }, [currentTenant?.id])
 
   async function loadBranding() {
     setLoading(true)
@@ -93,17 +88,6 @@ export default function BrandingConfigSection() {
 
   function handleChange(field, value) {
     setBranding((prev) => ({ ...prev, [field]: value }))
-  }
-
-  // Not enterprise
-  if (!hasBrandingAccess) {
-    return (
-      <UpgradePrompt
-        feature="White-Label Branding"
-        description="Customize logos, colors, and branding for your organization with white-label support."
-        requiredTier="enterprise"
-      />
-    )
   }
 
   // No tenant context
