@@ -105,8 +105,11 @@ this is not.
 Start with the **16 SEC candidates**: ruling on those turns "claimed by Qilin"
 into "claimed by Qilin, and the company told the SEC".
 
-**2. Merge #42 and #43.** Both green including webkit, both supersede the old
-stale PRs. See §2d.
+**2. Merge #44, then #42 and #43.** #44 removes the subscription tier system.
+Until it is merged **and deployed**, vigil.theintelligence.company/pricing is
+still serving $29/mo and $99/mo Subscribe buttons — checked 22 September, after
+the commit landed on the branch. The commit is not the fix; the deploy is.
+#42 and #43 are green including webkit and supersede the old stale PRs. See §2d.
 
 **3. Read §2b before building any page.** Most of what was built on 21–22
 September is invisible in the product.
@@ -256,9 +259,6 @@ central claim and no human has ever exercised it end to end.
 
 ### 4b. Owner decisions, unchanged
 
-- **`/pricing` is a live route** with tiers and Subscribe buttons, and the
-  monetization layer is still committed and public. It is registered **twice**
-  in `src/App.jsx`, at lines 106 and 255; 66 files still reference it.
 - **The git history still holds the three commercial documents**, readable at
   any commit before 21 September. Removing them means `git filter-repo` and a
   force-push that breaks every clone and open PR.
@@ -425,6 +425,24 @@ before spending time on any of them.
 | `npm run lint` and CI disagreeing on the warning ceiling      | Fixed; one number, 325, in `package.json` only  |
 | e2e running against the live production database              | Fixed in #39; stubbed                           |
 | `ofac-reachability-probe` Edge Function                       | Deleted                                         |
+| The subscription tier system                                  | Removed in #44; see below                       |
+
+**On #44, because “removed” is doing different work at each layer.** The pricing
+page, the Stripe client and its three Vercel functions, `SubscriptionContext`,
+`features.js` and the upsell components are gone from the repository, and the
+gating is unwound at twenty call sites rather than stubbed to true. The 17 files
+are archived outside this repository, alongside the other commercial material.
+
+Three things deliberately survive, and a session that assumes otherwise will be
+wrong:
+
+- **The database still has the schema.** `011_subscriptions_and_api.sql` is
+  applied and its tables remain, as does `tenants.subscription_tier` — which a
+  view in `021_tenants.sql` still selects. Nothing writes the column any more.
+  Dropping it would destroy records, which this project does not do.
+- **The git history still holds all of it**, the same caveat as the three
+  commercial documents above.
+- **Production keeps serving the old bundle until someone deploys.** See §2a.
 
 ### 4h. Never started
 

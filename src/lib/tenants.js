@@ -147,7 +147,6 @@ export const tenants = {
         support_email: tenantData.supportEmail,
         billing_email: tenantData.billingEmail,
         custom_domain: tenantData.customDomain,
-        subscription_tier: tenantData.subscriptionTier || 'team',
         max_users: tenantData.maxUsers || 10,
         features: tenantData.features || {},
       })

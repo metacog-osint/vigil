@@ -103,7 +103,6 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@sentry/react": "^8.0.0",
-    "@stripe/stripe-js": "^8.6.1",
     "@supabase/supabase-js": "^2.39.0",
     "clsx": "^2.0.0",
     "date-fns": "^3.0.0",
