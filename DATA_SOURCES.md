@@ -28,6 +28,7 @@ DB-IP. Confirm those against the source before relying on them.
 | SEC EDGAR                              | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
 | OFAC SDN                               | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
 | **ETDA / ThaiCERT Threat Group Cards** | **CC BY-NC-SA 4.0 — NonCommercial**                                                  | **Free to use now; must be removed from anything sold.** Supplies 186 actor origin countries, all carrying `origin_source = 'etda'`, and `actor_origins_commercial` already excludes them. The licence is re-read from the API response on every run.                |
+| California AG breach notices           | **US state government public record**                                                | Filed under Civil Code 1798.29/1798.82 and published as a public record. Sellable.                                                                                                                                                                                   |
 | CISA advisories                        | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
 | NCSC-UK                                | **Open Government Licence v3.0**                                                     | Free to use and redistribute, **including commercially**, provided the source is acknowledged. Vigil stores the advisory URL and the publishing government on every row, which satisfies it.                                                                         |
 | DB-IP (indicator location)             | **CC BY 4.0**                                                                        | **Attribution is required wherever located data is shown** — currently the IOC search page and the Help methodology. Any new view showing country needs it too.                                                                                                      |
@@ -107,9 +108,34 @@ contradicting itself rather than reporting a disagreement.
 
 ### Regulatory Disclosures
 
-| Source                  | Endpoint                                                           | Data Type                                                    | Schedule | Script                                                                         | Auth                       |
-| ----------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------ | -------------------------- |
-| SEC EDGAR 8-K Item 1.05 | `https://efts.sec.gov/LATEST/search-index?q="Item 1.05"&forms=8-K` | Material cybersecurity incidents **disclosed by the victim** | Daily    | `workers/src/feeds/sec-disclosures.js` → `sec-cyber-disclosures` Edge Function | None (User-Agent required) |
+| Source                       | Endpoint                                                           | Data Type                                                    | Schedule | Script                                                                         | Auth                       |
+| ---------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------ | -------------------------- |
+| SEC EDGAR 8-K Item 1.05      | `https://efts.sec.gov/LATEST/search-index?q="Item 1.05"&forms=8-K` | Material cybersecurity incidents **disclosed by the victim** | Daily    | `workers/src/feeds/sec-disclosures.js` → `sec-cyber-disclosures` Edge Function | None (User-Agent required) |
+| California AG breach notices | `https://oag.ca.gov/privacy/databreach/list`                       | **5,302 breach notifications, every cause**                  | Daily    | `workers/src/feeds/ca-breach-notices.js` → `ca-breach-notices` Edge Function   | None                       |
+
+**The California source is the one that stops Vigil being a ransomware-only
+platform.** All 39,575 incidents it holds are ransomware leak-site claims;
+against that, the entire non-ransomware corpus was about 500 rows. That is not
+because the other sources were missing but because one table outnumbered
+everything else eighty to one, and a feed of a hundred rows could not change
+it.
+
+5,302 notifications filed under Civil Code 1798.29 and 1798.82, back to
+20 January 2012, covering intrusion, insider, lost device, misdirected mail and
+vendor compromise. 2,841 carry the date of the breach as well as the date it
+was reported; the rest are null because California published no incident date.
+
+It shares `victim_disclosures` with the SEC filings deliberately. An 8-K and a
+California notice are the _same_ kind of claim — the victim telling a regulator
+under a legal duty — unlike vendor research and government advisories, which
+migration 139 keeps apart. Splitting them would mean asking "what did the
+victim say" twice.
+
+**The cause of each breach is not imported.** The list page does not carry it,
+and inferring "ransomware" from an organisation name would invent the very
+thing this source was added to avoid. **No notice is matched to an incident**
+either: `match_status` stays `unreviewed`, because whether a California filing
+and a leak-site claim describe one event is a judgment.
 
 **Why this one is unlike every other source here.** Everything else in this
 document is the attacker's claim. Since December 2023 an SEC registrant has had to
