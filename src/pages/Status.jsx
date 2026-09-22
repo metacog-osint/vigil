@@ -12,15 +12,9 @@ import {
   getTimeRelative,
 } from '../lib/status'
 import { SmartTime } from '../components/TimeDisplay'
-import { useSubscription } from '../contexts/SubscriptionContext'
 
-// SLA Targets (can be customized per tier)
-const SLA_TARGETS = {
-  free: 99.0,
-  professional: 99.5,
-  team: 99.9,
-  enterprise: 99.95,
-}
+// The uptime target this page measures against.
+const SLA_TARGET = 99.9
 
 const STATUS_COLORS = {
   operational: 'bg-green-500',
@@ -39,7 +33,6 @@ const STATUS_TEXT_COLORS = {
 }
 
 export default function Status() {
-  const { tier } = useSubscription()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [recentIncidents, setRecentIncidents] = useState([])
@@ -47,7 +40,7 @@ export default function Status() {
   const [uptimeHistory, setUptimeHistory] = useState([])
   const [view, setView] = useState('current') // current | history
 
-  const slaTarget = SLA_TARGETS[tier] || SLA_TARGETS.free
+  const slaTarget = SLA_TARGET
 
   useEffect(() => {
     loadData()
@@ -166,9 +159,7 @@ export default function Status() {
       <UptimeSummary components={Object.values(components || {}).flat()} />
 
       {/* SLA Compliance */}
-      {slaCompliance && (
-        <SlaComplianceCard compliance={slaCompliance} target={slaTarget} tier={tier} />
-      )}
+      {slaCompliance && <SlaComplianceCard compliance={slaCompliance} target={slaTarget} />}
 
       {/* Footer */}
       <div className="text-center text-gray-500 text-sm pt-8 border-t border-gray-800">
@@ -534,7 +525,7 @@ function UptimeSummary({ components }) {
 /**
  * SLA Compliance Card
  */
-function SlaComplianceCard({ compliance, target, tier }) {
+function SlaComplianceCard({ compliance, target }) {
   const actual = parseFloat(compliance.average)
   const isMeetingSla = actual >= target
   const diff = (actual - target).toFixed(2)
@@ -608,15 +599,8 @@ function SlaComplianceCard({ compliance, target, tier }) {
         </div>
       </div>
 
-      {/* Tier info */}
       <div className="mt-4 pt-4 border-t border-gray-800 text-center">
-        <p className="text-gray-500 text-sm">
-          Your <span className="text-cyan-400 capitalize">{tier || 'free'}</span> plan includes{' '}
-          {target}% uptime SLA
-          {tier !== 'enterprise' && (
-            <span className="text-gray-600"> - Upgrade for higher SLA guarantees</span>
-          )}
-        </p>
+        <p className="text-gray-500 text-sm">Measured against a {target}% uptime target</p>
       </div>
     </div>
   )

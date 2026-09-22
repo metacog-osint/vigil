@@ -195,7 +195,6 @@ export { default as AnalyticsDashboard } from './AnalyticsDashboard'
 export { default as NotificationBell } from './NotificationBell'
 export { default as OnboardingTour } from './OnboardingTour'
 export { default as SavedSearches } from './SavedSearches'
-export { default as UpgradePrompt, FeatureGate } from './UpgradePrompt'
 export { default as KillChainVisualization, KillChainMini } from './KillChainVisualization'
 export { default as ThreatAttributionMap } from './ThreatAttributionMap'
 export { default as Timeline } from './Timeline'
@@ -317,30 +316,3 @@ export {
   ClusterSummaryCard,
   ClusterSummaryList,
 } from './patterns'
-
-// ============================================
-// UPGRADE PROMPT COMPONENTS
-// ============================================
-export {
-  BlurredContent,
-  BlurredHistoricalData,
-  BlurredListTeaser,
-  BlurredSearchResults,
-  BlurredCorrelationPreview,
-  ExportBlockedModal,
-  LimitReachedModal,
-  LimitWarningToast,
-  useLimitCheck,
-  TierBadge,
-  LockedBadge,
-  FeatureLabel,
-  LockedIcon,
-  NavItemWithTier,
-  ButtonWithTier,
-  UpgradeInline,
-  NewFeatureBadge,
-  MissedAlertsWidget,
-  MissedAlertsCard,
-} from './upgrade'
-
-export { default as ApiPlayground } from './upgrade/ApiPlayground'

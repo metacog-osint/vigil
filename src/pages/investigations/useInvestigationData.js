@@ -7,7 +7,7 @@ import { investigations } from '../../lib/investigations'
 /**
  * Main hook for investigation data loading
  */
-export function useInvestigationData(userId, hasAccess, filters) {
+export function useInvestigationData(userId, filters) {
   const [investigationList, setInvestigationList] = useState([])
   const [selectedInvestigation, setSelectedInvestigation] = useState(null)
   const [templates, setTemplates] = useState([])
@@ -16,10 +16,6 @@ export function useInvestigationData(userId, hasAccess, filters) {
   const [error, setError] = useState(null)
 
   const loadData = useCallback(async () => {
-    if (!hasAccess) {
-      setLoading(false)
-      return
-    }
     setLoading(true)
     try {
       const [list, templateList, statsData] = await Promise.all([
@@ -35,7 +31,7 @@ export function useInvestigationData(userId, hasAccess, filters) {
     } finally {
       setLoading(false)
     }
-  }, [userId, hasAccess, filters])
+  }, [userId, filters])
 
   const loadInvestigation = useCallback(
     async (id) => {
