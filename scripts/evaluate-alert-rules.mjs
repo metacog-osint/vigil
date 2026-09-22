@@ -410,7 +410,7 @@ async function main() {
 
       // Send email notification
       if (rule.notify_email) {
-        // Get user email (from Firebase, stored in user_preferences or passed as param)
+        // Get user email (stored in user_preferences, or passed as a param)
         // For now, we'll need to handle this via a lookup or stored email
         // This is a simplified version - in production you'd fetch the user's email
         console.log('  Email notification queued (requires user email lookup)')
