@@ -41,6 +41,7 @@ import { ingestCisaAdvisories } from './cisa-advisories.js'
 import { ingestNcscAdvisories } from './ncsc-advisories.js'
 import { ingestEtdaActors } from './etda-actors.js'
 import { ingestVendorResearch } from './vendor-research.js'
+import { ingestCaBreachNotices } from './ca-breach-notices.js'
 
 // Threat actor databases
 import { ingestMalpedia } from './malpedia.js'
@@ -320,6 +321,15 @@ export const JOBS = [
     cost: 8,
     intervalMinutes: 6 * HOUR,
     run: (db, env) => ingestVendorResearch(db, env),
+  },
+  // California AG breach notifications. Reads the four newest pages; the
+  // 108-page backfill is a manual call with {"backfill": true}.
+  {
+    id: 'ca-ag',
+    priority: 2,
+    cost: 6,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestCaBreachNotices(db, env),
   },
   {
     id: 'mitre',
