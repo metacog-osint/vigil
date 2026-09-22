@@ -432,6 +432,26 @@ Shadow mode · victim identity resolution · lead time as a statistic (the SEC
 and state data make this computable — Krispy Kreme 8 days, Key Tronic 21) ·
 provenance on every number · engine contract views · a public methodology page.
 
+**An agent-facing lookup.** Added 22 September, from a read of a published
+enrichment-agent design. The SOAR-style pipelines — a hash or an IP arrives,
+the agent queries VirusTotal, AbuseIPDB, Shodan, OTX, URLhaus and GreyNoise,
+and a model writes it up — have no source among those six that answers "is this
+victim on a leak site, which actor, and how settled is the attribution?". A
+read-only endpoint, HTTP or MCP, returning `leak_claims` and an `actor_brief`
+carrying `resolution_state` would make Vigil a source for that ecosystem rather
+than a competitor inside it. The selling point is the part those agents cannot
+do: it returns **undecided** when the data does not settle it, instead of
+inventing an alias merge. §4a's three untaken alias verdicts are the honest
+demonstration of that, not an embarrassment.
+
+**It is blocked on licence, not on engineering.** ransomware.live supplies the
+group profiles and 11,256 victim countries and is personal-use-only (§4b).
+Serving that over an API to third parties is further from personal use than
+anything Vigil does today. Build it against the regulator disclosures and the
+vendor-research corpus, or replace the source first — do not point it at
+`incidents` and assume the licence travels with the row. `source_licences` and
+`actor_origins_commercial` are the mechanism; rule 8 in CLAUDE.md is the reason.
+
 Work belonging to the separate product, and to the owner's own commitments
 around it, is tracked outside this repository by deliberate decision. Do not
 add it here.
