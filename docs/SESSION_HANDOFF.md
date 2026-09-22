@@ -235,18 +235,30 @@ the handover named.
 
 ## 4. Everything outstanding
 
+Compiled 22 September from every session since 19 September, and measured
+against the live database rather than remembered. Where a number appears, it
+was queried.
+
 ### 4a. Needs a person, not a session
 
-- **80 review-queue findings, zero verdicts ever recorded.** §2a.
-- **21 vendor→actor link proposals, none confirmed.** `vendor_report_actors`.
-- **8,879 of 8,895 regulator disclosures unreviewed.** Whether a California
-  notice and a leak-site claim describe one event is a judgment; `match_status`
-  stays `unreviewed` by design.
+Nothing here is blocked on engineering. All of it is judgment.
+
+| Item                                                                                                                               | Measured                           |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| **Review-queue findings with no verdict.** The page exists; a verdict has never been recorded through it. §2a.                     | **80 open** (31 resolved, 82 auto) |
+| **Vendor→actor link proposals, none confirmed.** `vendor_report_actors.confirmed` is false on every row.                           | **21**                             |
+| **Regulator disclosures unreviewed.** Whether a state notice and a leak-site claim describe one event is a judgment, by design.    | **8,879 of 8,895**                 |
+| **Three named alias verdicts still untaken** — Hive = hiveleak, Royal → BlackSuit, and Conti, which has no citable authority page. | 3                                  |
+| **Family decisions left open** from the September identity work — Hades, Medusa, NetWorm.                                          | 3                                  |
+
+The first row is the one that matters. The review queue is the product's
+central claim and no human has ever exercised it end to end.
 
 ### 4b. Owner decisions, unchanged
 
 - **`/pricing` is a live route** with tiers and Subscribe buttons, and the
-  ~91-file monetization layer is still committed and public.
+  monetization layer is still committed and public. It is registered **twice**
+  in `src/App.jsx`, at lines 106 and 255; 66 files still reference it.
 - **The git history still holds the three commercial documents**, readable at
   any commit before 21 September. Removing them means `git filter-repo` and a
   force-push that breaks every clone and open PR.
@@ -257,37 +269,110 @@ the handover named.
   escalation/on-call, SSO, benchmarks, usage analytics. The test is: would you
   demo it?
 - **Leaked-password protection** is off, in the Auth dashboard.
-- **12 of 19 registered sources have an unchecked licence**, including
+- **12 of 21 registered sources have an unchecked licence**, including
   `misp-galaxy` and `mitre-attack`, which between them supply most of the actor
   origins Vigil holds. An unchecked licence is not a permissive one.
+- **Alert delivery is deliberately off.** A false "you have been breached" is
+  the one mistake that cannot be walked back. Turn it on only after the review
+  queue has been used in anger.
+- **ETDA's terms are accepted in principle**, on the condition that the source
+  can be cut from any restricted tier later. `source_licences` plus
+  `actor_origins_commercial` is the mechanism that honours it.
 
 ### 4c. Ready to build, no decision needed
 
-- **The three pages in §2b.** Highest value.
-- **Malpedia is stale since 30 May.** Already ingested, already licensed,
-  already in the registry, and it carries actor country — the cheapest
-  remaining win on attribution coverage.
-- **`mitre` and `mitre-atlas` have never recorded a run.** Priority 4–5
-  weeklies; the campaign data was last written 20 September, so something ran.
+**The three pages in §2b are the highest value work left.** 8,895 regulator
+disclosures cannot be seen by a user at all. The owner's steer on 22 September
+was search filters and maps over the state disclosures, with the reader
+choosing how the data is presented.
+
+Feeds and data completeness, measured 22 September 00:45 UTC:
+
+| Item                                                                                                                                     | Measured         |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| **Malpedia stale.** Already ingested, licensed and registered, and it carries actor country — the cheapest remaining win on attribution. | 114.8 days       |
+| **`censys` stale and erroring.**                                                                                                         | 247.9 days       |
+| **`mitre` and `mitre-atlas` have never recorded a run** (priority 4–5 weeklies).                                                         | never            |
+| **Six feeds late** — anyrun-trends, bgpstream, epss, misp-galaxy, ransomwhere, tor-exits; `epss` erroring.                               | 1.1–1.2 days     |
+| **Incidents with no country.** Was 71% in September.                                                                                     | 22,216 of 39,575 |
+| **Incidents with no sector.**                                                                                                            | 4,075            |
+| **Actors with no trend status.** Need an "insufficient data" label and exclusion from default views.                                     | 4,123 of 4,504   |
+| **Actors with a stored AI summary.** Every `ai_summary` is empty.                                                                        | 0                |
+| **MITRE campaigns with no actor link.** Salt Typhoon and Volt Typhoon are exactly the non-ransomware activity that is missing.           | 32 of 56         |
+
+Schemas that exist with nothing rendering them:
+
+- **AI summaries into the review queue** as drafts — generated, then approved or
+  edited with sources shown, and only approved text reaching a group page.
+  Unreviewed generated prose would undercut the whole argument; the queue is
+  what makes it defensible.
 - **Team watchlists** have a schema and a query layer and no interface.
 - **`investigation_entities` is read-only** — the tab lists linked entities and
   nothing writes one.
-- **`settings.spec.js:46`** is selector soup that has failed on three browsers.
+- **`webhooks` / `webhook_deliveries`** — attach to whatever alert-delivery work
+  lands rather than building it in isolation.
 
-### 4d. Sources: what to do next, and what not to re-try
+### 4d. Validation and reliability — agreed, never built
+
+All of this came out of the detection-engineering discussion on 20 September and
+was agreed at the time. None of it exists. The first two are the ones that would
+catch a real miss.
+
+- **A regression suite of real cases**, replayed on every deploy, starting with
+  eight: the Jack Henry listing; the `svfcu.org` domain-only victim; Fiserv's
+  engineering-data claim; the LockBit seizure notices; a name collision; the
+  Citrix Bleed exploited-vulnerability and patch-deadline pair; an undecided
+  alias pair; and a stale feed during a weekly run. A change that breaks one
+  fails the build, and every future miss becomes a case before its fix.
+- **Variation testing, which is the largest gap.** The cases above test known
+  examples, not variants of them. Each needs spellings that must still match
+  (`SVFCU`, `www.svfcu.org`, typos) and near-misses that must not. Parent and
+  product names too: **a listing naming Symitar, ProfitStars or Banno would get
+  past the matcher today**, though all three are Jack Henry.
+- **A daily end-to-end test** — a clearly marked synthetic claim through
+  ingestion, matching and delivery. If today's test did not pass, nothing
+  should report "all clear"; it reports monitoring degraded.
+- **A weekly review-path test**, separate from the daily one, timing the human
+  decision. The daily test cannot wait on a person, so it cannot cover the
+  queue.
+- **Source drift checks** — per-feed volume and completeness thresholds. Zero
+  ransomware listings in 24 hours is an alarm, and so is a missing-victim-name
+  rate above a threshold. This catches a source that changes silently, which an
+  end-to-end test cannot.
+- **A measured hit rate**, monthly: of the incidents publicly reported, how many
+  would Vigil have alerted on. Misses become new test cases.
+- **A plain statement of what Vigil cannot see** — ransoms paid and never
+  listed, and anything inside a vendor's own systems. Saying so is honest and it
+  is also the protection.
+- **Feedback on every alert** — useful, not relevant, already knew. The
+  `actions` table already has the field. An alert type nobody acts on gets
+  retuned or retired.
+- **A database performance baseline on a quiet instance.** Same NVD feed, same
+  code, same day: 27 seconds locally against 274 in the worker, and one tick
+  took 876 seconds of its 15-minute budget. Nobody has measured this with the
+  instance quiet, and "it needs a bigger instance" is a recurring monthly cost
+  against the one-expense constraint. Free-tier headroom is §2c.
+
+### 4e. Sources: what to do next, and what not to re-try
 
 **Do next, in order:**
 
 1. **HHS OCR** — ~7,876 US healthcare breaches, the victim's own account to a
    regulator. **The owner has agreed this gets its own session.** Re-checked
    22 September: a session-based JSF portal with ViewState and no export. Days
-   of scraper work.
+   of scraper work, or a CC BY 4.0 mirror.
 2. **More state AGs.** About a dozen publish a readable list; three are in.
    Adding one is a `REGISTRIES` entry in `state-breach-notices` — a URL, its
-   pagination and a column map.
+   pagination and a column map. The owner asked for all of them.
 3. **Connecting breach notices to existing sources** — the owner's idea on
    22 September. A California notice and a leak-site claim for the same
    organisation is a candidate, not a fact, so it belongs in the queue.
+4. **Vendor research feeds** — MSTIC, Mandiant, Talos, Unit 42. All free RSS and
+   all attributing, but in prose, so each one is a queued finding and never a
+   regular expression.
+5. **Law enforcement** — Europol operations and Treasury designations. DOJ is
+   rejected below.
+6. **Acronis** — asked about on 21 September and never assessed.
 
 **Checked and rejected. Do not re-try without reading the evidence:**
 
@@ -304,15 +389,52 @@ the handover named.
 | **Iowa AG**                             | HTTP 200, but the page carries no table                                                                                                                                                                                                                            |
 | **GreyNoise API**                       | Returns an IP's classification and geolocation — where the box is, not who rented it. Its _research blog_ is ingested and is a different thing                                                                                                                     |
 
-### 4e. Never started
+### 4f. Small debts
+
+- **`settings.spec.js:46`** is selector soup that has failed on three browsers.
+- **The mobile performance e2e tests** assert a 10-second budget that includes
+  `networkidle`, so they measure whatever else is touching the database rather
+  than the app. They will keep blocking merges at random until the budget is
+  raised or they measure render time instead.
+- **The pre-commit hook covers neither `workers/` nor `supabase/`.**
+- **Feed cadence is declared in two places** with nothing enforcing agreement.
+- **`urlhaus` has 100 recorded failures**, and NVD intermittently fails one
+  batch.
+- **Indicators are stored as `address:port`.**
+- **Seven tables have RLS enabled and no policy** — `alert_queue`,
+  `certificates`, `certificate_hosts`, `dns_records`, `tenants`,
+  `tenant_branding`, `tenant_invitations`. Closed to the public, so INFO-level.
+- **Eight materialized views are readable through the API.** WARN-level.
+- **Dependabot** — §2d. #42 and #43 are green and ready; the seven
+  major-version PRs are each a piece of work rather than a merge.
+- **Vercel bot protection** was tripped on 21 September by a 30-second
+  production poll. Attack Challenge Mode was never enabled — the API returns
+  `Seawall Config not found` — and it should have cleared. Worth loading the
+  site once to confirm. **Do not poll production.**
+
+### 4g. Recently closed — do not re-do
+
+These appear as open in older notes and in chat, and are fixed. Check here
+before spending time on any of them.
+
+| Item                                                          | State                                           |
+| ------------------------------------------------------------- | ----------------------------------------------- |
+| `alert_rules` → `user_alert_rules` in AlertAnalyticsDashboard | Fixed; the column is `rule_name`                |
+| `useActorData.js` exhaustive-deps blocking the commit hook    | Fixed; the file lints clean                     |
+| `detect_leak_site_notices()` not scheduled                    | Fixed; it is in `workers/src/feeds/registry.js` |
+| `npm run lint` and CI disagreeing on the warning ceiling      | Fixed; one number, 325, in `package.json` only  |
+| e2e running against the live production database              | Fixed in #39; stubbed                           |
+| `ofac-reachability-probe` Edge Function                       | Deleted                                         |
+
+### 4h. Never started
 
 Shadow mode · victim identity resolution · lead time as a statistic (the SEC
 and state data make this computable — Krispy Kreme 8 days, Key Tronic 21) ·
-provenance on every number · AI summaries into the queue · regression suite ·
-daily test alert · drift checks · indicator data-quality debt · database
-performance baseline · engine contract views · `webhooks` /
-`webhook_deliveries` (attach to whatever alert-delivery work lands) · the
-offshoot items.
+provenance on every number · engine contract views · a public methodology page.
+
+Work belonging to the separate product, and to the owner's own commitments
+around it, is tracked outside this repository by deliberate decision. Do not
+add it here.
 
 ---
 
