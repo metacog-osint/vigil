@@ -125,4 +125,8 @@ export { threatHunts } from './supabase/threatHunts'
 // TEAMS & COLLABORATION
 export { teams } from './supabase/teams'
 
+// ============================================
+// REGULATOR DISCLOSURES
+export { disclosures, DISCLOSURE_SOURCES, COUNT_SCOPES } from './supabase/disclosures'
+
 export default supabase
