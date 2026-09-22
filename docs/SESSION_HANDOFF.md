@@ -117,6 +117,51 @@ country into silence.
 
 ---
 
+## 2a-quater. The ransomware-heaviness problem, and where it stands
+
+_22 September. The owner's instruction: "I do not want a ransomware-heavy
+platform, there are equal to more critical threats out there."_
+
+**The diagnosis mattered more than the fix.** Vigil was not missing
+non-ransomware sources - it had ICS advisories, MITRE campaigns, vendor
+research and government attribution already. It was that `incidents` held
+39,575 rows and everything else held about 500, so one table outnumbered the
+rest eighty to one. A feed of a hundred rows could not have moved it.
+
+| Corpus                                      |   Rows |     Share |
+| ------------------------------------------- | -----: | --------: |
+| Ransomware leak-site claims                 | 39,575 | **87.0%** |
+| Regulator breach notices (California + SEC) |  5,385 | **11.8%** |
+| Vendor research reports                     |    286 |      0.6% |
+| ICS/OT advisories                           |    148 |      0.3% |
+| MITRE campaigns                             |     56 |      0.1% |
+| Government attribution advisories           |     16 |      0.0% |
+
+Ransomware was ~98.7% of the event corpus. It is 87% now, and the second
+category is the victim's own account to a regulator - the strongest evidence
+class Vigil holds.
+
+**What would move it further, in order:**
+
+1. **HHS OCR** - ~7,876 US healthcare breaches. Still the largest prize and
+   still out of reach: a session-based JSF portal with no export. Days of
+   scraper work, not an afternoon. Checked again on 22 September.
+2. **More state AGs** - Maine, Washington, Texas. California took an afternoon
+   and returned 5,302; the others are the same shape of work.
+3. **Presenting by class rather than by count.** Even at 87%, a dashboard that
+   ranks by row count will always look like a ransomware product. That is a
+   product decision, not a feed.
+
+**DOJ press releases were checked and rejected, and should not be re-tried
+without reading this.** Real JSON API, law enforcement, names actor and victim,
+US public domain - everything suggests it should work. It does not. DOJ's topic
+taxonomy is administrative: "Cybercrime" includes child exploitation and
+misbranded drug sales; "Countering Nation-State Threats" includes transporting
+defendants from Haiti. **Across 549 releases over two weeks, 14 matched those
+topics and zero were genuine cyber events.**
+
+---
+
 ## 2a-ter. Attribution sources, 21 September evening
 
 **Actor origin coverage 10.7% -> 14.9%** via ETDA/ThaiCERT (186 actors, 433
