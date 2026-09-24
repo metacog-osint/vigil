@@ -55,17 +55,28 @@ export function kindForSection(heading: string): string | null {
   return SECTION_KINDS.find((s) => s.re.test(heading.trim()))?.kind ?? null
 }
 
+/**
+ * Strip tags and decode the entities FinCEN's register actually uses.
+ *
+ * `&amp;` is decoded LAST, and that ordering is the whole point. Decoding it
+ * first turns `&amp;lt;` into `&lt;`, which the next replacement then turns
+ * into a `<` — a tag delimiter conjured out of text that never contained one.
+ * CodeQL calls this double-unescaping and flagged it here as high severity,
+ * correctly: the first version of this function decoded `&amp;` on line three,
+ * and `&amp;lt;b&amp;gt;` came out as `<b>`.
+ */
 function text(html: string): string {
   return html
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
     .replace(/&#039;|&apos;/g, "'")
     .replace(/&quot;/g, '"')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&#8216;|&#8217;|‘|’/g, "'")
     .replace(/&#8220;|&#8221;|“|”/g, '"')
+    // Last, so nothing it produces can be decoded a second time.
+    .replace(/&amp;/g, '&')
     .replace(/\s+/g, ' ')
     .trim()
 }
