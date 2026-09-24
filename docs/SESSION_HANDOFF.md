@@ -9,10 +9,9 @@ documentation in this repository.
 is on screen, what is not, and the two rules the disclosures query layer encodes
 that a careless commit would undo.
 
-**Before anything else, read the warning at the end of §2.** There are two
-commits on a branch that no open PR points at, and a registered feed that has
-never run because of it. It is the one thing here that disappears if nobody
-looks.
+**Before anything else, read the warning at the end of §2.** The same migration
+exists on two branches under different SHAs, and merging both would apply it
+twice.
 
 ---
 
@@ -68,24 +67,33 @@ remembered._
 - **Database:** 2,687 MB of 8,192 MB (33%). See §2c.
 - **Open PRs:** 7, all Dependabot majors. See §2d.
 
-### ⚠ Work that is not on `main` and has no open PR
+### ⚠ The same FinCEN work exists twice, on two branches
 
-**`feat/evidence-tiers` is two commits ahead of `main`.** PR #49 was merged and
-closed on 24 September, and the branch was pushed to _after_ that, so nothing
-open points at this work and it will not show up in a PR list:
+Both carry migration `147_fincen_advisories.sql`. **Merging both applies it
+twice.** They are not the same commit — the second branch rebuilt the work
+rather than sharing history, so git will not recognise them as duplicates and
+will not warn you:
 
-| Commit    | What                                                              |
-| --------- | ----------------------------------------------------------------- |
-| `6af9988` | FinCEN advisories — 183 documents, October 2007 to September 2026 |
-| `061898a` | A merge of the branch into itself                                 |
+| Branch                 | Commits ahead of `main` | The FinCEN commit | PR                   |
+| ---------------------- | ----------------------- | ----------------- | -------------------- |
+| `feat/fincen-register` | 3                       | `381e8bf`         | **#52 — merge this** |
+| `feat/evidence-tiers`  | 2                       | `6af9988`         | none — abandoned     |
 
-It is pushed to origin, so nothing is lost, but it needs a fresh PR to land. The
-`fincen-advisories` feed is already registered in `feed_expectations` and has
-**never run**, which is consistent with the caller not being on `main` yet.
+`feat/fincen-register` is the one to take: it has the same ingestion work plus a
+page that renders the register and a fix for a queue that could not be read.
+**Once #52 is merged, delete `feat/evidence-tiers`** and the worktree still
+attached to it at `…/dba372c4-…/scratchpad/tiers`. Check nobody is using that
+worktree first; it belonged to a live session on 24 September.
 
-There is also a **live worktree** for that branch at
-`…/dba372c4-…/scratchpad/tiers`. Do not remove it without checking whether a
-session is using it.
+How this happened is worth keeping, because it will happen again: PR #49 was
+merged and closed, then the branch was pushed to, so the new work was invisible
+to every PR list. A second session then rebuilt it cleanly. **A closed PR does
+not mean a finished branch** — §5 has the check.
+
+**Merging does not start the feed.** `fincen-advisories` is registered in
+`feed_expectations` and its state is `never`, because the worker has not been
+deployed. `cd workers && npm run deploy` is the only thing that schedules it,
+and that has now been missed in four sessions. Reminder 6 in CLAUDE.md.
 
 ### What the corpus is made of
 
@@ -147,10 +155,11 @@ run it. §4g carries the measurement.
 Start with the **254 SEC candidates**: ruling on those turns "claimed by Qilin"
 into "claimed by Qilin, and the company told the SEC".
 
-**2. Open a PR for the FinCEN work stranded on `feat/evidence-tiers`.** Two
-commits, no open PR, and a registered feed that has never run because its caller
-is not on `main`. §2 has the detail. This is the one thing on this list that
-gets quietly lost if nobody acts.
+**2. Merge #52, then deploy the worker.** It lands FinCEN — 183 documents back
+to 2007 — and the page that renders them. Then `cd workers && npm run deploy`,
+without which the feed stays at `state = never`. Afterwards delete
+`feat/evidence-tiers`, which carries a second copy of the same migration under a
+different SHA. §2 explains why that is dangerous.
 
 **2b. Fix `ofac-sdn`.** It is the only `critical` feed that is failing, and
 `ingestion_is_healthy()` returns true anyway. That is the function behaving as
