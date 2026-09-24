@@ -189,10 +189,13 @@ cd workers && npm run deploy   # The scheduled feeds. NOT run by CI.
    source rather than writing rows nobody can judge for resale. Two sources are
    NonCommercial; `actor_origins_commercial` is how they come out of a paid
    tier.
-9. **Building a page? Read `docs/SESSION_HANDOFF.md` §2b first.** 8,895
-   regulator disclosures, 286 vendor reports and the whole licence layer are in
-   the database with no page rendering them. That gap is larger than any
-   remaining data gap.
+9. **Building a page? Read `docs/SESSION_HANDOFF.md` §2b first.** The 8,896
+   regulator disclosures have a page as of 22 September, `/disclosures`, which
+   is on a branch and not yet deployed — check, do not assume. 286 vendor
+   reports and the whole licence layer still have no page at all. §2b also
+   records the two rules `src/lib/supabase/disclosures.js` encodes — no single
+   total of people affected, and every figure a database count rather than a
+   tally of returned rows — both of which a careless commit would undo.
 
 ---
 

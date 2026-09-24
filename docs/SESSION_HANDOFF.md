@@ -5,8 +5,9 @@ this, then `README.md`, then the migration headers for whatever you are about
 to touch — those headers carry the reasoning and are the strongest
 documentation in this repository.
 
-**Start with §2a.** Then read **§2b** before building any page: most of what
-was built on 21–22 September is in the database and invisible in the product.
+**Start with §2a.** Then read **§2b** before building any page: it records what
+is on screen, what is not, and the two rules the disclosures query layer encodes
+that a careless commit would undo.
 
 ---
 
@@ -111,46 +112,69 @@ still serving $29/mo and $99/mo Subscribe buttons — checked 22 September, afte
 the commit landed on the branch. The commit is not the fix; the deploy is.
 #42 and #43 are green including webkit and supersede the old stale PRs. See §2d.
 
-**3. Read §2b before building any page.** Most of what was built on 21–22
-September is invisible in the product.
+**3. Read §2b before building any page.** The two largest rows were closed on
+22 September; the vendor research corpus and the licence layer are still
+invisible, and §2b records what the disclosures page settled and what it did
+not.
 
 ---
 
 ## 2b. What exists in the database and not on screen
 
-This is the largest gap in the project right now, and it is not a data gap.
+The two largest rows were built on 22 September. What remains is the vendor
+research corpus and the licence layer.
 
-| Data                       |   Rows | Query layer             | On screen           |
-| -------------------------- | -----: | ----------------------- | ------------------- |
-| `victim_disclosures`       |  8,895 | **none**                | **no**              |
-| `breach_notices_by_state`  | 3 rows | **none**                | **no**              |
-| `vendor_reports`           |    286 | `vendorReports.js`      | **no**              |
-| `vendor_report_actors`     |     21 | `vendorReports.js`      | **no**              |
-| `source_licences`          |     19 | `sourceLicences.js`     | **no**              |
-| `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**              |
+**`/disclosures` and `/contested-claims` are merged** (#46, #49) and reach
+production on the next deploy, which Vercel runs from `main` automatically.
+The pricing-page lesson in §2a still applies to anything not yet merged: the
+commit is not the fix, the deploy is.
+
+| Data                       |   Rows | Query layer             | On screen              |
+| -------------------------- | -----: | ----------------------- | ---------------------- |
+| `victim_disclosures`       |  8,896 | `disclosures.js`        | **yes** — /disclosures  |
+| `breach_notices_by_state`  | 3 rows | `disclosures.js`        | **yes** — /disclosures  |
+| `vendor_reports`           |    286 | `vendorReports.js`      | **no**                 |
+| `vendor_report_actors`     |     21 | `vendorReports.js`      | **no**                 |
+| `source_licences`          |     21 | `sourceLicences.js`     | **no**                 |
+| `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**                 |
 | `contested_claims`         |      8 | `contestedClaims.js`    | **yes** — /contested-claims |
-| `evidence_publishers`      |     20 | `contestedClaims.js`    | partly — tiers only |
-| `regulatory_advisories`    |    183 | **none**                | **no**              |
-| `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer |
+| `evidence_publishers`      |     20 | `contestedClaims.js`    | partly — tiers only    |
+| `regulatory_advisories`    |    183 | **none**                | **no**                 |
+| `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer    |
 
-Only the map's Attributed layer renders any of it. **8,895 regulator
-disclosures — 18% of the entire corpus, and the strongest evidence class Vigil
-holds — cannot be seen by a user at all.**
+**What the disclosures page settled, and what it did not.** It renders the
+filings, the per-state totals and a name search, and it states plainly that the
+state counts are not comparable. It does **not** let anyone rule on a filing:
+`match_status` is displayed, never written. Connecting a notice to a leak-site
+claim is still a queued judgment (§4a) with no interface.
 
-Three things follow, in order of value:
+**Read `src/lib/supabase/disclosures.js` before building anything near it.**
+Two rules are encoded there with tests, and both are one careless commit from
+being undone:
 
-1. **A page for the breach notices**, with the state filter and map the owner
-   asked for on 22 September. `breach_notices_by_state` exists for exactly
-   this. There is no query module yet; write one in `src/lib/supabase/` and
-   re-export it from the monolith (see CLAUDE.md).
-2. **A review surface for vendor reports.** 21 actor links proposed and 8
-   attribution questions queued, none of them rulable through the product. This
-   is also what would finally write `linguistic` — the sixth
+- **There is deliberately no method returning a single total of people
+  affected.** Washington counts its own residents, Oregon counts everyone
+  worldwide, California publishes nothing. Adding them gives 1.45 billion
+  "people affected", a figure about nothing. A test asserts the absence of such
+  a method, because the obvious next commit is the one that adds it.
+- **Every figure is a database count, never a tally of returned rows.**
+  PostgREST caps a plain `select()` at 1,000. Counting client-side shipped
+  "1,000 filings held" against a real 8,896, and "0 carry a count" against
+  3,255 — the first thousand rows are all Californian and California publishes
+  no counts. Both rendered as fact. The tests assert `head: true` rather than
+  the numbers, so the fix cannot regress quietly.
+
+Two things follow, in order of value:
+
+1. **A review surface for vendor reports.** 286 reports, 21 actor links
+   proposed and 8 attribution questions queued, none of them rulable through
+   the product. This is also what would finally write `linguistic` — the sixth
    `attribution_strength` exists and nothing has ever set it.
-3. **Presentation the user controls.** Agreed with the owner on 22 September:
+2. **Presentation the user controls.** Agreed with the owner on 22 September:
    _the user_ decides how the data is presented rather than a fixed view. Even
    at 80.8%, any dashboard that ranks by row count will look like a ransomware
-   product. This is the piece that actually delivers what was asked for.
+   product. The disclosures page is a start — a registry filter and a name
+   search — and not the whole of what was asked for.
 
 ---
 
@@ -284,10 +308,10 @@ central claim and no human has ever exercised it end to end.
 
 ### 4c. Ready to build, no decision needed
 
-**The three pages in §2b are the highest value work left.** 8,895 regulator
-disclosures cannot be seen by a user at all. The owner's steer on 22 September
-was search filters and maps over the state disclosures, with the reader
-choosing how the data is presented.
+**The vendor research surface in §2b is the highest value work left.** The
+regulator disclosures are on screen as of 22 September; 286 vendor reports and
+the 21 actor links proposed against them are not, and none of the 8 queued
+attribution questions can be ruled on through the product.
 
 Feeds and data completeness, measured 22 September 00:45 UTC:
 
