@@ -42,6 +42,7 @@ import { ingestNcscAdvisories } from './ncsc-advisories.js'
 import { ingestEtdaActors } from './etda-actors.js'
 import { ingestVendorResearch } from './vendor-research.js'
 import { ingestStateBreachNotices } from './state-breach-notices.js'
+import { ingestFincenAdvisories } from './fincen-advisories.js'
 
 // Threat actor databases
 import { ingestMalpedia } from './malpedia.js'
@@ -258,6 +259,16 @@ export const JOBS = [
     cost: 1,
     intervalMinutes: 6 * HOUR,
     run: (db, env) => ingestNcscAdvisories(db, env),
+  },
+  {
+    // Daily. FinCEN published six alerts in the whole of 2026, so anything
+    // more often is polling a static page; one subrequest, and the Edge
+    // Function reads three HTML pages behind it.
+    id: 'fincen-advisories',
+    priority: 2,
+    cost: 1,
+    intervalMinutes: 24 * HOUR,
+    run: (db, env) => ingestFincenAdvisories(db, env),
   },
   {
     id: 'ransomwhere',

@@ -130,6 +130,7 @@ This is the largest gap in the project right now, and it is not a data gap.
 | `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**              |
 | `contested_claims`         |      8 | `contestedClaims.js`    | **yes** — /contested-claims |
 | `evidence_publishers`      |     20 | `contestedClaims.js`    | partly — tiers only |
+| `regulatory_advisories`    |    183 | **none**                | **no**              |
 | `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer |
 
 Only the map's Attributed layer renders any of it. **8,895 regulator

@@ -249,6 +249,53 @@ and a short RSS summary — never the article body — and all eight are registe
 in `source_licences` as **not sellable**, because nobody has read their terms
 against this use.
 
+### Financial Crime Advisories
+
+| Source           | Endpoint                                                     | Data Type                                             | Schedule | Script                                                                     | Auth |
+| ---------------- | ------------------------------------------------------------ | ----------------------------------------------------- | -------- | -------------------------------------------------------------------------- | ---- |
+| FinCEN register  | `https://www.fincen.gov/resources/advisoriesbulletinsfact-sheets` | Alerts, advisories, notices, bulletins and fact sheets | Daily    | `workers/src/feeds/fincen-advisories.js` → `fincen-advisories` Edge Function | None |
+
+**Licence: US public domain.** A work of the US government, no restriction.
+Registered in `source_licences` as `fincen` before anything could write a row.
+
+**Why this source.** Everything else here records what happened. FinCEN records
+what institutions are told to look for, and it is the only body on this list
+whose output is written to be acted on under a legal obligation.
+`FIN-2023-Alert005` is the pig-butchering alert; `FIN-2026-Alert005`, published
+3 September 2026, is "Money Laundering Activity Associated with Digital Asset
+Investment Scam Centers".
+
+183 documents on first run, going back to October 2007: 137 advisories,
+27 alerts, 18 notices, 1 fact sheet. Nine are rescinded and kept — they were
+issued and institutions acted on them. Thirteen are Spanish republications
+carrying the same identifier as the English original, which is why `language` is
+part of the key.
+
+**There is no feed.** `/rss.xml` and `/news-room/rss` both return 404 (checked
+24 September 2026). The register is server-rendered HTML, which is the only
+reason this is ingestible without a browser. Two pages with two different
+shapes: the register is plain tables linking to PDFs, and the advisory archive
+is a Drupal view, fifteen rows to a page, linking to landing pages with the date
+in a `<time datetime>`. There are two parsers, because one would be wrong about
+each of them differently.
+
+A routine run reads the register and the newest two archive pages, about 28
+seconds. The full walk is eleven fetches and took 113 seconds, close enough to
+the Edge Function wall clock that a daily job would eventually trip over it, so
+it is opt-in with `?full=1` and run by hand.
+
+**What is deliberately not ingested.** The red-flag indicators. They are inside
+the PDFs, they are the valuable part, and turning a paragraph of prose into a
+structured indicator is a judgment — the kind that put two false attributions in
+this database when a regular expression made it. `indicators_read` is false on
+every row and `review_regulatory_advisories()` queues the fraud-relevant ones
+for a person; 29 are queued as of the first run.
+
+There is no topic column either. A phrase table deciding that an alert "is
+about" pig butchering asserts something FinCEN did not say in those words.
+
+---
+
 ### Government Attribution
 
 | Source                    | Endpoint                                                     | Data Type                                      | Schedule | Script                                                                   | Auth |
