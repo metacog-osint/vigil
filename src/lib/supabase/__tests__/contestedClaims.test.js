@@ -29,7 +29,18 @@ import {
 /** A chainable stub that resolves to whatever the test hands it. */
 function stubQuery(result) {
   const chain = {}
-  for (const method of ['select', 'order', 'range', 'eq', 'neq', 'not', 'is', 'gte', 'lte', 'maybeSingle']) {
+  for (const method of [
+    'select',
+    'order',
+    'range',
+    'eq',
+    'neq',
+    'not',
+    'is',
+    'gte',
+    'lte',
+    'maybeSingle',
+  ]) {
     chain[method] = vi.fn(() => chain)
   }
   chain.maybeSingle = vi.fn(() => Promise.resolve(result))
@@ -56,7 +67,8 @@ describe('the module refuses to resolve a claim', () => {
           {
             claim_key: 'global_crypto_scam_losses_2025',
             resolution: 'present_both',
-            handling: '"$14 billion measured, projected above $17 billion." Never present the projection alone.',
+            handling:
+              '"$14 billion measured, projected above $17 billion." Never present the projection alone.',
             decided_by: 'a person',
             values_recorded: 3,
             distinct_origins: 1,
@@ -134,9 +146,7 @@ describe('every coverage figure is a database count', () => {
   })
 
   it('returns null rather than zero when a count fails', async () => {
-    supabase.from.mockReturnValue(
-      stubQuery({ count: null, error: { message: 'no' } })
-    )
+    supabase.from.mockReturnValue(stubQuery({ count: null, error: { message: 'no' } }))
 
     const { data } = await contestedClaims.getCoverage()
 

@@ -40,7 +40,8 @@ const ECHO_CLAIM = {
   period_end: '2025-12-31',
   scope_note: null,
   resolution: 'present_both',
-  handling: '"$14 billion measured, projected above $17 billion." Never present the projection alone.',
+  handling:
+    '"$14 billion measured, projected above $17 billion." Never present the projection alone.',
   decided_by: 'T. R. Brummer, scam-disruption compilation v1.0',
   decided_at: '2026-08-21T00:00:00+00:00',
   values_recorded: 3,
@@ -185,9 +186,7 @@ describe('a repetition never passes for a source', () => {
 describe('the page does not resolve anything itself', () => {
   it('renders the ruling a person made, verbatim', async () => {
     render(<ContestedClaims />)
-    expect(
-      await screen.findByText(/Never present the projection alone/)
-    ).toBeInTheDocument()
+    expect(await screen.findByText(/Never present the projection alone/)).toBeInTheDocument()
   })
 
   it('shows both the measured and the projected figure rather than one', async () => {
@@ -201,18 +200,14 @@ describe('the page does not resolve anything itself', () => {
 
   it('takes no position where nobody has ruled', async () => {
     render(<ContestedClaims />)
-    expect(
-      await screen.findByText(/until it is ruled Vigil has no position/)
-    ).toBeInTheDocument()
+    expect(await screen.findByText(/until it is ruled Vigil has no position/)).toBeInTheDocument()
   })
 })
 
 describe('nothing here reads as established', () => {
   it('warns that no figure has been checked at source, before any figure', async () => {
     render(<ContestedClaims />)
-    expect(
-      screen.getByText(/Nothing on this page has been checked at source/)
-    ).toBeInTheDocument()
+    expect(screen.getByText(/Nothing on this page has been checked at source/)).toBeInTheDocument()
 
     // Let the load settle so the assertion above is known to have run before
     // any figure reached the screen, not merely alongside one.
@@ -221,7 +216,15 @@ describe('nothing here reads as established', () => {
 
   it('renders a failed count as an em dash rather than zero', async () => {
     getCoverage.mockResolvedValue({
-      data: { claims: null, values: null, repetitions: null, verified: null, echoClaims: null, publishers: null, untiered: null },
+      data: {
+        claims: null,
+        values: null,
+        repetitions: null,
+        verified: null,
+        echoClaims: null,
+        publishers: null,
+        untiered: null,
+      },
       error: null,
     })
 
