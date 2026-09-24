@@ -118,3 +118,6 @@ export {
 
 // Retry utility for resilient API calls
 export { withRetry, fetchWithRetry, createRetryable } from '../retry'
+
+// What victims told a regulator, and what their counts actually count
+export { disclosures, DISCLOSURE_SOURCES, COUNT_SCOPES } from './disclosures'
