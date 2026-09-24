@@ -84,26 +84,34 @@ non-ransomware source could move it.
 
 ## 2a. Do these first
 
-**1. Use the review queue.** `/review`. **80 findings open, and no verdict has
+**1. Use the review queue.** `/review`. **340 findings open, and no verdict has
 ever been recorded through the page.** It is the product's central claim and it
 has never been exercised for real. Everything else on this list is optional;
 this is not.
 
-| Check                          | Count | What it asks                                                                                                  |
-| ------------------------------ | ----: | ------------------------------------------------------------------------------------------------------------- |
-| `victim_country_disagreement`  |    25 | Two sources name different countries for one victim                                                           |
-| `sec_disclosure_candidate`     |    16 | A company filed an 8-K and a group claimed a company of that name                                             |
-| `leak_site_notice_candidate`   |    13 | A leak-site post that reads as an announcement, not a victim claim                                            |
-| `vendor_attribution_candidate` |     8 | A vendor report whose wording may be an attribution                                                           |
-| `actor_origin_ambiguous`       |     5 | An actor matching ETDA entries that name two different countries                                              |
-| `leak_site_notice_review`      |     3 | Ruled once, queued again                                                                                      |
-| `actor_alias_review`           |     2 | Two names, one group?                                                                                         |
-| `attribution_unstated`         |     1 | NCSC named Iran without saying what its relationship to it is                                                 |
-| `campaign_multiple_actors`     |     1 | MITRE attributes C0052 to two groups; `actor_id` holds one                                                    |
-| `actor_origin_disagreement`    |     1 | OnionDog: Vigil says KP, ETDA says KR                                                                         |
-| five others                    |     5 | Audit-log trust, victim and vulnerability key quality, review authority, an actor that resumed after takedown |
+Counts re-queried 24 September. The last handover said 80; the SEC check alone
+has gone from 16 to 254 since, so treat any count here as decaying and re-run
+the query rather than trusting the table.
 
-Start with the **16 SEC candidates**: ruling on those turns "claimed by Qilin"
+| Check                             | Count | What it asks                                                                                                  |
+| --------------------------------- | ----: | ------------------------------------------------------------------------------------------------------------- |
+| `sec_disclosure_candidate`        |   254 | A company filed an 8-K and a group claimed a company of that name                                             |
+| `victim_country_disagreement`     |    25 | Two sources name different countries for one victim                                                           |
+| `claim_value_unverified`          |    17 | A claimed figure nothing independent supports                                                                 |
+| `leak_site_notice_candidate`      |    13 | A leak-site post that reads as an announcement, not a victim claim                                            |
+| `vendor_attribution_candidate`    |     8 | A vendor report whose wording may be an attribution                                                           |
+| `actor_origin_ambiguous`          |     5 | An actor matching ETDA entries that name two different countries                                              |
+| `leak_site_notice_review`         |     3 | Ruled once, queued again                                                                                      |
+| `actor_alias_review`              |     2 | Two names, one group?                                                                                         |
+| `ioc_actor_backfill`              |     1 | Should `iocs.actor_id` ever be derived from `malware_family`? See §4g                                         |
+| `actor_row_may_be_malware_family` |     1 | 16 actor rows that match a family name and have no incidents — groups, or mis-ingested families?              |
+| eleven others                     |    11 | Audit-log trust, victim and vulnerability key quality, review authority, an actor that resumed after takedown |
+
+Two of these were queued on 24 September rather than found by a feed: they came
+out of measuring the `iocs.actor_id` backfill, and they are the reason not to
+run it. §4g carries the measurement.
+
+Start with the **254 SEC candidates**: ruling on those turns "claimed by Qilin"
 into "claimed by Qilin, and the company told the SEC".
 
 **2. Merge #44, then #42 and #43.** #44 removes the subscription tier system.
@@ -452,6 +460,7 @@ before spending time on any of them.
 | e2e running against the live production database              | Fixed in #39; stubbed                           |
 | `ofac-reachability-probe` Edge Function                       | Deleted                                         |
 | The subscription tier system                                  | Removed in #44; see below                       |
+| Backfilling `iocs.actor_id` by joining our own data            | Measured 24 September and rejected; see below   |
 
 **On #44, because “removed” is doing different work at each layer.** The pricing
 page, the Stripe client and its three Vercel functions, `SubscriptionContext`,
@@ -469,6 +478,38 @@ wrong:
 - **The git history still holds all of it**, the same caveat as the three
   commercial documents above.
 - **Production keeps serving the old bundle until someone deploys.** See §2a.
+
+**On the `iocs.actor_id` backfill, because the proposal keeps coming back.**
+`actor_id` is NULL on all **577,742** rows. The suggestion each time is a batch
+pass with no model in it, joining against Vigil's own incident and actor data.
+Measured 24 September, that join does not exist and the fallback is unsafe:
+
+- **`incident_id` is NULL on all 577,742 rows too.** There is no IOC→incident
+  link to walk, so the one path that would have been provenance rather than
+  inference is not there.
+- The only remaining path is `malware_family` → actor by name or alias. It
+  reaches **22,231 rows, 3.8%** of the table — not "much of it". 446,234 rows
+  have a family matching no actor at all, and the largest families are not
+  families: `malware_download` (152,855), `malware` (70,577), `phishing`
+  (33,534), `Unknown malware` (25,788).
+- **The 3.8% it does reach is where it is most wrong.** `Mirai` matches an actor
+  typed `apt`, and Mirai is a botnet family with many unrelated operators.
+  `unknown` matches an actor literally named `Unknown`. `Snake` matches two —
+  Turla, whose malware it is, and a ransomware group of the same name.
+  `XWorm`, `ValleyRAT` and `Havoc` are commodity tooling, and the actor rows
+  they match look like malware families mis-ingested as actors.
+
+So the backfill would not fill the column so much as launder a naming
+coincidence into an attribution, at the exact scale that makes it impossible to
+unpick later. **Do not run it.** Both the specific question and the actor-row
+problem are queued in `data_quality_findings` for a person, which is where a
+judgment of this kind belongs. The queue already carries 15 resolved
+`family_actor_review` findings, so the question has precedent and a format.
+
+A defensible version exists and is a different piece of work: give IOCs a real
+provenance column at ingestion — the report, advisory or leak-site post an
+indicator came from — and derive the actor from that. That is a fact about
+where a row came from rather than a guess about what it means.
 
 ### 4h. Never started
 
