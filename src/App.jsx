@@ -23,6 +23,7 @@ const Alerts = lazy(() => import('./pages/Alerts'))
 const AdvancedSearch = lazy(() => import('./pages/AdvancedSearch'))
 const TrendAnalysis = lazy(() => import('./pages/TrendAnalysis'))
 const ReviewQueue = lazy(() => import('./pages/ReviewQueue'))
+const Disclosures = lazy(() => import('./pages/Disclosures'))
 const ThreatHunts = lazy(() => import('./pages/ThreatHunts'))
 const ApiDocs = lazy(() => import('./pages/ApiDocs'))
 const Reports = lazy(() => import('./pages/Reports'))
@@ -246,6 +247,7 @@ function ProtectedApp() {
                         <Route path="/alerts" element={<Alerts />} />
                         <Route path="/trends" element={<TrendAnalysis />} />
                         <Route path="/review" element={<ReviewQueue />} />
+                        <Route path="/disclosures" element={<Disclosures />} />
                         <Route path="/threat-hunts" element={<ThreatHunts />} />
                         <Route path="/api-docs" element={<ApiDocs />} />
                         <Route path="/reports" element={<Reports />} />
