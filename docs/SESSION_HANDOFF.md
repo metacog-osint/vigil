@@ -1,4 +1,4 @@
-# Session handoff — 20–22 September 2026
+# Session handoff — 20–24 September 2026
 
 Written so the next session can pick up without re-deriving anything. Read
 this, then `README.md`, then the migration headers for whatever you are about
@@ -8,6 +8,11 @@ documentation in this repository.
 **Start with §2a.** Then read **§2b** before building any page: it records what
 is on screen, what is not, and the two rules the disclosures query layer encodes
 that a careless commit would undo.
+
+**Before anything else, read the warning at the end of §2.** There are two
+commits on a branch that no open PR points at, and a registered feed that has
+never run because of it. It is the one thing here that disappears if nobody
+looks.
 
 ---
 
@@ -47,18 +52,40 @@ Do not collapse them:
 
 ## 2. Where things stand
 
-_Last updated 22 September 2026._
+_Last updated 24 September 2026. Every number below was re-queried, not
+remembered._
 
-- **Branch:** `main`. Everything is merged; no feature branch is outstanding.
+- **Branch:** `main` at `05a9e3c`, deployed to production 24 September 02:23.
 - **Supabase project:** `faqazkwdkajhxmwxchop`
-- **Migrations:** numbered to `144`, all applied. The live DB numbers by
-  timestamp, so repo filenames are for humans only.
-- **Tests:** ~1,100 passing (1,018 unit, 82 worker).
-- **Lint:** 321 warnings against a ceiling of **325**, set only in
+- **Migrations:** 141 files numbered to `146`, all applied. The live DB numbers
+  by timestamp, so repo filenames are for humans only.
+- **Tests:** **1,115 passing** across 50 files.
+- **Lint:** **298 warnings**, 0 errors, against a ceiling of **325** set only in
   `package.json`.
-- **Worker:** deployed, 36 feeds watched, `ingestion_is_healthy()` true.
-- **Edge Functions:** 9, and the deployment now matches the repo exactly.
-- **Database:** 2,642 MB of 8,192 MB (32%). See §2c.
+- **Worker:** deployed, 36 feeds watched, `ingestion_is_healthy()` returns true
+  — but a `critical` feed is erroring and the check does not catch it. See §4c.
+- **Edge Functions:** 10.
+- **Database:** 2,687 MB of 8,192 MB (33%). See §2c.
+- **Open PRs:** 7, all Dependabot majors. See §2d.
+
+### ⚠ Work that is not on `main` and has no open PR
+
+**`feat/evidence-tiers` is two commits ahead of `main`.** PR #49 was merged and
+closed on 24 September, and the branch was pushed to _after_ that, so nothing
+open points at this work and it will not show up in a PR list:
+
+| Commit    | What                                                              |
+| --------- | ----------------------------------------------------------------- |
+| `6af9988` | FinCEN advisories — 183 documents, October 2007 to September 2026 |
+| `061898a` | A merge of the branch into itself                                 |
+
+It is pushed to origin, so nothing is lost, but it needs a fresh PR to land. The
+`fincen-advisories` feed is already registered in `feed_expectations` and has
+**never run**, which is consistent with the caller not being on `main` yet.
+
+There is also a **live worktree** for that branch at
+`…/dba372c4-…/scratchpad/tiers`. Do not remove it without checking whether a
+session is using it.
 
 ### What the corpus is made of
 
@@ -68,10 +95,10 @@ threats out there."
 
 | Corpus                                     |   Rows |     Share |
 | ------------------------------------------ | -----: | --------: |
-| Ransomware leak-site claims                | 39,575 | **80.8%** |
-| Regulator breach notices (CA, WA, OR, SEC) |  8,895 | **18.2%** |
-| Vendor research reports                    |    286 |      0.6% |
-| ICS/OT advisories                          |    148 |      0.3% |
+| Ransomware leak-site claims                | 39,643 | **80.8%** |
+| Regulator breach notices (CA, WA, OR, SEC) |  8,898 | **18.1%** |
+| Vendor research reports                    |    292 |      0.6% |
+| ICS/OT advisories                          |    157 |      0.3% |
 | MITRE campaigns                            |     56 |      0.1% |
 | Government attribution advisories          |     16 |      0.0% |
 
@@ -84,18 +111,24 @@ non-ransomware source could move it.
 
 ## 2a. Do these first
 
-**1. Use the review queue.** `/review`. **340 findings open, and no verdict has
+**1. Use the review queue.** `/review`. **369 findings open, and no verdict has
 ever been recorded through the page.** It is the product's central claim and it
 has never been exercised for real. Everything else on this list is optional;
 this is not.
 
-Counts re-queried 24 September. The last handover said 80; the SEC check alone
-has gone from 16 to 254 since, so treat any count here as decaying and re-run
-the query rather than trusting the table.
+Counts re-queried 24 September at 02:30. They moved by 29 in the hour before
+that, so treat every number here as decaying and re-run the query rather than
+trusting the table:
+
+```sql
+select check_name, count(*) from data_quality_findings
+where status='open' group by 1 order by 2 desc;
+```
 
 | Check                             | Count | What it asks                                                                                                  |
 | --------------------------------- | ----: | ------------------------------------------------------------------------------------------------------------- |
 | `sec_disclosure_candidate`        |   254 | A company filed an 8-K and a group claimed a company of that name                                             |
+| `advisory_indicators_unread`      |    29 | An advisory carries indicators nothing has read                                                               |
 | `victim_country_disagreement`     |    25 | Two sources name different countries for one victim                                                           |
 | `claim_value_unverified`          |    17 | A claimed figure nothing independent supports                                                                 |
 | `leak_site_notice_candidate`      |    13 | A leak-site post that reads as an announcement, not a victim claim                                            |
@@ -105,7 +138,7 @@ the query rather than trusting the table.
 | `actor_alias_review`              |     2 | Two names, one group?                                                                                         |
 | `ioc_actor_backfill`              |     1 | Should `iocs.actor_id` ever be derived from `malware_family`? See §4g                                         |
 | `actor_row_may_be_malware_family` |     1 | 16 actor rows that match a family name and have no incidents — groups, or mis-ingested families?              |
-| eleven others                     |    11 | Audit-log trust, victim and vulnerability key quality, review authority, an actor that resumed after takedown |
+| ten others                        |    10 | Audit-log trust, victim and vulnerability key quality, review authority, an actor that resumed after takedown |
 
 Two of these were queued on 24 September rather than found by a feed: they came
 out of measuring the `iocs.actor_id` backfill, and they are the reason not to
@@ -114,11 +147,18 @@ run it. §4g carries the measurement.
 Start with the **254 SEC candidates**: ruling on those turns "claimed by Qilin"
 into "claimed by Qilin, and the company told the SEC".
 
-**2. Merge #44, then #42 and #43.** #44 removes the subscription tier system.
-Until it is merged **and deployed**, vigil.theintelligence.company/pricing is
-still serving $29/mo and $99/mo Subscribe buttons — checked 22 September, after
-the commit landed on the branch. The commit is not the fix; the deploy is.
-#42 and #43 are green including webkit and supersede the old stale PRs. See §2d.
+**2. Open a PR for the FinCEN work stranded on `feat/evidence-tiers`.** Two
+commits, no open PR, and a registered feed that has never run because its caller
+is not on `main`. §2 has the detail. This is the one thing on this list that
+gets quietly lost if nobody acts.
+
+**2b. Fix `ofac-sdn`.** It is the only `critical` feed that is failing, and
+`ingestion_is_healthy()` returns true anyway. That is the function behaving as
+written rather than a bug — it trips on `state in ('stale','never')` and
+`ofac-sdn` is still only `late` — but it means **a critical feed erroring on
+every attempt reads as healthy until it goes stale**, and `last_status` is not
+consulted at all. Fix the feed; then decide whether that is the threshold you
+want. §4c.
 
 **3. Read §2b before building any page.** The two largest rows were closed on
 22 September; the vendor research corpus and the licence layer are still
@@ -137,17 +177,17 @@ production on the next deploy, which Vercel runs from `main` automatically.
 The pricing-page lesson in §2a still applies to anything not yet merged: the
 commit is not the fix, the deploy is.
 
-| Data                       |   Rows | Query layer             | On screen              |
-| -------------------------- | -----: | ----------------------- | ---------------------- |
-| `victim_disclosures`       |  8,896 | `disclosures.js`        | **yes** — /disclosures  |
-| `breach_notices_by_state`  | 3 rows | `disclosures.js`        | **yes** — /disclosures  |
-| `vendor_reports`           |    286 | `vendorReports.js`      | **no**                 |
-| `vendor_report_actors`     |     21 | `vendorReports.js`      | **no**                 |
-| `source_licences`          |     21 | `sourceLicences.js`     | **no**                 |
-| `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**                 |
+| Data                       |   Rows | Query layer             | On screen                   |
+| -------------------------- | -----: | ----------------------- | --------------------------- |
+| `victim_disclosures`       |  8,898 | `disclosures.js`        | **yes** — /disclosures      |
+| `breach_notices_by_state`  | 3 rows | `disclosures.js`        | **yes** — /disclosures      |
+| `vendor_reports`           |    292 | `vendorReports.js`      | **no**                      |
+| `vendor_report_actors`     |     21 | `vendorReports.js`      | **no**                      |
+| `source_licences`          |     22 | `sourceLicences.js`     | **no**                      |
+| `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**                      |
 | `contested_claims`         |      8 | `contestedClaims.js`    | **yes** — /contested-claims |
-| `evidence_publishers`      |     20 | `contestedClaims.js`    | partly — tiers only    |
-| `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer    |
+| `evidence_publishers`      |     20 | `contestedClaims.js`    | partly — tiers only         |
+| `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer         |
 
 **What the disclosures page settled, and what it did not.** It renders the
 filings, the per-state totals and a name search, and it states plainly that the
@@ -185,14 +225,14 @@ Two things follow, in order of value:
 
 ---
 
-## 2c. Free-tier headroom, measured 22 September
+## 2c. Free-tier headroom, measured 24 September
 
-|                                  |                                         |
-| -------------------------------- | --------------------------------------- |
-| Database                         | **2,642 MB of 8,192 MB** (Supabase Pro) |
-| Everything added 21–22 September | **~9 MB**                               |
-| Worker cron triggers             | **4 of 5** allowed on Workers Free      |
-| Cron invocations                 | ~29/day against 100,000/day             |
+|                       |                                         |
+| --------------------- | --------------------------------------- |
+| Database              | **2,687 MB of 8,192 MB** (Supabase Pro) |
+| Added 22–24 September | **~45 MB**                              |
+| Worker cron triggers  | **4 of 5** allowed on Workers Free      |
+| Cron invocations      | ~29/day against 100,000/day             |
 
 **The growth is not the feeds.** `entity_changelog` is 1,197 MB — 45% of the
 whole database — and `iocs` another 827 MB. Together about **95 MB/month, with
@@ -211,24 +251,27 @@ The config was the problem, not the bumps. `.github/dependabot.yml` now groups
 npm majors and GitHub Actions, and Dependabot superseded the old PRs within a
 minute.
 
-- **#42** — 10 npm minor/patch updates, rebased onto current main. **All checks
-  green, webkit included. Ready to merge.**
-- **#43** — 6 GitHub Actions bumps in one PR. **All green. Ready to merge.**
+- **#42** — 10 npm minor/patch updates. **Merged 24 September.** Its lockfile
+  predated the 154-package prune in #44, so `main` was merged into it first and
+  CI re-run, to prove `npm ci` worked against the combined lock and that the
+  `@firebase` and `@stripe` trees did not come back. Neither did.
+- **#43** — 6 GitHub Actions bumps. **Merged 24 September.** Side effect worth
+  knowing: CodeQL now runs on pull requests, and passes.
 
 Those two greens are the proof of something worth remembering: **the thirteen
 older PRs' red crosses were inherited, not caused.** Every one predated PR #39,
 which is what took main from 21 failing tests to green, so their CI ran against
 a main that was already broken.
 
-**Seven major-version PRs remain** (#7, #8, #10–#14). Each is a piece of work
-rather than a merge: eslint 8→9 needs the flat-config migration and would take
+**Seven major-version PRs remain** (#7, #8, #10–#14), all raised in January and
+all still open. Each is a piece of work rather than a merge: eslint 8→9 needs the flat-config migration and would take
 the lint gate with it; react-router 6→7 and react 18→19 change APIs the app
 uses; vite 5→7 and `@vitejs/plugin-react` 4→5 move together. They collapse into
 one `major-updates` PR on Dependabot's next scheduled run.
 
 ---
 
-## 3. What the 20–22 September sessions built
+## 3. What the 20–24 September sessions built
 
 Kept short. The reasoning lives in the migration headers, which are the
 strongest documentation in this repository.
@@ -268,6 +311,40 @@ the column `rule_name`.
 **Commercial material out of the public repository** — three files, not the one
 the handover named.
 
+### 22–24 September
+
+**The subscription tier system is gone** (#44, #47). The pricing page, the Stripe
+client and its three Vercel functions, `SubscriptionContext`, `features.js` and
+the upsell components: removed, not stubbed, with the gating unwound at twenty
+call sites so no tier can come back by accident. `/pricing` no longer exists in
+production — verified against the deployed bundle, which contains zero
+references to it. The 17 files are archived outside the repository. §4g has what
+deliberately survives.
+
+Two things fell out of that removal, and both are the more interesting half:
+
+- **A gate had been hiding a broken page.** Watchlists handed `EmptyState` an
+  object as its `action`; React refused to render it and the page threw. Nobody
+  had seen it, because every visitor without a plan got the upgrade prompt
+  instead. `e2e/ungated-pages.spec.js` now renders each previously gated page
+  and fails if one reaches the error boundary.
+- **The lockfile had 154 packages nothing used** — the whole `@firebase`,
+  `firebase-admin`, `@google-cloud` and `@grpc` tree, stale since the move to
+  Supabase, reinstalled on every `npm ci`. Removed. The Firebase remnants in the
+  CSP went with it (#47): `connect-src` allowed `*.firebaseio.com`,
+  `identitytoolkit.googleapis.com` and `securetoken.googleapis.com`, and
+  `script-src` allowed `apis.google.com`. Nothing had used any of them for
+  months.
+
+**Two pages that render what was already in the database** — `/disclosures`
+(#46) for the 8,898 regulator filings, and `/contested-claims` (#49) with an
+evidence tier for every source. §2b has what the disclosures query layer encodes
+and why a careless commit would undo it.
+
+**`iocs.actor_id` was measured and left alone.** §4g carries the working; the
+short version is that the join everyone proposes does not exist, the fallback
+reaches 3.8% of the table, and that 3.8% is where it is most wrong.
+
 ---
 
 ## 4. Everything outstanding
@@ -280,13 +357,13 @@ was queried.
 
 Nothing here is blocked on engineering. All of it is judgment.
 
-| Item                                                                                                                               | Measured                           |
-| ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| **Review-queue findings with no verdict.** The page exists; a verdict has never been recorded through it. §2a.                     | **80 open** (31 resolved, 82 auto) |
-| **Vendor→actor link proposals, none confirmed.** `vendor_report_actors.confirmed` is false on every row.                           | **21**                             |
-| **Regulator disclosures unreviewed.** Whether a state notice and a leak-site claim describe one event is a judgment, by design.    | **8,879 of 8,895**                 |
-| **Three named alias verdicts still untaken** — Hive = hiveleak, Royal → BlackSuit, and Conti, which has no citable authority page. | 3                                  |
-| **Family decisions left open** from the September identity work — Hades, Medusa, NetWorm.                                          | 3                                  |
+| Item                                                                                                                                                                                  | Measured                            |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| **Review-queue findings with no verdict.** The page exists; a verdict has never been recorded through it. §2a.                                                                        | **369 open** (31 resolved, 84 auto) |
+| **Vendor→actor link proposals, none confirmed.** `vendor_report_actors.confirmed` is false on every row.                                                                              | **21**                              |
+| **Regulator disclosures unreviewed.** Whether a state notice and a leak-site claim describe one event is a judgment, by design. The page displays `match_status` and never writes it. | **8,898 of 8,898**                  |
+| **Three named alias verdicts still untaken** — Hive = hiveleak, Royal → BlackSuit, and Conti, which has no citable authority page.                                                    | 3                                   |
+| **Family decisions left open** from the September identity work — Hades, Medusa, NetWorm.                                                                                             | 3                                   |
 
 The first row is the one that matters. The review queue is the product's
 central claim and no human has ever exercised it end to end.
@@ -320,19 +397,23 @@ regulator disclosures are on screen as of 22 September; 286 vendor reports and
 the 21 actor links proposed against them are not, and none of the 8 queued
 attribution questions can be ruled on through the product.
 
-Feeds and data completeness, measured 22 September 00:45 UTC:
+Feeds and data completeness, re-measured 24 September 02:30 UTC:
 
-| Item                                                                                                                                     | Measured         |
-| ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| **Malpedia stale.** Already ingested, licensed and registered, and it carries actor country — the cheapest remaining win on attribution. | 114.8 days       |
-| **`censys` stale and erroring.**                                                                                                         | 247.9 days       |
-| **`mitre` and `mitre-atlas` have never recorded a run** (priority 4–5 weeklies).                                                         | never            |
-| **Six feeds late** — anyrun-trends, bgpstream, epss, misp-galaxy, ransomwhere, tor-exits; `epss` erroring.                               | 1.1–1.2 days     |
-| **Incidents with no country.** Was 71% in September.                                                                                     | 22,216 of 39,575 |
-| **Incidents with no sector.**                                                                                                            | 4,075            |
-| **Actors with no trend status.** Need an "insufficient data" label and exclusion from default views.                                     | 4,123 of 4,504   |
-| **Actors with a stored AI summary.** Every `ai_summary` is empty.                                                                        | 0                |
-| **MITRE campaigns with no actor link.** Salt Typhoon and Volt Typhoon are exactly the non-ransomware activity that is missing.           | 32 of 56         |
+| Item                                                                                                                                                                       | Measured         |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| **`ofac-sdn` is failing and it is the only `critical` feed doing so.** `upsert_sanctioned_addresses failed: canceling statement due to statement timeout`. **Start here.** | 1.1 days late    |
+| **`ioc-geo` erroring**, also a statement timeout (`57014`). Two timeouts in different feeds is a database-performance signal, not two coincidences.                        | erroring         |
+| **`fincen-advisories` has never run** — registered in `feed_expectations`, but its caller is on the unmerged branch. §2.                                                   | never            |
+| **Malpedia stale.** Already ingested, licensed and registered, and it carries actor country — the cheapest remaining win on attribution.                                   | 116.8 days       |
+| **`censys` stale and erroring** — `subrequest budget exhausted (32/32, 18 reserved)`.                                                                                      | 250.0 days       |
+| **`mitre` and `mitre-atlas` have never recorded a run** (priority 4–5 weeklies).                                                                                           | never            |
+| **`vulncheck` 401s on every attempt.** Never succeeded.                                                                                                                    | never            |
+| **Five feeds stale** — anyrun-trends, bgpstream, misp-galaxy, ransomwhere, tor-exits.                                                                                      | 3.1–3.3 days     |
+| **Incidents with no country.**                                                                                                                                             | 22,252 of 39,643 |
+| **Incidents with no sector.**                                                                                                                                              | 4,133            |
+| **Actors with no trend status.** Need an "insufficient data" label and exclusion from default views.                                                                       | 4,123 of 4,504   |
+| **Actors with a stored AI summary.** Every `ai_summary` is empty.                                                                                                          | 0                |
+| **MITRE campaigns with no actor link.** Salt Typhoon and Volt Typhoon are exactly the non-ransomware activity that is missing.                                             | 32 of 56         |
 
 Schemas that exist with nothing rendering them:
 
@@ -460,7 +541,11 @@ before spending time on any of them.
 | e2e running against the live production database              | Fixed in #39; stubbed                           |
 | `ofac-reachability-probe` Edge Function                       | Deleted                                         |
 | The subscription tier system                                  | Removed in #44; see below                       |
-| Backfilling `iocs.actor_id` by joining our own data            | Measured 24 September and rejected; see below   |
+| Backfilling `iocs.actor_id` by joining our own data           | Measured 24 September and rejected; see below   |
+| Firebase remnants, including three CSP origins                | Removed in #47                                  |
+| `/disclosures` and `/contested-claims` not on screen          | Built and merged, #46 and #49                   |
+| Dependabot #42 and #43                                        | Merged 24 September; §2d                        |
+| `ungated-pages.spec.js` asserting absence before render       | Fixed in #50                                    |
 
 **On #44, because “removed” is doing different work at each layer.** The pricing
 page, the Stripe client and its three Vercel functions, `SubscriptionContext`,
@@ -557,6 +642,20 @@ Branches do not protect you; last write wins.
   filename matters. This happened three times today.
 - **Stay out of other lanes.** `workers/`, the alert path and `iocs.js` were
   actively being rewritten today.
+- **Prefer a `git worktree` to working in the shared directory.** Three of the
+  changes on 24 September were made in
+  `git worktree add -b <branch> <scratch-dir> origin/main`, committed and pushed
+  from there, and the worktree removed afterwards. The shared tree was never
+  touched, so another session building a page in it was never disturbed. This is
+  the single practice that made parallel work safe, and it costs about twenty
+  seconds.
+- **Never switch branches in the shared tree while it is dirty.** Check
+  `git status` first; if another session has uncommitted work there, use a
+  worktree instead.
+- **A closed PR does not mean the branch is finished.** `feat/evidence-tiers`
+  was merged and closed, then pushed to again. Before removing any worktree or
+  branch, run `git merge-base --is-ancestor <sha> origin/main` — "the PR is
+  merged" is not the same question and will give you the wrong answer. §2.
 
 **Applying migrations.** Use the Supabase MCP `apply_migration`. Write the full
 reasoning into the repo file and apply a condensed version that points back at it,
@@ -736,24 +835,31 @@ Watch the Vercel dashboard or the GitHub deployment, not the site itself.
 
 ## 7. If you only do one thing
 
-**Use the review queue**, at `/review`. Eighty findings are waiting and not one
+**Use the review queue**, at `/review`. **369 findings** are waiting and not one
 verdict has ever been recorded through the page.
 
 Every one is a judgment no amount of engineering will settle — which two names
 are one group, whether a post is a victim claim, whether an advisory naming
-Iran without saying how means state or something weaker. **Sixteen SEC
+Iran without saying how means state or something weaker. **The 254 SEC
 candidates** are the place to start: a company filed an 8-K Item 1.05 saying a
 material incident occurred, and a ransomware group claimed an organisation of
 the same name. Ruling on those turns "claimed by Qilin" into "claimed by Qilin,
 and the company told the SEC" — the only corroboration a leak-site feed cannot
 buy.
 
-The queue grew by 22 between 20 and 22 September, and every addition was a
-source refusing to guess: NCSC naming Iran without saying how, MITRE
+The queue grew from 80 to 369 between 22 and 24 September, and every addition
+was a source refusing to guess: NCSC naming Iran without saying how, MITRE
 attributing one campaign to two groups, ETDA disagreeing with Vigil about
-OnionDog, GreyNoise calling someone "a suspected Chinese speaker". **That is
-the mechanism working. It produces work rather than removing it, and the work
-has never once been done.**
+OnionDog, GreyNoise calling someone "a suspected Chinese speaker". Two of the
+newest were queued by a session that had been asked to backfill `iocs.actor_id`
+and found that doing so would invent 22,231 attributions — the mechanism
+catching a mistake before it reached the database, which is the whole argument
+in §1. **That is the mechanism working. It produces work rather than removing
+it, and the work has never once been done.**
+
+It is also growing faster than anyone is clearing it, which is its own answer:
+a queue nobody empties is indistinguishable from a queue nobody needed, and the
+difference matters more to this project than to most.
 
 Clearing them through the page is also the only way to know the page is right.
 It has been driven signed-out and under test, and its write path has been
