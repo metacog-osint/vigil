@@ -100,7 +100,6 @@
 | Issue | Fix |
 |-------|-----|
 | Missing ransomwatch ingestion | Created `ingest-ransomwatch.mjs` |
-| firebase.js getDoc bug | Changed to `getDocs()` for queries |
 | ActivityChart empty | Fixed date parsing, expanded range |
 | Dashboard missing visualizations | Added ThreatGauge, SectorChart, VulnTreemap |
 
@@ -135,7 +134,6 @@ src/
 │   └── useKeyboardShortcuts.js
 └── lib/                # Utilities
     ├── supabase.js     # Database client & queries
-    ├── firebase.js     # Auth (optional)
     ├── queryParser.js  # Advanced search parser
     └── export.js       # Export utilities
 ```
@@ -176,7 +174,6 @@ MITRE       ──────────────────────�
 - `FilterBar.jsx` - Created but never used
 - `SparklineBar`, `TimelineMini`, `ActorTimeline` - Exported but not imported
 - `malwareSamples`, `syncLog` queries - Defined but unused
-- Firebase auth functions - Partially implemented (using Supabase instead)
 
 ### Potential Improvements
 - Add FilterBar to Incidents/Vulnerabilities pages
@@ -214,10 +211,6 @@ VITE_SUPABASE_ANON_KEY=xxx
 # Optional - AI Summaries (free tier), server-side only
 GROQ_API_KEY=xxx  # Get from https://console.groq.com/keys - never prefix with VITE_
 
-# Optional (Firebase - not currently used)
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
 ```
 
 ### AI Features (Optional)

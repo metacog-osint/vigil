@@ -128,3 +128,5 @@ export {
   RESOLUTIONS,
   VERIFICATION_STATES,
 } from './contestedClaims'
+// What victims told a regulator, and what their counts actually count
+export { disclosures, DISCLOSURE_SOURCES, COUNT_SCOPES } from './disclosures'
