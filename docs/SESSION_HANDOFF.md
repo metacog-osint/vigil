@@ -124,18 +124,21 @@ not.
 The two largest rows were built on 22 September. What remains is the vendor
 research corpus and the licence layer.
 
-**`/disclosures` is on a branch, not in production.** PR #46. Same trap as the
-pricing page in §2a: the commit is not the fix, the deploy is. Check before
-repeating either claim.
+**`/disclosures` and `/contested-claims` are merged** (#46, #49) and reach
+production on the next deploy, which Vercel runs from `main` automatically.
+The pricing-page lesson in §2a still applies to anything not yet merged: the
+commit is not the fix, the deploy is.
 
 | Data                       |   Rows | Query layer             | On screen              |
 | -------------------------- | -----: | ----------------------- | ---------------------- |
-| `victim_disclosures`       |  8,896 | `disclosures.js`        | **PR #46**, not merged |
-| `breach_notices_by_state`  | 3 rows | `disclosures.js`        | **PR #46**, not merged |
+| `victim_disclosures`       |  8,896 | `disclosures.js`        | **yes** — /disclosures  |
+| `breach_notices_by_state`  | 3 rows | `disclosures.js`        | **yes** — /disclosures  |
 | `vendor_reports`           |    286 | `vendorReports.js`      | **no**                 |
 | `vendor_report_actors`     |     21 | `vendorReports.js`      | **no**                 |
 | `source_licences`          |     21 | `sourceLicences.js`     | **no**                 |
 | `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**                 |
+| `contested_claims`         |      8 | `contestedClaims.js`    | **yes** — /contested-claims |
+| `evidence_publishers`      |     20 | `contestedClaims.js`    | partly — tiers only    |
 | `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer    |
 
 **What the disclosures page settled, and what it did not.** It renders the
