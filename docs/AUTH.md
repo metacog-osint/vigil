@@ -235,7 +235,7 @@ On sign out:
 ## Troubleshooting
 
 **Verification email redirects to landing page:**
-- Ensure `useAuth` hook uses Supabase (not Firebase)
+- Ensure the `useAuth` hook is the Supabase one in `src/hooks/useAuth.js`
 - Check Supabase Dashboard > Authentication > URL Configuration > Site URL
 - Verify the redirect URL is whitelisted
 
