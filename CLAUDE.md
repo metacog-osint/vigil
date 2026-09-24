@@ -1,6 +1,6 @@
 # CLAUDE.md - AI Assistant Context
 
-> **Last Updated:** 22 September 2026 | **Version:** 2.4.0
+> **Last Updated:** 24 September 2026 | **Version:** 2.5.0
 >
 > **Parts of this file are dated.** Read
 > [`docs/SESSION_HANDOFF.md`](./docs/SESSION_HANDOFF.md) first: it carries current
@@ -71,7 +71,7 @@ fixing a module changed nothing on screen. That produced four separate
 user-visible defects on 20 September, including a page that reported no sync
 data beside a table of 15,068 rows.
 
-The monolith is now 126 lines of pure re-exports and nothing else. **Keep it
+The monolith is now 141 lines of pure re-exports and nothing else. **Keep it
 that way.** Any new object goes in `src/lib/supabase/`, is exported from
 `src/lib/supabase/index.js`, and is re-exported from the monolith:
 
@@ -189,20 +189,46 @@ cd workers && npm run deploy   # The scheduled feeds. NOT run by CI.
    source rather than writing rows nobody can judge for resale. Two sources are
    NonCommercial; `actor_origins_commercial` is how they come out of a paid
    tier.
-9. **Building a page? Read `docs/SESSION_HANDOFF.md` §2b first.** The 8,896
-   regulator disclosures have a page as of 22 September, `/disclosures`, which
-   is on a branch and not yet deployed — check, do not assume. 286 vendor
-   reports and the whole licence layer still have no page at all. §2b also
-   records the two rules `src/lib/supabase/disclosures.js` encodes — no single
-   total of people affected, and every figure a database count rather than a
-   tally of returned rows — both of which a careless commit would undo.
+9. **Building a page? Read `docs/SESSION_HANDOFF.md` §2b first.** The 8,898
+   regulator disclosures and the contested claims both have pages now,
+   `/disclosures` and `/contested-claims`, merged and deployed on 24 September.
+   **292 vendor reports and the whole licence layer still have no page at all.**
+   §2b also records the two rules `src/lib/supabase/disclosures.js` encodes — no
+   single total of people affected, and every figure a database count rather
+   than a tally of returned rows — both of which a careless commit would undo.
+
+10. **There is no subscription tier system.** It was removed on 22 September and
+    the code is archived outside this repository. If you find `canAccess`,
+    `FeatureGate`, a tier or a paywall in anything you are reading, it is either
+    `src/lib/tenants.js` (unrelated, tenant membership) or something that should
+    not be there. The database schema deliberately survives; nothing writes it.
+
+11. **Prefer a `git worktree` to working in the shared directory.** Several
+    sessions share one working tree and last write wins. See
+    `docs/SESSION_HANDOFF.md` §5.
 
 ---
 
 ## Deployment
 
+**Vercel deploys production from `main` automatically.** Merging a PR is the
+deploy; observed four times on 24 September, each landing within a minute or
+two. You do not normally run anything.
+
+Check it actually went out rather than assuming — the pricing page stayed live
+for a day because a commit was mistaken for a deploy:
+
+```bash
+gh api "repos/metacog-osint/vigil/deployments?environment=Production&per_page=1"   --jq '.[]|{sha:.sha[0:7],created:.created_at}'
+```
+
+Manual deploy, only if the automatic one has failed:
+
 ```bash
 npm run build && npx vercel --prod --yes
 ```
+
+**The Cloudflare worker is the exception and has no CI deploy at all.** See
+reminder 6.
 
 Domain: vigil.theintelligence.company
