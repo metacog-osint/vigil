@@ -147,6 +147,7 @@ commit is not the fix, the deploy is.
 | `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**                 |
 | `contested_claims`         |      8 | `contestedClaims.js`    | **yes** — /contested-claims |
 | `evidence_publishers`      |     20 | `contestedClaims.js`    | partly — tiers only    |
+| `regulatory_advisories`    |    183 | `advisoryRegister.js`   | **yes** — /financial-crime |
 | `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer    |
 
 **What the disclosures page settled, and what it did not.** It renders the
