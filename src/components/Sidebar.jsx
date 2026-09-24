@@ -263,6 +263,7 @@ const navigationGroups = [
       { name: 'Threat Actors', href: '/actors', icon: icons.actors, tourId: 'nav-actors' },
       { name: 'Vulnerabilities', href: '/vulnerabilities', icon: icons.vulnerabilities },
       { name: 'Advisories', href: '/advisories', icon: icons.advisories },
+      { name: 'Contested Claims', href: '/contested-claims', icon: icons.compare },
       { name: 'Disclosures', href: '/disclosures', icon: icons.reports },
     ],
   },
