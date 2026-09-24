@@ -43,19 +43,27 @@ test.describe('Previously gated pages render', () => {
     test(`${path} should not render the error boundary`, async ({ page }) => {
       await openApp(page, path)
 
-      // The error boundary is what a render-time throw looks like to a user.
-      await expect(page.getByRole('heading', { name: /page error/i })).toHaveCount(0)
-
-      // And nothing should be offering an upgrade any more.
-      await expect(page.getByRole('heading', { name: /upgrade to/i })).toHaveCount(0)
-
+      // Wait for the page's own content before asserting anything is absent.
+      // toHaveCount(0) is satisfied by a page that has not rendered yet, so
+      // running the two negative checks first made them pass on a blank
+      // document — they would have reported success for a page that was still
+      // painting, which is the state a broken page spends its whole life in.
       if (heading) {
         await expect(page.getByRole('heading', { name: heading, level: 1 })).toBeVisible({
           timeout: 15000,
         })
       } else {
+        // No specific heading to expect, so the error boundary's own "Page
+        // Error" heading can satisfy this. The next assertion is what rules
+        // that out.
         await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15000 })
       }
+
+      // The error boundary is what a render-time throw looks like to a user.
+      await expect(page.getByRole('heading', { name: /page error/i })).toHaveCount(0)
+
+      // And nothing should be offering an upgrade any more.
+      await expect(page.getByRole('heading', { name: /upgrade to/i })).toHaveCount(0)
     })
   }
 })
