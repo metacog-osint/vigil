@@ -63,6 +63,50 @@ describe('the register holds documents, not indicators', () => {
   })
 })
 
+describe('an unreadable queue is not an empty one', () => {
+  /**
+   * The case this guards. PostgREST answers an RLS-filtered read with an empty
+   * set and count 0 rather than a 403 — verified against the live API with the
+   * anon key, whose Content-Range header reported a range of zero rows while
+   * 29 documents were in fact queued.
+   */
+  it('returns null, not zero, when the queue reads empty but documents are unread', async () => {
+    supabase.from.mockImplementation((table) =>
+      table === 'data_quality_findings'
+        ? stubQuery({ data: [], count: 0, error: null })
+        : stubQuery({ count: 183, error: null })
+    )
+
+    const { count } = await advisoryRegister.getQueuedForReading()
+
+    expect(count).toBeNull()
+  })
+
+  it('believes a zero when the register agrees there is nothing left to read', async () => {
+    supabase.from.mockImplementation((table) =>
+      table === 'data_quality_findings'
+        ? stubQuery({ data: [], count: 0, error: null })
+        : stubQuery({ count: 0, error: null })
+    )
+
+    const { count } = await advisoryRegister.getQueuedForReading()
+
+    expect(count).toBe(0)
+  })
+
+  it('does not suppress a real count', async () => {
+    supabase.from.mockImplementation((table) =>
+      table === 'data_quality_findings'
+        ? stubQuery({ data: [], count: 29, error: null })
+        : stubQuery({ count: 183, error: null })
+    )
+
+    const { count } = await advisoryRegister.getQueuedForReading()
+
+    expect(count).toBe(29)
+  })
+})
+
 describe('a rescinded document is history, not a mistake', () => {
   it('includes rescinded documents unless a caller excludes them', async () => {
     const chain = stubQuery({ data: [], count: 0, error: null })

@@ -168,16 +168,53 @@ export const advisoryRegister = {
    *
    * Read from `data_quality_findings` rather than recomputed here, so the page
    * and the review queue cannot disagree about what is outstanding.
+   *
+   * ## Why this cross-checks before it returns a number
+   *
+   * `data_quality_findings` is readable by `authenticated` and not by `anon`
+   * (migration 126). PostgREST answers an RLS-filtered read with an empty set
+   * and `count: 0` — **not** an error, and not a denial a caller can detect.
+   * Checked against the live API with the anon key, the Content-Range header
+   * came back as a range of zero rows while 29 documents were queued.
+   *
+   * The page is behind auth so a real user reads the true figure, which is
+   * worse rather than better: if that policy is ever narrowed the page starts
+   * publishing "0 queued for a person to read" as a fact, and zero is a
+   * plausible number in a way an error is not.
+   *
+   * So a zero is only believed when the register agrees there is nothing to
+   * read. If the register holds unread documents and the queue reads empty,
+   * the count is `null` — unknown — and the page renders an em dash. That is
+   * the standing rule here: absence and zero are different answers.
+   *
+   * This asks the register only whether `indicators_read` is false. It does not
+   * re-implement which documents are worth queueing; that predicate lives in
+   * `review_regulatory_advisories()` and stays there.
    */
   async getQueuedForReading({ limit = 200 } = {}) {
-    const { data, count, error } = await supabase
-      .from('data_quality_findings')
-      .select('subject, details, first_seen', { count: 'exact' })
-      .eq('check_name', 'advisory_indicators_unread')
-      .eq('status', 'open')
-      .order('first_seen', { ascending: false })
-      .limit(limit)
+    const [queue, unread] = await Promise.all([
+      supabase
+        .from('data_quality_findings')
+        .select('subject, details, first_seen', { count: 'exact' })
+        .eq('check_name', 'advisory_indicators_unread')
+        .eq('status', 'open')
+        .order('first_seen', { ascending: false })
+        .limit(limit),
+      supabase
+        .from('regulatory_advisories')
+        .select('id', { count: 'exact', head: true })
+        .eq('indicators_read', false),
+    ])
 
-    return { data, count: typeof count === 'number' ? count : null, error }
+    const { data, count, error } = queue
+    if (error) return { data: null, count: null, error }
+
+    const readable = count !== 0 || unread.error !== null || unread.count === 0
+
+    return {
+      data,
+      count: readable && typeof count === 'number' ? count : null,
+      error: null,
+    }
   },
 }
