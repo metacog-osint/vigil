@@ -258,6 +258,83 @@ absent, which is a different answer from zero.
 
 **Priority:** MEDIUM - High impact but limited public data sources
 
+> **Superseded, 24 September 2026.** "Limited public data sources" is wrong,
+> and it is wrong in the same way the CERT-EU entry in §1 was wrong: it counted
+> indicator feeds and concluded there was nothing there. The public record on
+> fraud is large, authoritative and free — it is just held by prosecutors,
+> Treasury and regulators rather than published as a blocklist. See §5a.
+
+---
+
+### 5a. Fraud and threat finance — the route is law enforcement, not scam feeds
+
+_Added 24 September 2026, after the owner asked whether Vigil should cover
+online scams, call scams and pig butchering._
+
+**The answer is yes, and the reason §5 missed it is a unit-of-record problem.**
+Vigil records an attack on a named organisation, claimed or disclosed. Scam
+data does not arrive in that shape. It arrives in four, and only two of them
+belong here.
+
+| Shape                | Example                                                | Verdict                                                                                                                              |
+| -------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Aggregate statistics | IC3 annual report, FTC Sentinel                        | **Not an incident.** Filing one as an event is the category error that got the CERT-EU monthly Cyber Brief rejected in §1. Own table. |
+| Individual victims   | One person's romance-scam report                       | **Rejected.** Named individuals as data subjects, a different privacy regime from a corporate breach notice, kept forever in `entity_changelog`. |
+| Infrastructure       | Scam domains, drainer wallets, spoofed numbers         | Already `iocs`. More of it does not change what Vigil can say happened.                                                              |
+| **Enforcement acts** | Indictments, designations, advisories, forfeitures     | **This is the one.** Names actor, mechanism and often victim class, under the strongest evidentiary standard available.               |
+
+The fourth shape needs almost no new machinery. `attributed_activity`
+(migration 131) already has `criminal` in its `attribution_strength` check
+constraint, and §3 above already lists DOJ, Europol and Treasury-as-attribution
+as undone work for unrelated reasons. Fraud coverage largely falls out of
+sources that were wanted anyway.
+
+#### Sources, all Tier 1 and all free
+
+| Source                              | Why it is the right one                                                                                                                                                | Licence                                            |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **FinCEN advisories and alerts**    | The best fit on this list. Structured as typology plus red-flag indicators — including the pig-butchering alert — and written to be acted on by regulated institutions. | US public domain                                    |
+| **OFAC designations as attribution** | Already ingested for addresses. Treasury has designated scam-compound networks and the laundering rails behind them. Same feed, read for _who_.                        | US public domain                                    |
+| **DOJ indictments and forfeitures** | Names individuals, compounds, wallets and mule structure. A charged indictment is the strongest provenance in the corpus.                                              | US public domain                                    |
+| **FBI IC3 / FTC Sentinel**          | Official statistics, in a statistics table, rendered as statistics. Same species as `breach_notices_by_state`.                                                         | US public domain                                    |
+| **UNODC threat assessments**        | The regional structural picture the US sources do not carry.                                                                                                           | **Unchecked — frequently CC BY-NC. Gate it first.** |
+
+#### Ruled out
+
+Scam-report aggregators — Chainabuse, ScamAdviser, national reporting portals.
+Restrictive terms, unverified user submissions, and submitting-party data that
+is personal in a way a breach notice is not.
+
+**On-chain tracing is also out of scope, permanently.** Clustering and
+attribution are the commercial moat of the blockchain-intelligence firms, they
+require data Vigil does not have, and their reliability is contested in court —
+the _Sterlingov_ Daubert opinion conceded the vendor does not track its own
+false-positive rate. Vigil's lane is the documentary layer around the chain:
+designations, indictments, advisories, typologies, and the contested record of
+what anyone actually claimed.
+
+#### What has been built
+
+Migrations **145** and **146** do the part that is not a feed: `evidence_publishers`
+(the three-tier source hierarchy), `contested_claims` and `claim_values` (two
+bodies, two numbers, one recorded ruling), and the non-upgrade rule enforced in
+`claim_values_resolved` — a figure's tier is the tier of whoever produced it and
+cannot be improved by being repeated. `contested_claims_summary.distinct_origins`
+therefore counts originators rather than citations, which is the difference
+between corroboration and echo.
+
+Eight worked examples are seeded from the 2025-26 public record on
+crypto-enabled fraud. **None has been verified against its primary source**, and
+`review_contested_claims()` queues every one of them as exactly that work.
+
+#### What remains
+
+1. A page. Nothing above is visible; see `docs/SESSION_HANDOFF.md` §2b for why
+   that matters more than the next feed.
+2. FinCEN and DOJ ingestion, in that order.
+3. A typology layer — stages, roles, rails — for indicators and designations to
+   hang off. This is the part no other source supplies ready-made.
+
 ---
 
 ### 6. Underground Economy / Dark Web
