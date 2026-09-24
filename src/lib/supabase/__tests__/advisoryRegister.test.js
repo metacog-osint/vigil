@@ -63,6 +63,42 @@ describe('the register holds documents, not indicators', () => {
   })
 })
 
+describe('a comma in the search box is not filter syntax', () => {
+  /**
+   * `or=(a.ilike.X,b.ilike.X)` is a grammar and the comma separates its
+   * conditions. Searching "scam, fraud" unquoted returned HTTP 400 against the
+   * live API, which is the product failing at the one thing a search box does.
+   */
+  it('quotes the search value so a comma cannot split the filter', async () => {
+    const chain = stubQuery({ data: [], count: 0, error: null })
+    supabase.from.mockReturnValue(chain)
+
+    await advisoryRegister.getAll({ search: 'scam, fraud' })
+
+    const filter = chain.or.mock.calls[0][0]
+    expect(filter).toBe('title.ilike."%scam, fraud%",advisory_id.ilike."%scam, fraud%"')
+  })
+
+  it('escapes a quote rather than letting it close the value', async () => {
+    const chain = stubQuery({ data: [], count: 0, error: null })
+    supabase.from.mockReturnValue(chain)
+
+    await advisoryRegister.getAll({ search: 'pig "butchering"' })
+
+    const filter = chain.or.mock.calls[0][0]
+    expect(filter).toContain('\\"butchering\\"')
+  })
+
+  it('does not build a filter at all when nothing was searched for', async () => {
+    const chain = stubQuery({ data: [], count: 0, error: null })
+    supabase.from.mockReturnValue(chain)
+
+    await advisoryRegister.getAll()
+
+    expect(chain.or).not.toHaveBeenCalled()
+  })
+})
+
 describe('an unreadable queue is not an empty one', () => {
   /**
    * The case this guards. PostgREST answers an RLS-filtered read with an empty

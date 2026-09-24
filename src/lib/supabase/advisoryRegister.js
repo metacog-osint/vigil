@@ -54,6 +54,22 @@ export const ADVISORY_SOURCES = {
   },
 }
 
+/**
+ * Quote a value for a PostgREST `or=` filter.
+ *
+ * `or=(a.ilike.X,b.ilike.X)` is a grammar, and the comma is part of it. A user
+ * typing "scam, fraud" in the search box produced `HTTP 400` — verified against
+ * the live API before this was written — because their comma was read as the
+ * separator between two conditions. Parentheses do the same thing.
+ *
+ * Quoting the value makes the grammar unambiguous. It cannot reach past RLS
+ * either way; this is a correctness fix, not a security one, and a search that
+ * 400s is the product failing at the one thing a search box is for.
+ */
+function orValue(raw) {
+  return `"${String(raw).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+}
+
 const LIST_COLUMNS = `
   id, source, advisory_id, language, kind, title, published,
   url, document_url, rescinded, rescinded_note, indicators_read
@@ -85,7 +101,10 @@ export const advisoryRegister = {
     if (source) query = query.eq('source', source)
     if (kind) query = query.eq('kind', kind)
     if (!includeRescinded) query = query.eq('rescinded', false)
-    if (search) query = query.or(`title.ilike.%${search}%,advisory_id.ilike.%${search}%`)
+    if (search) {
+      const v = orValue(`%${search}%`)
+      query = query.or(`title.ilike.${v},advisory_id.ilike.${v}`)
+    }
 
     const { data, count, error } = await query
     return { data, count: typeof count === 'number' ? count : null, error }
