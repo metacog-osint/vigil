@@ -125,4 +125,15 @@ export { threatHunts } from './supabase/threatHunts'
 // TEAMS & COLLABORATION
 export { teams } from './supabase/teams'
 
+// ============================================
+// CONTESTED CLAIMS
+export {
+  contestedClaims,
+  EVIDENCE_TIERS,
+  UNCLASSIFIED_TIER,
+  MEASUREMENTS,
+  RESOLUTIONS,
+  VERIFICATION_STATES,
+} from './supabase/contestedClaims'
+
 export default supabase

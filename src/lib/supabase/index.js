@@ -118,3 +118,13 @@ export {
 
 // Retry utility for resilient API calls
 export { withRetry, fetchWithRetry, createRetryable } from '../retry'
+
+// Where the published record disagrees with itself, and who produced each figure
+export {
+  contestedClaims,
+  EVIDENCE_TIERS,
+  UNCLASSIFIED_TIER,
+  MEASUREMENTS,
+  RESOLUTIONS,
+  VERIFICATION_STATES,
+} from './contestedClaims'
