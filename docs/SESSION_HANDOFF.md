@@ -58,8 +58,10 @@ five of eight lines._
 - **Tests:** 1,217 passing (1,135 unit, 82 worker).
 - **Lint:** 298 warnings against a ceiling of **325**, set only in
   `package.json`.
-- **Worker:** deployed, 37 feeds watched. **`fincen-advisories` is in the
-  registry but was not in the deployed bundle as of this line** - see §2e.
+- **Worker:** deployed, 37 feeds watched. `fincen-advisories` was added to the
+  registry in this change; a registry entry is not a running feed until
+  `cd workers && npm run deploy` has been run from a tree containing it
+  (CLAUDE.md, reminder 6).
 - **Edge Functions:** 10, including `fincen-advisories`.
 - **Database:** 2,687 MB of 8,192 MB (33%). See §2c.
 - **Open findings:** 369. §2a was re-counted at 340 earlier the same day;
