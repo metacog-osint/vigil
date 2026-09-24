@@ -135,5 +135,7 @@ export {
   RESOLUTIONS,
   VERIFICATION_STATES,
 } from './supabase/contestedClaims'
+// REGULATOR DISCLOSURES
+export { disclosures, DISCLOSURE_SOURCES, COUNT_SCOPES } from './supabase/disclosures'
 
 export default supabase
