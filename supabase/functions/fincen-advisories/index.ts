@@ -103,8 +103,9 @@ Deno.serve(async (req: Request) => {
     const unique = dedupe(rows)
 
     // An empty parse here IS a failure, unlike the NCSC feed. The register is a
-    // static archive going back to 2001; if it reads as empty, the markup
-    // changed and the parser is wrong.
+    // static archive going back to 2007 - measured, by walking it to the last
+    // page - so if it reads as empty the markup changed and the parser is
+    // wrong.
     if (unique.length === 0) {
       throw new Error('parsed 0 rows from the FinCEN register - the markup has probably changed')
     }
