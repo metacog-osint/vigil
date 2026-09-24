@@ -72,7 +72,9 @@ function MeasurementBadge({ measurement }) {
   return (
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded text-xs border whitespace-nowrap ${
-        loud ? 'border-red-800/60 bg-red-900/30 text-red-300' : 'border-gray-700 bg-gray-800/60 text-gray-400'
+        loud
+          ? 'border-red-800/60 bg-red-900/30 text-red-300'
+          : 'border-gray-700 bg-gray-800/60 text-gray-400'
       }`}
       title={meta.note}
     >
