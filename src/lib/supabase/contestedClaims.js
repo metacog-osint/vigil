@@ -85,9 +85,15 @@ export const MEASUREMENTS = {
 export const RESOLUTIONS = {
   unresolved: { label: 'Unresolved', note: 'Nobody has ruled. The queue is asking.' },
   present_both: { label: 'Present both', note: 'Both values stand and both must be shown.' },
-  present_range: { label: 'Present as a range', note: 'One range. Neither endpoint is the figure.' },
+  present_range: {
+    label: 'Present as a range',
+    note: 'One range. Neither endpoint is the figure.',
+  },
   prefer_one: { label: 'Prefer one', note: 'One value is right, and the reason is recorded.' },
-  do_not_quote: { label: 'Do not quote', note: 'No figure here is quotable. Describe it another way.' },
+  do_not_quote: {
+    label: 'Do not quote',
+    note: 'No figure here is quotable. Describe it another way.',
+  },
   transcription_artefact: {
     label: 'Transcription artefact',
     note: 'Not a disagreement. Someone mistyped a figure and it propagated.',
@@ -186,7 +192,9 @@ export const contestedClaims = {
   async getPublishers() {
     const { data, error } = await supabase
       .from('evidence_publishers')
-      .select('publisher_id, display_name, tier, tier_rationale, publisher_type, licence_source_id, checked_on, notes')
+      .select(
+        'publisher_id, display_name, tier, tier_rationale, publisher_type, licence_source_id, checked_on, notes'
+      )
       .order('tier', { ascending: true, nullsFirst: true })
       .order('display_name', { ascending: true })
 
