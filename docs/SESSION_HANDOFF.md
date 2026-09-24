@@ -128,6 +128,8 @@ This is the largest gap in the project right now, and it is not a data gap.
 | `vendor_report_actors`     |     21 | `vendorReports.js`      | **no**              |
 | `source_licences`          |     19 | `sourceLicences.js`     | **no**              |
 | `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**              |
+| `contested_claims`         |      8 | **none**                | **no**              |
+| `evidence_publishers`      |     20 | **none**                | **no**              |
 | `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer |
 
 Only the map's Attributed layer renders any of it. **8,895 regulator
