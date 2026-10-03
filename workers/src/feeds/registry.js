@@ -52,7 +52,7 @@ import { ingestMitreAtlas } from './mitre-atlas.js'
 
 // Network and malware intelligence
 import { ingestBGPStream } from './bgpstream.js'
-import { enrichCensys } from './censys.js'
+import { enrichCensys, CENSYS_BATCH } from './censys.js'
 import { ingestAnyRun } from './anyrun.js'
 
 /**
@@ -153,6 +153,11 @@ export const JOBS = [
   },
   {
     id: 'vulncheck',
+    // HTTP 401 on every run since at least early September: the key was revoked
+    // or expired. A job that has never succeeded is always due, so it was spending
+    // budget on every hourly tick. Rotate VULNCHECK_API_KEY, confirm with a manual
+    // GET /ingest/vulncheck, then delete this line.
+    paused: 'VULNCHECK_API_KEY rejected (HTTP 401)',
     priority: 3,
     cost: 6,
     intervalMinutes: 6 * HOUR,
@@ -310,7 +315,8 @@ export const JOBS = [
   {
     id: 'censys',
     priority: 4,
-    cost: 6,
+    // One select, then an update per IP looked up. See CENSYS_BATCH.
+    cost: CENSYS_BATCH + 1,
     intervalMinutes: DAY,
     run: (db, env) => enrichCensys(db, env),
   },
@@ -371,6 +377,14 @@ export const JOBS = [
 ]
 
 export const JOBS_BY_ID = Object.fromEntries(JOBS.map((job) => [job.id, job]))
+
+/**
+ * What the cron triggers offer the scheduler. A `paused` job is left out because
+ * one that cannot succeed is always overdue and is offered budget on every tick.
+ * It stays in JOBS_BY_ID, so GET /ingest/<id> can still run it by hand to check a
+ * fix before unpausing.
+ */
+export const SCHEDULED_JOBS = JOBS.filter((job) => !job.paused)
 
 /**
  * The database-side jobs return their counts in `data`. Normalizing them here
