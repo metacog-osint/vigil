@@ -144,11 +144,17 @@ run it. §4g carries the measurement.
 Start with the **254 SEC candidates**: ruling on those turns "claimed by Qilin"
 into "claimed by Qilin, and the company told the SEC".
 
-**2. Merge #44, then #42 and #43.** #44 removes the subscription tier system.
-Until it is merged **and deployed**, vigil.theintelligence.company/pricing is
-still serving $29/mo and $99/mo Subscribe buttons — checked 22 September, after
-the commit landed on the branch. The commit is not the fix; the deploy is.
-#42 and #43 are green including webkit and supersede the old stale PRs. See §2d.
+**2. Decide what `ingestion_is_healthy()` should mean.** `ofac-sdn` broke on
+20 September and was still broken on 3 October — thirteen days — and the health
+check returned **true** for eleven of them. It trips on
+`state in ('stale','never')` and a feed that is merely `late` does not qualify,
+so a `critical` feed erroring on every single attempt read as healthy until it
+aged out. `last_status` is never consulted at all. The query timeout behind it is
+fixed and applied (#54, migration 148); **the threshold is not, and that is the
+part that matters** — the fix only works next time if something tells you.
+
+§4c has the feed list. Nothing watches whether the database is answering at all,
+which §2 records separately.
 
 **3. Read §2b before building any page.** The two largest rows were closed on
 22 September; the vendor research corpus and the licence layer are still
@@ -167,18 +173,18 @@ production on the next deploy, which Vercel runs from `main` automatically.
 The pricing-page lesson in §2a still applies to anything not yet merged: the
 commit is not the fix, the deploy is.
 
-| Data                       |   Rows | Query layer             | On screen              |
-| -------------------------- | -----: | ----------------------- | ---------------------- |
-| `victim_disclosures`       |  8,896 | `disclosures.js`        | **yes** — /disclosures  |
-| `breach_notices_by_state`  | 3 rows | `disclosures.js`        | **yes** — /disclosures  |
-| `vendor_reports`           |    286 | `vendorReports.js`      | **no**                 |
-| `vendor_report_actors`     |     21 | `vendorReports.js`      | **no**                 |
-| `source_licences`          |     21 | `sourceLicences.js`     | **no**                 |
-| `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**                 |
+| Data                       |   Rows | Query layer             | On screen                   |
+| -------------------------- | -----: | ----------------------- | --------------------------- |
+| `victim_disclosures`       |  8,896 | `disclosures.js`        | **yes** — /disclosures      |
+| `breach_notices_by_state`  | 3 rows | `disclosures.js`        | **yes** — /disclosures      |
+| `vendor_reports`           |    286 | `vendorReports.js`      | **no**                      |
+| `vendor_report_actors`     |     21 | `vendorReports.js`      | **no**                      |
+| `source_licences`          |     21 | `sourceLicences.js`     | **no**                      |
+| `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**                      |
 | `contested_claims`         |      8 | `contestedClaims.js`    | **yes** — /contested-claims |
-| `evidence_publishers`      |     20 | `contestedClaims.js`    | partly — tiers only    |
-| `regulatory_advisories`    |    183 | `advisoryRegister.js`   | **yes** — /financial-crime |
-| `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer    |
+| `evidence_publishers`      |     20 | `contestedClaims.js`    | partly — tiers only         |
+| `regulatory_advisories`    |    183 | `advisoryRegister.js`   | **yes** — /financial-crime  |
+| `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer         |
 
 **What the disclosures page settled, and what it did not.** It renders the
 filings, the per-state totals and a name search, and it states plainly that the
@@ -491,7 +497,7 @@ before spending time on any of them.
 | e2e running against the live production database              | Fixed in #39; stubbed                           |
 | `ofac-reachability-probe` Edge Function                       | Deleted                                         |
 | The subscription tier system                                  | Removed in #44; see below                       |
-| Backfilling `iocs.actor_id` by joining our own data            | Measured 24 September and rejected; see below   |
+| Backfilling `iocs.actor_id` by joining our own data           | Measured 24 September and rejected; see below   |
 
 **On #44, because “removed” is doing different work at each layer.** The pricing
 page, the Stripe client and its three Vercel functions, `SubscriptionContext`,
@@ -578,6 +584,31 @@ add it here.
 
 **Several Claude sessions share one working tree.** Not worktrees — one directory.
 Branches do not protect you; last write wins.
+
+**Use a `git worktree` instead of the shared directory.** This is the practice
+that made 24 September's parallel work safe, and it costs about twenty seconds:
+
+```bash
+git worktree add -b <branch> <scratch-dir> origin/main
+# commit and push from there
+git worktree remove <scratch-dir>
+```
+
+Every change that day went through one, so the shared tree was never touched and
+the session building a page in it was never disturbed. **Never switch branches in
+the shared tree while it is dirty** — check `git status` first.
+
+**A closed PR does not mean a finished branch.** `feat/evidence-tiers` was merged
+and closed, then pushed to again, so new work became invisible to every PR list.
+A second session rebuilt it on `feat/fincen-register` and the same migration then
+existed twice under two SHAs. Before deleting any branch or worktree, ask the
+question that actually matters:
+
+```bash
+git merge-base --is-ancestor <sha> origin/main   # in main, or not?
+```
+
+“Its PR is merged” is a different question and will give you the wrong answer.
 
 - **Stage explicit paths.** Never `git add -A`; you will sweep another session's
   in-flight work into your commit.
