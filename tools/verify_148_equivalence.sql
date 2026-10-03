@@ -1,4 +1,12 @@
--- Run this BEFORE applying migration 148.
+-- Equivalence check for migration 148.
+--
+-- Run BEFORE applying 148, and again after any change to actor_key, to
+-- threat_actors' aliases, or to the SDN payload's shape.
+--
+-- It was run on 2026-10-03 in three batches covering all 99 distinct entities
+-- (rows 1-30, 31-70, 71-99) because the "old" half times out on the full set.
+-- Every batch returned 0 and 0, and 148 was applied on that basis. To repeat it
+-- in batches, add a row_number() over the ent CTE and filter on it.
 --
 -- 148 rewrites the _matches join inside upsert_sanctioned_addresses so it can
 -- use idx_threat_actors_actor_key. The rewrite is intended to be exactly
