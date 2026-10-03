@@ -47,18 +47,48 @@ Do not collapse them:
 
 ## 2. Where things stand
 
-_Last updated 22 September 2026._
+_Last updated 24 September 2026. Every figure below was measured, not carried
+forward - the previous version of this block was two days old and wrong about
+five of eight lines._
 
-- **Branch:** `main`. Everything is merged; no feature branch is outstanding.
+- **Branch:** `main`.
 - **Supabase project:** `faqazkwdkajhxmwxchop`
-- **Migrations:** numbered to `144`, all applied. The live DB numbers by
+- **Migrations:** numbered to `147`, all applied. The live DB numbers by
   timestamp, so repo filenames are for humans only.
-- **Tests:** ~1,100 passing (1,018 unit, 82 worker).
-- **Lint:** 321 warnings against a ceiling of **325**, set only in
+- **Tests:** 1,217 passing (1,135 unit, 82 worker).
+- **Lint:** 298 warnings against a ceiling of **325**, set only in
   `package.json`.
-- **Worker:** deployed, 36 feeds watched, `ingestion_is_healthy()` true.
-- **Edge Functions:** 9, and the deployment now matches the repo exactly.
-- **Database:** 2,642 MB of 8,192 MB (32%). See §2c.
+- **Worker:** deployed, 37 feeds watched. `fincen-advisories` was added to the
+  registry in this change; a registry entry is not a running feed until
+  `cd workers && npm run deploy` has been run from a tree containing it
+  (CLAUDE.md, reminder 6).
+- **Edge Functions:** 10, including `fincen-advisories`.
+- **Database:** 2,687 MB of 8,192 MB (33%). See §2c.
+- **Open findings:** 369. §2a was re-counted at 340 earlier the same day;
+  migrations 145-147 added the rest.
+
+### The database went down on 24 September, and nobody did anything to fix it
+
+Worth recording because the next person to see it should not go looking for a
+cause in their own work. Between roughly 02:40 and 03:37 UTC every query
+against Postgres hung - no response at 45 seconds - while the API gateway
+answered normally (`/rest/v1/` returned 401 in 0.14s) and `edge_logs` and
+`realtime_logs` kept flowing. `postgres_logs` and `postgrest_logs` simply
+stopped. The Supabase management API could not reach the database either,
+though the project reported `ACTIVE_HEALTHY` throughout.
+
+Immediately before it went quiet the logs carried `canceling statement due to
+statement timeout` and checkpoints with `write=85 seconds`, and the edge log
+shows `state-breach-notices` and `ofac-sdn` running in that window. Both are
+bulk writers.
+
+It recovered on its own at 03:37 UTC with no intervention and no data loss.
+
+The thing to take from it: **a scheduled ingestion run can make the whole
+product unreachable for the better part of an hour.** The live site's static
+shell still served, so it looked up while every query behind it hung. Nothing
+watches for that - `ingestion_is_healthy()` asks whether feeds are running, not
+whether the database is answering.
 
 ### What the corpus is made of
 
@@ -147,6 +177,7 @@ commit is not the fix, the deploy is.
 | `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**                 |
 | `contested_claims`         |      8 | `contestedClaims.js`    | **yes** — /contested-claims |
 | `evidence_publishers`      |     20 | `contestedClaims.js`    | partly — tiers only    |
+| `regulatory_advisories`    |    183 | `advisoryRegister.js`   | **yes** — /financial-crime |
 | `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer    |
 
 **What the disclosures page settled, and what it did not.** It renders the

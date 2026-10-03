@@ -138,4 +138,8 @@ export {
 // REGULATOR DISCLOSURES
 export { disclosures, DISCLOSURE_SOURCES, COUNT_SCOPES } from './supabase/disclosures'
 
+// ============================================
+// FINANCIAL CRIME ADVISORIES
+export { advisoryRegister, ADVISORY_KINDS, ADVISORY_SOURCES } from './supabase/advisoryRegister'
+
 export default supabase
