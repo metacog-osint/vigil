@@ -8,6 +8,25 @@
 
 const CENSYS_API = 'https://api.platform.censys.io/v3/global'
 
+/**
+ * IPs looked up per run. Each one is a fetch() the budget cannot see plus an
+ * update it can, so this sets the job's cost: one select and up to BATCH updates
+ * on the budget, BATCH more calls inside the reserve. The registry's `cost` for
+ * censys must stay at BATCH + 1.
+ *
+ * The old query selected every IOC in the table (about 600,000 rows, one
+ * subrequest per thousand) and then filtered on `type`, which it had not
+ * selected. It ran out of budget on every tick from September on, and because it
+ * had never succeeded it sorted first at priority 4 every time - so every
+ * priority 4 and 5 feed behind it got no budget at all.
+ */
+export const CENSYS_BATCH = 5
+
+// Newest first, on the (type, created_at) index: 4ms against 21s ordering by
+// last_seen, which has no index to stop early on.
+const CANDIDATES_QUERY =
+  'type=eq.ip&metadata->censys_enriched=is.null&order=created_at.desc'
+
 export async function enrichCensys(supabase, env) {
   console.log('Starting Censys enrichment...')
 
@@ -21,18 +40,13 @@ export async function enrichCensys(supabase, env) {
   let failed = 0
 
   try {
-    // Get IPs that haven't been enriched yet
-    const { data: allIocs } = await supabase
+    const { data: candidates, error } = await supabase
       .from('iocs')
-      .select('id,value,metadata,source')
+      .select('id,value,metadata', CANDIDATES_QUERY, { maxRows: CENSYS_BATCH })
 
-    // Filter to IPs without censys enrichment (limit 50 for free tier)
-    const candidates = (allIocs || [])
-      .filter(ioc =>
-        ioc.type === 'ip' &&
-        !ioc.metadata?.censys_enriched
-      )
-      .slice(0, 50)
+    if (error) {
+      return { success: false, error: `could not read IPs to enrich: ${error.message}` }
+    }
 
     console.log(`Found ${candidates.length} IPs to enrich`)
 
@@ -63,6 +77,11 @@ export async function enrichCensys(supabase, env) {
         if (response.status === 429) {
           console.log('Rate limited, stopping enrichment')
           break
+        }
+
+        // A bad key fails every lookup the same way; say so once, plainly.
+        if (response.status === 401 || response.status === 403) {
+          return { success: false, error: `Censys refused the API key (HTTP ${response.status})` }
         }
 
         if (!response.ok) {
@@ -106,5 +125,5 @@ export async function enrichCensys(supabase, env) {
   }
 
   console.log(`Censys complete: ${enriched} enriched, ${failed} failed`)
-  return { success: true, source: 'censys', enriched, failed }
+  return { success: true, source: 'censys', enriched, updated: enriched, failed }
 }
