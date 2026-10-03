@@ -1,6 +1,6 @@
 -- 148. Make the OFAC actor match index-usable
 --
--- STATUS WHEN WRITTEN: NOT APPLIED. See "why this is not applied yet" below.
+-- STATUS: APPLIED 2026-10-03, after the verification below passed.
 --
 -- WHAT IS BROKEN
 --
@@ -52,18 +52,35 @@
 -- keeps the same columns and the same GROUP BY, so exact_name and matched_alias
 -- are computed exactly as before over the same alias arrays.
 --
--- WHY THIS IS NOT APPLIED YET
+-- HOW IT WAS VERIFIED BEFORE BEING APPLIED
 --
 -- This function decides which tracked actors are linked to OFAC-designated
 -- entities. A wrong link here is the most consequential claim in the database,
--- and rule 7 of CLAUDE.md applies: do not guess a judgment, and do not assume an
--- optimisation preserves one. The rewrite is intended to be exactly equivalent
--- and that equivalence was NOT verified by execution -- the direct Postgres
--- connection timed out for the entire window in which this was written, while
--- PostgREST stayed up.
+-- so the rewrite was not applied on the strength of looking equivalent.
 --
--- Run tools/verify_148_equivalence.sql first. It returns in_old_only and
--- in_new_only. If either is non-zero, do not apply this.
+-- Written 24 September and left unapplied: the direct Postgres connection was
+-- down for that whole window -- the outage recorded in section 2 of the
+-- handover -- so the check could not be run. Applied 2026-10-03 once it could.
+--
+-- tools/verify_148_equivalence.sql compares the old and new match sets. The old
+-- half is the query that times out, so it was run in three batches covering all
+-- 99 distinct SDN entities: rows 1-30, 31-70, 71-99. Every batch returned
+-- in_old_only = 0 and in_new_only = 0. Old and new agree on all three matches
+-- the current data produces.
+--
+-- The whole function was then run end to end inside a transaction that rolled
+-- back, with a payload of all 1,043 live addresses:
+--
+--   {"addresses": 1043, "new": 0, "refreshed": 1043, "relisted": 0,
+--    "delisted": 0, "actors_linked": 2, "alias_matches_queued": 0}
+--
+-- It returned promptly instead of timing out, and sanctioned_addresses.last_seen
+-- was still 2026-09-20 afterwards, confirming the rollback held.
+--
+-- 2026-09-20 was also the feed's last successful run. It had been failing for
+-- thirteen days, and ingestion_is_healthy() only started returning false once
+-- ofac-sdn aged from 'late' into 'stale' -- which is the threshold question
+-- section 4c of the handover raises, still open.
 
 CREATE OR REPLACE FUNCTION public.upsert_sanctioned_addresses(p_rows jsonb)
  RETURNS jsonb
