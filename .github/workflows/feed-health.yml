@@ -1,0 +1,41 @@
+# Tell someone when ingestion breaks.
+#
+# ofac-sdn broke on 20 September 2026 and was still broken on 3 October -
+# thirteen days, found by a person looking rather than by anything saying so.
+# ioc-geo failed 42 times in the week to 4 October the same way. Nothing watched
+# either, and the review queue is not a notification.
+#
+# GitHub emails you when a workflow fails, which is the channel that actually
+# gets read. The reasoning for what counts as broken - and why `late` does not -
+# is in scripts/check-feed-health.mjs.
+
+name: Feed health
+
+on:
+  schedule:
+    # Twice a day. Often enough that nothing rots for a fortnight, rare enough
+    # that a failure is still worth opening. Ten retired workflows were disabled
+    # on 3 October because they cried wolf; this one must not.
+    - cron: '0 7,19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Critical feeds are running
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # No npm install: the script uses only built-in fetch and node:fs.
+      - name: Check critical feed health
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: node scripts/check-feed-health.mjs
