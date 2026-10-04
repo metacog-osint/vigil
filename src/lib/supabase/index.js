@@ -133,3 +133,6 @@ export { disclosures, DISCLOSURE_SOURCES, COUNT_SCOPES } from './disclosures'
 
 // What a regulator told institutions to look for, as opposed to what happened
 export { advisoryRegister, ADVISORY_KINDS, ADVISORY_SOURCES } from './advisoryRegister'
+
+// Who is sanctioned, which addresses, and which tracked actors are the same entity
+export { sanctions, SANCTIONS_PROGRAMS, SANCTIONS_VERDICTS } from './sanctions'
