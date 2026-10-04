@@ -161,7 +161,7 @@ sync_log          # Ingestion history
 ```
 External APIs → Ingestion Scripts → Supabase → React Frontend
      ↓                                              ↓
-Ransomwatch ─────────────────────────────────→ Dashboard
+RansomLook  ─────────────────────────────────→ Dashboard
 CISA KEV    ─────────────────────────────────→ Vulnerabilities
 NVD         ─────────────────────────────────→ Vulnerabilities
 ThreatFox   ─────────────────────────────────→ IOC Search
