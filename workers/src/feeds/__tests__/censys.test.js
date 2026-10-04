@@ -85,6 +85,49 @@ describe('enrichCensys', () => {
   })
 })
 
+describe('ip:port candidates', () => {
+  it('looks up the host, not the endpoint', async () => {
+    // 94.6% of type='ip' rows are ipv4:port from the C2 feeds, and newest-first
+    // means those are exactly what a run draws. Censys answers 422 for them.
+    const { db, updates } = fakeDb([
+      { id: 'a', value: '103.245.237.10:9506', metadata: {} },
+    ])
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ result: { autonomous_system: { asn: 1 } } }),
+      })
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await run(db, ENV)
+
+    expect(fetchMock.mock.calls[0][0]).toContain('/asset/host/103.245.237.10')
+    expect(fetchMock.mock.calls[0][0]).not.toContain('9506')
+    expect(result.success).toBe(true)
+    // The port stays in the stored indicator; only the lookup drops it.
+    expect(updates[0].value).toBe('a')
+  })
+
+  it('reports the status when every lookup fails', async () => {
+    const { db } = fakeDb([
+      { id: 'a', value: '1.1.1.1', metadata: {} },
+      { id: 'b', value: '2.2.2.2', metadata: {} },
+    ])
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.resolve({ ok: false, status: 422, json: () => Promise.resolve({}) }))
+    )
+
+    const result = await run(db, ENV)
+
+    expect(result.success).toBe(false)
+    expect(result.error).toMatch(/422/)
+    expect(result.failed).toBe(2)
+  })
+})
+
 describe('registry', () => {
   it('declares a Censys cost that covers one select and an update per IP', () => {
     expect(JOBS_BY_ID.censys.cost).toBe(CENSYS_BATCH + 1)
