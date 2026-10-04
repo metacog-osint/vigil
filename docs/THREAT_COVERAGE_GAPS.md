@@ -28,7 +28,7 @@ Vigil currently provides intelligence across these domains:
 
 | Domain                     | Coverage Level | Primary Sources                                           |
 | -------------------------- | -------------- | --------------------------------------------------------- |
-| Ransomware Intelligence    | **Strong**     | RansomLook, Ransomware.live, Ransomwatch                  |
+| Ransomware Intelligence    | **Strong**     | RansomLook, Ransomware.live                               |
 | Indicators of Compromise   | **Strong**     | ThreatFox, URLhaus, Feodo, Spamhaus, OTX, PhishTank       |
 | Vulnerability Intelligence | **Strong**     | NVD, CISA KEV, CISA Alerts                                |
 | Threat Actor Profiles      | **Good**       | MITRE ATT&CK, Malpedia, MISP Galaxy                       |

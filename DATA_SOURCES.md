@@ -50,8 +50,11 @@ that run from `scripts/` rather than the worker.
 | RansomLook                     | `https://www.ransomlook.io/api`                                                  | Ransomware incidents, victim claims                   | Every 30min     | `ingest-ransomlook.mjs`                                                      | None |
 | Ransomware.live                | `https://api.ransomware.live/v2`                                                 | Victim claims, historical data (2020+)                | Every 6h        | `ingest-ransomware-live.mjs`                                                 | None |
 | Ransomware.live groups         | `https://api.ransomware.live/v2/groups`                                          | Group ATT&CK techniques, tooling, leak-site addresses | Daily 03:00 UTC | `workers/src/feeds/ransomware-live.js`                                       | None |
-| Ransomwatch                    | `https://raw.githubusercontent.com/joshhighet/ransomwatch/main/`                 | Victim posts, group metadata                          | Every 6h        | `ingest-ransomwatch.mjs`                                                     | None |
 | ThreatCluster Ransomware-Intel | `https://raw.githubusercontent.com/Jam0k/Ransomware-Intel/main/data/victims.csv` | **Victim country**, sector, listed/delisted status    | Daily           | `workers/src/feeds/threatcluster.js` → `threatcluster-victims` Edge Function | None |
+
+**Why Ransomwatch was removed.** Its upstream repo was archived on 3 Mar 2026
+and stopped updating, so the ingest script was deleted on 4 Oct 2026. Incidents
+it loaded before then keep `source = 'ransomwatch'`.
 
 **Why ThreatCluster was added.** Ransomware.live was the only source that ever
 supplied `victim_country` — 11,256 of 11,317 — and it stopped on 29 May 2026.
