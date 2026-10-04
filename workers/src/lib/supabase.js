@@ -68,8 +68,10 @@ export function createSupabaseClient(env, { budget = null } = {}) {
         // SELECT query
         // `query` is an optional PostgREST filter string, e.g. 'name=in.("a","b")'.
         // Pages through results, since PostgREST caps each response (1000 rows by default).
-        async select(columns = '*', query = '') {
-          const pageSize = 1000
+        // `maxRows` stops after that many rows, so a job that wants "the next N" costs
+        // one subrequest instead of a page for every row in the table.
+        async select(columns = '*', query = '', { maxRows = Infinity } = {}) {
+          const pageSize = Math.min(1000, maxRows)
           const rows = []
 
           for (let offset = 0; ; offset += pageSize) {
@@ -89,7 +91,7 @@ export function createSupabaseClient(env, { budget = null } = {}) {
 
             const page = await response.json()
             rows.push(...page)
-            if (page.length < pageSize) break
+            if (page.length < pageSize || rows.length >= maxRows) break
           }
 
           return { data: rows, error: null }
