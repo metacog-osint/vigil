@@ -52,7 +52,9 @@ export const sanctions = {
 
     const { data, error } = await supabase
       .from('sanctioned_addresses')
-      .select('address, currency, entity_name, entity_uid, programs, aliases, first_seen, last_seen, delisted_at')
+      .select(
+        'address, currency, entity_name, entity_uid, programs, aliases, first_seen, last_seen, delisted_at'
+      )
       .ilike('address', address)
       .limit(1)
 
@@ -104,9 +106,7 @@ export const sanctions = {
         .then(({ data, error }) => (error ? null : data)),
       // Measured, not asserted. sanctions_wallet_overlap() is one call rather
       // than fetching 9,900 wallets into the browser. See migration 151.
-      supabase.rpc('sanctions_wallet_overlap').then(({ data, error }) =>
-        error ? null : data
-      ),
+      supabase.rpc('sanctions_wallet_overlap').then(({ data, error }) => (error ? null : data)),
       supabase
         .from('sanctioned_addresses')
         .select('last_seen')
@@ -119,13 +119,13 @@ export const sanctions = {
       data: {
         addresses,
         delisted,
-        currentlyDesignated:
-          addresses === null || delisted === null ? null : addresses - delisted,
+        currentlyDesignated: addresses === null || delisted === null ? null : addresses - delisted,
         // entity_uid is not unique per row - one entity holds many addresses -
         // and PostgREST cannot count distinct, so this is the one figure
         // derived from returned rows. It is capped at 1,000 like any select,
         // which is why it is labelled "at least" wherever it is rendered.
-        entitiesAtLeast: entityRows === null ? null : new Set(entityRows.map((r) => r.entity_uid)).size,
+        entitiesAtLeast:
+          entityRows === null ? null : new Set(entityRows.map((r) => r.entity_uid)).size,
         entitiesCapped: entityRows !== null && entityRows.length >= 1000,
         walletsHeld: overlap?.wallets_held ?? null,
         walletsOnSdnList: overlap?.wallets_on_sdn_list ?? null,
@@ -187,7 +187,9 @@ export const sanctions = {
   async getActorLinks() {
     return supabase
       .from('actor_sanctions')
-      .select('actor_id, entity_uid, entity_name, programs, match_basis, first_seen, last_seen, threat_actors(name, actor_type)')
+      .select(
+        'actor_id, entity_uid, entity_name, programs, match_basis, first_seen, last_seen, threat_actors(name, actor_type)'
+      )
       .order('entity_name')
   },
 
