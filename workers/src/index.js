@@ -10,7 +10,7 @@
  * listed under. See the registry for why.
  */
 
-import { JOBS, JOBS_BY_ID } from './feeds/registry.js'
+import { JOBS, JOBS_BY_ID, SCHEDULED_JOBS } from './feeds/registry.js'
 import { runDueJobs, runJob, createTimeBudget } from './lib/scheduler.js'
 import { createSupabaseClient, createSubrequestBudget } from './lib/supabase.js'
 
@@ -46,7 +46,7 @@ export default {
 
     try {
       const summary = await runDueJobs({
-        jobs: JOBS,
+        jobs: SCHEDULED_JOBS,
         feedDb,
         logDb: logDb.from('sync_log'),
         healthDb: logDb.from('feed_health'),
@@ -155,7 +155,7 @@ export default {
       // Run whatever is overdue, exactly as a cron trigger would.
       if (url.pathname === '/ingest/due') {
         const summary = await runDueJobs({
-          jobs: JOBS,
+          jobs: SCHEDULED_JOBS,
           feedDb,
           logDb: logDb.from('sync_log'),
           healthDb: logDb.from('feed_health'),
