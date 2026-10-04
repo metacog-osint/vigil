@@ -28,7 +28,6 @@
     "ingest:mitre": "node scripts/ingest-mitre.mjs",
     "ingest:malpedia": "node scripts/ingest-malpedia.mjs",
     "ingest:misp-galaxy": "node scripts/ingest-misp-galaxy.mjs",
-    "ingest:ransomwatch": "node scripts/ingest-ransomwatch.mjs",
     "ingest:ransomlook": "node scripts/ingest-ransomlook.mjs",
     "ingest:ransomware-live": "node scripts/ingest-ransomware-live.mjs",
     "ingest:ransomware": "node scripts/ingest-ransomlook.mjs && node scripts/ingest-ransomware-live.mjs",
