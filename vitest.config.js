@@ -9,7 +9,13 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.js'],
     // workers/ runs the ingestion. It had no tests at all until the scheduler
     // rewrite, which is part of why a silent failure lasted four months.
-    include: ['src/**/*.{test,spec}.{js,jsx}', 'workers/**/*.{test,spec}.js'],
+    // scripts/ had no coverage either, and now carries the feed-health check
+    // that is the only thing telling anyone when ingestion stops.
+    include: [
+      'src/**/*.{test,spec}.{js,jsx}',
+      'workers/**/*.{test,spec}.js',
+      'scripts/**/*.{test,spec}.{js,mjs}',
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
