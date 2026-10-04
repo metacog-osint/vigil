@@ -85,8 +85,8 @@ function Lookup() {
       <div>
         <h2 className="text-lg font-medium text-white">Is this address designated?</h2>
         <p className="text-sm text-gray-400 mt-1">
-          Matched case-insensitively, because Bitcoin addresses are case-sensitive and Ethereum&apos;s
-          are not, and people paste either.
+          Matched case-insensitively, because Bitcoin addresses are case-sensitive and
+          Ethereum&apos;s are not, and people paste either.
         </p>
       </div>
 
@@ -171,7 +171,9 @@ function ActorLinks({ links }) {
   // is a finding rather than nothing to show.
   return (
     <div className="space-y-2">
-      <h2 className="text-lg font-medium text-white">Tracked actors that are designated entities</h2>
+      <h2 className="text-lg font-medium text-white">
+        Tracked actors that are designated entities
+      </h2>
       <p className="text-sm text-gray-400">
         <code className="text-gray-300">match_basis</code> is the claim. <strong>name</strong> is an
         exact match on the designated name; <strong>alias_reviewed</strong> means a person confirmed
@@ -179,45 +181,48 @@ function ActorLinks({ links }) {
       </p>
       {!links?.length && (
         <p className="cyber-card p-4 text-sm text-gray-400">
-          No tracked actor is currently linked to a designated entity. That is a statement about
-          the links, not about the actors.
+          No tracked actor is currently linked to a designated entity. That is a statement about the
+          links, not about the actors.
         </p>
       )}
       {links?.length > 0 && (
-      <div className="cyber-card overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
-              <th className="px-4 py-2">Vigil actor</th>
-              <th className="px-4 py-2">OFAC entity</th>
-              <th className="px-4 py-2">Programmes</th>
-              <th className="px-4 py-2">Basis</th>
-            </tr>
-          </thead>
-          <tbody>
-            {links.map((row) => (
-              <tr key={`${row.actor_id}-${row.entity_uid}`} className="border-b border-gray-800/60">
-                <td className="px-4 py-2 text-white">{row.threat_actors?.name ?? '—'}</td>
-                <td className="px-4 py-2 text-gray-300">{row.entity_name}</td>
-                <td className="px-4 py-2 text-gray-400">
-                  {(row.programs ?? []).map((p) => (
-                    <span key={p} title={SANCTIONS_PROGRAMS[p] ?? p} className="mr-2">
-                      {p}
-                    </span>
-                  ))}
-                </td>
-                <td className="px-4 py-2">
-                  {/* An exact name match states itself; an alias match rests on a
-                      recorded verdict, so it is marked differently. */}
-                  <span className={row.match_basis === 'name' ? 'badge-info' : 'badge-medium'}>
-                    {row.match_basis}
-                  </span>
-                </td>
+        <div className="cyber-card overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
+                <th className="px-4 py-2">Vigil actor</th>
+                <th className="px-4 py-2">OFAC entity</th>
+                <th className="px-4 py-2">Programmes</th>
+                <th className="px-4 py-2">Basis</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {links.map((row) => (
+                <tr
+                  key={`${row.actor_id}-${row.entity_uid}`}
+                  className="border-b border-gray-800/60"
+                >
+                  <td className="px-4 py-2 text-white">{row.threat_actors?.name ?? '—'}</td>
+                  <td className="px-4 py-2 text-gray-300">{row.entity_name}</td>
+                  <td className="px-4 py-2 text-gray-400">
+                    {(row.programs ?? []).map((p) => (
+                      <span key={p} title={SANCTIONS_PROGRAMS[p] ?? p} className="mr-2">
+                        {p}
+                      </span>
+                    ))}
+                  </td>
+                  <td className="px-4 py-2">
+                    {/* An exact name match states itself; an alias match rests on a
+                      recorded verdict, so it is marked differently. */}
+                    <span className={row.match_basis === 'name' ? 'badge-info' : 'badge-medium'}>
+                      {row.match_basis}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )
@@ -235,17 +240,15 @@ function Decisions({ decisions }) {
       </p>
       {!decisions?.length && (
         <p className="cyber-card p-4 text-sm text-gray-400">
-          No verdict has been recorded yet. The alias matches that need one are queued in the
-          review queue.
+          No verdict has been recorded yet. The alias matches that need one are queued in the review
+          queue.
         </p>
       )}
       <div className="space-y-2">
         {(decisions ?? []).map((d) => (
           <div
             key={`${d.actor_key}-${d.entity_uid}`}
-            className={`cyber-card p-4 ${
-              d.verdict === 'rejected' ? 'border-amber-800/50' : ''
-            }`}
+            className={`cyber-card p-4 ${d.verdict === 'rejected' ? 'border-amber-800/50' : ''}`}
           >
             <div className="flex items-baseline justify-between gap-3">
               <span className="text-white font-mono text-sm">{d.actor_key}</span>
