@@ -27,6 +27,23 @@ export const CENSYS_BATCH = 5
 const CANDIDATES_QUERY =
   'type=eq.ip&metadata->censys_enriched=is.null&order=created_at.desc'
 
+/**
+ * Censys looks up a host, not an endpoint. 50,746 of the 53,624 `type = 'ip'`
+ * rows - 94.6% - are `ipv4:port` pairs from the C2 feeds (Feodo, ThreatFox),
+ * and the host lookup rejects those with HTTP 422 "validation failed". Only
+ * 2,878 rows are a bare address.
+ *
+ * Because the candidate query takes the newest first, and the C2 feeds are what
+ * produce new rows, every run drew five `ip:port` values and enriched nothing.
+ * Measured 4 October, on the first scheduled run after #59.
+ *
+ * The port is dropped for the lookup only. The row is written by id, and the
+ * port stays in `value`, which is the indicator as its source published it.
+ */
+function hostOf(value) {
+  return String(value).split(':')[0]
+}
+
 export async function enrichCensys(supabase, env) {
   console.log('Starting Censys enrichment...')
 
@@ -38,6 +55,9 @@ export async function enrichCensys(supabase, env) {
 
   let enriched = 0
   let failed = 0
+  // Which statuses the lookups failed with. Without this a run reported only
+  // "wrote none of them", and finding the 422 took a manual curl.
+  const failedStatuses = new Set()
 
   try {
     const { data: candidates, error } = await supabase
@@ -55,7 +75,7 @@ export async function enrichCensys(supabase, env) {
         // Rate limiting - free tier has 1 concurrent action limit
         await new Promise(r => setTimeout(r, 1000))
 
-        const response = await fetch(`${CENSYS_API}/asset/host/${ioc.value}`, {
+        const response = await fetch(`${CENSYS_API}/asset/host/${hostOf(ioc.value)}`, {
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Accept': 'application/json',
@@ -86,6 +106,7 @@ export async function enrichCensys(supabase, env) {
 
         if (!response.ok) {
           failed++
+          failedStatuses.add(response.status)
           continue
         }
 
@@ -125,5 +146,19 @@ export async function enrichCensys(supabase, env) {
   }
 
   console.log(`Censys complete: ${enriched} enriched, ${failed} failed`)
+
+  // Every lookup failing is a broken feed, not a quiet success. Carry the status
+  // so the next person reads the cause instead of inferring it.
+  if (enriched === 0 && failed > 0) {
+    const seen = [...failedStatuses].sort((a, b) => a - b).join(', ')
+    return {
+      success: false,
+      source: 'censys',
+      error: `all ${failed} lookups failed${seen ? ` (HTTP ${seen})` : ''}`,
+      enriched,
+      failed,
+    }
+  }
+
   return { success: true, source: 'censys', enriched, updated: enriched, failed }
 }
