@@ -10,7 +10,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const scripts = [
   { name: 'RansomLook', file: 'ingest-ransomlook.mjs' },  // Run first - creates actors
-  { name: 'Ransomware.live', file: 'ingest-ransomware-live.mjs' },
   { name: 'CISA KEV', file: 'ingest-cisa-kev.mjs' },
   { name: 'CISA Alerts', file: 'ingest-cisa-alerts.mjs' },
   { name: 'NVD CVEs', file: 'ingest-nvd.mjs' },
