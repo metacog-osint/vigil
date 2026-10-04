@@ -142,4 +142,7 @@ export { disclosures, DISCLOSURE_SOURCES, COUNT_SCOPES } from './supabase/disclo
 // FINANCIAL CRIME ADVISORIES
 export { advisoryRegister, ADVISORY_KINDS, ADVISORY_SOURCES } from './supabase/advisoryRegister'
 
+// SANCTIONS
+export { sanctions, SANCTIONS_PROGRAMS, SANCTIONS_VERDICTS } from './supabase/sanctions'
+
 export default supabase
