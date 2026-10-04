@@ -88,7 +88,7 @@ npm run ingest
 Or run individual scripts:
 
 ```bash
-node scripts/ingest-ransomwatch.mjs  # 16,000+ incidents
+node scripts/ingest-ransomlook.mjs   # Ransomware victim claims
 node scripts/ingest-cisa-kev.mjs     # 1,487 KEVs
 node scripts/ingest-nvd.mjs          # Recent CVEs
 node scripts/ingest-mitre.mjs        # ATT&CK techniques
