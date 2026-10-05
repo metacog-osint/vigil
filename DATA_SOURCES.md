@@ -254,9 +254,9 @@ against this use.
 
 ### Financial Crime Advisories
 
-| Source           | Endpoint                                                     | Data Type                                             | Schedule | Script                                                                     | Auth |
-| ---------------- | ------------------------------------------------------------ | ----------------------------------------------------- | -------- | -------------------------------------------------------------------------- | ---- |
-| FinCEN register  | `https://www.fincen.gov/resources/advisoriesbulletinsfact-sheets` | Alerts, advisories, notices, bulletins and fact sheets | Daily    | `workers/src/feeds/fincen-advisories.js` → `fincen-advisories` Edge Function | None |
+| Source          | Endpoint                                                          | Data Type                                              | Schedule | Script                                                                       | Auth |
+| --------------- | ----------------------------------------------------------------- | ------------------------------------------------------ | -------- | ---------------------------------------------------------------------------- | ---- |
+| FinCEN register | `https://www.fincen.gov/resources/advisoriesbulletinsfact-sheets` | Alerts, advisories, notices, bulletins and fact sheets | Daily    | `workers/src/feeds/fincen-advisories.js` → `fincen-advisories` Edge Function | None |
 
 **Licence: US public domain.** A work of the US government, no restriction.
 Registered in `source_licences` as `fincen` before anything could write a row.
@@ -359,9 +359,34 @@ ten items is not a feed that says who did it.
 
 ### Ransomware Payment Tracking
 
-| Source      | Endpoint                          | Data Type                                 | Schedule | Script    | Auth |
-| ----------- | --------------------------------- | ----------------------------------------- | -------- | --------- | ---- |
-| Ransomwhere | `https://api.ransomwhe.re/export` | Ransomware BTC payments, wallet addresses | Daily    | `planned` | None |
+| Source                       | Endpoint                                 | Data Type                                                          | Schedule | Script                                                                    | Auth |
+| ---------------------------- | ---------------------------------------- | ------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------- | ---- |
+| Ransomwhere (Zenodo deposit) | `https://zenodo.org/api/records/6512122` | Ransomware BTC payments, wallet addresses, per-transaction amounts | Weekly   | `workers/src/feeds/ransomwhere.js` -> `ransomwhere-archive` Edge Function | None |
+
+**Licence: CC-BY-4.0. Commercial use permitted with attribution** - cite
+`https://doi.org/10.5281/zenodo.6512122`. Registered in `source_licences` as
+`ransomwhere-archive`. This is the only ransom-payment source Vigil can reach
+that may be sold: ransomware.live is personal-use only and the live
+`api.ransomwhe.re/export` carried no stated licence at all.
+
+**The live API is dead, which is why this route exists.** It has returned
+HTTP 502 since 20 September 2026. Checked from outside the worker on 4 October:
+the export path 502s, `api.ransomwhe.re` answers 403, and `ransomwhe.re` serves
+200 and still links to the same URL. The service is broken and has not moved.
+
+**It is a snapshot, not a feed.** The concept DOI always resolves to the newest
+deposit; v1.1.0 was published 2024-10-27 and its payments end 19 August 2024.
+Re-running will not add anything newer. Every row records `snapshot_version` and
+`snapshot_published`, so the age of the data is visible rather than the age of
+the import, and the Edge Function skips the 5.5 MB download when the version
+already matches `feed_cursors`.
+
+**The total needs its split.** 136 families, 11,178 addresses, 21,790
+transactions, about USD 1.016bn at the value on the day of each transaction. Of
+that, **USD 682m - 67% - is family "Unlabeled"**, the dataset's own label for an
+address it could not attribute. `metadata.attributed` is false on that row.
+Quoting the billion without the split would be two thirds a guess, which is the
+same error migration 144 exists to prevent for "people affected".
 
 ### Sanctions
 

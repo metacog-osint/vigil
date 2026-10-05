@@ -277,9 +277,17 @@ export const JOBS = [
   },
   {
     id: 'ransomwhere',
-    priority: 4,
-    cost: 10,
-    intervalMinutes: DAY,
+    // The only ransom-payment corpus Vigil holds, which is why feed_expectations
+    // marks it critical (migration 152) - the live API died on 20 September and
+    // nobody found out for fourteen days.
+    priority: 3,
+    // One subrequest to the Edge Function. It was 10 when the parse happened
+    // here against the API that is now 502.
+    cost: 1,
+    // Weekly: the Zenodo deposit only changes when a new version is published,
+    // and the function skips the 5.5 MB download when the version matches
+    // feed_cursors. A daily run would re-import an identical file.
+    intervalMinutes: 7 * DAY,
     run: (db, env) => ingestRansomwhere(db, env),
   },
 
