@@ -47,7 +47,7 @@ export { incidents } from './incidents'
 export { iocs, detectIOCType } from './iocs'
 export { countries } from './countries'
 export { sourceLicences } from './sourceLicences'
-export { vendorReports } from './vendorReports'
+export { vendorReports, VENDOR_SOURCES, LINK_VERDICTS } from './vendorReports'
 export {
   attributedActivity,
   ATTRIBUTION_STRENGTHS,
