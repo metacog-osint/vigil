@@ -145,4 +145,13 @@ export { advisoryRegister, ADVISORY_KINDS, ADVISORY_SOURCES } from './supabase/a
 // SANCTIONS
 export { sanctions, SANCTIONS_PROGRAMS, SANCTIONS_VERDICTS } from './supabase/sanctions'
 
+// RANSOM PAYMENTS
+export {
+  ransomPayments,
+  summarise as summariseRansomPayments,
+  RANSOM_PAYMENTS_SOURCE,
+  RANSOMWHERE_CITATION,
+  UNLABELED_FAMILY,
+} from './supabase/ransomPayments'
+
 export default supabase

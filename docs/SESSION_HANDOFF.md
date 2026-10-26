@@ -185,6 +185,12 @@ commit is not the fix, the deploy is.
 | `evidence_publishers`      |     20 | `contestedClaims.js`    | partly — tiers only         |
 | `regulatory_advisories`    |    183 | `advisoryRegister.js`   | **yes** — /financial-crime  |
 | `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer         |
+| `ransomware_payments`      |    136 | `ransomPayments.js`     | **yes** — /ransom-payments  |
+
+`ransomPayments.js` carries the rule migration 152 stated: no single total of
+ransom paid, because two thirds of it is "Unlabeled". A test asserts the
+absence, as `disclosures.test.js` does for people affected. The page states the
+snapshot's age (v1.1.0, last payment August 2024) before any figure.
 
 **What the disclosures page settled, and what it did not.** It renders the
 filings, the per-state totals and a name search, and it states plainly that the

@@ -13,3 +13,19 @@
 export function figure(n) {
   return typeof n === 'number' ? n.toLocaleString() : '—'
 }
+
+/**
+ * US dollars, with the same rule: a sum Vigil could not make is a dash, not $0.
+ *
+ * `compact` is for headline figures ("$334.1M"). Tables use whole dollars, so
+ * a reader comparing two families compares the figures the dataset holds.
+ */
+export function usd(n, { compact = false } = {}) {
+  if (typeof n !== 'number' || Number.isNaN(n)) return '—'
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: compact ? 1 : 0,
+    ...(compact ? { notation: 'compact' } : {}),
+  }).format(n)
+}
