@@ -1,6 +1,9 @@
-#!/usr/bin/env node
 /**
  * Fail when a feed marked `critical` is not running.
+ *
+ * Run as `node scripts/check-feed-health.mjs`. There is no #! line: the file
+ * is not executable, and on a Windows checkout a #! line ending in CRLF made
+ * vitest fail to parse this file at all.
  *
  * Nothing watched this. ofac-sdn - the feed whose silence matters most, because
  * it is the sanctions list - broke on 20 September 2026 and was still broken on
@@ -30,15 +33,77 @@
  * Zenodo deposit published in 2024 has not changed, which is a working feed
  * serving old data. The table says so in its own column (migration 153), so a
  * green run is never read as current ransom-payment figures.
+ *
+ * ONE ERROR FROM AN HOURLY FEED IS NOT YET A FAILURE
+ *
+ * ransomlook reads a site behind Cloudflare that times out now and then: 21
+ * of its runs failed between 24 and 26 October, twenty with HTTP 524 and one
+ * 502, each followed by a success the next hour. Failing on any single error
+ * meant an email whenever the twice-daily check landed just after one, about a
+ * problem that had already gone away.
+ *
+ * So a feed that runs hourly or faster must fail twice in a row, counting only
+ * runs that actually ran (success or error). One error is listed in the summary
+ * and does not fail the job. Anything slower still fails on the first error:
+ * ofac-sdn runs daily, and waiting for a second error there means a day
+ * without the sanctions list. stale and never still fail regardless.
+ *
+ * If the recent runs cannot be read, the error counts. The rule exists to
+ * spare a blip, not to excuse a feed whose history nobody could check.
  */
 
 const BROKEN_STATES = new Set(['stale', 'never'])
 
-export function classify(feeds) {
-  const broken = feeds.filter(
-    (f) => f.last_status === 'error' || BROKEN_STATES.has(f.state)
+/** At or below this cadence, a single error is not yet a failure. */
+export const ONE_ERROR_ALLOWED_AT_MINUTES = 60
+
+export function allowsOneError(f) {
+  return (
+    typeof f.expected_interval_minutes === 'number' &&
+    f.expected_interval_minutes <= ONE_ERROR_ALLOWED_AT_MINUTES
   )
-  return { broken, ok: feeds.filter((f) => !broken.includes(f)) }
+}
+
+/** How many of the newest runs, newest first, are errors in a row. */
+export function errorsInARow(statuses) {
+  let n = 0
+  for (const status of statuses ?? []) {
+    if (status !== 'error') break
+    n += 1
+  }
+  return n
+}
+
+/**
+ * `recent` maps feed_id to that feed's newest run statuses, newest first. It
+ * is only needed for hourly feeds whose last status is an error.
+ */
+export function classify(feeds, recent = {}) {
+  const broken = []
+  const blips = []
+
+  for (const f of feeds) {
+    if (BROKEN_STATES.has(f.state)) {
+      broken.push(f)
+    } else if (f.last_status !== 'error') {
+      continue
+    } else if (!allowsOneError(f)) {
+      broken.push(f)
+    } else {
+      const statuses = recent[f.feed_id]
+      const unreadable = !Array.isArray(statuses) || statuses.length < 2
+      const streak = errorsInARow(statuses)
+      if (unreadable || streak >= 2) broken.push(f)
+      else if (streak === 1) blips.push(f)
+      // streak 0: a run succeeded between the two reads, so it has recovered.
+    }
+  }
+
+  return {
+    broken,
+    blips,
+    ok: feeds.filter((f) => !broken.includes(f) && !blips.includes(f)),
+  }
 }
 
 export function hoursSince(minutes) {
@@ -80,6 +145,30 @@ export function table(feeds) {
   )
 }
 
+/**
+ * The newest two runs that actually ran, per feed, from sync_log (readable by
+ * anon, like feed_health). A feed whose runs cannot be read is left out, and
+ * classify() then counts its error rather than excusing it.
+ */
+async function readRecentRuns(url, key, feedIds) {
+  const recent = {}
+  for (const id of feedIds) {
+    const query =
+      `select=status&source=eq.${encodeURIComponent(id)}` +
+      '&status=in.(success,error)&order=completed_at.desc&limit=2'
+    try {
+      const response = await fetch(`${url}/rest/v1/sync_log?${query}`, {
+        headers: { apikey: key, Authorization: `Bearer ${key}` },
+        signal: AbortSignal.timeout(30_000),
+      })
+      if (response.ok) recent[id] = (await response.json()).map((r) => r.status)
+    } catch {
+      // Left out on purpose; see above.
+    }
+  }
+  return recent
+}
+
 async function main() {
   const url = process.env.SUPABASE_URL
   const key = process.env.SUPABASE_ANON_KEY
@@ -92,7 +181,7 @@ async function main() {
 
   const query =
     'select=feed_id,critical,state,last_status,last_error,minutes_since_success,' +
-    'snapshot_version,snapshot_published' +
+    'expected_interval_minutes,snapshot_version,snapshot_published' +
     '&critical=is.true&order=feed_id'
 
   let feeds
@@ -121,7 +210,12 @@ async function main() {
     process.exit(1)
   }
 
-  const { broken } = classify(feeds)
+  const recent = await readRecentRuns(
+    url,
+    key,
+    feeds.filter((f) => f.last_status === 'error' && allowsOneError(f)).map((f) => f.feed_id)
+  )
+  const { broken, blips } = classify(feeds, recent)
 
   const summary = [
     '## Critical feed health',
@@ -130,6 +224,14 @@ async function main() {
       ? ['**Broken:**', '', ...broken.map(describe)].join('\n')
       : `All ${feeds.length} critical feeds are running.`,
     '',
+    ...(blips.length
+      ? [
+          '**One error, not failing yet.** Hourly feeds fail on the second error in a row:',
+          '',
+          ...blips.map(describe),
+          '',
+        ]
+      : []),
     '<details><summary>All critical feeds</summary>',
     '',
     table(feeds),
