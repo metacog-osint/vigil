@@ -152,7 +152,25 @@ where there is CPU for them.
 ### Modify schema
 
 1. Migration in `supabase/migrations/`
-2. Update `src/lib/supabase/`
+2. **Grants in the same migration** (reminder 12). From 30 October 2026
+   nothing in `public` is reachable by default:
+
+   ```sql
+   -- every new table, view or materialized view, including one rebuilt with DROP + CREATE
+   grant select on public.my_table to anon, authenticated;
+   -- only if the worker or an Edge Function writes it directly over REST
+   grant select, insert, update, delete on public.my_table to service_role;
+   alter table public.my_table enable row level security;
+
+   -- every SECURITY DEFINER function: shut it, then open it to its caller
+   revoke execute on function public.apply_x(jsonb, text) from public, anon, authenticated;
+   grant execute on function public.apply_x(jsonb, text) to service_role;
+   ```
+
+3. Update `src/lib/supabase/`
+
+`node scripts/check-migration-grants.mjs` checks both rules, and the test
+suite runs it on every migration from 154 on.
 
 ---
 
@@ -207,6 +225,20 @@ cd workers && npm run deploy   # The scheduled feeds. NOT run by CI.
     share one working tree and last write wins. `docs/SESSION_HANDOFF.md` §5 has
     the commands, and the `merge-base` check that tells you whether a branch is
     actually finished.
+
+12. **Say who can reach every object you create.** Two gaps, one cause:
+    Supabase's default privileges used to grant everything in `public` to
+    anon, authenticated and service_role.
+    - **Tables, views and sequences:** from 30 October 2026 Supabase stops
+      granting new ones (changelog 45329). Without a `GRANT`, supabase-js
+      gets "permission denied", a `try/catch` swallows it, and the page shows
+      an empty state, the same silent failure as the old query-layer trap
+      above.
+    - **Functions** are not part of that change and stay executable by all
+      three. A `SECURITY DEFINER` writer left that way can be called with
+      the browser's anon key: `apply_ransom_payments` was, from 152 until
+      154. Revoking from `public` alone is not enough, because Supabase
+      grants `authenticated` by name, which is what 145 and 147 missed.
 
 ---
 
