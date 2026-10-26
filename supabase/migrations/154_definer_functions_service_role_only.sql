@@ -1,7 +1,9 @@
 -- 154. Four SECURITY DEFINER functions that writers call were open to callers
 --      they were never meant for
 --
--- STATUS: NOT YET APPLIED.
+-- STATUS: applied 2026-10-26 at 18:54 UTC, before this file was pushed. The
+-- check query below returned no rows, and Security Advisor no longer lists any
+-- of the four.
 --
 -- WHAT WAS OPEN
 --
