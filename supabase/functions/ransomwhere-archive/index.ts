@@ -182,13 +182,28 @@ Deno.serve(async (request) => {
 
     const seen = (cursors?.[0]?.cursor ?? {}) as { snapshot_version?: string }
 
-    // Nothing new to import. Reported as a success with a reason, because a
-    // deposit that has not changed is the normal case for a weekly job.
+    // Nothing new to import, which is the normal case for a weekly job.
+    //
+    // `unchanged`, not `skipped`. The worker's scheduler records any `skipped`
+    // string as a skipped run, and feed_health counts only successes - so a
+    // check that reached Zenodo and confirmed the version read as a feed that
+    // had stopped. Marked critical, it went stale on 11 October and failed the
+    // twice-daily feed-health workflow 29 times running, burying any real
+    // failure under the same email. It also made the scheduler, which measures
+    // overdue from the last success, re-run this weekly job every hour.
+    //
+    // ofac-sdn already reports an unmoved list this way, and scheduler.test.js
+    // pins `unchanged: true` as a success. A failed check still returns
+    // success: false below and alerts on the first attempt. The age of the
+    // data is a separate fact: feed_health carries snapshot_version and
+    // snapshot_published from feed_cursors (migration 153), so a fresh check
+    // is never read as fresh data.
     if (!force && seen.snapshot_version === version) {
       return json({
         success: true,
         source: SOURCE,
-        skipped: `snapshot ${version} already imported`,
+        unchanged: true,
+        note: `snapshot ${version} already imported`,
         snapshot_version: version,
         snapshot_published: published,
         ms: Date.now() - started,
