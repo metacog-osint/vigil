@@ -25,6 +25,11 @@
  *
  * The anon key is enough - feed_health is readable by `anon`, and that key
  * already ships in the browser bundle. Nothing privileged is used here.
+ *
+ * `fresh` describes the check, not the data. ransomwhere confirms weekly that a
+ * Zenodo deposit published in 2024 has not changed, which is a working feed
+ * serving old data. The table says so in its own column (migration 153), so a
+ * green run is never read as current ransom-payment figures.
  */
 
 const BROKEN_STATES = new Set(['stale', 'never'])
@@ -40,22 +45,39 @@ export function hoursSince(minutes) {
   return minutes === null || minutes === undefined ? null : Math.floor(minutes / 60)
 }
 
+/**
+ * How old the data is, for a source that is a snapshot rather than a stream.
+ * null for a live feed: it has no vintage to state, and printing "live" would
+ * be a claim this view cannot back.
+ */
+export function dataAge(f) {
+  if (!f.snapshot_version && !f.snapshot_published) return null
+  const version = f.snapshot_version ? `snapshot ${f.snapshot_version}` : 'snapshot'
+  return f.snapshot_published ? `${version}, published ${f.snapshot_published}` : version
+}
+
 function describe(f) {
   const h = hoursSince(f.minutes_since_success)
   const age = h === null ? 'never succeeded' : `last success ${h}h ago`
   const status = f.last_status ?? 'never ran'
+  const vintage = dataAge(f) ? ` (data: ${dataAge(f)})` : ''
   const err = f.last_error ? `\n  - \`${String(f.last_error).slice(0, 200)}\`` : ''
-  return `- **${f.feed_id}** — state \`${f.state}\`, last status \`${status}\`, ${age}${err}`
+  return `- **${f.feed_id}** — state \`${f.state}\`, last status \`${status}\`, ${age}${vintage}${err}`
 }
 
-function table(feeds) {
+export function table(feeds) {
   const rows = feeds
     .map((f) => {
       const h = hoursSince(f.minutes_since_success)
-      return `| ${f.feed_id} | ${f.state} | ${f.last_status ?? 'never ran'} | ${h ?? 'never'} |`
+      const data = dataAge(f) ?? '—'
+      return `| ${f.feed_id} | ${f.state} | ${f.last_status ?? 'never ran'} | ${h ?? 'never'} | ${data} |`
     })
     .join('\n')
-  return `| Feed | State | Last status | Hours since success |\n| --- | --- | --- | --- |\n${rows}`
+  return (
+    '| Feed | State | Last status | Hours since success | Data |\n' +
+    '| --- | --- | --- | --- | --- |\n' +
+    rows
+  )
 }
 
 async function main() {
@@ -69,7 +91,8 @@ async function main() {
   }
 
   const query =
-    'select=feed_id,critical,state,last_status,last_error,minutes_since_success' +
+    'select=feed_id,critical,state,last_status,last_error,minutes_since_success,' +
+    'snapshot_version,snapshot_published' +
     '&critical=is.true&order=feed_id'
 
   let feeds
