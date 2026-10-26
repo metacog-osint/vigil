@@ -136,3 +136,12 @@ export { advisoryRegister, ADVISORY_KINDS, ADVISORY_SOURCES } from './advisoryRe
 
 // Who is sanctioned, which addresses, and which tracked actors are the same entity
 export { sanctions, SANCTIONS_PROGRAMS, SANCTIONS_VERDICTS } from './sanctions'
+
+// Where ransom money went, by family, from a 2024 snapshot - never as one total
+export {
+  ransomPayments,
+  summarise as summariseRansomPayments,
+  RANSOM_PAYMENTS_SOURCE,
+  RANSOMWHERE_CITATION,
+  UNLABELED_FAMILY,
+} from './ransomPayments'
