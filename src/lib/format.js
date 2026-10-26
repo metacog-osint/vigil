@@ -25,6 +25,10 @@ export function usd(n, { compact = false } = {}) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
+    // Both bounds explicit. The currency default minimum is 2, and engines
+    // reconcile it with a smaller maximum differently: Node 20 renders
+    // "$334.0M" where Node 24 and current browsers render "$334M".
+    minimumFractionDigits: 0,
     maximumFractionDigits: compact ? 1 : 0,
     ...(compact ? { notation: 'compact' } : {}),
   }).format(n)
