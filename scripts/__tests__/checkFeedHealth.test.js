@@ -9,7 +9,7 @@
  * 3 October for generating failures nobody could act on.
  */
 import { describe, it, expect } from 'vitest'
-import { classify, hoursSince } from '../check-feed-health.mjs'
+import { classify, hoursSince, dataAge, table } from '../check-feed-health.mjs'
 
 const feed = (overrides) => ({
   feed_id: 'a-feed',
@@ -63,5 +63,37 @@ describe('hoursSince', () => {
     // 0 would render as "last success 0h ago", which is the opposite of true.
     expect(hoursSince(null)).toBeNull()
     expect(hoursSince(undefined)).toBeNull()
+  })
+})
+
+describe('dataAge', () => {
+  // ransomwhere checks a 2024 Zenodo deposit every week. Once a confirmed check
+  // counts as success it reads `fresh`, which is true of the check and false of
+  // the data. These keep the second fact on the same line as the first.
+  const ransomwhere = feed({
+    feed_id: 'ransomwhere',
+    snapshot_version: '1.1.0',
+    snapshot_published: '2024-10-27',
+  })
+
+  it('states the version and publication date of a snapshot', () => {
+    expect(dataAge(ransomwhere)).toBe('snapshot 1.1.0, published 2024-10-27')
+  })
+
+  it('says nothing about a live feed rather than calling it live', () => {
+    expect(dataAge(feed({ snapshot_version: null, snapshot_published: null }))).toBeNull()
+    expect(dataAge(feed())).toBeNull()
+  })
+
+  it('puts the snapshot date beside the fresh state in the summary table', () => {
+    const row = table([ransomwhere])
+      .split('\n')
+      .find((line) => line.startsWith('| ransomwhere'))
+    expect(row).toContain('| fresh |')
+    expect(row).toContain('snapshot 1.1.0, published 2024-10-27')
+  })
+
+  it('does not count a fresh snapshot feed as broken', () => {
+    expect(classify([ransomwhere]).broken).toEqual([])
   })
 })

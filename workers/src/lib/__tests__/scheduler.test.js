@@ -189,6 +189,34 @@ describe('runJob', () => {
     expect(ctx.logDb.rows[0].status).toBe('success')
   })
 
+  it('counts an unchanged ransomwhere deposit as a successful run', async () => {
+    // The exact shape ransomwhere-archive returns when the Zenodo version
+    // matches feed_cursors. It used to say `skipped: 'snapshot 1.1.0 already
+    // imported'`, which this scheduler rightly records as a skip - and a
+    // critical feed that only ever skips goes stale. From 11 October that
+    // failed the feed-health workflow on every run. The reason travels as
+    // `note` and lands in the logged result, not in error_message.
+    const ctx = context()
+    const result = await runJob(
+      job({
+        id: 'ransomwhere',
+        run: async () => ({
+          success: true,
+          source: 'ransomwhere-archive',
+          unchanged: true,
+          note: 'snapshot 1.1.0 already imported',
+          snapshot_version: '1.1.0',
+          snapshot_published: '2024-10-27',
+        }),
+      }),
+      ctx
+    )
+
+    expect(result.status).toBe('success')
+    expect(ctx.logDb.rows[0]).toMatchObject({ status: 'success', error_message: null })
+    expect(ctx.logDb.rows[0].metadata.result.note).toBe('snapshot 1.1.0 already imported')
+  })
+
   it('records a reported failure as an error', async () => {
     const ctx = context()
     const result = await runJob(
