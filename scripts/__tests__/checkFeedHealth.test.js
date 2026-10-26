@@ -9,7 +9,14 @@
  * 3 October for generating failures nobody could act on.
  */
 import { describe, it, expect } from 'vitest'
-import { classify, hoursSince, dataAge, table } from '../check-feed-health.mjs'
+import {
+  classify,
+  hoursSince,
+  dataAge,
+  table,
+  errorsInARow,
+  allowsOneError,
+} from '../check-feed-health.mjs'
 
 const feed = (overrides) => ({
   feed_id: 'a-feed',
@@ -50,6 +57,75 @@ describe('classify', () => {
     const { broken, ok } = classify([bad, good])
     expect(broken.map((f) => f.feed_id)).toEqual(['bad'])
     expect(ok.map((f) => f.feed_id)).toEqual(['good'])
+  })
+})
+
+describe('one error from an hourly feed', () => {
+  // ransomlook, 26 October: HTTP 524 at 21:16, a success at 22:15.
+  const hourly = (overrides) =>
+    feed({
+      feed_id: 'ransomlook',
+      expected_interval_minutes: 60,
+      last_status: 'error',
+      ...overrides,
+    })
+
+  it('is listed, not failed, when the run before it succeeded', () => {
+    const f = hourly()
+    const { broken, blips } = classify([f], { ransomlook: ['error', 'success'] })
+    expect(broken).toEqual([])
+    expect(blips).toEqual([f])
+  })
+
+  it('fails on the second error in a row', () => {
+    const f = hourly()
+    expect(classify([f], { ransomlook: ['error', 'error'] }).broken).toEqual([f])
+  })
+
+  it('fails when its recent runs could not be read, rather than excusing it', () => {
+    const f = hourly()
+    expect(classify([f], {}).broken).toEqual([f])
+    expect(classify([f], { ransomlook: ['error'] }).broken).toEqual([f])
+  })
+
+  it('is neither failed nor listed when a success landed between the two reads', () => {
+    const f = hourly()
+    const { broken, blips, ok } = classify([f], { ransomlook: ['success', 'error'] })
+    expect(broken).toEqual([])
+    expect(blips).toEqual([])
+    expect(ok).toEqual([f])
+  })
+
+  it('still fails if the feed has gone stale, whatever its last runs say', () => {
+    const f = hourly({ state: 'stale' })
+    expect(classify([f], { ransomlook: ['error', 'success'] }).broken).toEqual([f])
+  })
+})
+
+describe('slower feeds still fail on the first error', () => {
+  it('fails a daily feed on one error - a day without the sanctions list is too long', () => {
+    const f = feed({ feed_id: 'ofac-sdn', expected_interval_minutes: 1440, last_status: 'error' })
+    expect(classify([f], { 'ofac-sdn': ['error', 'success'] }).broken).toEqual([f])
+  })
+
+  it('fails a six-hourly feed on one error', () => {
+    const f = feed({ feed_id: 'cisa-kev', expected_interval_minutes: 360, last_status: 'error' })
+    expect(classify([f], { 'cisa-kev': ['error', 'success'] }).broken).toEqual([f])
+  })
+
+  it('treats an unknown interval as slow', () => {
+    expect(allowsOneError(feed({}))).toBe(false)
+    expect(allowsOneError(feed({ expected_interval_minutes: 60 }))).toBe(true)
+    expect(allowsOneError(feed({ expected_interval_minutes: 61 }))).toBe(false)
+  })
+})
+
+describe('errorsInARow', () => {
+  it('counts only the leading errors', () => {
+    expect(errorsInARow(['error', 'error', 'success', 'error'])).toBe(2)
+    expect(errorsInARow(['success', 'error'])).toBe(0)
+    expect(errorsInARow([])).toBe(0)
+    expect(errorsInARow(undefined)).toBe(0)
   })
 })
 
