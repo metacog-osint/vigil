@@ -267,6 +267,7 @@ const navigationGroups = [
       { name: 'Disclosures', href: '/disclosures', icon: icons.reports },
       { name: 'Financial Crime', href: '/financial-crime', icon: icons.investigations },
       { name: 'Sanctions', href: '/sanctions', icon: icons.compare },
+      { name: 'Ransom Payments', href: '/ransom-payments', icon: icons.trends },
     ],
   },
   {
