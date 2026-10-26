@@ -14,13 +14,11 @@
 --   review_contested_claims()                         authenticated
 --
 -- apply_ransom_payments is the serious one. It is SECURITY DEFINER, so it
--- writes ransomware_payments as its owner, past RLS, and anon could call it at
--- /rest/v1/rpc/apply_ransom_payments with the key that ships in the browser
--- bundle. Its only guards are a registered source name, which is public in
--- DATA_SOURCES.md, and a payload of at least 50 families. Anyone could have
--- rewritten the ransom-payment totals, the "follow the money" figures, without
--- signing in. Checked the same day: every row was last written by the
--- 4 October import, so there is no sign that it happened.
+-- writes ransomware_payments as its owner, past RLS, and it was executable
+-- by anon - without signing in. The ransom-payment totals, the "follow the
+-- money" figures, were writable by anyone. Checked the same day: every row
+-- was last written by the 4 October import, so there is no sign that it
+-- happened.
 --
 -- The other three need a signed-in user. Three accounts exist, the newest from
 -- January, and regulatory_advisories holds only source 'fincen'.
