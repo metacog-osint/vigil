@@ -1,6 +1,7 @@
 -- 155. ioc-geo reads the indicators that arrived since it last ran, not all of them
 --
--- STATUS: NOT YET APPLIED.
+-- STATUS: applied 2026-10-26 at 18:56 UTC. Nothing was waiting, so the mark
+-- started at the moment of applying (18:55:43 UTC).
 --
 -- THE FIFTH TIME
 --
