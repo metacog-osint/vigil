@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 /**
  * EntityThreatSummary Component
  * AI-powered threat summaries for entities
@@ -57,14 +58,14 @@ function generateTemplateSummary(entityType, entity, _additionalData = {}) {
             : 'low confidence'
       return `${entity.type.toUpperCase()} indicator with ${conf} from ${entity.source || 'open source'}. ${
         entity.malware_family ? `Associated with ${entity.malware_family} malware family.` : ''
-      } First observed ${entity.first_seen ? new Date(entity.first_seen).toLocaleDateString() : 'recently'}.`
+      } First observed ${entity.first_seen ? fmtDate(entity.first_seen, { year: true }) : 'recently'}.`
     }
     case 'incident': {
       return `${entity.victim_name} (${entity.victim_sector || 'Unknown sector'}) was targeted by ${entity.threat_actor?.name || 'unknown actor'}. ${
         entity.threat_actor?.trend_status === 'ESCALATING'
           ? 'Actor showing increased activity.'
           : ''
-      } Discovered ${entity.discovered_date ? new Date(entity.discovered_date).toLocaleDateString() : 'recently'}.`
+      } Discovered ${entity.discovered_date ? fmtDate(entity.discovered_date, { year: true }) : 'recently'}.`
     }
     default:
       return 'Summary not available for this entity type.'

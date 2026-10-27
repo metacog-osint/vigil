@@ -1,3 +1,4 @@
+import { fmtDate } from './time'
 // Utility functions for Vigil
 
 /**
@@ -140,7 +141,7 @@ export function relativeTime(date) {
   if (diffDay < 7) return `${diffDay}d ago`
   if (diffWeek < 4) return `${diffWeek}w ago`
   if (diffMonth < 12) return `${diffMonth}mo ago`
-  return d.toLocaleDateString()
+  return fmtDate(date, { year: true })
 }
 
 /**

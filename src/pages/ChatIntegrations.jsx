@@ -1,3 +1,4 @@
+import { fmtTime } from '../lib/time'
 import { useState, useEffect } from 'react'
 import {
   chatIntegrations,
@@ -385,7 +386,7 @@ export default function ChatIntegrations() {
                               </div>
                               <div className="flex items-center gap-3 text-xs text-gray-500">
                                 <span>@{log.platform_user_name || 'unknown'}</span>
-                                <span>{new Date(log.executed_at).toLocaleTimeString()}</span>
+                                <span>{fmtTime(log.executed_at, { seconds: true })}</span>
                               </div>
                             </div>
                           ))}

@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import TrendBadge from '../TrendBadge'
@@ -191,7 +192,7 @@ export default function CountryAttackPanel({ country, days = 30, onActorClick, o
                       )}
                     </div>
                     <span className="text-gray-500 text-xs whitespace-nowrap ml-2">
-                      {new Date(inc.discovered_date).toLocaleDateString()}
+                      {fmtDate(inc.discovered_date, { year: true })}
                     </span>
                   </div>
                 ))}

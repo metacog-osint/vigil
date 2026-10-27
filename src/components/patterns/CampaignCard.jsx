@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 /**
  * Campaign Card Component
  *
@@ -145,8 +146,8 @@ export function CampaignCard({ campaign, onSelect, isSelected }) {
       {/* Timeline */}
       {startTime && (
         <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-800">
-          <span>Started: {new Date(startTime).toLocaleDateString()}</span>
-          {endTime && <span>Last seen: {new Date(endTime).toLocaleDateString()}</span>}
+          <span>Started: {fmtDate(startTime, { year: true })}</span>
+          {endTime && <span>Last seen: {fmtDate(endTime, { year: true })}</span>}
         </div>
       )}
 

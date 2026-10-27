@@ -1,3 +1,4 @@
+import { fmtDate } from '../../../lib/time'
 /**
  * CountryThreatsTab Component
  *
@@ -231,7 +232,7 @@ function CountryDetailPanel({ country, onClose }) {
           </div>
           {country.last_event && (
             <div className="text-xs text-gray-500 mt-1">
-              Last event: {new Date(country.last_event).toLocaleDateString()}
+              Last event: {fmtDate(country.last_event, { year: true })}
             </div>
           )}
         </div>

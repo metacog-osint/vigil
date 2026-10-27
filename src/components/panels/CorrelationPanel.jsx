@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 // Correlation Panel - Shows TTPs, CVEs, and IOCs for an actor
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
@@ -167,7 +168,7 @@ function MalwareItem({ sample }) {
       )}
       {sample.first_seen && (
         <div className="text-xs text-gray-500 mt-1">
-          First seen: {new Date(sample.first_seen).toLocaleDateString()}
+          First seen: {fmtDate(sample.first_seen, { year: true })}
         </div>
       )}
     </div>

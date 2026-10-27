@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 /**
  * Contested claims.
  *
@@ -197,7 +198,7 @@ function ClaimCard({ claim, values }) {
             <p className="text-sm text-gray-200">{claim.handling}</p>
             <p className="text-xs text-gray-600 mt-1">
               Ruled by {claim.decided_by}
-              {claim.decided_at ? ` on ${new Date(claim.decided_at).toLocaleDateString()}` : ''}
+              {claim.decided_at ? ` on ${fmtDate(claim.decided_at, { year: true })}` : ''}
             </p>
           </>
         ) : (

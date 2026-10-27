@@ -236,7 +236,8 @@ describe('utils', () => {
 
     it('should return formatted date for times over 12 months ago', () => {
       const date = new Date('2022-01-15T12:00:00')
-      expect(relativeTime(date)).toMatch(/\d+\/\d+\/\d+/)
+      // Older dates use the shared time display (src/lib/time.js), e.g. "Jan 15, 2022"
+      expect(relativeTime(date)).toMatch(/2022/)
     })
 
     it('should handle string dates', () => {

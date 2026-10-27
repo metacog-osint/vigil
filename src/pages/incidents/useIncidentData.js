@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 /**
  * Incident Data Hooks
  * Custom hooks for incident data loading, sorting, filtering, and analytics
@@ -434,7 +435,7 @@ export function useIncidentAnalytics(incidentList, timeRange) {
       const date = new Date(now)
       date.setDate(date.getDate() - i)
       const dateKey = date.toISOString().split('T')[0]
-      const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      const monthDay = fmtDate(dateKey)
       timelineData.push({
         date: dateKey,
         label: i % labelInterval === 0 ? monthDay : '',

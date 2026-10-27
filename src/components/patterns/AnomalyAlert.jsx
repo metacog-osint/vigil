@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 /**
  * Anomaly Alert Component
  *
@@ -110,9 +111,7 @@ export function AnomalyAlert({ anomaly, onDismiss, onAcknowledge }) {
               <h4 className={`font-medium ${anomalyConfig.textColor}`}>{anomalyConfig.label}</h4>
               <SeverityIndicator severity={severity} />
             </div>
-            {date && (
-              <div className="text-xs text-gray-500">{new Date(date).toLocaleDateString()}</div>
-            )}
+            {date && <div className="text-xs text-gray-500">{fmtDate(date, { year: true })}</div>}
           </div>
         </div>
 

@@ -1,8 +1,8 @@
+import { fmt, fmtDate } from '../../lib/time'
 /**
  * Investigation Detail Component
  */
 import { useState } from 'react'
-import { format } from 'date-fns'
 import { investigations, ENTRY_TYPES, CATEGORIES, STATUSES } from '../../lib/investigations'
 import { StatusBadge, TlpBadge } from './InvestigationConstants.jsx'
 import EntryCard from './EntryCard.jsx'
@@ -51,7 +51,7 @@ export default function InvestigationDetail({
 
     for (const entry of investigation.entries || []) {
       const typeLabel = ENTRY_TYPES[entry.entry_type]?.label || entry.entry_type
-      const date = format(new Date(entry.created_at), 'MMM d, yyyy h:mm a')
+      const date = fmt(entry.created_at, { year: true })
       md += `### ${typeLabel} (${date})\n\n`
       md += `${entry.content?.text || entry.content?.title || entry.content?.event || JSON.stringify(entry.content)}\n\n`
     }
@@ -214,7 +214,7 @@ export default function InvestigationDetail({
         )}
 
         <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-          <span>Created {format(new Date(investigation.created_at), 'MMM d, yyyy')}</span>
+          <span>Created {fmtDate(investigation.created_at, { year: true })}</span>
           {investigation.category && (
             <span>{CATEGORIES.find((c) => c.value === investigation.category)?.label}</span>
           )}
