@@ -177,8 +177,9 @@ commit is not the fix, the deploy is.
 | -------------------------- | -----: | ----------------------- | --------------------------- |
 | `victim_disclosures`       |  8,896 | `disclosures.js`        | **yes** — /disclosures      |
 | `breach_notices_by_state`  | 3 rows | `disclosures.js`        | **yes** — /disclosures      |
-| `vendor_reports`           |    286 | `vendorReports.js`      | **no**                      |
-| `vendor_report_actors`     |     21 | `vendorReports.js`      | **no**                      |
+| `vendor_reports`           |    377 | `vendorReports.js`      | **yes** — /research         |
+| `vendor_report_actors`     |     27 | `vendorReports.js`      | **yes** — /research, rulable |
+| `vendor_link_decisions`    |      0 | `vendorReports.js`      | **yes** — /research         |
 | `source_licences`          |     21 | `sourceLicences.js`     | **no**                      |
 | `actor_origins_commercial` |      — | `sourceLicences.js`     | **no**                      |
 | `contested_claims`         |      8 | `contestedClaims.js`    | **yes** — /contested-claims |
@@ -191,6 +192,15 @@ commit is not the fix, the deploy is.
 ransom paid, because two thirds of it is "Unlabeled". A test asserts the
 absence, as `disclosures.test.js` does for people affected. The page states the
 snapshot's age (v1.1.0, last payment August 2024) before any figure.
+
+`/research` renders the vendor corpus and lets a signed-in reviewer confirm,
+reject or defer each proposed actor link, with reasoning, through
+`rule_vendor_actor_link()` (migration 156, append only, reviewer from the JWT).
+It does not write attributions: a report's country is still set by nothing,
+and its attribution question is answered in the review queue, where the
+verdict is recorded but not yet applied to `vendor_reports`. That last step -
+writing country, strength and phrase from a verdict, the first time
+`linguistic` would ever be set - is what remains of §2b item 1.
 
 **What the disclosures page settled, and what it did not.** It renders the
 filings, the per-state totals and a name search, and it states plainly that the
