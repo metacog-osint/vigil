@@ -11,9 +11,14 @@ export function fmt(value, opts = {}) {
   if (t) return t.format(d, opts)
   const o = {}
   if (opts.weekday) o.weekday = 'short'
-  if (opts.date !== false) { o.month = 'short'; o.day = 'numeric'; if (opts.year) o.year = 'numeric' }
+  if (opts.date !== false) {
+    o.month = 'short'
+    o.day = 'numeric'
+    if (opts.year) o.year = 'numeric'
+  }
   if (opts.time !== false) {
-    o.hour = 'numeric'; o.minute = '2-digit'
+    o.hour = 'numeric'
+    o.minute = '2-digit'
     if (opts.seconds) o.second = '2-digit'
     if (opts.zoneName !== false) o.timeZoneName = 'short'
   }
