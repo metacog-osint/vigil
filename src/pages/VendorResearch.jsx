@@ -23,7 +23,13 @@
  */
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { vendorReports, VENDOR_SOURCES, LINK_VERDICTS } from '../lib/supabase'
+import {
+  vendorReports,
+  VENDOR_SOURCES,
+  LINK_VERDICTS,
+  ATTRIBUTION_VERDICTS,
+  STRENGTH_MEANINGS,
+} from '../lib/supabase'
 import { figure, calendarDay } from '../lib/format'
 
 const PAGE_SIZE = 25
@@ -75,36 +81,176 @@ function Counts({ overview }) {
   )
 }
 
-function Attribution({ report, question }) {
-  if (report.attribution_decided_at) {
-    return (
-      <p className="text-sm text-gray-300">
-        <span className="text-gray-500">Attribution, ruled: </span>
-        {report.attributed_country
-          ? `${report.attributed_country} (${report.attribution_strength ?? 'strength not recorded'})`
-          : 'names no country'}
-        {report.attribution_phrase && (
-          <span className="text-gray-400"> — “{report.attribution_phrase}”</span>
-        )}
-      </p>
-    )
+/** A ruled attribution in words. Linguistic may carry no country at all. */
+function attributionText(report) {
+  const country = report.attributed_country
+  const strength = report.attribution_strength
+  if (!country && !strength) return 'names no country'
+  if (!country) return `no country, ${strength} only`
+  return `${country} (${strength ?? 'strength not recorded'})`
+}
+
+function AttributionForm({ report, onRuled }) {
+  const [verdict, setVerdict] = useState('')
+  const [strength, setStrength] = useState('')
+  const [country, setCountry] = useState('')
+  const [phrase, setPhrase] = useState('')
+  const [rationale, setRationale] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  const attributes = verdict === 'attributes'
+  const code = country.trim()
+  const countryOk = /^[A-Za-z]{2}$/.test(code) || (code === '' && strength === 'linguistic')
+  const ready =
+    verdict &&
+    rationale.trim().length >= 10 &&
+    (!attributes || (strength && phrase.trim().length >= 3 && countryOk))
+
+  async function submit(e) {
+    e.preventDefault()
+    if (!ready) return
+    setBusy(true)
+    setError(null)
+    const { error: err } = await vendorReports.ruleAttribution({
+      reportId: report.id,
+      verdict,
+      country: code,
+      strength,
+      phrase: phrase.trim(),
+      rationale: rationale.trim(),
+    })
+    setBusy(false)
+    if (err) setError(err.message)
+    else onRuled()
   }
 
   return (
-    <div className="text-sm">
-      <p className="text-gray-400">
-        <span className="text-gray-500">Attribution: </span>
-        not yet read by anyone at Vigil. That is not the same as naming no one.
-      </p>
-      {question && (
-        <p className="text-amber-200/80 mt-1">
-          A question is queued
-          {question.phrase && <> on the wording “{question.phrase}”</>}.{' '}
-          <Link to="/review" className="text-cyber-accent hover:underline">
-            Answer it in the review queue
-          </Link>
-          .
+    <form onSubmit={submit} className="mt-2 space-y-2 border border-gray-800 rounded p-3">
+      <fieldset className="space-y-1">
+        <legend className="text-xs text-gray-500">
+          Having read the report, what does it attribute?
+        </legend>
+        {Object.entries(ATTRIBUTION_VERDICTS).map(([key, label]) => (
+          <label key={key} className="flex items-center gap-2 text-sm text-gray-300">
+            <input
+              type="radio"
+              name={`attribution-${report.id}`}
+              value={key}
+              checked={verdict === key}
+              onChange={() => setVerdict(key)}
+            />
+            {label}
+          </label>
+        ))}
+      </fieldset>
+
+      {attributes && (
+        <div className="space-y-2">
+          <select
+            className="cyber-input w-full text-sm"
+            value={strength}
+            onChange={(e) => setStrength(e.target.value)}
+            aria-label="Strength"
+          >
+            <option value="">Strength…</option>
+            {Object.entries(STRENGTH_MEANINGS).map(([key, meaning]) => (
+              <option key={key} value={key}>
+                {meaning}
+              </option>
+            ))}
+          </select>
+          <input
+            className="cyber-input w-full text-sm"
+            placeholder="The vendor's own words, quoted"
+            value={phrase}
+            onChange={(e) => setPhrase(e.target.value)}
+            aria-label="The vendor's own words"
+          />
+          <input
+            className="cyber-input w-24 text-sm uppercase"
+            placeholder="CN"
+            maxLength={2}
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            aria-label="Country, two-letter code"
+          />
+          <p className="text-xs text-gray-500">
+            Country as a two-letter code.{' '}
+            {strength === 'linguistic'
+              ? 'Optional at linguistic: a language is not a state, and the quote can carry it.'
+              : 'Required, except at linguistic.'}
+          </p>
+        </div>
+      )}
+
+      <textarea
+        className="cyber-input w-full text-sm"
+        rows={2}
+        placeholder="Why - at least ten characters. This is kept with the ruling."
+        value={rationale}
+        onChange={(e) => setRationale(e.target.value)}
+        aria-label="Reasoning for the attribution ruling"
+      />
+      {error && <p className="text-sm text-red-300">The ruling was not recorded: {error}</p>}
+      <button type="submit" className="cyber-button text-sm" disabled={!ready || busy}>
+        {busy ? 'Recording…' : 'Record attribution ruling'}
+      </button>
+    </form>
+  )
+}
+
+function Attribution({ report, question, ruling, onRuled }) {
+  const [open, setOpen] = useState(false)
+  const ruled = Boolean(report.attribution_decided_at)
+
+  return (
+    <div className="text-sm space-y-1">
+      {ruled ? (
+        <p className="text-gray-300">
+          <span className="text-gray-500">Attribution, ruled: </span>
+          {attributionText(report)}
+          {report.attribution_phrase && (
+            <span className="text-gray-400"> — “{report.attribution_phrase}”</span>
+          )}
         </p>
+      ) : (
+        <p className="text-gray-400">
+          <span className="text-gray-500">Attribution: </span>
+          not yet read by anyone at Vigil. That is not the same as naming no one.
+        </p>
+      )}
+      {!ruled && ruling?.verdict === 'deferred' && (
+        <p className="text-xs text-gray-500">
+          Deferred {calendarDay(ruling.decided_at)}: {ruling.rationale}
+        </p>
+      )}
+      {!ruled && question && (
+        <p className="text-amber-200/80">
+          A question is queued
+          {question.phrase && <> on the wording “{question.phrase}”</>}. Ruling here answers it in
+          the{' '}
+          <Link to="/review" className="text-cyber-accent hover:underline">
+            review queue
+          </Link>{' '}
+          too.
+        </p>
+      )}
+      <button
+        type="button"
+        className="text-xs text-cyber-accent hover:underline"
+        onClick={() => setOpen((o) => !o)}
+      >
+        {open ? 'Cancel' : ruled ? 'Rule on attribution again' : 'Rule on attribution'}
+      </button>
+      {open && (
+        <AttributionForm
+          report={report}
+          onRuled={() => {
+            setOpen(false)
+            onRuled()
+          }}
+        />
       )}
     </div>
   )
@@ -225,7 +371,7 @@ function LinkRow({ report, link, ruling, onRuled }) {
   )
 }
 
-function Report({ report, question, rulings, onRuled }) {
+function Report({ report, question, rulings, attributionRuling, onRuled }) {
   const links = report.vendor_report_actors ?? []
 
   return (
@@ -244,7 +390,12 @@ function Report({ report, question, rulings, onRuled }) {
         </span>
       </div>
       {report.summary && <p className="text-sm text-gray-400 line-clamp-3">{report.summary}</p>}
-      <Attribution report={report} question={question} />
+      <Attribution
+        report={report}
+        question={question}
+        ruling={attributionRuling}
+        onRuled={onRuled}
+      />
       {links.length > 0 && (
         <div>
           <h3 className="text-xs uppercase tracking-wide text-gray-500 mt-2">
@@ -276,6 +427,7 @@ export default function VendorResearch() {
   const [result, setResult] = useState(null)
   const [questions, setQuestions] = useState({})
   const [rulings, setRulings] = useState({})
+  const [attributionRulings, setAttributionRulings] = useState({})
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
   const [reload, setReload] = useState(0)
@@ -313,15 +465,18 @@ export default function VendorResearch() {
       setResult(data)
 
       const reports = data.reports
-      const [q, r] = await Promise.all([
+      const ids = reports.map((x) => x.id)
+      const [q, r, a] = await Promise.all([
         vendorReports.getOpenQuestions(reports.map((x) => x.url)),
-        vendorReports.getLatestRulings(reports.map((x) => x.id)),
+        vendorReports.getLatestRulings(ids),
+        vendorReports.getLatestAttributionRulings(ids),
       ])
       if (cancelled) return
       setQuestions(q.data ?? {})
-      // Rulings are history, not the state of a link: if they cannot be read,
-      // the badges still come from vendor_report_actors.confirmed.
+      // Rulings are history, not the state of a link or a report: if they
+      // cannot be read, what is shown still comes from the rows themselves.
       setRulings(r.data ?? {})
+      setAttributionRulings(a.data ?? {})
       setLoading(false)
     }
 
@@ -419,6 +574,7 @@ export default function VendorResearch() {
             report={report}
             question={questions[report.url]}
             rulings={rulings}
+            attributionRuling={attributionRulings[report.id]}
             onRuled={onRuled}
           />
         ))}

@@ -17,10 +17,12 @@
  * actor record, with each half sourced to something that actually claimed it.
  * That is what `getWithActors` returns.
  *
- * A proposed link is a name match until a person rules on it. `ruleLink` is
- * the only write here, it goes through rule_vendor_actor_link() (migration
- * 156), which takes the reviewer from the JWT and keeps every ruling, and
- * nothing in this module can write an attribution.
+ * A proposed link is a name match until a person rules on it. The module's two
+ * writes are a person's rulings, each through a SECURITY DEFINER function
+ * that takes the reviewer from the JWT and keeps every ruling:
+ * `ruleLink` (rule_vendor_actor_link, migration 156) and `ruleAttribution`
+ * (rule_vendor_attribution, 157). Nothing here parses, infers or guesses an
+ * attribution; the only way one reaches a report is a person quoting it.
  */
 
 import { supabase } from './client'
@@ -42,6 +44,28 @@ export const LINK_VERDICTS = {
   confirmed: 'Confirmed: the report is about this actor',
   rejected: 'Rejected: the name matched, the actor is wrong',
   deferred: 'Deferred: not enough to say yet',
+}
+
+/** What a reading of a report's attribution can conclude (migration 157). */
+export const ATTRIBUTION_VERDICTS = {
+  attributes: 'It attributes the activity',
+  names_no_country: 'Read it: it names no country',
+  deferred: 'Deferred: not enough to say yet',
+}
+
+/**
+ * The six strengths, strongest first, as a reviewer has to choose between
+ * them. The examples are the wordings 131 and 139 recorded; the vendor's own
+ * words go in the phrase, so a reader can check the choice.
+ */
+export const STRENGTH_MEANINGS = {
+  state: 'State: state-sponsored or state-directed, in the vendor’s words',
+  affiliated: 'Affiliated: tied to a state, short of directed by it',
+  nexus: 'Nexus: a link to a country, such as “China-nexus”',
+  aligned: 'Aligned: sympathetic to a country and explicitly not state, such as “pro-Russia”',
+  criminal: 'Criminal: a criminal group the vendor places in a country',
+  linguistic:
+    'Linguistic: language or time zone only, such as “a suspected Chinese speaker”. Not a country claim',
 }
 
 const COUNT = { count: 'exact', head: true }
@@ -232,6 +256,42 @@ export const vendorReports = {
       p_verdict: verdict,
       p_rationale: rationale,
     })
+  },
+
+  /**
+   * Record and apply a reading of what a report attributes. Only an
+   * `attributes` ruling carries a country, strength and phrase; the others
+   * send nulls, which the function requires. It also answers the report's
+   * open review-queue question. The reviewer is taken from the JWT.
+   */
+  async ruleAttribution({ reportId, verdict, country, strength, phrase, rationale }) {
+    const attributes = verdict === 'attributes'
+    return supabase.rpc('rule_vendor_attribution', {
+      p_report_id: reportId,
+      p_verdict: verdict,
+      p_country: attributes && country ? String(country).trim().toUpperCase() : null,
+      p_strength: attributes ? strength : null,
+      p_phrase: attributes ? phrase : null,
+      p_rationale: rationale,
+    })
+  },
+
+  /**
+   * The most recent attribution ruling per report. Needed for a deferral,
+   * which changes nothing on the report but is still a person having looked.
+   */
+  async getLatestAttributionRulings(reportIds) {
+    if (!reportIds?.length) return { data: {}, error: null }
+    const { data, error } = await supabase
+      .from('vendor_attribution_decisions')
+      .select('report_id, verdict, rationale, decided_at')
+      .in('report_id', reportIds)
+      .order('decided_at', { ascending: false })
+
+    if (error) return { data: null, error }
+    const latest = {}
+    for (const d of data ?? []) if (!latest[d.report_id]) latest[d.report_id] = d
+    return { data: latest, error: null }
   },
 }
 
