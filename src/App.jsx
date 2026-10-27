@@ -15,6 +15,7 @@ const Activity = lazy(() => import('./pages/Activity'))
 const ThreatActors = lazy(() => import('./pages/ThreatActors'))
 const Vulnerabilities = lazy(() => import('./pages/Vulnerabilities'))
 const Advisories = lazy(() => import('./pages/Advisories'))
+const VendorResearch = lazy(() => import('./pages/VendorResearch'))
 const IOCs = lazy(() => import('./pages/IOCs'))
 const Techniques = lazy(() => import('./pages/Techniques'))
 const Watchlists = lazy(() => import('./pages/Watchlists'))
@@ -236,6 +237,7 @@ function ProtectedApp() {
                         />
                         <Route path="/vulnerabilities" element={<Vulnerabilities />} />
                         <Route path="/advisories" element={<Advisories />} />
+                        <Route path="/research" element={<VendorResearch />} />
                         <Route path="/iocs" element={<IOCs />} />
                         <Route
                           path="/bulk-search"
