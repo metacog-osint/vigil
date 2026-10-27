@@ -3,6 +3,8 @@ import { useAuth } from '../hooks/useAuth'
 import {
   vendors,
   vendorEvents,
+  vendorClaims,
+  parseAliases,
   VENDOR_CATEGORIES,
   CRITICALITY_LEVELS,
   RISK_LEVELS,
@@ -11,6 +13,7 @@ import {
   getRiskColor,
 } from '../lib/vendors'
 import { SmartTime } from '../components/TimeDisplay'
+import { calendarDay } from '../lib/format'
 
 const RISK_COLORS = {
   critical: 'bg-red-500',
@@ -472,6 +475,24 @@ function VendorDetailModal({ vendor, onClose, onUpdate, onDelete }) {
             </div>
           )}
 
+          {vendor.aliases?.length > 0 && (
+            <div>
+              <div className="text-xs text-gray-500 mb-2">Also trades as</div>
+              <div className="flex flex-wrap gap-2">
+                {vendor.aliases.map((alias) => (
+                  <span
+                    key={alias}
+                    className="text-xs bg-gray-700/60 text-gray-300 px-2 py-1 rounded"
+                  >
+                    {alias}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <VendorClaims vendorId={vendor.id} />
+
           {/* Technologies */}
           {vendor.technologies?.length > 0 && (
             <div>
@@ -529,11 +550,90 @@ function VendorDetailModal({ vendor, onClose, onUpdate, onDelete }) {
 }
 
 /**
+ * Leak-site claims that name this vendor (migration 161).
+ *
+ * A `possible` is shown apart and worded as a question, because it is one:
+ * "First Data leakage" may not be First Data. It is never styled as a hit.
+ */
+function VendorClaims({ vendorId }) {
+  const [state, setState] = useState({ loading: true, error: null, matches: [], possible: [] })
+
+  useEffect(() => {
+    let cancelled = false
+    setState({ loading: true, error: null, matches: [], possible: [] })
+    vendorClaims
+      .getForVendor(vendorId)
+      .then(({ matches, possible }) => {
+        if (!cancelled) setState({ loading: false, error: null, matches, possible })
+      })
+      .catch((err) => {
+        if (!cancelled) setState({ loading: false, error: err, matches: [], possible: [] })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [vendorId])
+
+  const row = (claim) => (
+    <div
+      key={claim.incident_id}
+      className="flex items-center justify-between gap-3 text-sm p-2 bg-gray-800/50 rounded"
+    >
+      <div className="min-w-0">
+        <div className="text-gray-200 truncate">{claim.victim_name}</div>
+        <div className="text-xs text-gray-500">
+          {claim.actor_name || 'Unknown group'} · matched on {claim.matched_on} ({claim.match_kind})
+        </div>
+      </div>
+      <span className="text-gray-500 text-xs whitespace-nowrap">
+        {calendarDay(claim.discovered_date)}
+      </span>
+    </div>
+  )
+
+  return (
+    <div>
+      <div className="text-xs text-gray-500 mb-2">Leak-site claims naming this vendor</div>
+      {state.loading ? (
+        <div className="text-gray-400 text-sm">Checking claims...</div>
+      ) : state.error ? (
+        <div className="text-sm text-orange-400">
+          Could not check leak-site claims, so this is not an all-clear.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {state.matches.length === 0 ? (
+            <div className="text-gray-500 text-sm">
+              No claim names this vendor, its domain or the names it also trades as.
+            </div>
+          ) : (
+            <div className="space-y-2">{state.matches.map(row)}</div>
+          )}
+          {state.possible.length > 0 && (
+            <div>
+              <div className="text-xs text-yellow-400/80 mb-1">
+                Might be this vendor; read the post before treating it as one (
+                {state.possible.length})
+              </div>
+              <div className="space-y-2 opacity-80">{state.possible.map(row)}</div>
+            </div>
+          )}
+          <div className="text-xs text-gray-600">
+            A claim is the group&apos;s assertion, not a confirmed breach.
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
  * Create Vendor Modal
  */
 function CreateVendorModal({ onClose, onCreate }) {
   const [name, setName] = useState('')
   const [domain, setDomain] = useState('')
+  const [aliases, setAliases] = useState('')
   const [category, setCategory] = useState('')
   const [criticality, setCriticality] = useState('medium')
   const [dataTypes, setDataTypes] = useState([])
@@ -551,6 +651,7 @@ function CreateVendorModal({ onClose, onCreate }) {
     await onCreate({
       name,
       domain,
+      aliases: parseAliases(aliases),
       category,
       criticality,
       dataTypes,
@@ -597,6 +698,21 @@ function CreateVendorModal({ onClose, onCreate }) {
               placeholder="e.g., salesforce.com"
               className="cyber-input w-full"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">Also trades as</label>
+            <input
+              type="text"
+              value={aliases}
+              onChange={(e) => setAliases(e.target.value)}
+              placeholder="e.g., Symitar, ProfitStars, Banno"
+              className="cyber-input w-full"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Products, brands and subsidiaries, separated by commas. A leak-site claim naming any
+              of them is matched to this vendor.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
