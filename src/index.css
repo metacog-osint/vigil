@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Shared Time dialog (public/tic-time.js) in Vigil's dark theme */
+.tic-time-dialog { --panel: #0f1724; --ink: #e5e7eb; --line: #334155; --muted: #94a3b8; --bg: #0b1220; --accent: #2563eb; }
+.tic-time-holder .tic-time-btn { color: #cbd5e1; font-size: 12px; }
+
 /* Custom cyber theme styles */
 @layer base {
   body {

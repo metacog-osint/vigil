@@ -1,3 +1,4 @@
+import TimeSettingsButton from './common/TimeSettingsButton'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase/client'
@@ -137,6 +138,7 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
         <WhatsNewBadge />
 
         {/* Notifications */}
+        <TimeSettingsButton />
         <NotificationBell userId={user?.id || 'anonymous'} />
 
         {/* User menu */}
