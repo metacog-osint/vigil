@@ -15,7 +15,9 @@ const getOverview = vi.fn()
 const getReports = vi.fn()
 const getOpenQuestions = vi.fn()
 const getLatestRulings = vi.fn()
+const getLatestAttributionRulings = vi.fn()
 const ruleLink = vi.fn()
+const ruleAttribution = vi.fn()
 
 vi.mock('../../lib/supabase', async () => {
   const actual = await vi.importActual('../../lib/supabase/vendorReports')
@@ -26,7 +28,9 @@ vi.mock('../../lib/supabase', async () => {
       getReports: (...a) => getReports(...a),
       getOpenQuestions: (...a) => getOpenQuestions(...a),
       getLatestRulings: (...a) => getLatestRulings(...a),
+      getLatestAttributionRulings: (...a) => getLatestAttributionRulings(...a),
       ruleLink: (...a) => ruleLink(...a),
+      ruleAttribution: (...a) => ruleAttribution(...a),
     },
   }
 })
@@ -107,12 +111,140 @@ beforeEach(() => {
     error: null,
   })
   getLatestRulings.mockResolvedValue({ data: {}, error: null })
+  getLatestAttributionRulings.mockResolvedValue({ data: {}, error: null })
   ruleLink.mockResolvedValue({ data: {}, error: null })
+  ruleAttribution.mockResolvedValue({ data: {}, error: null })
 })
 
 function card(title) {
   return screen.getByText(title).closest('article')
 }
+
+async function openAttributionForm(title) {
+  renderPage()
+  await screen.findByText(title)
+  const article = card(title)
+  fireEvent.click(within(article).getByRole('button', { name: 'Rule on attribution' }))
+  return article
+}
+
+describe('ruling on what a report attributes', () => {
+  it('records "names no country" with reasoning alone', async () => {
+    const talos = await openAttributionForm(TALOS.title)
+    const record = within(talos).getByRole('button', { name: 'Record attribution ruling' })
+    fireEvent.click(within(talos).getByLabelText(/names no country/))
+    expect(record).toBeDisabled()
+    fireEvent.change(within(talos).getByLabelText(/Reasoning for the attribution/), {
+      target: { value: 'The nationality named is the victim.' },
+    })
+    expect(record).toBeEnabled()
+    fireEvent.click(record)
+    await waitFor(() =>
+      expect(ruleAttribution).toHaveBeenCalledWith(
+        expect.objectContaining({ reportId: 'r-talos', verdict: 'names_no_country' })
+      )
+    )
+  })
+
+  it('needs a strength, the vendor’s words and a country to attribute', async () => {
+    const talos = await openAttributionForm(TALOS.title)
+    const record = within(talos).getByRole('button', { name: 'Record attribution ruling' })
+    fireEvent.click(within(talos).getByLabelText(/It attributes the activity/))
+    fireEvent.change(within(talos).getByLabelText(/Reasoning for the attribution/), {
+      target: { value: 'The title says China-nexus.' },
+    })
+    expect(record).toBeDisabled()
+
+    fireEvent.change(within(talos).getByLabelText('Strength'), { target: { value: 'nexus' } })
+    fireEvent.change(within(talos).getByLabelText(/vendor's own words/), {
+      target: { value: 'China-nexus' },
+    })
+    expect(record).toBeDisabled()
+
+    fireEvent.change(within(talos).getByLabelText(/Country/), { target: { value: 'cn' } })
+    expect(record).toBeEnabled()
+    fireEvent.click(record)
+    await waitFor(() =>
+      expect(ruleAttribution).toHaveBeenCalledWith({
+        reportId: 'r-talos',
+        verdict: 'attributes',
+        country: 'cn',
+        strength: 'nexus',
+        phrase: 'China-nexus',
+        rationale: 'The title says China-nexus.',
+      })
+    )
+  })
+
+  it('lets linguistic stand without a country', async () => {
+    const talos = await openAttributionForm(TALOS.title)
+    const record = within(talos).getByRole('button', { name: 'Record attribution ruling' })
+    fireEvent.click(within(talos).getByLabelText(/It attributes the activity/))
+    fireEvent.change(within(talos).getByLabelText('Strength'), { target: { value: 'linguistic' } })
+    fireEvent.change(within(talos).getByLabelText(/vendor's own words/), {
+      target: { value: 'a suspected Chinese speaker' },
+    })
+    fireEvent.change(within(talos).getByLabelText(/Reasoning for the attribution/), {
+      target: { value: 'Language of code comments only.' },
+    })
+    expect(within(talos).getByText(/a language is not a state/)).toBeInTheDocument()
+    expect(record).toBeEnabled()
+  })
+
+  it('shows a linguistic ruling without a country as exactly that', async () => {
+    getReports.mockResolvedValue({
+      data: {
+        reports: [
+          {
+            ...TALOS,
+            attribution_strength: 'linguistic',
+            attribution_phrase: 'a suspected Chinese speaker',
+            attribution_decided_at: '2026-10-27T01:00:00Z',
+          },
+        ],
+        total: 1,
+      },
+      error: null,
+    })
+    renderPage()
+    await screen.findByText(TALOS.title)
+    expect(card(TALOS.title)).toHaveTextContent('no country, linguistic only')
+    expect(card(TALOS.title)).not.toHaveTextContent('names no country')
+  })
+
+  it('shows a deferral on an unread report', async () => {
+    getLatestAttributionRulings.mockResolvedValue({
+      data: {
+        'r-talos': {
+          verdict: 'deferred',
+          rationale: 'Need the full article first.',
+          decided_at: '2026-10-27T01:00:00Z',
+        },
+      },
+      error: null,
+    })
+    renderPage()
+    expect(
+      await screen.findByText(/Deferred Oct 27, 2026: Need the full article first/)
+    ).toBeInTheDocument()
+  })
+
+  it('says when the ruling was not recorded', async () => {
+    ruleAttribution.mockResolvedValue({
+      data: null,
+      error: { message: 'an attribution needs a strength' },
+    })
+    const talos = await openAttributionForm(TALOS.title)
+    fireEvent.click(within(talos).getByLabelText(/names no country/))
+    fireEvent.change(within(talos).getByLabelText(/Reasoning for the attribution/), {
+      target: { value: 'The nationality named is the victim.' },
+    })
+    fireEvent.click(within(talos).getByRole('button', { name: 'Record attribution ruling' }))
+    expect(
+      await within(talos).findByText(/not recorded: an attribution needs a strength/)
+    ).toBeInTheDocument()
+  })
+})
 
 describe('a blank attribution is not an answer', () => {
   it('says an unruled report has not been read, never that it names no one', async () => {

@@ -196,11 +196,14 @@ snapshot's age (v1.1.0, last payment August 2024) before any figure.
 `/research` renders the vendor corpus and lets a signed-in reviewer confirm,
 reject or defer each proposed actor link, with reasoning, through
 `rule_vendor_actor_link()` (migration 156, append only, reviewer from the JWT).
-It does not write attributions: a report's country is still set by nothing,
-and its attribution question is answered in the review queue, where the
-verdict is recorded but not yet applied to `vendor_reports`. That last step -
-writing country, strength and phrase from a verdict, the first time
-`linguistic` would ever be set - is what remains of §2b item 1.
+
+The same page records what a report attributes, through
+`rule_vendor_attribution()` (157): attributes (country, strength and the
+vendor's own words; the country is optional at `linguistic`), names no
+country, or deferred. It writes the report's attribution columns and answers
+the report's open review-queue question through `record_verdict()`, marking
+the verdict applied. Nothing parses or infers an attribution; this is a person
+quoting one. §2b item 1 is built. Nobody has used it yet.
 
 **What the disclosures page settled, and what it did not.** It renders the
 filings, the per-state totals and a name search, and it states plainly that the
