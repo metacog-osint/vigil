@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom'
 
 const NOTIFICATION_ICONS = {
   kev_added: '🛡️',
+  // KEV with known ransomware use reaching EPSS 0.5 (migration 159)
+  kev_priority: '🚨',
   actor_escalating: '⚠️',
   watchlist_update: '👁️',
   vendor_alert: '🔔',
