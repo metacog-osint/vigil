@@ -1,4 +1,4 @@
-/*! tic-time.js v1.1 · The Intelligence Company shared time display · canonical copy:
+/*! tic-time.js v1.2 · The Intelligence Company shared time display · canonical copy:
  *  D:\Projects\theintelligence-company\site\shared\tic-time.js (copy this file into each site; keep the version line).
  *
  *  House rule (Tom, 27 Oct 2026): store UTC; show times in the viewer's own time zone by default, always naming
@@ -32,6 +32,7 @@
   var listeners = [];
 
   function validZone(z) {
+    if (typeof z !== "string" || !z) return false; // Intl accepts timeZone: undefined, so check first (v1.2)
     if (z === "auto" || z === "UTC") return true;
     try { new Intl.DateTimeFormat("en-US", { timeZone: z }); return true; } catch (e) { return false; }
   }
@@ -199,6 +200,6 @@
     return btn;
   }
 
-  window.TicTime = { version: "1.1", format: format, zone: zone, zoneLabel: zoneLabel, hour12: hour12, get: function () { return Object.assign({}, settings); },
+  window.TicTime = { version: "1.2", format: format, zone: zone, zoneLabel: zoneLabel, hour12: hour12, get: function () { return Object.assign({}, settings); },
     set: set, onChange: onChange, renderAll: renderAll, mountSettings: mountSettings, zones: ZONES.slice() };
 })();
