@@ -11,10 +11,13 @@ export default defineConfig({
     // rewrite, which is part of why a silent failure lasted four months.
     // scripts/ had no coverage either, and now carries the feed-health check
     // that is the only thing telling anyone when ingestion stops.
+    // supabase/tests runs SQL in a real Postgres (PGlite, in-process): the
+    // logic that lives in migrations had no tests before it reached live.
     include: [
       'src/**/*.{test,spec}.{js,jsx}',
       'workers/**/*.{test,spec}.js',
       'scripts/**/*.{test,spec}.{js,mjs}',
+      'supabase/tests/**/*.test.js',
     ],
     coverage: {
       provider: 'v8',

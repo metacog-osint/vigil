@@ -402,11 +402,21 @@ Schemas that exist with nothing rendering them:
 - **`webhooks` / `webhook_deliveries`** — attach to whatever alert-delivery work
   lands rather than building it in isolation.
 
-### 4d. Validation and reliability — agreed, never built
+### 4d. Validation and reliability — agreed 20 September, partly built
 
 All of this came out of the detection-engineering discussion on 20 September and
-was agreed at the time. None of it exists. The first two are the ones that would
-catch a real miss.
+was agreed at the time. The first two are the ones that would catch a real miss.
+
+**Built on 26 October 2026:** the matcher those cases need (migration 161,
+`org_key` / `org_match` / `match_vendor_claims`) and the suite itself, in
+`supabase/tests/claimMatcher.test.js`. It runs the real migration in an
+in-process Postgres (PGlite, `supabase/tests/pg.js`) on every CI run. It covers
+Jack Henry with Symitar / ProfitStars / Banno, `svfcu.org` with its variants
+and a typo, Fiserv's two spellings, Susquehanna Glass, "First Data leakage" and
+the Operation Cronos banners. **Still open, listed as `it.todo` in that file:**
+the Citrix Bleed alert pair, the undecided alias pair and the stale feed during
+a weekly run. Matches are read on the vendor page; nothing yet turns one into a
+notification or a `possible` into a review-queue question.
 
 - **A regression suite of real cases**, replayed on every deploy, starting with
   eight: the Jack Henry listing; the `svfcu.org` domain-only victim; Fiserv's
@@ -417,8 +427,9 @@ catch a real miss.
 - **Variation testing, which is the largest gap.** The cases above test known
   examples, not variants of them. Each needs spellings that must still match
   (`SVFCU`, `www.svfcu.org`, typos) and near-misses that must not. Parent and
-  product names too: **a listing naming Symitar, ProfitStars or Banno would get
-  past the matcher today**, though all three are Jack Henry.
+  product names too: a listing naming Symitar, ProfitStars or Banno must reach
+  Jack Henry's watchers. Since 161 it does, when the vendor records them under
+  "Also trades as" (`vendors.aliases`); no brand list ships with Vigil.
 - **A daily end-to-end test** — a clearly marked synthetic claim through
   ingestion, matching and delivery. If today's test did not pass, nothing
   should report "all clear"; it reports monitoring degraded.

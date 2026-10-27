@@ -124,6 +124,7 @@ export const vendors = {
         data_types: vendorData.dataTypes || [],
         data_classification: vendorData.dataClassification,
         technologies: vendorData.technologies || [],
+        aliases: vendorData.aliases || [],
         is_monitored: vendorData.isMonitored !== false,
         monitor_breaches: vendorData.monitorBreaches !== false,
         monitor_vulnerabilities: vendorData.monitorVulnerabilities !== false,
@@ -158,6 +159,7 @@ export const vendors = {
       'data_types',
       'data_classification',
       'technologies',
+      'aliases',
       'notes',
       'status',
     ]
@@ -472,4 +474,46 @@ export function formatRiskScore(score) {
   return { score, level, color: getRiskColor(level) }
 }
 
-export default { vendors, vendorEvents, vendorAssessments }
+/**
+ * The names typed into "Also trades as": comma or line separated, trimmed,
+ * duplicates dropped regardless of case. Symitar, ProfitStars and Banno for
+ * Jack Henry is the case this exists for (migration 161).
+ */
+export function parseAliases(text) {
+  const seen = new Set()
+  const out = []
+  for (const part of String(text ?? '').split(/[,\n]/)) {
+    const name = part.trim()
+    const key = name.toLowerCase()
+    if (!name || seen.has(key)) continue
+    seen.add(key)
+    out.push(name)
+  }
+  return out
+}
+
+/**
+ * Leak-site claims that name a vendor (migration 161, match_vendor_claims).
+ *
+ * `match` rows are the claim naming the vendor, its domain or a name it trades
+ * under. `possible` rows are a question for a person - a name inside a longer
+ * claim, or a close spelling - and must never be shown as if the vendor had
+ * been hit. A failed lookup throws rather than returning [], because "no
+ * claims" and "could not check" are different answers.
+ */
+export const vendorClaims = {
+  async getForVendor(vendorId, { since = null } = {}) {
+    const { data, error } = await supabase.rpc('match_vendor_claims', {
+      p_vendor_id: vendorId,
+      p_since: since,
+    })
+    if (error) throw error
+    const rows = data || []
+    return {
+      matches: rows.filter((r) => r.confidence === 'match'),
+      possible: rows.filter((r) => r.confidence === 'possible'),
+    }
+  },
+}
+
+export default { vendors, vendorEvents, vendorAssessments, vendorClaims }
