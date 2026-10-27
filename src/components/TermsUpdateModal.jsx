@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 /**
  * Terms Update Modal
  *
@@ -13,11 +14,7 @@ export default function TermsUpdateModal({ termsVersion, onAccept, accepting, er
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Unknown'
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
+    return fmtDate(dateStr, { year: true })
   }
 
   return (

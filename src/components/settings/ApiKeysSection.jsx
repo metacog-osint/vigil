@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 import { useState, useEffect } from 'react'
 import { apiKeys } from '../../lib/apiKeys'
 
@@ -185,7 +186,7 @@ export default function ApiKeysSection({ userId }) {
                     <span className="font-mono">{key.key_prefix}</span>
                     <span>Scopes: {key.scopes?.join(', ')}</span>
                     {key.last_used_at && (
-                      <span>Last used: {new Date(key.last_used_at).toLocaleDateString()}</span>
+                      <span>Last used: {fmtDate(key.last_used_at, { year: true })}</span>
                     )}
                   </div>
                 </div>

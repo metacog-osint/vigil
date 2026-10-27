@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 /**
  * WeeklyTrendsWidget Component
  *
@@ -164,10 +165,7 @@ export default function WeeklyTrendsWidget() {
   // Format week labels
   const formattedData = sortedWeeks.map((item) => ({
     ...item,
-    weekLabel: new Date(item.week).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-    }),
+    weekLabel: fmtDate(item.week),
   }))
 
   return (

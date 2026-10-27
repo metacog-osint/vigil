@@ -1,7 +1,7 @@
+import { fmt } from '../../lib/time'
 /**
  * Entry Card Component
  */
-import { format } from 'date-fns'
 import { ENTRY_TYPES } from '../../lib/investigations'
 import { ENTRY_COLORS } from './InvestigationConstants.jsx'
 
@@ -16,9 +16,7 @@ export default function EntryCard({ entry, onDelete }) {
           {typeInfo.label}
         </span>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">
-            {format(new Date(entry.created_at), 'MMM d, h:mm a')}
-          </span>
+          <span className="text-xs text-gray-500">{fmt(entry.created_at)}</span>
           <button onClick={onDelete} className="text-gray-500 hover:text-red-400">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path

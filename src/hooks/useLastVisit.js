@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 /**
  * useLastVisit Hook
  *
@@ -72,7 +73,7 @@ export function useLastVisit() {
     if (diffHours < 24) return `${diffHours}h ago`
     if (diffDays === 1) return 'yesterday'
     if (diffDays < 7) return `${diffDays}d ago`
-    return lastVisit.toLocaleDateString()
+    return fmtDate(lastVisit, { year: true })
   }, [lastVisit])
 
   // Get visit history

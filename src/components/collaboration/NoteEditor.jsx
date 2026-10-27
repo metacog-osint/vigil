@@ -1,3 +1,4 @@
+import { fmtDate, fmtTime } from '../../lib/time'
 /**
  * NoteEditor Component
  *
@@ -90,13 +91,13 @@ export function NoteEditor({ entityType, entityId, entityName, className = '' })
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
     if (diffDays === 0) {
-      return 'Today ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+      return 'Today ' + fmtTime(dateStr)
     } else if (diffDays === 1) {
       return 'Yesterday'
     } else if (diffDays < 7) {
       return `${diffDays} days ago`
     } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      return fmtDate(dateStr)
     }
   }
 

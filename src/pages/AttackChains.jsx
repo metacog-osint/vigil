@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 /**
  * Attack Chains Page
  *
@@ -106,9 +107,7 @@ function AttackChainCard({ chain, onSelect, isSelected }) {
 
       <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
         {chain.source && <span>Source: {chain.source}</span>}
-        {chain.last_seen && (
-          <span>Last seen: {new Date(chain.last_seen).toLocaleDateString()}</span>
-        )}
+        {chain.last_seen && <span>Last seen: {fmtDate(chain.last_seen, { year: true })}</span>}
       </div>
     </div>
   )
@@ -284,12 +283,8 @@ function ChainDetailPanel({ chain, onClose }) {
               View Source Report →
             </a>
           )}
-          {chain.first_seen && (
-            <div>First seen: {new Date(chain.first_seen).toLocaleDateString()}</div>
-          )}
-          {chain.last_seen && (
-            <div>Last seen: {new Date(chain.last_seen).toLocaleDateString()}</div>
-          )}
+          {chain.first_seen && <div>First seen: {fmtDate(chain.first_seen, { year: true })}</div>}
+          {chain.last_seen && <div>Last seen: {fmtDate(chain.last_seen, { year: true })}</div>}
         </div>
       </div>
     </div>

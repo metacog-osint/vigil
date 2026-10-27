@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 /**
  * IOCCorrelationGraph Component
  * Visualizes relationships between IOCs, actors, and malware
@@ -246,7 +247,7 @@ function NodeDetailsPanel({ node, onClose }) {
           {node.metadata.source && <div>Source: {node.metadata.source}</div>}
           {node.metadata.confidence && <div>Confidence: {node.metadata.confidence}%</div>}
           {node.metadata.first_seen && (
-            <div>First seen: {new Date(node.metadata.first_seen).toLocaleDateString()}</div>
+            <div>First seen: {fmtDate(node.metadata.first_seen, { year: true })}</div>
           )}
         </div>
       )}

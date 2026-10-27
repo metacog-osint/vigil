@@ -1,3 +1,4 @@
+import { fmt, fmtDate } from '../lib/time'
 import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -621,7 +622,7 @@ function LogDetailPanel({ log, onClose }) {
         {/* Timestamp */}
         <div>
           <div className="text-xs text-gray-500 uppercase mb-1">Timestamp</div>
-          <div className="text-gray-300">{new Date(log.created_at).toLocaleString()}</div>
+          <div className="text-gray-300">{fmt(log.created_at, { year: true, seconds: true })}</div>
         </div>
 
         {/* User */}
@@ -719,7 +720,7 @@ function ActivityChart({ data }) {
           />
           {data.length <= 14 && (
             <span className="text-xs text-gray-500 transform -rotate-45 origin-top-left whitespace-nowrap">
-              {new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {fmtDate(d.date)}
             </span>
           )}
         </div>
