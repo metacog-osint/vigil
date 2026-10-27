@@ -1,10 +1,11 @@
 /**
  * The vendor-research query layer.
  *
- * The first test asserts an absence: nothing here writes an attribution.
+ * The first tests assert an absence: nothing here infers an attribution.
  * Migration 139 measured 279 vendor titles and found zero attributions a
- * parser could read, and the module's one write is a ruling on a proposed
- * link, through rule_vendor_actor_link (migration 156).
+ * parser could read. An attribution reaches a report only as a person's
+ * ruling, through rule_vendor_attribution (157), as a link does through
+ * rule_vendor_actor_link (156).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -14,7 +15,14 @@ vi.mock('../client', () => ({
 }))
 
 import { supabase } from '../client'
-import { vendorReports, VENDOR_SOURCES, LINK_VERDICTS } from '../vendorReports'
+import {
+  vendorReports,
+  VENDOR_SOURCES,
+  LINK_VERDICTS,
+  ATTRIBUTION_VERDICTS,
+  STRENGTH_MEANINGS,
+} from '../vendorReports'
+import { ATTRIBUTION_STRENGTHS } from '../attributedActivity'
 
 function stubQuery(result) {
   const chain = {}
@@ -29,9 +37,18 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-describe('nothing here writes an attribution', () => {
-  it('has no method that sets, applies or infers one', () => {
-    expect(Object.keys(vendorReports).filter((k) => /attribut|country|infer/i.test(k))).toEqual([])
+describe('nothing here infers an attribution', () => {
+  it('has no method that infers, parses or extracts one', () => {
+    expect(
+      Object.keys(vendorReports).filter((k) => /infer|parse|extract|guess|detect|derive/i.test(k))
+    ).toEqual([])
+  })
+
+  it('writes only a person’s rulings, each through its function', () => {
+    const writes = Object.keys(vendorReports).filter((k) =>
+      /^(rule|set|apply|update|save)/i.test(k)
+    )
+    expect(writes.sort()).toEqual(['ruleAttribution', 'ruleLink'])
   })
 
   it('rules on a link through the function, and never sends who decided', async () => {
@@ -175,5 +192,83 @@ describe('getOpenQuestions', () => {
     expect(chain.eq).toHaveBeenCalledWith('check_name', 'vendor_attribution_candidate')
     expect(chain.eq).toHaveBeenCalledWith('status', 'open')
     expect(data['https://x/report']).toEqual({ id: 'f-1', phrase: 'China-nexus' })
+  })
+})
+
+describe('ruleAttribution', () => {
+  beforeEach(() => {
+    supabase.rpc.mockResolvedValue({ data: {}, error: null })
+  })
+
+  it('sends the country as a code, with the strength and the vendor’s words', async () => {
+    await vendorReports.ruleAttribution({
+      reportId: 'r-1',
+      verdict: 'attributes',
+      country: ' cn ',
+      strength: 'nexus',
+      phrase: 'China-nexus',
+      rationale: 'The title says China-nexus.',
+    })
+
+    expect(supabase.rpc).toHaveBeenCalledWith('rule_vendor_attribution', {
+      p_report_id: 'r-1',
+      p_verdict: 'attributes',
+      p_country: 'CN',
+      p_strength: 'nexus',
+      p_phrase: 'China-nexus',
+      p_rationale: 'The title says China-nexus.',
+    })
+  })
+
+  it('sends no country at linguistic when none was given', async () => {
+    await vendorReports.ruleAttribution({
+      reportId: 'r-1',
+      verdict: 'attributes',
+      country: '',
+      strength: 'linguistic',
+      phrase: 'a suspected Chinese speaker',
+      rationale: 'Language of code comments only.',
+    })
+    expect(supabase.rpc.mock.calls[0][1].p_country).toBeNull()
+  })
+
+  it('sends nulls for anything but an attribution, whatever the form held', async () => {
+    await vendorReports.ruleAttribution({
+      reportId: 'r-1',
+      verdict: 'names_no_country',
+      country: 'CN',
+      strength: 'state',
+      phrase: 'left over',
+      rationale: 'The nationality is the victim.',
+    })
+    const params = supabase.rpc.mock.calls[0][1]
+    expect([params.p_country, params.p_strength, params.p_phrase]).toEqual([null, null, null])
+    expect(Object.keys(params).some((k) => /decided|user|by/i.test(k))).toBe(false)
+  })
+
+  it('offers three readings and the six strengths, strongest first', () => {
+    expect(Object.keys(ATTRIBUTION_VERDICTS)).toEqual([
+      'attributes',
+      'names_no_country',
+      'deferred',
+    ])
+    expect(Object.keys(STRENGTH_MEANINGS)).toEqual([...ATTRIBUTION_STRENGTHS].reverse())
+  })
+})
+
+describe('getLatestAttributionRulings', () => {
+  it('keeps the newest ruling per report, a deferral included', async () => {
+    supabase.from.mockReturnValue(
+      stubQuery({
+        data: [
+          { report_id: 'r', verdict: 'deferred', decided_at: '2026-10-27T02:00:00Z' },
+          { report_id: 'r', verdict: 'attributes', decided_at: '2026-10-27T01:00:00Z' },
+        ],
+        error: null,
+      })
+    )
+    const { data } = await vendorReports.getLatestAttributionRulings(['r'])
+    expect(supabase.from).toHaveBeenCalledWith('vendor_attribution_decisions')
+    expect(data.r.verdict).toBe('deferred')
   })
 })
