@@ -3,7 +3,7 @@
  * Intl currency formatting has differed between them (see usd()).
  */
 import { describe, it, expect } from 'vitest'
-import { figure, usd } from '../format'
+import { figure, usd, calendarDay } from '../format'
 
 describe('figure', () => {
   it('shows a missing count as a dash, never 0', () => {
@@ -29,5 +29,21 @@ describe('usd', () => {
     expect(usd(null)).toBe('—')
     expect(usd(undefined, { compact: true })).toBe('—')
     expect(usd(Number.NaN)).toBe('—')
+  })
+})
+
+describe('calendarDay', () => {
+  it('reads a bare date as a day, not as midnight UTC shifted west', () => {
+    // Central time is west of UTC; as a timestamp this would render Oct 21.
+    expect(calendarDay('2026-10-22')).toBe('Oct 22, 2026')
+  })
+
+  it('formats a full timestamp by its UTC day', () => {
+    expect(calendarDay('2026-10-27T01:00:00Z')).toBe('Oct 27, 2026')
+  })
+
+  it('shows a missing or unreadable date as a dash', () => {
+    expect(calendarDay(null)).toBe('—')
+    expect(calendarDay('not a date')).toBe('—')
   })
 })

@@ -156,7 +156,10 @@ where there is CPU for them.
    nothing in `public` is reachable by default:
 
    ```sql
-   -- every new table, view or materialized view, including one rebuilt with DROP + CREATE
+   -- every new table, view or materialized view, including one rebuilt with DROP + CREATE.
+   -- Until 30 Oct 2026 the defaults still grant everything to anon and authenticated,
+   -- so start from nothing, then grant what is meant (156 learned this live)
+   revoke all on public.my_table from anon, authenticated;
    grant select on public.my_table to anon, authenticated;
    -- only if the worker or an Edge Function writes it directly over REST
    grant select, insert, update, delete on public.my_table to service_role;
