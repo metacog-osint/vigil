@@ -9,6 +9,7 @@ const Landing = lazy(() => import('./pages/Landing'))
 const Auth = lazy(() => import('./pages/Auth'))
 const Terms = lazy(() => import('./pages/Terms'))
 const Privacy = lazy(() => import('./pages/Privacy'))
+const Sources = lazy(() => import('./pages/Sources'))
 
 // Lazy loaded pages - code split for smaller initial bundle
 const Activity = lazy(() => import('./pages/Activity'))
@@ -56,6 +57,7 @@ import { KeyboardShortcutsModal, OnboardingTour } from './components'
 import PersonalizationWizard, { usePersonalizationWizard } from './components/PersonalizationWizard'
 import TermsUpdateModal from './components/TermsUpdateModal'
 import SessionWarningModal from './components/SessionWarningModal'
+import SiteFooter from './components/common/SiteFooter'
 
 // Hooks
 import { useAuth } from './hooks/useAuth'
@@ -108,10 +110,13 @@ function PublicLayout() {
           <Route path="/register" element={<Navigate to="/auth?mode=register" replace />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/sources" element={<Sources />} />
           {/* Redirect any other route to landing */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      {/* Data credits the sources' licences require, on every page */}
+      <SiteFooter />
     </ErrorBoundary>
   )
 }
@@ -238,6 +243,7 @@ function ProtectedApp() {
                         <Route path="/vulnerabilities" element={<Vulnerabilities />} />
                         <Route path="/advisories" element={<Advisories />} />
                         <Route path="/research" element={<VendorResearch />} />
+                        <Route path="/sources" element={<Sources />} />
                         <Route path="/iocs" element={<IOCs />} />
                         <Route
                           path="/bulk-search"
@@ -291,6 +297,8 @@ function ProtectedApp() {
                     </Suspense>
                   </ErrorBoundary>
                 </main>
+
+                <SiteFooter />
 
                 {/* Offline indicator */}
                 {!isOnline && (
