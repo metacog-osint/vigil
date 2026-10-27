@@ -1,13 +1,7 @@
 import { fmt, fmtDate, fmtTime } from '../../lib/time'
 // Improved time display components with tooltips and smart formatting
 import { memo } from 'react'
-import {
-  formatDistanceToNow,
-  isToday,
-  isYesterday,
-  isThisWeek,
-  differenceInHours,
-} from 'date-fns'
+import { formatDistanceToNow, isToday, isYesterday, isThisWeek, differenceInHours } from 'date-fns'
 import { clsx } from 'clsx'
 
 export function smartFormatDate(date) {
@@ -91,7 +85,10 @@ export const DateBadge = memo(function DateBadge({ date, className = '' }) {
   }
 
   return (
-    <span className={clsx('text-xs font-medium', colorClass, className)} title={fmt(d, { year: true })}>
+    <span
+      className={clsx('text-xs font-medium', colorClass, className)}
+      title={fmt(d, { year: true })}
+    >
       {smartFormatDate(d)}
     </span>
   )
@@ -104,11 +101,7 @@ export const FullDate = memo(function FullDate({ date, className = '' }) {
 
   const d = new Date(date)
 
-  return (
-    <span className={clsx(className)}>
-      {fmtDate(d, { year: true })}
-    </span>
-  )
+  return <span className={clsx(className)}>{fmtDate(d, { year: true })}</span>
 })
 
 export const Timestamp = memo(function Timestamp({ date, showTime = true, className = '' }) {
