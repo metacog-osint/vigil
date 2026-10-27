@@ -67,4 +67,21 @@ export const sourceLicences = {
   },
 }
 
+/**
+ * What a source's licence says about commercial use, as the Sources page shows
+ * it. A licence nobody has read is never shown as allowed without saying so:
+ * an unread licence is not a permissive one (migration 136).
+ */
+export function commercialUseStatus(row) {
+  const read = Boolean(row?.checked_on)
+  if (row?.commercial_use) {
+    return read
+      ? { label: 'Allowed', tone: 'allowed' }
+      : { label: 'Allowed, terms not re-read', tone: 'unread' }
+  }
+  return read
+    ? { label: 'Not allowed', tone: 'not-allowed' }
+    : { label: 'Not yet read', tone: 'unread' }
+}
+
 export default sourceLicences
