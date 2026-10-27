@@ -209,6 +209,18 @@ payments (Ransomwhere) · routing (BGPStream) · enrichment (Censys, ANY.RUN).
 Each source's terms differ, and not all permit commercial use. See
 [DATA_SOURCES.md](./DATA_SOURCES.md) before building on this.
 
+## Licence
+
+The code is licensed under the
+[GNU Affero General Public License v3.0](./LICENSE) (`AGPL-3.0-only`). You may
+use, change and share it. If you run a modified version as a network service,
+you must offer its users the source of your version.
+
+**The licence covers the code, not the data.** Every data source keeps its own
+terms, and some, ransomware.live among them, do not permit commercial use.
+The live register is the Sources page (`/sources`) on the site, read from the
+`source_licences` table; [DATA_SOURCES.md](./DATA_SOURCES.md) explains each one.
+
 ---
 
 _The Intelligence Company · [github.com/metacog-osint/vigil](https://github.com/metacog-osint/vigil)_
