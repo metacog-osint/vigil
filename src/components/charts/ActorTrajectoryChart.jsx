@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 import { useState, useEffect } from 'react'
 import {
   LineChart,
@@ -121,7 +122,7 @@ export function ActorTrajectoryChart({
             dataKey="date"
             stroke="#9ca3af"
             fontSize={12}
-            tickFormatter={(value) => format(new Date(value), 'MM/dd')}
+            tickFormatter={(value) => fmtDate(value)}
           />
           <YAxis stroke="#9ca3af" fontSize={12} />
           <Tooltip
@@ -131,7 +132,7 @@ export function ActorTrajectoryChart({
               borderRadius: '8px',
             }}
             labelStyle={{ color: '#9ca3af' }}
-            labelFormatter={(value) => format(new Date(value), 'MMM d, yyyy')}
+            labelFormatter={(value) => fmtDate(value, { year: true })}
           />
           {showLegend && (
             <Legend
@@ -212,7 +213,7 @@ export function ActorTrajectoryMini({ actorId, days = 14, height = 80 }) {
             borderRadius: '4px',
             fontSize: '12px',
           }}
-          labelFormatter={(value) => format(new Date(value), 'MMM d')}
+          labelFormatter={(value) => fmtDate(value)}
           formatter={(value) => [`${value} incidents`, '7d']}
         />
       </LineChart>

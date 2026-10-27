@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 /**
  * Alert Analytics Dashboard
  *
@@ -289,7 +290,7 @@ function AlertVolumeTrend({ data }) {
             />
             {idx % 7 === 0 && (
               <span className="text-xs text-gray-500 mt-1 truncate">
-                {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                {fmtDate(day.date, { weekday: true, date: false })}
               </span>
             )}
           </div>

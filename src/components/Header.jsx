@@ -1,3 +1,4 @@
+import { fmtTime } from '../lib/time'
 import TimeSettingsButton from './common/TimeSettingsButton'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -68,7 +69,7 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
 
         {/* Last updated */}
         <div className="hidden sm:block text-xs text-gray-500">
-          Last sync: {new Date().toLocaleTimeString()}
+          Last sync: {fmtTime(new Date())}
         </div>
       </div>
 

@@ -1,3 +1,4 @@
+import { fmtDate } from '../time'
 /**
  * Compare Module
  * Database queries for time-based comparison analytics
@@ -45,7 +46,7 @@ export const compare = {
     // Convert to array format
     return Object.entries(countsByDate).map(([date, count]) => ({
       date,
-      label: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      label: fmtDate(date),
       value: count,
     }))
   },

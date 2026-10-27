@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 /**
  * A country filter that says which geography it means.
  *
@@ -110,8 +111,8 @@ export function CountryCoverageNote({ coverage, geography }) {
       {stale && mostRecent && (
         <>
           {' '}
-          The most recent one is {new Date(mostRecent).toLocaleDateString()} — the source that
-          supplied it stopped.
+          The most recent one is {fmtDate(mostRecent, { year: true })} — the source that supplied it
+          stopped.
         </>
       )}
     </p>

@@ -1,7 +1,8 @@
+import { fmt, fmtTime } from '../lib/time'
 // Timeline - Chronological event visualization
 import { useMemo } from 'react'
 import { clsx } from 'clsx'
-import { format, formatDistanceToNow, isToday, isYesterday, differenceInDays } from 'date-fns'
+import { formatDistanceToNow, isToday, isYesterday, differenceInDays } from 'date-fns'
 
 const EVENT_TYPES = {
   incident: { color: 'bg-red-500', icon: '!' },
@@ -13,10 +14,10 @@ const EVENT_TYPES = {
 
 function formatEventDate(date) {
   const d = new Date(date)
-  if (isToday(d)) return `Today at ${format(d, 'HH:mm')}`
-  if (isYesterday(d)) return `Yesterday at ${format(d, 'HH:mm')}`
-  if (differenceInDays(new Date(), d) < 7) return format(d, 'EEEE, HH:mm')
-  return format(d, 'MMM d, yyyy HH:mm')
+  if (isToday(d)) return `Today at ${fmtTime(d)}`
+  if (isYesterday(d)) return `Yesterday at ${fmtTime(d)}`
+  if (differenceInDays(new Date(), d) < 7) return fmt(d, { weekday: true, date: false })
+  return fmt(d, { year: true })
 }
 
 function TimelineItem({ event, isFirst: _isFirst, isLast, onClick }) {

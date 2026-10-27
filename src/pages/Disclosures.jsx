@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 /**
  * Regulator disclosures.
  *
@@ -28,9 +29,7 @@ const STATES_INGESTED = 3
 function formatDate(value) {
   if (!value) return '—'
   const d = new Date(value)
-  return Number.isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+  return Number.isNaN(d.getTime()) ? '—' : fmtDate(value, { year: true })
 }
 
 function SourceBadge({ source }) {

@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 // Unified Security Events Page
 // Aggregates all event types into a single timeline view
 import { useState, useEffect, useCallback } from 'react'
@@ -570,9 +571,7 @@ function OverviewView({ stats, dailyCounts, pieData, loading }) {
               stroke="#6b7280"
               fontSize={11}
               tickLine={false}
-              tickFormatter={(d) =>
-                new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-              }
+              tickFormatter={(d) => fmtDate(d)}
             />
             <YAxis stroke="#6b7280" fontSize={11} tickLine={false} />
             <RechartsTooltip
@@ -582,13 +581,7 @@ function OverviewView({ stats, dailyCounts, pieData, loading }) {
                 borderRadius: '8px',
               }}
               labelStyle={{ color: '#9ca3af' }}
-              labelFormatter={(d) =>
-                new Date(d).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })
-              }
+              labelFormatter={(d) => fmtDate(d, { year: true })}
             />
             <Area
               type="monotone"

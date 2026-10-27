@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 /**
  * Temporal Cluster Chart Component
  *
@@ -33,8 +34,7 @@ const CLUSTER_COLORS = [
 ]
 
 function formatDate(dateStr) {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return fmtDate(dateStr)
 }
 
 function CustomTooltip({ active, payload, label }) {

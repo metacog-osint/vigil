@@ -1,3 +1,4 @@
+import { fmt } from '../../lib/time'
 /**
  * Operations Dashboard
  * Internal monitoring for sync status, error rates, and data freshness
@@ -6,7 +7,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { syncLog } from '../../lib/supabase'
-import { formatDistanceToNow, format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import { isSystemAdmin } from '../../lib/adminAuth'
 
 // Status badge component
@@ -182,9 +183,7 @@ function SourceHistoryModal({ source, history, onClose }) {
               <tbody>
                 {history?.map((log) => (
                   <tr key={log.id} className="border-b border-gray-800">
-                    <td className="py-2 text-sm text-gray-300">
-                      {format(new Date(log.completed_at), 'MMM d, HH:mm')}
-                    </td>
+                    <td className="py-2 text-sm text-gray-300">{fmt(log.completed_at)}</td>
                     <td className="py-2">
                       <StatusBadge status={log.status} />
                     </td>

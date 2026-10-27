@@ -1,3 +1,4 @@
+import { fmt, fmtDate, fmtTime } from '../lib/time'
 import { useState, useEffect } from 'react'
 import {
   statusOverview,
@@ -163,7 +164,7 @@ export default function Status() {
 
       {/* Footer */}
       <div className="text-center text-gray-500 text-sm pt-8 border-t border-gray-800">
-        <p>Last updated: {new Date().toLocaleString()}</p>
+        <p>Last updated: {fmt(new Date(), { year: true })}</p>
         <p className="mt-1">
           Powered by <span className="text-cyber-accent">Vigil</span> by The Intelligence Company
         </p>
@@ -408,17 +409,11 @@ function MaintenanceCard({ maintenance }) {
           )}
         </div>
         <div className="text-right text-sm text-gray-400">
-          <div>{new Date(maintenance.scheduled_start).toLocaleDateString()}</div>
+          <div>{fmtDate(maintenance.scheduled_start, { year: true })}</div>
           <div>
-            {new Date(maintenance.scheduled_start).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+            {fmtTime(maintenance.scheduled_start, { zoneName: false })}
             {' - '}
-            {new Date(maintenance.scheduled_end).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+            {fmtTime(maintenance.scheduled_end)}
           </div>
         </div>
       </div>
