@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
+
+// Shared time settings (public/tic-time.js): redraw everything when the viewer changes zone or clock.
+if (window.TicTime) window.TicTime.onChange(() => window.location.reload())
 import { registerServiceWorker } from './lib/serviceWorker'
 import { initSentry } from './lib/sentry'
 import { validateEnv } from './lib/env'
