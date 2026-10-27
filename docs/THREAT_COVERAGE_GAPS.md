@@ -126,24 +126,31 @@ registry, already licensed, and has not run since May.
 _Measured 27 October 2026._ 22,524 of 40,886 incidents (55%) carry no victim
 country. Only two sources have ever supplied one, and the gap follows them:
 
-| Incidents with no country | Count | Why |
-| --- | ---: | --- |
-| From Ransomwatch (2021–2023) | 15,815 | Ransomwatch never published a country, and was archived in March 2026. |
-| From ransomware.live | 3,918 | Its country field is incomplete, and it stopped supplying one on 29 May 2026. |
-| From RansomLook | 2,410 | RansomLook publishes no country on any public endpoint. |
+| Incidents with no country    |  Count | Why                                                                           |
+| ---------------------------- | -----: | ----------------------------------------------------------------------------- |
+| From Ransomwatch (2021–2023) | 15,815 | Ransomwatch never published a country, and was archived in March 2026.        |
+| From ransomware.live         |  3,918 | Its country field is incomplete, and it stopped supplying one on 29 May 2026. |
+| From RansomLook              |  2,410 | RansomLook publishes no country on any public endpoint.                       |
 
-| Source of the countries held | Incidents | Licence |
-| --- | ---: | --- |
-| ransomware.live | 11,317 | Personal use only |
-| ThreatCluster Ransomware-Intel | 7,045 | TLP:CLEAR, redistributable |
+| Source of the countries held   | Incidents | Licence                    |
+| ------------------------------ | --------: | -------------------------- |
+| ransomware.live                |    11,317 | Personal use only          |
+| ThreatCluster Ransomware-Intel |     7,045 | TLP:CLEAR, redistributable |
 
-**What can still be filled from a source that states it.** ThreatCluster
-publishes a 365-day file alongside the 90-day one the daily run reads, and the
-backfill has never been run. 3,148 incidents from the last year have no
-country. `apply_victim_countries` fills only empty values and queues any
-disagreement, and the two sources agree on 99% of the victims both name, so
-the backfill is safe to run: `POST /functions/v1/threatcluster-victims` with
-`{"window":"365d"}` and the service-role key.
+**What the 365-day backfill filled: 27.** ThreatCluster publishes a 365-day
+file alongside the 90-day one the daily run reads. It was run once on
+27 October 2026 (UTC): 8,449 rows parsed, 27 countries filled, 36
+disagreements queued for review.
+
+An earlier version of this section said the backfill could fill the 3,148
+empty incidents from the last year. That counted empty rows, not rows
+ThreatCluster names, and it was wrong. The daily run had already filled 6,911
+of that year's 12,254 incidents, so the 365-day file mostly repeated them.
+The 3,138 still empty are victims ThreatCluster does not list under the same
+name key. Many are listed by domain (`www.smithdollar.com`,
+`reddycardiology.com`) where ThreatCluster gives a company name. Matching
+those would mean comparing a domain with a name, which is a judgment, not a
+lookup. If it is done, the matches go to review first.
 
 **What cannot.** No licence-clean source states a country for the 2021–2023
 Ransomwatch rows. ransomware.live does, but restoring it deepens the one
@@ -312,12 +319,12 @@ Vigil records an attack on a named organisation, claimed or disclosed. Scam
 data does not arrive in that shape. It arrives in four, and only two of them
 belong here.
 
-| Shape                | Example                                                | Verdict                                                                                                                              |
-| -------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Aggregate statistics | IC3 annual report, FTC Sentinel                        | **Not an incident.** Filing one as an event is the category error that got the CERT-EU monthly Cyber Brief rejected in §1. Own table. |
-| Individual victims   | One person's romance-scam report                       | **Rejected.** Named individuals as data subjects, a different privacy regime from a corporate breach notice, kept forever in `entity_changelog`. |
-| Infrastructure       | Scam domains, drainer wallets, spoofed numbers         | Already `iocs`. More of it does not change what Vigil can say happened.                                                              |
-| **Enforcement acts** | Indictments, designations, advisories, forfeitures     | **This is the one.** Names actor, mechanism and often victim class, under the strongest evidentiary standard available.               |
+| Shape                | Example                                            | Verdict                                                                                                                                          |
+| -------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Aggregate statistics | IC3 annual report, FTC Sentinel                    | **Not an incident.** Filing one as an event is the category error that got the CERT-EU monthly Cyber Brief rejected in §1. Own table.            |
+| Individual victims   | One person's romance-scam report                   | **Rejected.** Named individuals as data subjects, a different privacy regime from a corporate breach notice, kept forever in `entity_changelog`. |
+| Infrastructure       | Scam domains, drainer wallets, spoofed numbers     | Already `iocs`. More of it does not change what Vigil can say happened.                                                                          |
+| **Enforcement acts** | Indictments, designations, advisories, forfeitures | **This is the one.** Names actor, mechanism and often victim class, under the strongest evidentiary standard available.                          |
 
 The fourth shape needs almost no new machinery. `attributed_activity`
 (migration 131) already has `criminal` in its `attribution_strength` check
@@ -327,13 +334,13 @@ sources that were wanted anyway.
 
 #### Sources, all Tier 1 and all free
 
-| Source                              | Why it is the right one                                                                                                                                                | Licence                                            |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| **FinCEN advisories and alerts**    | The best fit on this list. Structured as typology plus red-flag indicators — including the pig-butchering alert — and written to be acted on by regulated institutions. | US public domain                                    |
-| **OFAC designations as attribution** | Already ingested for addresses. Treasury has designated scam-compound networks and the laundering rails behind them. Same feed, read for _who_.                        | US public domain                                    |
-| **DOJ indictments and forfeitures** | Names individuals, compounds, wallets and mule structure. A charged indictment is the strongest provenance in the corpus.                                              | US public domain                                    |
-| **FBI IC3 / FTC Sentinel**          | Official statistics, in a statistics table, rendered as statistics. Same species as `breach_notices_by_state`.                                                         | US public domain                                    |
-| **UNODC threat assessments**        | The regional structural picture the US sources do not carry.                                                                                                           | **Unchecked — frequently CC BY-NC. Gate it first.** |
+| Source                               | Why it is the right one                                                                                                                                                 | Licence                                             |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| **FinCEN advisories and alerts**     | The best fit on this list. Structured as typology plus red-flag indicators — including the pig-butchering alert — and written to be acted on by regulated institutions. | US public domain                                    |
+| **OFAC designations as attribution** | Already ingested for addresses. Treasury has designated scam-compound networks and the laundering rails behind them. Same feed, read for _who_.                         | US public domain                                    |
+| **DOJ indictments and forfeitures**  | Names individuals, compounds, wallets and mule structure. A charged indictment is the strongest provenance in the corpus.                                               | US public domain                                    |
+| **FBI IC3 / FTC Sentinel**           | Official statistics, in a statistics table, rendered as statistics. Same species as `breach_notices_by_state`.                                                          | US public domain                                    |
+| **UNODC threat assessments**         | The regional structural picture the US sources do not carry.                                                                                                            | **Unchecked — frequently CC BY-NC. Gate it first.** |
 
 #### Ruled out
 
