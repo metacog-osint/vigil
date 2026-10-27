@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 // IOC Quick Lookup Card - Rich display for IOC search results with enrichment links
 import { clsx } from 'clsx'
 import { iocs } from '../../lib/supabase'
@@ -165,7 +166,7 @@ export function IOCQuickLookupCard({ data, type, onNavigate }) {
               <div>
                 <span className="text-gray-500">First seen:</span>
                 <span className="ml-1 text-white">
-                  {new Date(primaryResult.first_seen).toLocaleDateString()}
+                  {fmtDate(primaryResult.first_seen, { year: true })}
                 </span>
               </div>
             )}
@@ -173,7 +174,7 @@ export function IOCQuickLookupCard({ data, type, onNavigate }) {
               <div>
                 <span className="text-gray-500">Last seen:</span>
                 <span className="ml-1 text-white">
-                  {new Date(primaryResult.last_seen).toLocaleDateString()}
+                  {fmtDate(primaryResult.last_seen, { year: true })}
                 </span>
               </div>
             )}

@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 /**
  * OFAC-designated digital currency addresses, and the actors that are them.
  *
@@ -28,9 +29,7 @@ import { figure } from '../lib/format'
 function formatDate(value) {
   if (!value) return 'an unknown date'
   const d = new Date(value)
-  return Number.isNaN(d.getTime())
-    ? 'an unknown date'
-    : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+  return Number.isNaN(d.getTime()) ? 'an unknown date' : fmtDate(value, { year: true })
 }
 
 function Counts({ overview }) {

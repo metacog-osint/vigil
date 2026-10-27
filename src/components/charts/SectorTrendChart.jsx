@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 import {
   LineChart,
   Line,
@@ -53,9 +54,7 @@ export function SectorTrendChart({ data, loading, height = 280, showLegend = tru
           dataKey="week"
           stroke="#6b7280"
           tick={{ fill: '#9ca3af', fontSize: 10 }}
-          tickFormatter={(v) =>
-            new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-          }
+          tickFormatter={(v) => fmtDate(v)}
         />
         <YAxis stroke="#6b7280" tick={{ fill: '#9ca3af', fontSize: 10 }} />
         <Tooltip
@@ -64,7 +63,7 @@ export function SectorTrendChart({ data, loading, height = 280, showLegend = tru
             border: '1px solid #374151',
             borderRadius: '8px',
           }}
-          labelFormatter={(v) => new Date(v).toLocaleDateString()}
+          labelFormatter={(v) => fmtDate(v, { year: true })}
         />
         {showLegend && <Legend />}
         {data.sectors.slice(0, 6).map((sector, i) => (
@@ -120,9 +119,7 @@ export function SectorTrendMini({ data, loading, height = 120 }) {
             borderRadius: '4px',
             fontSize: '11px',
           }}
-          labelFormatter={(v) =>
-            new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-          }
+          labelFormatter={(v) => fmtDate(v)}
         />
         {topSectors.map((sector, i) => (
           <Line
@@ -176,9 +173,7 @@ export function ActivityTrendChart({ data, loading, height = 200 }) {
           dataKey="date"
           stroke="#6b7280"
           tick={{ fill: '#9ca3af', fontSize: 10 }}
-          tickFormatter={(v) =>
-            new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-          }
+          tickFormatter={(v) => fmtDate(v)}
         />
         <YAxis stroke="#6b7280" tick={{ fill: '#9ca3af', fontSize: 10 }} />
         <Tooltip
@@ -187,7 +182,7 @@ export function ActivityTrendChart({ data, loading, height = 200 }) {
             border: '1px solid #374151',
             borderRadius: '8px',
           }}
-          labelFormatter={(v) => new Date(v).toLocaleDateString()}
+          labelFormatter={(v) => fmtDate(v, { year: true })}
           formatter={(value) => [value, 'Incidents']}
         />
         <Area type="monotone" dataKey="count" stroke="#00ff88" fill="url(#activityGradient)" />
@@ -231,9 +226,7 @@ export function ActivityTrendMini({ data, loading, height = 80 }) {
             borderRadius: '4px',
             fontSize: '11px',
           }}
-          labelFormatter={(v) =>
-            new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-          }
+          labelFormatter={(v) => fmtDate(v)}
           formatter={(value) => [value, 'Incidents']}
         />
       </AreaChart>

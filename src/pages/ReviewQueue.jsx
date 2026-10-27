@@ -1,3 +1,4 @@
+import { fmt, fmtDate } from '../lib/time'
 /**
  * Review Queue
  *
@@ -215,9 +216,7 @@ function FindingCard({ finding, onRecorded }) {
           <h2 className="text-white font-semibold break-words">{finding.subject}</h2>
           <div className="text-xs text-gray-500 mt-1">
             <span className="font-mono">{finding.check_name}</span>
-            {finding.first_seen && (
-              <> · first seen {new Date(finding.first_seen).toLocaleDateString()}</>
-            )}
+            {finding.first_seen && <> · first seen {fmtDate(finding.first_seen, { year: true })}</>}
           </div>
         </div>
 
@@ -255,7 +254,7 @@ function FindingCard({ finding, onRecorded }) {
           </div>
           <p className="text-gray-300">{finding.latest_rationale}</p>
           <p className="text-xs text-gray-500 mt-2">
-            {finding.latest_decided_at && new Date(finding.latest_decided_at).toLocaleString()}
+            {finding.latest_decided_at && fmt(finding.latest_decided_at, { year: true })}
           </p>
         </div>
       )}
