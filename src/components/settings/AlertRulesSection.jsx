@@ -2,7 +2,13 @@ import { useState, useEffect } from 'react'
 import { alertRules } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
 
-const RULE_TYPES = [
+/**
+ * Only types evaluate_alert_rules() actually evaluates. Offering one it does
+ * not is a rule that saves and never fires - severity_threshold was that,
+ * until migration 159. A test reads the engine's latest migration and fails
+ * if this list offers a type it does not handle.
+ */
+export const RULE_TYPES = [
   {
     value: 'vendor_cve',
     label: 'Vendor CVE',
@@ -20,9 +26,11 @@ const RULE_TYPES = [
   },
   { value: 'kev_added', label: 'New KEV', description: 'Alert when CVEs are added to KEV catalog' },
   {
-    value: 'severity_threshold',
-    label: 'Severity Threshold',
-    description: 'Alert on high severity events',
+    value: 'kev_epss_p1',
+    label: 'KEV ransomware + EPSS ≥ 0.5',
+    description:
+      'Alert when a KEV entry with known ransomware use reaches an EPSS score of 0.5 or more. ' +
+      'EPSS often rises days after a CVE reaches KEV, so this fires when it crosses, not when it is listed.',
   },
 ]
 
@@ -258,6 +266,12 @@ function ConditionsDisplay({ conditions, ruleType }) {
   }
   if (conditions.kev_only) {
     parts.push('KEV only')
+  }
+  if (typeof conditions.min_cvss === 'number') {
+    parts.push(`Min CVSS: ${conditions.min_cvss}`)
+  }
+  if (conditions.ransomware_only) {
+    parts.push('Ransomware use only')
   }
 
   return <span>{parts.join(' • ') || 'All matching events'}</span>
@@ -541,25 +555,33 @@ function ConditionsEditor({ ruleType, conditions, onChange }) {
         </div>
       )
 
-    case 'severity_threshold':
+    case 'kev_epss_p1':
       return (
         <div className="space-y-3">
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Minimum Severity</label>
-            <select
-              value={conditions.min_severity || 'high'}
-              onChange={(e) => updateCondition('min_severity', e.target.value)}
+            <label className="block text-sm text-gray-400 mb-1">
+              Vendors (comma-separated, optional)
+            </label>
+            <input
+              type="text"
+              value={conditions.vendors?.join(', ') || ''}
+              onChange={(e) =>
+                updateCondition(
+                  'vendors',
+                  e.target.value
+                    .split(',')
+                    .map((v) => v.trim())
+                    .filter(Boolean)
+                )
+              }
               className="w-full cyber-input"
-            >
-              {SEVERITY_OPTIONS.map((sev) => (
-                <option key={sev} value={sev}>
-                  {sev.charAt(0).toUpperCase() + sev.slice(1)}
-                </option>
-              ))}
-            </select>
+              placeholder="Leave empty for every vendor"
+            />
           </div>
           <p className="text-xs text-gray-500">
-            Alert on any event with severity at or above this threshold
+            Fires once per CVE, when it is first seen meeting both conditions on an EPSS score from
+            the last three days. CVEs that already met them when this rule type was added do not
+            fire.
           </p>
         </div>
       )
