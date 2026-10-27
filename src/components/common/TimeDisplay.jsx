@@ -1,13 +1,7 @@
+import { fmt, fmtDate, fmtTime } from '../../lib/time'
 // Improved time display components with tooltips and smart formatting
 import { memo } from 'react'
-import {
-  formatDistanceToNow,
-  format,
-  isToday,
-  isYesterday,
-  isThisWeek,
-  differenceInHours,
-} from 'date-fns'
+import { formatDistanceToNow, isToday, isYesterday, isThisWeek, differenceInHours } from 'date-fns'
 import { clsx } from 'clsx'
 
 export function smartFormatDate(date) {
@@ -24,21 +18,21 @@ export function smartFormatDate(date) {
 
   // Today: show "Today at HH:MM"
   if (isToday(d)) {
-    return `Today at ${format(d, 'HH:mm')}`
+    return `Today at ${fmtTime(d)}`
   }
 
   // Yesterday: show "Yesterday at HH:MM"
   if (isYesterday(d)) {
-    return `Yesterday at ${format(d, 'HH:mm')}`
+    return `Yesterday at ${fmtTime(d)}`
   }
 
   // This week: show day name
   if (isThisWeek(d)) {
-    return format(d, 'EEEE') // Monday, Tuesday, etc.
+    return fmt(d, { weekday: true, date: false, time: false })
   }
 
   // Otherwise: show date
-  return format(d, 'MMM d, yyyy')
+  return fmtDate(d, { year: true })
 }
 
 export const TimeAgo = memo(function TimeAgo({ date, className = '' }) {
@@ -48,7 +42,7 @@ export const TimeAgo = memo(function TimeAgo({ date, className = '' }) {
 
   const d = new Date(date)
   const relativeTime = formatDistanceToNow(d, { addSuffix: true })
-  const fullDate = format(d, 'PPpp') // "Apr 29, 2023 at 3:45 PM"
+  const fullDate = fmt(d, { year: true })
 
   return (
     <span className={clsx('cursor-help', className)} title={fullDate}>
@@ -64,7 +58,7 @@ export const SmartTime = memo(function SmartTime({ date, className = '' }) {
 
   const d = new Date(date)
   const smartDate = smartFormatDate(d)
-  const fullDate = format(d, 'PPpp')
+  const fullDate = fmt(d, { year: true })
 
   return (
     <span className={clsx('cursor-help', className)} title={fullDate}>
@@ -91,7 +85,10 @@ export const DateBadge = memo(function DateBadge({ date, className = '' }) {
   }
 
   return (
-    <span className={clsx('text-xs font-medium', colorClass, className)} title={format(d, 'PPpp')}>
+    <span
+      className={clsx('text-xs font-medium', colorClass, className)}
+      title={fmt(d, { year: true })}
+    >
       {smartFormatDate(d)}
     </span>
   )
@@ -104,11 +101,7 @@ export const FullDate = memo(function FullDate({ date, className = '' }) {
 
   const d = new Date(date)
 
-  return (
-    <span className={clsx(className)}>
-      {format(d, 'PPP')} {/* April 29, 2023 */}
-    </span>
-  )
+  return <span className={clsx(className)}>{fmtDate(d, { year: true })}</span>
 })
 
 export const Timestamp = memo(function Timestamp({ date, showTime = true, className = '' }) {
@@ -117,9 +110,11 @@ export const Timestamp = memo(function Timestamp({ date, showTime = true, classN
   }
 
   const d = new Date(date)
-  const formatString = showTime ? 'yyyy-MM-dd HH:mm:ss' : 'yyyy-MM-dd'
-
-  return <span className={clsx('font-mono text-xs', className)}>{format(d, formatString)}</span>
+  return (
+    <span className={clsx('font-mono text-xs', className)}>
+      {showTime ? fmt(d, { year: true, seconds: true }) : fmtDate(d, { year: true })}
+    </span>
+  )
 })
 
 export default {
