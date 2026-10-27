@@ -177,6 +177,9 @@ Deno.serve(async (req) => {
       window,
       parsed: rows.length,
       ...(data ?? {}),
+      // The scheduler logs `updated` as records_updated. Without it every run
+      // logged 0 rows written while filling 20 to 40 countries a day.
+      updated: Number(data?.filled ?? 0),
       ms: Date.now() - started,
     })
   } catch (error) {

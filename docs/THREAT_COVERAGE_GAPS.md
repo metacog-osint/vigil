@@ -121,6 +121,42 @@ Attackers layer drew a tenth of the corpus.
 **The next move here is Malpedia, not a new source.** It is already in the
 registry, already licensed, and has not run since May.
 
+### 3b. Where a victim is
+
+_Measured 27 October 2026._ 22,524 of 40,886 incidents (55%) carry no victim
+country. Only two sources have ever supplied one, and the gap follows them:
+
+| Incidents with no country | Count | Why |
+| --- | ---: | --- |
+| From Ransomwatch (2021–2023) | 15,815 | Ransomwatch never published a country, and was archived in March 2026. |
+| From ransomware.live | 3,918 | Its country field is incomplete, and it stopped supplying one on 29 May 2026. |
+| From RansomLook | 2,410 | RansomLook publishes no country on any public endpoint. |
+
+| Source of the countries held | Incidents | Licence |
+| --- | ---: | --- |
+| ransomware.live | 11,317 | Personal use only |
+| ThreatCluster Ransomware-Intel | 7,045 | TLP:CLEAR, redistributable |
+
+**What can still be filled from a source that states it.** ThreatCluster
+publishes a 365-day file alongside the 90-day one the daily run reads, and the
+backfill has never been run. 3,148 incidents from the last year have no
+country. `apply_victim_countries` fills only empty values and queues any
+disagreement, and the two sources agree on 99% of the victims both name, so
+the backfill is safe to run: `POST /functions/v1/threatcluster-victims` with
+`{"window":"365d"}` and the service-role key.
+
+**What cannot.** No licence-clean source states a country for the 2021–2023
+Ransomwatch rows. ransomware.live does, but restoring it deepens the one
+licence exposure Vigil already carries.
+
+**What was considered and not done.** 2,191 of the empty rows carry a
+two-letter top-level domain, about 1,700 after removing vanity domains such as
+`.io`, `.co` and `.ai`. A `.de` domain says where a domain was registered, not
+where the victim is; a German subsidiary of a US firm, or a US firm with a
+German brand site, reads the same. Writing it as `victim_country` would be an
+inference recorded as a fact. If it is ever used, it belongs in a separate,
+labelled field, never in `victim_country`.
+
 ### 4. Vendor threat research
 
 Microsoft MSTIC, Mandiant, Talos, Unit 42, Secureworks — all publish free RSS
