@@ -1,7 +1,8 @@
 -- 156. A proposed link between a vendor report and an actor can be ruled on
 --      from the product
 --
--- STATUS: NOT YET APPLIED.
+-- STATUS: applied 2026-10-27 at 00:05 UTC, with the revoke below applied a
+-- minute later as a second step (156b in the live migration log).
 --
 -- WHY
 --
@@ -82,6 +83,11 @@ drop policy if exists vendor_link_decisions_select on public.vendor_link_decisio
 create policy vendor_link_decisions_select on public.vendor_link_decisions
   for select to authenticated using (true);
 
+-- Until 30 October 2026 Supabase's default privileges grant every new table to
+-- anon and authenticated in full. RLS already refuses those writes, but this
+-- file promises that no grant allows one, so the defaults are revoked and the
+-- one privilege meant is granted back. From 30 October the revoke is a no-op.
+revoke all on public.vendor_link_decisions from anon, authenticated;
 grant select on public.vendor_link_decisions to authenticated, service_role;
 
 create or replace function public.rule_vendor_actor_link(
