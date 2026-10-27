@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase, correlations } from '../../lib/supabase'
@@ -273,7 +274,7 @@ export default function ActorQuickProfile({ actorId, actorName, onClose, onAddTo
                 >
                   <span className="text-gray-300 truncate">{inc.victim_name}</span>
                   <span className="text-gray-500 whitespace-nowrap ml-2">
-                    {new Date(inc.discovered_date).toLocaleDateString()}
+                    {fmtDate(inc.discovered_date, { year: true })}
                   </span>
                 </div>
               ))}

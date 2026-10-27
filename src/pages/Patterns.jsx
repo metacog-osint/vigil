@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 /**
  * Patterns Page
  *
@@ -105,8 +106,8 @@ function CampaignCard({ pattern }) {
             <div className="text-white">
               {pattern.startDate && pattern.endDate && (
                 <>
-                  {new Date(pattern.startDate).toLocaleDateString()} -{' '}
-                  {new Date(pattern.endDate).toLocaleDateString()}
+                  {fmtDate(pattern.startDate, { year: true })} -{' '}
+                  {fmtDate(pattern.endDate, { year: true })}
                 </>
               )}
             </div>

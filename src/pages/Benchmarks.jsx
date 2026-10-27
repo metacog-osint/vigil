@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 import { useState, useEffect } from 'react'
 import {
   benchmarks,
@@ -458,12 +459,7 @@ export default function Benchmarks() {
                           <XAxis
                             dataKey="period_start"
                             stroke="#9ca3af"
-                            tickFormatter={(date) =>
-                              new Date(date).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                              })
-                            }
+                            tickFormatter={(date) => fmtDate(date)}
                           />
                           <YAxis stroke="#9ca3af" />
                           <RechartsTooltip

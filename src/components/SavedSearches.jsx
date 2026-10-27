@@ -1,3 +1,4 @@
+import { fmt } from '../lib/time'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -182,7 +183,7 @@ export function SavedSearchesPanel({ page, currentFilters, onApply, onClose }) {
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
                   {search.result_count !== null && `${search.result_count} results • `}
-                  {new Date(search.searched_at).toLocaleString()}
+                  {fmt(search.searched_at, { year: true })}
                 </div>
               </div>
             ))}

@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 
@@ -271,12 +272,7 @@ export default function CalendarHeatmap({
       {/* Peak day highlight */}
       {stats.peakDay && (
         <div className="text-xs text-gray-500">
-          Peak: {stats.peakDay[1]} incidents on{' '}
-          {new Date(stats.peakDay[0]).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })}
+          Peak: {stats.peakDay[1]} incidents on {fmtDate(stats.peakDay[0], { year: true })}
         </div>
       )}
 
@@ -291,12 +287,7 @@ export default function CalendarHeatmap({
         >
           <div className="text-sm text-white font-medium">{tooltip.count} incidents</div>
           <div className="text-xs text-gray-400">
-            {new Date(tooltip.date).toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric',
-            })}
+            {fmtDate(tooltip.date, { weekday: true, year: true })}
           </div>
         </div>
       )}

@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 /**
  * Analytics Dashboard Component
  * Internal view for product analytics and user engagement
@@ -5,7 +6,6 @@
 
 import { useState, useEffect } from 'react'
 import { analyticsQueries } from '../lib/analytics'
-import { format } from 'date-fns'
 import {
   LineChart,
   Line,
@@ -126,7 +126,7 @@ export default function AnalyticsDashboard() {
                 dataKey="date"
                 stroke="#9ca3af"
                 fontSize={12}
-                tickFormatter={(d) => format(new Date(d), 'MMM d')}
+                tickFormatter={(d) => fmtDate(d)}
               />
               <YAxis stroke="#9ca3af" fontSize={12} />
               <Tooltip
@@ -259,7 +259,7 @@ export default function AnalyticsDashboard() {
                       {user.user_id.slice(0, 20)}...
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-400">
-                      {user.last_seen_at ? format(new Date(user.last_seen_at), 'MMM d, yyyy') : '-'}
+                      {user.last_seen_at ? fmtDate(user.last_seen_at, { year: true }) : '-'}
                     </td>
                     <td className="py-3 px-4 text-sm text-red-400">
                       {user.days_since_last_activity} days

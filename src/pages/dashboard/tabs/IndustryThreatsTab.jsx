@@ -1,3 +1,4 @@
+import { fmtDate } from '../../../lib/time'
 /**
  * IndustryThreatsTab Component
  *
@@ -155,7 +156,7 @@ function IndustryDetailPanel({ industry, onClose }) {
 
         {industry.last_event && (
           <div className="text-xs text-gray-500 pt-2 border-t border-gray-800">
-            Last event: {new Date(industry.last_event).toLocaleDateString()}
+            Last event: {fmtDate(industry.last_event, { year: true })}
           </div>
         )}
       </div>

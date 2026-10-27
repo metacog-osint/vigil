@@ -84,7 +84,8 @@ describe('relativeTime', () => {
 
   it('returns formatted date for times over a year ago', () => {
     const date = new Date('2023-01-15T12:00:00Z') // 2 years ago
-    expect(relativeTime(date)).toMatch(/\d+\/\d+\/\d+/)
+    // Older dates use the shared time display (src/lib/time.js), e.g. "Jan 15, 2023"
+    expect(relativeTime(date)).toMatch(/2023/)
   })
 
   it('handles string dates', () => {
