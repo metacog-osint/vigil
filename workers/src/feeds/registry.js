@@ -173,7 +173,9 @@ export const JOBS = [
   {
     id: 'epss',
     priority: 3,
-    cost: 10,
+    // One subrequest to the epss-scores Edge Function (migration 158). It was
+    // 10, spent refreshing the same 40 CVEs a day.
+    cost: 1,
     intervalMinutes: DAY,
     run: (db, env) => ingestEPSS(db, env),
   },
