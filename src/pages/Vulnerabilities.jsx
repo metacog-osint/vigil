@@ -1,6 +1,7 @@
+import { fmtDate } from '../lib/time'
 import { useState, useEffect } from 'react'
 import { vulnerabilities } from '../lib/supabase'
-import { formatDistanceToNow, format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import { SkeletonTable } from '../components/Skeleton'
 import { EmptyVulnerabilities } from '../components/EmptyState'
 import { SeverityBadge, SeverityBar, EPSSBadge } from '../components/SeverityBadge'
@@ -295,7 +296,7 @@ export default function Vulnerabilities() {
                   <div className="text-gray-500 mb-1">KEV Added</div>
                   <div className="text-gray-300">
                     {selectedVuln.kev_date
-                      ? format(new Date(selectedVuln.kev_date), 'PP')
+                      ? fmtDate(selectedVuln.kev_date, { year: true })
                       : 'Unknown'}
                   </div>
                 </div>
@@ -309,7 +310,7 @@ export default function Vulnerabilities() {
                           : 'text-gray-300'
                       }
                     >
-                      {format(new Date(selectedVuln.kev_due_date), 'PP')}
+                      {fmtDate(selectedVuln.kev_due_date, { year: true })}
                     </div>
                   </div>
                 )}
@@ -463,7 +464,7 @@ export default function Vulnerabilities() {
                   <div className="text-gray-500 mb-1">KEV Added</div>
                   <div className="text-gray-300">
                     {selectedVuln.kev_date
-                      ? format(new Date(selectedVuln.kev_date), 'PP')
+                      ? fmtDate(selectedVuln.kev_date, { year: true })
                       : 'Unknown'}
                   </div>
                 </div>
@@ -477,7 +478,7 @@ export default function Vulnerabilities() {
                           : 'text-gray-300'
                       }
                     >
-                      {format(new Date(selectedVuln.kev_due_date), 'PP')}
+                      {fmtDate(selectedVuln.kev_due_date, { year: true })}
                     </div>
                   </div>
                 )}

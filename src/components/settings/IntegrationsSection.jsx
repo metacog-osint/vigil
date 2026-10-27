@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 /**
  * Integrations Section Component
  * Manages external integrations (Slack, Teams, Jira, etc.)
@@ -471,7 +472,7 @@ export default function IntegrationsSection({ userId }) {
                       <div className="text-sm text-gray-400">
                         {integration.is_connected ? 'Connected' : 'Not connected'}
                         {integration.last_sync_at &&
-                          ` · Last sync: ${new Date(integration.last_sync_at).toLocaleDateString()}`}
+                          ` · Last sync: ${fmtDate(integration.last_sync_at, { year: true })}`}
                       </div>
                     </div>
                   </div>

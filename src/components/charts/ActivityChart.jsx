@@ -1,3 +1,4 @@
+import { fmtDate } from '../../lib/time'
 import { useState, useEffect } from 'react'
 import { incidents } from '../../lib/supabase'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
@@ -30,7 +31,7 @@ export default function ActivityChart() {
 
         const chartData = Object.entries(counts).map(([date, count]) => ({
           date,
-          displayDate: format(new Date(date), 'MMM d'),
+          displayDate: fmtDate(date),
           incidents: count,
         }))
 

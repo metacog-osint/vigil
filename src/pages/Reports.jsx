@@ -1,3 +1,4 @@
+import { fmt } from '../lib/time'
 /**
  * Reports Page
  * Configure and manage scheduled intelligence reports
@@ -12,7 +13,7 @@ import {
   DAY_OPTIONS,
 } from '../lib/scheduledReports'
 import { useAuth } from '../hooks/useAuth'
-import { format, formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 
 const TIMEZONES = [
   { value: 'UTC', label: 'UTC' },
@@ -191,7 +192,7 @@ export default function Reports() {
                     {item.scheduled_reports?.name || 'Report'}
                   </div>
                   <div className="text-sm text-gray-400">
-                    {format(new Date(item.generated_at), 'MMM d, yyyy h:mm a')}
+                    {fmt(item.generated_at, { year: true })}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -724,9 +725,7 @@ function HistoryModal({ report, userId, onClose }) {
               {history.map((item) => (
                 <div key={item.id} className="p-4 hover:bg-gray-800/30">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="text-white">
-                      {format(new Date(item.generated_at), 'MMM d, yyyy h:mm a')}
-                    </div>
+                    <div className="text-white">{fmt(item.generated_at, { year: true })}</div>
                     <StatusBadge status={item.delivery_status} />
                   </div>
                   {item.stats && (

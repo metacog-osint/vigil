@@ -1,3 +1,4 @@
+import { fmtDate } from '../lib/time'
 /**
  * Financial crime advisories.
  *
@@ -23,9 +24,7 @@ const PAGE_SIZE = 50
 function formatDate(value) {
   if (!value) return 'undated'
   const d = new Date(value)
-  return Number.isNaN(d.getTime())
-    ? 'undated'
-    : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+  return Number.isNaN(d.getTime()) ? 'undated' : fmtDate(value, { year: true })
 }
 
 function KindBadge({ kind }) {
