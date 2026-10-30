@@ -88,6 +88,8 @@ export default async function handler(request) {
       },
     })
   } catch (err) {
-    return json(503, { error: 'Feed temporarily unavailable', detail: String(err.message || err) })
+    // The cause goes to the server log only: a public response must not reveal internals.
+    console.error('feed: build failed', err)
+    return json(503, { error: 'Feed temporarily unavailable' })
   }
 }
