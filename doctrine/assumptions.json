@@ -1,0 +1,48 @@
+{
+  "program": "vigil",
+  "assumptions": [
+    {
+      "id": "VG-AS-1",
+      "text": "A leak-site post naming a victim means the group attacked that victim.",
+      "test": {"type": "manual", "rule": "Claims matched to the victim's own filing (VG-IND-2); identity reviews in the migration headers"},
+      "status": "strained",
+      "note": "Operation Cronos: 23 'victims' on the seized LockBit site were NCA and FBI notices (migration 095). Groups also re-post old victims and inflate lists. Every claim is published as claimed, never as fact.",
+      "reviewed": "2026-10-30",
+      "linked": ["VG-IND-1", "VG-IND-2", "VG-IND-3"]
+    },
+    {
+      "id": "VG-AS-2",
+      "text": "One brand name is one operation.",
+      "test": {"type": "manual", "rule": "Identity, lineage and shared tooling kept apart; alias merges are queued as findings (README)"},
+      "status": "strained",
+      "note": "LockBit existed as seven records before migration 095; public alias lists file distinct groups together.",
+      "reviewed": "2026-10-30",
+      "linked": ["VG-IND-1"]
+    },
+    {
+      "id": "VG-AS-3",
+      "text": "Claims appear on leak sites soon after the attack.",
+      "test": {"type": "auto", "rule": "Compare discovered_date with the victim's disclosed incident_date where matched"},
+      "status": "untested",
+      "reviewed": "2026-10-30",
+      "linked": ["VG-IND-1", "VG-IND-3"]
+    },
+    {
+      "id": "VG-AS-4",
+      "text": "A current EPSS score is a fair estimate of exploitation activity in the next 30 days.",
+      "test": {"type": "manual", "rule": "FIRST's published EPSS performance; Vigil's own alerts scored later by Verdict"},
+      "status": "untested",
+      "reviewed": "2026-10-30",
+      "linked": ["VG-IND-6"]
+    },
+    {
+      "id": "VG-AS-5",
+      "text": "A feed that stops is noticed.",
+      "test": {"type": "auto", "rule": "feed_expectations rows and the feed-health workflow; a feed without a row is not watched"},
+      "status": "holds",
+      "note": "Holds only for registered feeds (CLAUDE.md: a feed without a feed_expectations row can stop silently).",
+      "reviewed": "2026-10-30",
+      "linked": ["VG-IND-4"]
+    }
+  ]
+}

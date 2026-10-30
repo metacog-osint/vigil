@@ -1,0 +1,91 @@
+{
+  "program": "vigil",
+  "indicator_rule": "Indicators meet Gentry's test. Lists stay flat, not tiered by time (Grabo). Readouts count changed indicators per hypothesis; there is no weighted threat score. Judgment calls (identity, attribution, defunct status) go to data_quality_findings for a person, never to a rule.",
+  "emerging_concerns": "A group name with no record claims its first victims: Vigil queues the identity question (new group, rebrand or alias) in data_quality_findings. It becomes a tracked actor once the finding is decided, and the queue entry is dropped after 60 days with no further claims.",
+  "indicators": [
+    {
+      "id": "VG-IND-1",
+      "text": "An extortion group is escalating",
+      "series": "threat_actors.trend_status (apply_actor_trends, migration 077)",
+      "rule": ">= 3 victims claimed in the last 7 days and > 1.25x the 7 days before; active groups only",
+      "baseline": "the previous 7 days (rolling)",
+      "gentry": {"predictive": true, "diagnostic": false, "unambiguous": true, "collectable": true}
+    },
+    {
+      "id": "VG-IND-2",
+      "text": "A victim's own filing confirms a claim",
+      "series": "victim_disclosures matched to incidents (match_status)",
+      "rule": "an SEC 8-K Item 1.05 or state breach notice matched to the claimed victim",
+      "baseline": "none (an event)",
+      "gentry": {"predictive": false, "diagnostic": true, "unambiguous": true, "collectable": true}
+    },
+    {
+      "id": "VG-IND-3",
+      "text": "Claims arrive in a batch rather than spread over the week",
+      "series": "leak-site claims by discovered_date",
+      "rule": "more than half of a group's claims for the week share one discovered_date (planned: not yet computed)",
+      "baseline": "the group's own previous weeks",
+      "gentry": {"predictive": false, "diagnostic": true, "unambiguous": true, "collectable": true}
+    },
+    {
+      "id": "VG-IND-4",
+      "text": "A leak-site feed is late or failing",
+      "series": "feed_expectations and ingestion_is_healthy()",
+      "rule": "the feed has missed its expected interval",
+      "baseline": "each feed's expected interval",
+      "gentry": {"predictive": false, "diagnostic": true, "unambiguous": true, "collectable": true}
+    },
+    {
+      "id": "VG-IND-5",
+      "text": "CISA adds a vulnerability to the Known Exploited Vulnerabilities catalog",
+      "series": "vulnerabilities.kev_date",
+      "rule": "kev_date within the window",
+      "baseline": "none (an event)",
+      "gentry": {"predictive": true, "diagnostic": false, "unambiguous": true, "collectable": true}
+    },
+    {
+      "id": "VG-IND-6",
+      "text": "A known-exploited vulnerability with known ransomware use reaches EPSS 0.5",
+      "series": "vulnerabilities.epss_score with ransomware_use (the PR #74 alert)",
+      "rule": "EPSS >= 0.5 on a current score (epss_date within 3 days, migration 159), KEV-listed, ransomware use known",
+      "baseline": "fixed threshold 0.5",
+      "gentry": {"predictive": true, "diagnostic": true, "unambiguous": true, "collectable": true}
+    },
+    {
+      "id": "VG-IND-7",
+      "text": "The EPSS score behind an alert is not current",
+      "series": "EPSS score date",
+      "rule": "epss_date more than 3 days old (migration 159)",
+      "baseline": "FIRST's daily release",
+      "gentry": {"predictive": false, "diagnostic": true, "unambiguous": true, "collectable": true}
+    }
+  ],
+  "warning_problems": [
+    {
+      "id": "VG-WP-1",
+      "title": "An extortion group's surge (any group)",
+      "frozen": "2026-10-30",
+      "watch_condition": {"current": "set per group from VG-IND-1", "levels": ["normal", "escalating"]},
+      "issue_on_change": "Issue a notice only when a group starts or stops escalating; stay silent while it holds.",
+      "deactivation": "A group returns to normal after two weeks without VG-IND-1.",
+      "hypotheses": [
+        {"id": "VG-WP-1-H1", "statement": "The group is attacking more victims", "emerging": ["VG-IND-1", "VG-IND-2"], "not_emerging": ["VG-IND-3"]},
+        {"id": "VG-WP-1-H2", "statement": "A backlog, re-posts or a rebrand: old victims published at once", "emerging": ["VG-IND-3"], "not_emerging": ["VG-IND-2"]},
+        {"id": "VG-WP-1-H3", "statement": "Artefact or data failure (a scraper outage ending, duplicates)", "emerging": ["VG-IND-4"], "not_emerging": []}
+      ]
+    },
+    {
+      "id": "VG-WP-2",
+      "title": "Broad exploitation of a newly listed vulnerability",
+      "frozen": "2026-10-30",
+      "watch_condition": {"current": "set per vulnerability from VG-IND-6", "levels": ["normal", "elevated"]},
+      "issue_on_change": "Issue a notice when a KEV entry with ransomware use first reaches EPSS 0.5; stay silent while it holds.",
+      "deactivation": "Back to normal when the current EPSS score falls below 0.5.",
+      "hypotheses": [
+        {"id": "VG-WP-2-H1", "statement": "Broad exploitation is likely within 30 days", "emerging": ["VG-IND-5", "VG-IND-6"], "not_emerging": ["VG-IND-7"]},
+        {"id": "VG-WP-2-H2", "statement": "Exploitation stays limited to targeted use", "emerging": ["VG-IND-5"], "not_emerging": ["VG-IND-6"]},
+        {"id": "VG-WP-2-H3", "statement": "Artefact: a stale or mis-joined EPSS score", "emerging": ["VG-IND-7"], "not_emerging": []}
+      ]
+    }
+  ]
+}
