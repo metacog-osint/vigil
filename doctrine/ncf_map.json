@@ -1,0 +1,15 @@
+{
+  "program": "vigil",
+  "note": "Deterministic: a victim's sector sets the critical-infrastructure sector tag. Vigil's sector names map to CISA's 16 sectors; claims carry sector[] only (no National Critical Function is implied by a claim). No AI calls.",
+  "sector_map": {
+    "healthcare": "healthcare_and_public_health",
+    "technology": "information_technology",
+    "finance": "financial_services",
+    "education": "government_services_and_facilities",
+    "government": "government_services_and_facilities",
+    "manufacturing": "critical_manufacturing",
+    "energy": "energy",
+    "retail": "commercial_facilities"
+  },
+  "rules": []
+}
