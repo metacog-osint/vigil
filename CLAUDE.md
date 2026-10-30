@@ -245,6 +245,21 @@ cd workers && npm run deploy   # The scheduled feeds. NOT run by CI.
 
 ---
 
+## Doctrine kit and the public feed (30 Oct 2026)
+
+- `doctrine/kit/` is a vendored copy of The Intelligence Company's shared kit (`D:\Projects\tic-doctrine`). Never
+  edit it here: change the kit and run `python D:/Projects/tic-doctrine/tools/sync.py <this repo>`. CI runs
+  `tic.py kitcheck` and `registers doctrine`.
+- `doctrine/` holds Vigil's registers: requirements under SQ4, warning problems `VG-WP-1` (a group's surge) and
+  `VG-WP-2` (exploitation of a newly listed vulnerability), indicators, assumptions, the sector map, source grades
+  (proposed; Tom to confirm) and a method summary.
+- `GET /api/feed` (`api/feed.js`, `api/_lib/doctrineFeed.js`) serves the feed in contract `tic-feed/2`. It reads
+  claims and group names only from the `*_commercial` views: Ransomware.live's terms forbid re-serving its raw data.
+- US persons: Vigil is not bound by EO 12333 (Tom, 30 Oct 2026). Items that name organizations say so in
+  `us_person_data`; nothing is stripped for that reason.
+
+---
+
 ## Deployment
 
 **Vercel deploys production from `main` automatically.** Merging is the deploy.
