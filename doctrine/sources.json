@@ -1,0 +1,61 @@
+{
+  "program": "vigil",
+  "register": "source_licences (database table, migration 136) and DATA_SOURCES.md",
+  "note": "The register of record is the source_licences table with DATA_SOURCES.md beside it. The feed reads only the *_commercial views for claims and group names, so nothing a restricted source supplied (Ransomware.live's terms forbid re-serving its raw data by API or file) leaves Vigil through it. The rows here add what the doctrine kit needs.",
+  "grading": {
+    "status": "proposed 30 Oct 2026; Tom to confirm",
+    "basis": "Admiralty reliability (A-F) of the source, credibility (1-6) of what it reports."
+  },
+  "extra": {
+    "ransomlook": {
+      "grade": "D3",
+      "independence_group": "leak-sites",
+      "ease_of_faking": "high",
+      "cadence_s": 1800,
+      "descriptor": "Crawler of ransomware leak sites. What it relays are the criminals' own claims: not usually reliable, possibly true. Every claim is published with status_class 'claimed'.",
+      "licence": "CC BY 4.0 (data and API responses)",
+      "probe": {"url": "https://www.ransomlook.io/api/recent", "expect": "json"}
+    },
+    "threatcluster": {
+      "grade": "C2",
+      "independence_group": "threatcluster",
+      "ease_of_faking": "medium",
+      "cadence_s": 86400,
+      "descriptor": "Independent crawl supplying victim countries; 99% agreement with the country data already held (916 of 922 overlapping victims).",
+      "licence": "TLP:CLEAR"
+    },
+    "cisa-kev": {
+      "grade": "A1",
+      "independence_group": "cisa",
+      "ease_of_faking": "low",
+      "cadence_s": 21600,
+      "descriptor": "CISA's Known Exploited Vulnerabilities catalog: official US government listing of vulnerabilities exploited in the wild.",
+      "licence": "US public domain",
+      "probe": {"url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json", "expect": "json", "time_path": "dateReleased"}
+    },
+    "first-epss": {
+      "grade": "B2",
+      "independence_group": "first",
+      "ease_of_faking": "low",
+      "cadence_s": 86400,
+      "descriptor": "FIRST's Exploit Prediction Scoring System: a model's probability of exploitation activity in the next 30 days, published daily.",
+      "licence": "FIRST EPSS: free to use with attribution (not re-checked; not yet in source_licences)"
+    },
+    "state-ag-notices": {
+      "grade": "A2",
+      "independence_group": "victim-filings",
+      "ease_of_faking": "low",
+      "cadence_s": 86400,
+      "descriptor": "Breach notices filed with the California, Washington and Oregon attorneys general; the state is the regulator that received the notice, not where the company is.",
+      "licence": "US state government public record"
+    },
+    "sec-edgar": {
+      "grade": "A2",
+      "independence_group": "victim-filings",
+      "ease_of_faking": "low",
+      "cadence_s": 86400,
+      "descriptor": "SEC Form 8-K Item 1.05 (material cybersecurity incident) filings by the victim company.",
+      "licence": "US public domain"
+    }
+  }
+}
