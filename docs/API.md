@@ -6,6 +6,17 @@
 
 ---
 
+## Public feed (no key)
+
+`GET https://vigil.theintelligence.company/api/feed` returns Vigil's current picture as GeoJSON in The
+Intelligence Company's feed contract v2 (`tic-feed/2`, described in `doctrine/kit/docs/feed-contract-v2.md`):
+escalating groups, leak-site claims from the last 48 hours, CISA KEV additions from the last 7 days and victim
+breach disclosures from the last 7 days, plus a summary item. It needs no key, is cached for 15 minutes, and reads
+claims and group names only from the `*_commercial` views, so nothing a restricted source supplied is re-served.
+Built by `api/_lib/doctrineFeed.js`; `src/lib/__tests__/doctrineFeed.test.js` runs the kit's linter over it.
+
+---
+
 ## Authentication
 
 All API endpoints require authentication via API key. Include your API key in the `Authorization` header:

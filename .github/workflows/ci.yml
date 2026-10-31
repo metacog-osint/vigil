@@ -38,6 +38,11 @@ jobs:
       - name: Run tests with coverage
         run: npm run test:coverage
 
+      # The vendored doctrine kit must match its manifest (never edit doctrine/kit/ here;
+      # change D:\Projects\tic-doctrine and sync), and the registers must pass the kit's checks.
+      - name: Doctrine kit copy and registers (tic-doctrine)
+        run: python3 doctrine/kit/tic.py kitcheck && python3 doctrine/kit/tic.py registers doctrine
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
