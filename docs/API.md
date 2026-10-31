@@ -15,6 +15,54 @@ breach disclosures from the last 7 days, plus a summary item. It needs no key, i
 claims and group names only from the `*_commercial` views, so nothing a restricted source supplied is re-served.
 Built by `api/_lib/doctrineFeed.js`; `src/lib/__tests__/doctrineFeed.test.js` runs the kit's linter over it.
 
+## Daily summary (no key)
+
+`GET https://vigil.theintelligence.company/api/summary` returns one sentence about the latest complete day, for
+The Intelligence Company's home page. No key, `Access-Control-Allow-Origin: *`, cached for an hour at the edge
+(`s-maxage=3600, stale-while-revalidate=86400`). Any failure is a 503 with no detail and `no-store`; a reader
+should ignore it and keep its own text.
+
+The live response on 31 Oct 2026, run locally against the production database:
+
+```json
+{
+  "built_at": "2026-10-31T21:42:17Z",
+  "day": "2026-10-30",
+  "brief": "Ransomware leak sites showed 43 new victim claims on 30 Oct 2026, from 16 groups; Qilin posted the most (11). Claims are unverified.",
+  "claims": 43,
+  "groups": 16,
+  "unattributed": 0,
+  "top": {
+    "claims": 11,
+    "groups": [
+      {
+        "name": "Qilin",
+        "url": "https://vigil.theintelligence.company/actors/785a7c44-ceff-4550-9d57-a2802bfc1835"
+      }
+    ]
+  },
+  "day_basis": "Claims by the date RansomLook first saw them on a leak site, as RansomLook dates them (measured at one to two hours ahead of UTC).",
+  "ingest_confirmed_at": "2026-10-31T01:15:15Z",
+  "link": "https://vigil.theintelligence.company/incidents",
+  "source": { "publisher": "RansomLook", "url": "https://www.ransomlook.io/", "licence": "CC BY 4.0" },
+  "attribution": "Vigil, The Intelligence Company. Leak-site claims: RansomLook (CC BY 4.0).",
+  "method": "vigil-summary-1"
+}
+```
+
+- `day` is RansomLook's calendar day, not a strict UTC day: its dates run one to two hours ahead of UTC.
+- A day is summarised only when a successful RansomLook run followed it with no gap over 12 hours between runs;
+  otherwise the day before is tried, back three days, then 503.
+- `claims` is the database's exact count. `groups`, `unattributed` and `top` are null when the day's rows did not
+  all come back. `top` is null when a leading group has no name a sellable source supplied; the runner-up is
+  never named in its place.
+- A zero day is a 503, not `"claims": 0`: Vigil's fetch working does not prove RansomLook's crawler was.
+- Claims and names come only from the `*_commercial` views, read with the anonymous key. Showing `brief` means
+  crediting RansomLook (CC BY 4.0); `attribution` is the line to use.
+
+Built by `api/_lib/publicSummary.js`, whose header carries the measurements behind each rule;
+`src/lib/__tests__/publicSummary.test.js` holds them.
+
 ---
 
 ## Authentication
