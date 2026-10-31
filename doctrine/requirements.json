@@ -1,0 +1,74 @@
+{
+  "program": "vigil",
+  "customer": "Public readers, defenders, analysts, and COP. Written by the program owner.",
+  "reviewed": "2026-10-30",
+  "review_by": "2027-01-31",
+  "requirements": [
+    {
+      "id": "VG-SQ-4",
+      "type": "standing",
+      "standing_question": "SQ4",
+      "question": "Is cyber and financial pressure rising on a target set?"
+    },
+    {
+      "id": "VG-PIR-1",
+      "type": "pir",
+      "parent": "VG-SQ-4",
+      "question": "Which extortion groups are escalating, and against which sectors and countries?",
+      "series": [
+        "leak-site claims (incidents)",
+        "actor trend: victims this week against last week (threat_actors.trend_status, apply_actor_trends)"
+      ],
+      "warning_problems": ["VG-WP-1"]
+    },
+    {
+      "id": "VG-PIR-2",
+      "type": "pir",
+      "parent": "VG-SQ-4",
+      "question": "Which known-exploited vulnerabilities are most likely to be used against defenders next?",
+      "series": [
+        "CISA KEV entries (vulnerabilities.kev_date)",
+        "FIRST EPSS score and its date",
+        "known ransomware use (CISA flag)"
+      ],
+      "warning_problems": ["VG-WP-2"]
+    },
+    {
+      "id": "VG-PIR-3",
+      "type": "pir",
+      "parent": "VG-SQ-4",
+      "question": "Which claimed attacks has the victim confirmed, and how many people were affected?",
+      "series": [
+        "victim disclosures: SEC 8-K Item 1.05 and state attorney-general breach notices (CA, WA, OR)",
+        "claim-to-disclosure matches (match_status)"
+      ],
+      "warning_problems": ["VG-WP-1"]
+    },
+    {
+      "id": "VG-PIR-4",
+      "type": "pir",
+      "parent": "VG-SQ-4",
+      "question": "Who is behind an operation, and is the attribution official, contested or unsupported?",
+      "series": [
+        "government attribution advisories",
+        "contested claims",
+        "sanctions designations (OFAC SDN)",
+        "actor origins"
+      ]
+    },
+    {
+      "id": "VG-EEI-1",
+      "type": "eei",
+      "parent": "VG-PIR-1",
+      "question": "Are the feeds running on time (feed_expectations, ingestion_is_healthy)?",
+      "series": ["feed health"]
+    },
+    {
+      "id": "VG-EEI-2",
+      "type": "eei",
+      "parent": "VG-PIR-2",
+      "question": "Is the EPSS score behind an alert current?",
+      "series": ["EPSS score date (current within 3 days, migration 159)"]
+    }
+  ]
+}
