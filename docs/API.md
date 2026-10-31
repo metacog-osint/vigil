@@ -14,6 +14,10 @@ escalating groups, leak-site claims from the last 48 hours, CISA KEV additions f
 breach disclosures from the last 7 days, plus a summary item. It needs no key, is cached for 15 minutes, and reads
 claims and group names only from the `*_commercial` views, so nothing a restricted source supplied is re-served.
 Built by `api/_lib/doctrineFeed.js`; `src/lib/__tests__/doctrineFeed.test.js` runs the kit's linter over it.
+The summary's figures for claims, KEV additions and breach notices are the database's counts for each window
+(`Prefer: count=exact`), not the number of items listed, which the queries cap at 300, 100 and 200. When a window
+holds more than the feed lists, the summary says how many it lists; a count that fails reads "count unavailable",
+never a number.
 
 ---
 
