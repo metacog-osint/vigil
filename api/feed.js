@@ -6,11 +6,10 @@
  * at the edge so a busy reader cannot load the database. Built by api/_lib/doctrineFeed.js.
  */
 
-import { buildFeed, countFromRange } from './_lib/doctrineFeed.js'
+import { buildFeed, countFromRange, windowStarts } from './_lib/doctrineFeed.js'
 
 export const config = { runtime: 'edge' }
 
-const DAY_MS = 86400000
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS' }
 
 const json = (status, body, extra = {}) =>
@@ -23,7 +22,8 @@ const json = (status, body, extra = {}) =>
  * With `count`, PostgREST also counts every row the filters match, in the same statement as
  * the capped page, and reports it in Content-Range. The summary states that count, never the
  * number of rows returned (docs/SESSION_HANDOFF.md §2b). Measured as anon on 31 Oct 2026: under
- * 3 ms for all three windows, 370 ms over 60 days, against the 3 s anon statement timeout.
+ * 3 ms for each of the four counts, and 370 ms for the three windows over 60 days, against the
+ * 3 s anon statement timeout.
  * A page cut short by its limit comes back 206 Partial Content, which res.ok accepts.
  */
 async function rest(base, key, path, { count = false } = {}) {
@@ -44,38 +44,43 @@ export default async function handler(request) {
   if (!base || !key) return json(503, { error: 'Feed not configured' })
 
   const now = new Date()
-  const since2 = new Date(now - 2 * DAY_MS).toISOString().slice(0, 10)
-  const since7 = new Date(now - 7 * DAY_MS).toISOString().slice(0, 10)
+  // The summary names each window by these same dates.
+  const since = windowStarts(now)
   try {
-    const [escalating, claimsPage, kevPage, disclosuresPage] = await Promise.all([
+    const [escalatingPage, claimsPage, kevPage, disclosuresPage] = await Promise.all([
       rest(
         base,
         key,
-        'threat_actors?select=id,incidents_7d&trend_status=eq.ESCALATING&status=eq.active&order=incidents_7d.desc&limit=50'
-      ),
-      rest(
-        base,
-        key,
-        `incidents_commercial?select=incident_id,actor_id,victim_name,discovered_date,victim_country,victim_country_withheld,victim_sector&discovered_date=gte.${since2}&order=discovered_date.desc&limit=300`,
+        'threat_actors?select=id,incidents_7d&trend_status=eq.ESCALATING&status=eq.active&order=incidents_7d.desc&limit=50',
         { count: true }
       ),
       rest(
         base,
         key,
-        `vulnerabilities?select=cve_id,kev_date,epss_score,epss_date,cvss_score,ransomware_use,ransomware_campaign_use,vendor,product,description&kev_date=gte.${since7}&order=kev_date.desc&limit=100`,
+        `incidents_commercial?select=incident_id,actor_id,victim_name,discovered_date,victim_country,victim_country_withheld,victim_sector&discovered_date=gte.${since.claims}&order=discovered_date.desc&limit=300`,
         { count: true }
       ),
       rest(
         base,
         key,
-        `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since7}T00:00:00Z&order=first_seen.desc&limit=200`,
+        `vulnerabilities?select=cve_id,kev_date,epss_score,epss_date,cvss_score,ransomware_use,ransomware_campaign_use,vendor,product,description&kev_date=gte.${since.kev}&order=kev_date.desc&limit=100`,
+        { count: true }
+      ),
+      rest(
+        base,
+        key,
+        `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since.disclosures}T00:00:00Z&order=first_seen.desc&limit=200`,
         { count: true }
       ),
     ])
+    const escalating = escalatingPage.rows
     const claims = claimsPage.rows
     const kev = kevPage.rows
     const disclosures = disclosuresPage.rows
+    // Escalating groups are counted before the filter below, so a group the feed cannot name
+    // still counts: the summary then says how many of them the feed names.
     const counts = {
+      actors: escalatingPage.count,
       claims: claimsPage.count,
       kev: kevPage.count,
       disclosures: disclosuresPage.count,
