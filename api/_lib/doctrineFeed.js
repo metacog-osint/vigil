@@ -112,15 +112,29 @@ const BASE_EPSS = {
   version: '1',
 }
 
+const DAY_MS = 86400000
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/** How many days before today (UTC) each window starts. api/feed.js queries from these dates. */
+export const WINDOW_DAYS = { claims: 2, kev: 7, disclosures: 7 }
+
+/** The first UTC date (YYYY-MM-DD) each window includes. */
+export function windowStarts(now = new Date()) {
+  const back = (days) => new Date(now.getTime() - days * DAY_MS).toISOString().slice(0, 10)
+  return {
+    claims: back(WINDOW_DAYS.claims),
+    kev: back(WINDOW_DAYS.kev),
+    disclosures: back(WINDOW_DAYS.disclosures),
+  }
+}
+
 const utc = (d) => new Date(d).toISOString().replace(/\.\d{3}Z$/, 'Z')
 const dayStart = (date) => `${String(date).slice(0, 10)}T00:00:00Z`
-const plain = (d) =>
-  new Date(d).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
+/** "4 Sep 2026", in UTC. Built by hand: en-GB in newer ICU spells September "Sept". */
+const plain = (d) => {
+  const t = new Date(d)
+  return `${t.getUTCDate()} ${MONTHS[t.getUTCMonth()]} ${t.getUTCFullYear()}`
+}
 const sectorsOf = (names) =>
   [
     ...new Set((names || []).map((n) => SECTOR_MAP[String(n || '').toLowerCase()]).filter(Boolean)),
@@ -145,18 +159,29 @@ export function countFromRange(header) {
 /** A count the database gave, or null. */
 const known = (n) => (Number.isSafeInteger(n) && n >= 0 ? n : null)
 
+const num = (n) => n.toLocaleString('en-US')
+
 /**
- * One figure in the summary title, for a window the row query caps. The figure is the
- * database's count, never the number of rows returned: a tally of a capped page once shipped
- * "1,000 filings" against 8,896 (docs/SESSION_HANDOFF.md §2b). With no count, no figure.
- * `detail` tallies the rows, so it is stated only when the rows are the whole window.
+ * One figure in the summary title, for rows the query caps. The figure is the database's
+ * count, never the number of rows returned: a tally of a capped page once shipped "1,000
+ * filings" against 8,896 (docs/SESSION_HANDOFF.md §2b). With no count, no figure.
+ *
+ * @param {object} f
+ * @param {number|null} f.total  the database's count
+ * @param {Array} f.rows         the rows the feed holds
+ * @param {string[]} f.noun      [singular, plural]
+ * @param {string} [f.scope]     what follows the noun, such as the window
+ * @param {string} [f.detail]    a tally of the rows, so stated only when they are all of them
+ * @param {function} f.part      k -> what to say when the feed holds only k of them
  */
-function windowClause(total, rows, what, detail) {
+function figure({ total, rows, noun: [one, many], scope, detail, part }) {
   const n = known(total)
-  if (n == null) return `count unavailable for ${what}`
-  if (n === rows.length) return `${n} ${what}${detail ? ` (${detail})` : ''}`
-  if (n > rows.length) return `${n} ${what} (the latest ${rows.length} in this feed)`
-  return `${n} ${what}`
+  const tail = scope ? ` ${scope}` : ''
+  if (n == null) return `count unavailable for ${many}${tail}`
+  const head = `${num(n)} ${n === 1 ? one : many}${tail}`
+  if (n === rows.length) return detail ? `${head} (${detail})` : head
+  if (n > rows.length) return `${head} (${part(rows.length)})`
+  return head
 }
 
 /** KEV descriptions read "<product> contains a <flaw>": the words before "contains" name the product. */
@@ -174,8 +199,8 @@ export function subjectOf(v) {
  * @param {object} rows.actorNames actor_id -> name, from threat_actors_commercial
  * @param {Array} rows.kev         vulnerabilities with kev_date in the window
  * @param {Array} rows.disclosures victim_disclosures first seen in the window
- * @param {object} [rows.counts]   the database's exact counts for the claims, kev and
- *   disclosures windows ({ claims, kev, disclosures }); a missing or failed count is null
+ * @param {object} [rows.counts]   the database's exact counts behind each list
+ *   ({ actors, claims, kev, disclosures }); a missing or failed count is null
  * @param {Date} [now]
  */
 export function buildFeed(
@@ -338,20 +363,45 @@ export function buildFeed(
   const count = (pred) => feats.filter(pred).length
   const mapped = count((f) => f.properties.id.startsWith('vigil:claim:') && f.geometry)
   const alerts = count((f) => f.properties.indicator_id === 'VG-IND-6')
+  // Each window by the first date it includes. The year only when it is not this year's.
+  const start = windowStarts(now)
+  const since = (d) => (d.startsWith(day.slice(0, 4)) ? plain(d).replace(/ \d{4}$/, '') : plain(d))
+  const latest = (k) => `the latest ${num(k)} in this feed`
   const summary = feature(null, {
     ...base,
     id: `vigil:${day}:summary`,
     title:
-      `Vigil, ${plain(now)}: ${actors.length} groups escalating; ` +
+      `Vigil, ${plain(now)}: ` +
       [
-        windowClause(
-          counts.claims,
-          claims,
-          'leak-site claims in 48 hours',
-          `${mapped} placed on the map`
-        ),
-        windowClause(counts.kev, kev, 'KEV additions in 7 days', `${alerts} meet the EPSS alert`),
-        windowClause(counts.disclosures, disclosures, 'breach notices in 7 days'),
+        figure({
+          total: counts.actors,
+          rows: actors,
+          noun: ['escalating group', 'escalating groups'],
+          part: (k) => `${num(k)} named in this feed`,
+        }),
+        figure({
+          total: counts.claims,
+          rows: claims,
+          noun: ['leak-site claim', 'leak-site claims'],
+          scope: `since ${since(start.claims)}`,
+          detail: `${num(mapped)} placed on the map`,
+          part: latest,
+        }),
+        figure({
+          total: counts.kev,
+          rows: kev,
+          noun: ['KEV addition', 'KEV additions'],
+          scope: `since ${since(start.kev)}`,
+          detail: `${num(alerts)} ${alerts === 1 ? 'meets' : 'meet'} the EPSS alert`,
+          part: latest,
+        }),
+        figure({
+          total: counts.disclosures,
+          rows: disclosures,
+          noun: ['breach notice', 'breach notices'],
+          scope: `first seen since ${since(start.disclosures)}`,
+          part: latest,
+        }),
       ].join('; '),
     tier: 'routine',
     status_class: 'reported',
