@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { buildFeed, SECTOR_MAP, subjectOf } from '../../../api/_lib/doctrineFeed.js'
+import { buildFeed, countFromRange, SECTOR_MAP, subjectOf } from '../../../api/_lib/doctrineFeed.js'
 
 const ROOT = resolve(__dirname, '../../..')
 const NOW = new Date('2026-10-30T18:00:00Z')
@@ -89,9 +89,12 @@ const rows = () => ({
       persons_affected: null,
     },
   ],
+  // The database's counts for each window; here the rows are the whole window.
+  counts: { claims: 3, kev: 3, disclosures: 2 },
 })
 
 const byId = (fc) => Object.fromEntries(fc.features.map((f) => [f.properties.id, f]))
+const summaryTitle = (fc) => fc.features[0].properties.title
 
 describe('doctrineFeed', () => {
   it('builds a contract v2 FeatureCollection with a summary first', () => {
@@ -108,7 +111,54 @@ describe('doctrineFeed', () => {
       '1 groups escalating; 3 leak-site claims in 48 hours (1 placed on the map)'
     )
     expect(head.title).toContain('3 KEV additions in 7 days (1 meet the EPSS alert)')
+    expect(head.title).toContain('2 breach notices in 7 days')
     expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2)
+  })
+
+  it("states the database's count when the window holds more than the rows returned", () => {
+    // A busy stretch: the row queries stop at their caps, the counts do not.
+    const fc = buildFeed({ ...rows(), counts: { claims: 450, kev: 120, disclosures: 2 } }, NOW)
+    const title = summaryTitle(fc)
+    expect(title).toContain('450 leak-site claims in 48 hours (the latest 3 in this feed)')
+    expect(title).toContain('120 KEV additions in 7 days (the latest 3 in this feed)')
+    expect(title).toContain('2 breach notices in 7 days')
+    // A tally of a capped page is not a count, so no sub-figure is drawn from one.
+    expect(title).not.toContain('placed on the map')
+    expect(title).not.toContain('meet the EPSS alert')
+    expect(title).not.toMatch(/\b3 leak-site claims/)
+    // The items themselves are unchanged.
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2)
+  })
+
+  it('states no figure for a count that failed, and never reads it as zero', () => {
+    const fc = buildFeed(
+      { ...rows(), counts: { claims: null, kev: Number.NaN, disclosures: undefined } },
+      NOW
+    )
+    const title = summaryTitle(fc)
+    expect(title).toContain('count unavailable for leak-site claims in 48 hours')
+    expect(title).toContain('count unavailable for KEV additions in 7 days')
+    expect(title).toContain('count unavailable for breach notices in 7 days')
+    expect(title).not.toMatch(/\d+ (leak-site claims|KEV additions|breach notices)/)
+    expect(title).not.toContain('placed on the map')
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2)
+
+    // No counts at all is the same as failed counts, not a fallback to the rows.
+    const bare = rows()
+    delete bare.counts
+    expect(summaryTitle(buildFeed(bare, NOW))).not.toMatch(/\d+ leak-site claims/)
+    // Only a whole, non-negative number is a count.
+    const junk = buildFeed({ ...rows(), counts: { claims: '3', kev: -1, disclosures: 2.5 } }, NOW)
+    expect(summaryTitle(junk)).not.toMatch(/\d+ (leak-site claims|KEV additions|breach notices)/)
+  })
+
+  it('reads the total from a PostgREST Content-Range header', () => {
+    expect(countFromRange('0-299/450')).toBe(450)
+    expect(countFromRange('0-86/87')).toBe(87)
+    expect(countFromRange('*/0')).toBe(0)
+    expect(countFromRange('0-86/*')).toBeNull()
+    expect(countFromRange('')).toBeNull()
+    expect(countFromRange(null)).toBeNull()
   })
 
   it('publishes claims as claims, placed only when the country is not withheld', () => {

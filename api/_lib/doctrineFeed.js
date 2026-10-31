@@ -132,6 +132,33 @@ const point = (cc) => {
 }
 const feature = (geometry, properties) => ({ type: 'Feature', geometry, properties })
 
+/**
+ * The total from a PostgREST Content-Range header sent under Prefer: count=exact: "0-299/450"
+ * is 450, and a match of no rows reports a total of 0. Null when the header carries no
+ * total ("0-86/*", or no header), never 0.
+ */
+export function countFromRange(header) {
+  const m = /\/(\d+)$/.exec(String(header || ''))
+  return m ? Number(m[1]) : null
+}
+
+/** A count the database gave, or null. */
+const known = (n) => (Number.isSafeInteger(n) && n >= 0 ? n : null)
+
+/**
+ * One figure in the summary title, for a window the row query caps. The figure is the
+ * database's count, never the number of rows returned: a tally of a capped page once shipped
+ * "1,000 filings" against 8,896 (docs/SESSION_HANDOFF.md §2b). With no count, no figure.
+ * `detail` tallies the rows, so it is stated only when the rows are the whole window.
+ */
+function windowClause(total, rows, what, detail) {
+  const n = known(total)
+  if (n == null) return `count unavailable for ${what}`
+  if (n === rows.length) return `${n} ${what}${detail ? ` (${detail})` : ''}`
+  if (n > rows.length) return `${n} ${what} (the latest ${rows.length} in this feed)`
+  return `${n} ${what}`
+}
+
 /** KEV descriptions read "<product> contains a <flaw>": the words before "contains" name the product. */
 export function subjectOf(v) {
   if (v.vendor && v.product) return `${v.vendor} ${v.product}`
@@ -147,10 +174,12 @@ export function subjectOf(v) {
  * @param {object} rows.actorNames actor_id -> name, from threat_actors_commercial
  * @param {Array} rows.kev         vulnerabilities with kev_date in the window
  * @param {Array} rows.disclosures victim_disclosures first seen in the window
+ * @param {object} [rows.counts]   the database's exact counts for the claims, kev and
+ *   disclosures windows ({ claims, kev, disclosures }); a missing or failed count is null
  * @param {Date} [now]
  */
 export function buildFeed(
-  { actors = [], claims = [], actorNames = {}, kev = [], disclosures = [] },
+  { actors = [], claims = [], actorNames = {}, kev = [], disclosures = [], counts = {} },
   now = new Date()
 ) {
   const published = utc(now)
@@ -307,14 +336,23 @@ export function buildFeed(
   }
 
   const count = (pred) => feats.filter(pred).length
+  const mapped = count((f) => f.properties.id.startsWith('vigil:claim:') && f.geometry)
+  const alerts = count((f) => f.properties.indicator_id === 'VG-IND-6')
   const summary = feature(null, {
     ...base,
     id: `vigil:${day}:summary`,
     title:
-      `Vigil, ${plain(now)}: ${actors.length} groups escalating; ${claims.length} leak-site claims in 48 hours ` +
-      `(${count((f) => f.properties.id.startsWith('vigil:claim:') && f.geometry)} placed on the map); ` +
-      `${kev.length} KEV additions in 7 days (${count((f) => f.properties.indicator_id === 'VG-IND-6')} meet the EPSS alert); ` +
-      `${disclosures.length} breach notices in 7 days`,
+      `Vigil, ${plain(now)}: ${actors.length} groups escalating; ` +
+      [
+        windowClause(
+          counts.claims,
+          claims,
+          'leak-site claims in 48 hours',
+          `${mapped} placed on the map`
+        ),
+        windowClause(counts.kev, kev, 'KEV additions in 7 days', `${alerts} meet the EPSS alert`),
+        windowClause(counts.disclosures, disclosures, 'breach notices in 7 days'),
+      ].join('; '),
     tier: 'routine',
     status_class: 'reported',
     us_person_data: 'none',
