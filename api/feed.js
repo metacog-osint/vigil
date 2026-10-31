@@ -6,7 +6,7 @@
  * at the edge so a busy reader cannot load the database. Built by api/_lib/doctrineFeed.js.
  */
 
-import { buildFeed } from './_lib/doctrineFeed.js'
+import { buildFeed, countFromRange } from './_lib/doctrineFeed.js'
 
 export const config = { runtime: 'edge' }
 
@@ -19,12 +19,20 @@ const json = (status, body, extra = {}) =>
     headers: { ...CORS, 'Content-Type': 'application/json', ...extra },
   })
 
-async function rest(base, key, path) {
-  const res = await fetch(`${base}/rest/v1/${path}`, {
-    headers: { apikey: key, Authorization: `Bearer ${key}` },
-  })
+/**
+ * With `count`, PostgREST also counts every row the filters match, in the same statement as
+ * the capped page, and reports it in Content-Range. The summary states that count, never the
+ * number of rows returned (docs/SESSION_HANDOFF.md §2b). Measured as anon on 31 Oct 2026: under
+ * 3 ms for all three windows, 370 ms over 60 days, against the 3 s anon statement timeout.
+ * A page cut short by its limit comes back 206 Partial Content, which res.ok accepts.
+ */
+async function rest(base, key, path, { count = false } = {}) {
+  const headers = { apikey: key, Authorization: `Bearer ${key}` }
+  if (count) headers.Prefer = 'count=exact'
+  const res = await fetch(`${base}/rest/v1/${path}`, { headers })
   if (!res.ok) throw new Error(`${path.split('?')[0]}: HTTP ${res.status}`)
-  return res.json()
+  const rows = await res.json()
+  return count ? { rows, count: countFromRange(res.headers.get('content-range')) } : rows
 }
 
 export default async function handler(request) {
@@ -39,7 +47,7 @@ export default async function handler(request) {
   const since2 = new Date(now - 2 * DAY_MS).toISOString().slice(0, 10)
   const since7 = new Date(now - 7 * DAY_MS).toISOString().slice(0, 10)
   try {
-    const [escalating, claims, kev, disclosures] = await Promise.all([
+    const [escalating, claimsPage, kevPage, disclosuresPage] = await Promise.all([
       rest(
         base,
         key,
@@ -48,19 +56,30 @@ export default async function handler(request) {
       rest(
         base,
         key,
-        `incidents_commercial?select=incident_id,actor_id,victim_name,discovered_date,victim_country,victim_country_withheld,victim_sector&discovered_date=gte.${since2}&order=discovered_date.desc&limit=300`
+        `incidents_commercial?select=incident_id,actor_id,victim_name,discovered_date,victim_country,victim_country_withheld,victim_sector&discovered_date=gte.${since2}&order=discovered_date.desc&limit=300`,
+        { count: true }
       ),
       rest(
         base,
         key,
-        `vulnerabilities?select=cve_id,kev_date,epss_score,epss_date,cvss_score,ransomware_use,ransomware_campaign_use,vendor,product,description&kev_date=gte.${since7}&order=kev_date.desc&limit=100`
+        `vulnerabilities?select=cve_id,kev_date,epss_score,epss_date,cvss_score,ransomware_use,ransomware_campaign_use,vendor,product,description&kev_date=gte.${since7}&order=kev_date.desc&limit=100`,
+        { count: true }
       ),
       rest(
         base,
         key,
-        `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since7}T00:00:00Z&order=first_seen.desc&limit=200`
+        `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since7}T00:00:00Z&order=first_seen.desc&limit=200`,
+        { count: true }
       ),
     ])
+    const claims = claimsPage.rows
+    const kev = kevPage.rows
+    const disclosures = disclosuresPage.rows
+    const counts = {
+      claims: claimsPage.count,
+      kev: kevPage.count,
+      disclosures: disclosuresPage.count,
+    }
     const ids = [
       ...new Set(
         [...escalating.map((a) => a.id), ...claims.map((c) => c.actor_id)].filter(Boolean)
@@ -78,7 +97,7 @@ export default async function handler(request) {
     const actors = escalating
       .filter((a) => actorNames[a.id])
       .map((a) => ({ ...a, name: actorNames[a.id] }))
-    const feed = buildFeed({ actors, claims, actorNames, kev, disclosures }, now)
+    const feed = buildFeed({ actors, claims, actorNames, kev, disclosures, counts }, now)
     return new Response(JSON.stringify(feed), {
       status: 200,
       headers: {
