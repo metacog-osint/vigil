@@ -255,6 +255,11 @@ cd workers && npm run deploy   # The scheduled feeds. NOT run by CI.
   (proposed; Tom to confirm) and a method summary.
 - `GET /api/feed` (`api/feed.js`, `api/_lib/doctrineFeed.js`) serves the feed in contract `tic-feed/2`. It reads
   claims and group names only from the `*_commercial` views: Ransomware.live's terms forbid re-serving its raw data.
+- `GET /api/summary` (`api/summary.js`, `api/_lib/publicSummary.js`, 31 Oct 2026) is the one-line "Latest from
+  Vigil" for theintelligence.company: the latest complete day's leak-site claims, the group count and the group
+  that posted the most. The hub depends on its fields (`built_at`, `day`, `brief`); keep them stable. Not under
+  `api/public/`: `.eslintrc.cjs` ignores every folder named `public`, so lint would skip it. `docs/API.md` has
+  the contract.
 - US persons: Vigil is not bound by EO 12333 (Tom, 30 Oct 2026). Items that name organizations say so in
   `us_person_data`; nothing is stripped for that reason.
 
