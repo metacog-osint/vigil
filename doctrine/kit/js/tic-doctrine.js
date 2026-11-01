@@ -7,6 +7,7 @@
 // - Store the number; show the ICD 203 term with its band ("Likely (55-80%)").
 // - Likelihood and confidence are two separate chips, never one sentence.
 // - Grey means no data, never quiet.
+// - Actors carry roles as their sources describe them; frames are unknown or neutral, never friend or hostile.
 
 // BEGIN GENERATED VOCAB
 export const VOCAB = {
@@ -393,10 +394,6 @@ export const VOCAB = {
     "CN": [
       32.498,
       106.337
-    ],
-    "CN-TW": [
-      23.652,
-      120.868
     ],
     "CO": [
       3.373,
@@ -1082,6 +1079,10 @@ export const VOCAB = {
       -8.514,
       179.21
     ],
+    "TW": [
+      23.652,
+      120.868
+    ],
     "TZ": [
       -6.052,
       34.959
@@ -1162,6 +1163,51 @@ export const VOCAB = {
       -18.912,
       29.925
     ]
+  },
+  "actor_roles": {
+    "party": {
+      "label": "Party",
+      "frame": "unknown"
+    },
+    "supporter": {
+      "label": "Supporter",
+      "frame": "unknown"
+    },
+    "responsible": {
+      "label": "Held responsible",
+      "frame": "unknown"
+    },
+    "affected": {
+      "label": "Affected",
+      "frame": "neutral"
+    },
+    "civilians": {
+      "label": "Civilians",
+      "frame": "neutral"
+    },
+    "third_party": {
+      "label": "Third party",
+      "frame": "neutral"
+    },
+    "unknown": {
+      "label": "Role unknown",
+      "frame": "unknown"
+    }
+  },
+  "actor_types": {
+    "government": "Government",
+    "armed_forces": "Armed forces",
+    "security_service": "Security service",
+    "armed_group": "Armed group",
+    "criminal_group": "Criminal group",
+    "political_group": "Political group",
+    "company": "Company",
+    "intergovernmental": "Intergovernmental",
+    "ngo": "NGO",
+    "media": "Media",
+    "population": "Population",
+    "individual": "Individual",
+    "unknown": "Unknown"
   },
   "ladders": {
     "pager": {
@@ -1361,6 +1407,25 @@ export function changeText(item, priorProbability) {
     words += ` from ${termFor(priorProbability).term} to ${termFor(item.probability).term}`;
   }
   return { arrow: ARROWS[c], text: words };
+}
+
+const RESPONSIBLE = { claimed: "Claims responsibility", reported: "Reported responsible", assessed: "Assessed responsible" };
+
+/** How to draw an actor. The frame is only ever "unknown" or "neutral": nothing is marked hostile. Claims draw hollow. */
+export function actorStyle(actor) {
+  const r = VOCAB.actor_roles[actor && actor.role] || VOCAB.actor_roles.unknown;
+  return { frame: r.frame, hollow: !actor || actor.status_class === "claimed" };
+}
+
+/** One line for an actor: "Russian Armed Forces · Party (Russia)", "LockBit · Claims responsibility". */
+export function actorLabel(actor) {
+  const r = VOCAB.actor_roles[actor.role] || VOCAB.actor_roles.unknown;
+  const role = actor.role === "responsible" ? (RESPONSIBLE[actor.status_class] || r.label) : r.label;
+  let extra = "";
+  if (actor.role === "supporter" && actor.side) extra = ` of ${actor.side}`;
+  else if (actor.role === "third_party") extra = actor.function ? ` (${actor.function})` : "";
+  else if (actor.side) extra = ` (${actor.side})`;
+  return `${actor.name} · ${role}${extra}`;
 }
 
 /** Indicator state for drawing: no data is grey and hatched, never blank. */
