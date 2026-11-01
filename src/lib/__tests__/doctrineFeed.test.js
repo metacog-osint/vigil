@@ -8,7 +8,13 @@ import { spawnSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { buildFeed, SECTOR_MAP, subjectOf } from '../../../api/_lib/doctrineFeed.js'
+import {
+  buildFeed,
+  countFromRange,
+  SECTOR_MAP,
+  subjectOf,
+  windowStarts,
+} from '../../../api/_lib/doctrineFeed.js'
 
 const ROOT = resolve(__dirname, '../../..')
 const NOW = new Date('2026-10-30T18:00:00Z')
@@ -89,9 +95,12 @@ const rows = () => ({
       persons_affected: null,
     },
   ],
+  // The database's counts behind each list; here the rows are all of them.
+  counts: { actors: 1, claims: 3, kev: 3, disclosures: 2 },
 })
 
 const byId = (fc) => Object.fromEntries(fc.features.map((f) => [f.properties.id, f]))
+const summaryTitle = (fc) => fc.features[0].properties.title
 
 describe('doctrineFeed', () => {
   it('builds a contract v2 FeatureCollection with a summary first', () => {
@@ -104,11 +113,91 @@ describe('doctrineFeed', () => {
     })
     const head = fc.features[0].properties
     expect(head.id).toBe('vigil:2026-10-30:summary')
-    expect(head.title).toContain(
-      '1 groups escalating; 3 leak-site claims in 48 hours (1 placed on the map)'
+    // Each window is named by the first date it includes, which is the date queried from.
+    expect(head.title).toBe(
+      'Vigil, 30 Oct 2026: 1 escalating group; ' +
+        '3 leak-site claims since 28 Oct (1 placed on the map); ' +
+        '3 KEV additions since 23 Oct (1 meets the EPSS alert); ' +
+        '2 breach notices first seen since 23 Oct'
     )
-    expect(head.title).toContain('3 KEV additions in 7 days (1 meet the EPSS alert)')
     expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2)
+  })
+
+  it('dates each window from the same start the queries use, with the year when it differs', () => {
+    expect(windowStarts(NOW)).toEqual({
+      claims: '2026-10-28',
+      kev: '2026-10-23',
+      disclosures: '2026-10-23',
+    })
+    const newYear = new Date('2027-01-01T05:00:00Z')
+    expect(windowStarts(newYear).claims).toBe('2026-12-30')
+    const title = summaryTitle(buildFeed(rows(), newYear))
+    expect(title).toMatch(/^Vigil, 1 Jan 2027: /)
+    expect(title).toContain('leak-site claims since 30 Dec 2026')
+    expect(title).toContain('KEV additions since 25 Dec 2026')
+    // September is "Sep", not ICU's "Sept".
+    expect(summaryTitle(buildFeed(rows(), new Date('2026-09-04T12:00:00Z')))).toMatch(
+      /^Vigil, 4 Sep 2026: .* since 2 Sep \(/
+    )
+  })
+
+  it("states the database's count when there are more than the rows returned", () => {
+    // A busy stretch: the row queries stop at their caps, the counts do not. Escalating
+    // groups also outnumber the rows when a group's name only a restricted source supplied.
+    const fc = buildFeed(
+      { ...rows(), counts: { actors: 3, claims: 4500, kev: 120, disclosures: 2 } },
+      NOW
+    )
+    const title = summaryTitle(fc)
+    expect(title).toContain('3 escalating groups (1 named in this feed)')
+    expect(title).toContain('4,500 leak-site claims since 28 Oct (the latest 3 in this feed)')
+    expect(title).toContain('120 KEV additions since 23 Oct (the latest 3 in this feed)')
+    expect(title).toContain('2 breach notices first seen since 23 Oct')
+    // A tally of a capped page is not a count, so no sub-figure is drawn from one.
+    expect(title).not.toContain('placed on the map')
+    expect(title).not.toContain('EPSS alert')
+    expect(title).not.toMatch(/\b3 leak-site claims/)
+    // The items themselves are unchanged.
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2)
+  })
+
+  it('states no figure for a count that failed, and never reads it as zero', () => {
+    const counted = /\d+ (escalating group|leak-site claim|KEV addition|breach notice)/
+    const fc = buildFeed(
+      {
+        ...rows(),
+        counts: { actors: null, claims: null, kev: Number.NaN, disclosures: undefined },
+      },
+      NOW
+    )
+    const title = summaryTitle(fc)
+    expect(title).toContain('count unavailable for escalating groups')
+    expect(title).toContain('count unavailable for leak-site claims since 28 Oct')
+    expect(title).toContain('count unavailable for KEV additions since 23 Oct')
+    expect(title).toContain('count unavailable for breach notices first seen since 23 Oct')
+    expect(title).not.toMatch(counted)
+    expect(title).not.toContain('placed on the map')
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2)
+
+    // No counts at all is the same as failed counts, not a fallback to the rows.
+    const bare = rows()
+    delete bare.counts
+    expect(summaryTitle(buildFeed(bare, NOW))).not.toMatch(counted)
+    // Only a whole, non-negative number is a count.
+    const junk = buildFeed(
+      { ...rows(), counts: { actors: '1', claims: '3', kev: -1, disclosures: 2.5 } },
+      NOW
+    )
+    expect(summaryTitle(junk)).not.toMatch(counted)
+  })
+
+  it('reads the total from a PostgREST Content-Range header', () => {
+    expect(countFromRange('0-299/450')).toBe(450)
+    expect(countFromRange('0-86/87')).toBe(87)
+    expect(countFromRange('*/0')).toBe(0)
+    expect(countFromRange('0-86/*')).toBeNull()
+    expect(countFromRange('')).toBeNull()
+    expect(countFromRange(null)).toBeNull()
   })
 
   it('publishes claims as claims, placed only when the country is not withheld', () => {
