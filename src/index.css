@@ -545,3 +545,41 @@ input[type='radio'] {
   width: 200%;
   height: 200%;
 }
+
+/* ============================================
+   HOUSE BAR (The Intelligence Company)
+   ============================================
+   public/tic-nav.js mounts a 34px navy bar first in <body> on every program site. tic-nav.css is a
+   shared copy, so Vigil's layout answers to it here rather than in that file. As on COP, the bar is
+   pinned and Vigil's own fixed chrome starts below it: the sidebar and phone drawer, and every
+   full-height overlay (modal and drawer backdrops, phone detail panels, the asset side panels).
+   If the bar is absent (script blocked), --house-bar-h is unset and all of this falls back to 0. */
+:root:has(> body > .tic-house) {
+  --house-bar-h: 34px;
+  /* Focus moves and in-page jumps stop below the pinned bar, not under it. */
+  scroll-padding-top: var(--house-bar-h);
+}
+
+body > .tic-house {
+  position: sticky;
+  top: 0;
+}
+
+aside.vigil-sidebar {
+  top: var(--house-bar-h, 0px);
+  bottom: 0;
+  height: auto;
+}
+
+/* An overlay inside a space-y-* parent picked up its 24px top margin, leaving a strip of page above
+   the phone detail panels. :root lifts these rules over Tailwind's space-y-* selector. */
+:root .fixed.inset-0,
+:root .fixed.inset-y-0 {
+  top: var(--house-bar-h, 0px);
+  margin-top: 0;
+}
+
+/* The skip link shows 1rem from the top when focused; keep it clear of the bar. */
+a.vigil-skip-link:focus {
+  top: calc(var(--house-bar-h, 0px) + 1rem);
+}
