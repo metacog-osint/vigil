@@ -583,7 +583,8 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
       {/* Sidebar */}
       <aside
         className={clsx(
-          'fixed top-0 left-0 z-50 h-full bg-cyber-dark border-r border-gray-800',
+          // vigil-sidebar: index.css starts it below The Intelligence Company house bar
+          'vigil-sidebar fixed top-0 left-0 z-50 h-full bg-cyber-dark border-r border-gray-800',
           'transform transition-all duration-300 ease-in-out flex flex-col',
           'lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
