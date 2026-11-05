@@ -105,8 +105,12 @@ export default function AboveFoldSection({ lastSync, aiSummary, escalatingActors
         </div>
       )}
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3" data-tour="dashboard-stats">
+      {/* Stats Row. Five across only from xl: below that a card is too narrow for a
+          seven-digit figure and its icon, and the icon spills out of the card. */}
+      <div
+        className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3"
+        data-tour="dashboard-stats"
+      >
         <StatCard
           label="Active Actors"
           value={figure(stats?.totalActors)}
