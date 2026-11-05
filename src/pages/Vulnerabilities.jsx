@@ -153,14 +153,14 @@ export default function Vulnerabilities() {
 
       {/* Content */}
       <div className="flex gap-6">
-        {/* Vuln List */}
-        <div className="flex-1">
+        {/* Vuln List. min-w-0 keeps it inside the page; the card scrolls if the table is wider. */}
+        <div className="flex-1 min-w-0">
           {loading ? (
             <SkeletonTable rows={8} cols={4} />
           ) : vulnList.length === 0 ? (
             <EmptyVulnerabilities />
           ) : (
-            <div className="cyber-card overflow-hidden">
+            <div className="cyber-card overflow-x-auto">
               <table className="cyber-table">
                 <thead>
                   <tr>
@@ -184,7 +184,7 @@ export default function Vulnerabilities() {
                           <span className="font-mono text-cyber-accent">{vuln.cve_id}</span>
                           <NewBadge date={vuln.kev_date} thresholdHours={72} />
                         </div>
-                        <div className="text-xs text-gray-500 truncate max-w-xs">
+                        <div className="text-xs text-gray-500 truncate max-w-[10rem] xl:max-w-xs">
                           {vuln.description?.slice(0, 60)}...
                         </div>
                       </td>

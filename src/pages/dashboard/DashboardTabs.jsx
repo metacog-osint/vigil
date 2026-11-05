@@ -119,13 +119,14 @@ export default function DashboardTabs({ activeTab, onTabChange }) {
 
   return (
     <div className="border-b border-gray-800">
-      <nav className="flex gap-1 sm:gap-4" aria-label="Dashboard sections">
+      {/* Scrolls sideways on its own when the tabs don't fit, rather than widening the page */}
+      <nav className="flex gap-1 sm:gap-4 overflow-x-auto" aria-label="Dashboard sections">
         {DASHBOARD_TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             className={`
-              flex items-center gap-1.5 px-2 sm:px-3 py-3 text-sm font-medium border-b-2 transition-colors
+              flex shrink-0 items-center gap-1.5 px-2 sm:px-3 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors
               ${
                 activeTab === tab.id
                   ? 'border-cyan-500 text-cyan-400'

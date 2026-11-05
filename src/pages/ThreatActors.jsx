@@ -577,7 +577,8 @@ export default function ThreatActors() {
 
       {/* Content */}
       <div className="flex gap-6">
-        <div className="flex-1" ref={tableRef}>
+        {/* min-w-0 keeps the list inside the page; the table's card scrolls if it is wider */}
+        <div className="flex-1 min-w-0" ref={tableRef}>
           {viewMode === 'overview' ? (
             <ActorOverviewView
               actors={actors}

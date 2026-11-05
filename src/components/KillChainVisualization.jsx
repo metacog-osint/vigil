@@ -191,8 +191,9 @@ export default function KillChainVisualization({
 
   return (
     <div className="space-y-4">
-      {/* Chain Visualization */}
-      <div className="flex items-center gap-1">
+      {/* Chain Visualization. Seven phases at 80 px or more don't fit a phone, so the
+          row scrolls on its own; p-0.5 leaves room for the selected phase's ring. */}
+      <div className="flex items-center gap-1 overflow-x-auto p-0.5">
         {KILL_CHAIN_PHASES.map((phase, index) => {
           const data = techniqueData[phase.id]
           const isSelected = selectedPhase?.id === phase.id
