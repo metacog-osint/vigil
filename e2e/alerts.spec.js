@@ -159,8 +159,10 @@ test.describe('Alert Settings Integration', () => {
     await openApp(page, '/settings')
 
     // 'text=' is not CSS and cannot be combined in a selector list, which is why
-    // this never matched anything.
-    const alertSettings = page.getByText(/alert|notification/i).first()
+    // this never matched anything. Scoped to <main>: page-wide, the first match
+    // was the sidebar's Alerts link, and is now a hidden description in the
+    // house bar's Programs menu.
+    const alertSettings = page.locator('main').getByRole('heading', { name: 'Alert Rules' })
     await expect(alertSettings).toBeVisible({ timeout: 10000 })
   })
 

@@ -242,18 +242,28 @@ describe('useDateRangeFilter', () => {
   })
 
   it('should set days and update range', () => {
-    const { result } = renderHook(() => useDateRangeFilter(30))
+    // setDays steps back by calendar days in local time, so the span is measured
+    // in calendar days, not hours. The clock is pinned to a week that crosses the
+    // US fall-back (1 Nov 2026), where 7 days is 169 hours in US zones and a
+    // ceil of the hours read 8; pinning also stops the hook's two new Date()
+    // calls from landing a millisecond apart.
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-04T18:00:00Z'))
+    try {
+      const { result } = renderHook(() => useDateRangeFilter(30))
 
-    act(() => {
-      result.current.setDays(7)
-    })
+      act(() => {
+        result.current.setDays(7)
+      })
 
-    expect(result.current.days).toBe(7)
+      expect(result.current.days).toBe(7)
 
-    const daysDiff = Math.ceil(
-      (result.current.endDate - result.current.startDate) / (1000 * 60 * 60 * 24)
-    )
-    expect(daysDiff).toBe(7)
+      const calendarDay = (d) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000
+      expect(calendarDay(result.current.endDate) - calendarDay(result.current.startDate)).toBe(7)
+      expect(result.current.endDate.getTime()).toBe(Date.now())
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('should set custom date range', () => {

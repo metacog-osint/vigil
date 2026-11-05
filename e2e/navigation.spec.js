@@ -1,13 +1,12 @@
 import { test, expect } from '@playwright/test'
-import { openApp } from './support/app'
+import { openApp, sidebarMenu } from './support/app'
 
 /**
- * Sidebar navigation. Links are scoped to the sidebar - the dashboard links to the
- * same routes from its cards - and .first() is needed even then, because the sidebar
- * renders each entry twice for its collapsed and expanded states.
+ * Sidebar navigation. Links are scoped to the sidebar menu - the dashboard links to
+ * the same routes from its cards, and the house bar is the first nav on the page -
+ * and .first() is needed even then, because an entry also appears under Pinned.
  */
-const navLink = (page, name) =>
-  page.locator('nav, aside').first().getByRole('link', { name, exact: true }).first()
+const navLink = (page, name) => sidebarMenu(page).getByRole('link', { name, exact: true }).first()
 
 test.describe('Navigation', () => {
   test('should navigate to the Activity feed', async ({ page }) => {
