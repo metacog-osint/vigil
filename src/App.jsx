@@ -187,13 +187,15 @@ function ProtectedApp() {
       <ToastProvider>
         <FocusModeProvider>
           <div className="min-h-screen bg-cyber-darker flex flex-col">
-            {/* Demo mode banner */}
-            <DemoBanner />
+            {/* Demo mode banner: starts right of the fixed sidebar on desktop, which would cover its left end */}
+            <DemoBanner
+              className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}
+            />
 
             {/* Skip to main content link for accessibility */}
             <a
               href="#main-content"
-              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-cyber-accent focus:text-white focus:rounded-lg focus:outline-none"
+              className="vigil-skip-link sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-cyber-accent focus:text-white focus:rounded-lg focus:outline-none"
             >
               Skip to main content
             </a>
