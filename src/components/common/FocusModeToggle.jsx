@@ -21,14 +21,15 @@ export function FocusModeToggle({ className = '' }) {
   }
 
   if (isLoading) {
-    return <div className="w-24 h-8 bg-gray-800 rounded-lg animate-pulse" />
+    // Same width as the button below xl (icon only), so loading never widens the header
+    return <div className="w-9 xl:w-24 h-8 bg-gray-800 rounded-lg animate-pulse" />
   }
 
   return (
     <button
       onClick={handleClick}
       className={`
-        flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all
+        flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg text-sm transition-all
         ${
           enabled
             ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 hover:bg-cyan-500/30'
@@ -75,8 +76,8 @@ export function FocusModeToggle({ className = '' }) {
         />
       </svg>
 
-      {/* Label */}
-      <span className="hidden sm:inline">
+      {/* Label. Icon only below xl, so the header fits beside the sidebar at 1024 px */}
+      <span className="hidden xl:inline">
         {!hasProfile ? 'Focus' : enabled ? 'Focused' : 'Focus'}
       </span>
 

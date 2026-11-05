@@ -34,9 +34,9 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
   }
 
   return (
-    <header className="h-16 bg-cyber-dark border-b border-gray-800 flex items-center justify-between px-4">
+    <header className="h-16 bg-cyber-dark border-b border-gray-800 flex items-center justify-between px-3 sm:px-4">
       {/* Left side */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <button
           onClick={onMenuClick}
           className="lg:hidden p-2 rounded-lg hover:bg-gray-800"
@@ -64,17 +64,21 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
           <span
             className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 live-indicator' : 'bg-yellow-500'}`}
           ></span>
-          <span className="text-gray-400">{isOnline ? 'Live' : 'Offline'}</span>
+          {/* On phones the dot alone shows the state; screen readers still hear the word */}
+          <span className="sr-only sm:not-sr-only text-gray-400">
+            {isOnline ? 'Live' : 'Offline'}
+          </span>
         </div>
 
-        {/* Last updated */}
-        <div className="hidden sm:block text-xs text-gray-500">
+        {/* Last updated. From md: below that it is squeezed onto three or four lines */}
+        <div className="hidden md:block text-xs text-gray-500">
           Last sync: {fmtTime(new Date())}
         </div>
       </div>
 
-      {/* Right side */}
-      <div className="flex items-center gap-2 sm:gap-4">
+      {/* Right side. Everything here has to fit beside the left side at 360 px
+          (phones) and 768 px (the content column at 1024 with the sidebar open). */}
+      <div className="flex items-center gap-1 sm:gap-4">
         {/* Mobile search button */}
         <button
           onClick={onSearchClick}
@@ -97,8 +101,8 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
           </svg>
         </button>
 
-        {/* Quick IOC Input - Desktop only */}
-        <div className="hidden lg:block w-56">
+        {/* Quick IOC Input - wide screens only; the search button covers IOCs too */}
+        <div className="hidden xl:block w-56">
           <QuickIOCInput />
         </div>
 
@@ -125,18 +129,24 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
           </svg>
           <span className="text-gray-500 group-hover:text-gray-300">Search</span>
           <kbd
-            className="inline-flex items-center px-1.5 py-0.5 text-xs text-gray-500 bg-gray-900/50 border border-gray-700 rounded group-hover:border-cyan-500/30 group-hover:text-cyan-400 transition-colors"
+            className="hidden xl:inline-flex items-center px-1.5 py-0.5 text-xs text-gray-500 bg-gray-900/50 border border-gray-700 rounded group-hover:border-cyan-500/30 group-hover:text-cyan-400 transition-colors"
             aria-hidden="true"
           >
             {navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}K
           </kbd>
         </button>
 
-        {/* Focus Mode Toggle */}
-        <FocusModeToggle />
+        {/* Focus Mode Toggle (not on the narrowest phones, under 360 px) */}
+        <div className="max-[359px]:hidden">
+          <FocusModeToggle />
+        </div>
 
-        {/* What's New */}
-        <WhatsNewBadge />
+        {/* What's New - not on phones, where there is no room for it beside the
+            Time and Sign in buttons. The dashboard's "What's Changed" card shows
+            the same kinds of counts there. */}
+        <div className="hidden sm:block">
+          <WhatsNewBadge />
+        </div>
 
         {/* Notifications */}
         <TimeSettingsButton />
@@ -181,7 +191,10 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
               )}
             </>
           ) : (
-            <button onClick={handleSignIn} className="cyber-button-primary text-sm">
+            <button
+              onClick={handleSignIn}
+              className="cyber-button-primary text-sm whitespace-nowrap px-3 sm:px-4"
+            >
               Sign in
             </button>
           )}

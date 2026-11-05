@@ -508,7 +508,7 @@ export default function Incidents() {
           countKey="incidents"
           loading={countriesLoading}
         />
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {TIME_RANGES.map((range) => (
             <button
               key={range.value}
@@ -628,7 +628,8 @@ export default function Incidents() {
         />
       ) : (
         <div className="flex gap-6">
-          <div className="flex-1" ref={tableRef}>
+          {/* min-w-0 keeps the list inside the page; the table's card scrolls if it is wider */}
+          <div className="flex-1 min-w-0" ref={tableRef}>
             <IncidentTableView
               incidents={sortedIncidents}
               loading={loading}

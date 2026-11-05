@@ -47,7 +47,7 @@ export function ActorTableView({
   }
 
   return (
-    <div className="cyber-card overflow-hidden">
+    <div className="cyber-card overflow-x-auto">
       <table className="cyber-table">
         <thead>
           <tr>

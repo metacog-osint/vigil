@@ -209,9 +209,11 @@ function ProtectedApp() {
                 onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
               />
 
-              {/* Main content */}
+              {/* Main content. min-w-0 lets this flex item be narrower than its
+                  widest child, so a wide table scrolls inside its own box
+                  instead of pushing the whole page past the screen edge. */}
               <div
-                className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}
+                className={`flex-1 min-w-0 flex flex-col min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}
               >
                 <Header
                   onMenuClick={() => setSidebarOpen(true)}
