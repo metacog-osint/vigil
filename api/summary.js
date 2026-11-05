@@ -13,7 +13,13 @@
  * Any failure is a 503 with no detail; the hub ignores it and keeps its own line.
  */
 
-import { buildSummary, latestConfirmedDay, runsSince, tallyGroups } from './_lib/publicSummary.js'
+import {
+  buildSummary,
+  lastRunAt,
+  latestConfirmedDay,
+  runsSince,
+  tallyGroups,
+} from './_lib/publicSummary.js'
 
 export const config = { runtime: 'edge' }
 
@@ -51,15 +57,13 @@ export default async function handler(request) {
 
   const now = new Date()
   try {
+    // metadata carries each run's skip count, which can close a gap over 12 hours.
     const runs = await rest(
       base,
       key,
-      `sync_log?select=completed_at&source=eq.ransomlook&status=eq.success&completed_at=gte.${runsSince(now)}&order=completed_at.asc&limit=1000`
+      `sync_log?select=completed_at,metadata&source=eq.ransomlook&status=eq.success&completed_at=gte.${runsSince(now)}&order=completed_at.asc&limit=1000`
     )
-    const pick = latestConfirmedDay(
-      runs.map((r) => r.completed_at),
-      now
-    )
+    const pick = latestConfirmedDay(runs, now)
     if (!pick) {
       console.error('summary: no day with confirmed RansomLook ingestion')
       return unavailable()
@@ -82,7 +86,10 @@ export default async function handler(request) {
       : []
     const names = Object.fromEntries(listed.map((r) => [r.actor_id, r.name]))
 
-    const summary = buildSummary({ ...pick, claims: count, rows, names }, now)
+    const summary = buildSummary(
+      { ...pick, dataAsOf: lastRunAt(runs), claims: count, rows, names },
+      now
+    )
     if (!summary) {
       console.error(`summary: nothing to state for ${pick.day} (count ${count})`)
       return unavailable()
