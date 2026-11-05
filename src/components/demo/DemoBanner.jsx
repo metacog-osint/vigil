@@ -8,7 +8,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useDemo } from '../../contexts/DemoContext'
 
-export default function DemoBanner() {
+export default function DemoBanner({ className = '' }) {
   const { isDemoMode, exitDemoMode, clearDemoMode } = useDemo()
   const navigate = useNavigate()
 
@@ -20,7 +20,9 @@ export default function DemoBanner() {
   }
 
   return (
-    <div className="bg-gradient-to-r from-cyber-accent/20 via-cyber-accent/10 to-cyber-accent/20 border-b border-cyber-accent/30">
+    <div
+      className={`bg-gradient-to-r from-cyber-accent/20 via-cyber-accent/10 to-cyber-accent/20 border-b border-cyber-accent/30 ${className}`}
+    >
       <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5 px-2 py-0.5 bg-cyber-accent/20 border border-cyber-accent/40 rounded text-xs font-medium text-cyber-accent">
