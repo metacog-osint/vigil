@@ -153,8 +153,8 @@ export default function Advisories() {
 
       {/* Content */}
       <div className="flex gap-6">
-        {/* Advisory List */}
-        <div className="flex-1">
+        {/* Advisory List. min-w-0 keeps it inside the page; the card scrolls if the table is wider. */}
+        <div className="flex-1 min-w-0">
           {loading ? (
             <SkeletonTable rows={8} cols={4} />
           ) : advisoryList.length === 0 ? (
@@ -163,7 +163,7 @@ export default function Advisories() {
               <p className="text-gray-500 text-sm">Run the GHSA ingestion to populate this data.</p>
             </div>
           ) : (
-            <div className="cyber-card overflow-hidden">
+            <div className="cyber-card overflow-x-auto">
               <table className="cyber-table">
                 <thead>
                   <tr>
@@ -185,7 +185,7 @@ export default function Advisories() {
                           <span className="font-mono text-cyber-accent text-sm">{adv.ghsa_id}</span>
                           <NewBadge date={adv.published_at} thresholdHours={168} />
                         </div>
-                        <div className="text-xs text-gray-500 truncate max-w-xs">
+                        <div className="text-xs text-gray-500 truncate max-w-[10rem] xl:max-w-xs">
                           {adv.summary?.slice(0, 60)}...
                         </div>
                         {adv.cve_id && (
@@ -193,7 +193,11 @@ export default function Advisories() {
                         )}
                       </td>
                       <td className="hidden md:table-cell">
-                        <div className="text-sm text-gray-300">{adv.package_name || '—'}</div>
+                        {/* Go module paths run to 48 characters with no spaces; let them wrap
+                            where they don't fit rather than widen the table */}
+                        <div className="text-sm text-gray-300 [overflow-wrap:anywhere]">
+                          {adv.package_name || '—'}
+                        </div>
                         <div className="text-xs text-gray-500 capitalize">{adv.ecosystem}</div>
                       </td>
                       <td>
