@@ -27,16 +27,12 @@ test.describe('Settings Page', () => {
     })
 
     test('should navigate between settings sections', async ({ page }) => {
-      // Find navigation elements
-      const navItems = page.locator('nav a, .tabs button, [role="tab"]')
-      const count = await navItems.count()
+      // Settings' own tabs, inside <main>. A page-wide 'nav a' picked up the house
+      // bar's Programs links, which stay hidden until its menu is opened.
+      const main = page.locator('main')
+      await main.getByRole('button', { name: 'Webhooks', exact: true }).click()
 
-      if (count > 1) {
-        // Click second nav item
-        await navItems.nth(1).click()
-        // Verify URL or content changed
-        await page.waitForTimeout(500)
-      }
+      await expect(main.getByRole('heading', { name: 'Webhooks', exact: true })).toBeVisible()
     })
   })
 
