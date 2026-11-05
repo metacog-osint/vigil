@@ -44,6 +44,19 @@ export async function openApp(page, path = '/') {
 }
 
 /**
+ * Vigil's own sidebar menu.
+ *
+ * Find it by name, never as "the first nav on the page": since 1 Nov 2026 every
+ * page opens with The Intelligence Company's house bar (public/tic-nav.js), a
+ * <nav> mounted first in <body> whose Programs menu holds links and hidden
+ * descriptions of its own. Its links go to the other programs, never to a Vigil
+ * route.
+ */
+export function sidebarMenu(page) {
+  return page.getByRole('navigation', { name: 'Main menu' })
+}
+
+/**
  * Move to another route without reloading, which would drop demo mode.
  *
  * The dispatch is not enough on its own. A synthetic popstate is a best-effort

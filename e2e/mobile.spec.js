@@ -10,25 +10,22 @@ import { openApp } from './support/app'
 // Use mobile viewport for all tests in this file
 test.use({ viewport: { width: 375, height: 667 }, hasTouch: true })
 
+// openApp() lands on the dashboard. It is not given '/dashboard': that is not a
+// route, it redirects to '/', and navigateTo() waits to leave the dashboard, so
+// it passed only when it caught the page mid-redirect.
+
 test.describe('Mobile Navigation', () => {
   test('should show mobile menu button', async ({ page }) => {
-    await openApp(page, '/dashboard')
+    await openApp(page)
 
-    // Mobile should show hamburger menu or similar
-    const menuButton = page.locator(
-      '[aria-label*="menu" i], button[aria-label*="toggle" i], [data-testid="mobile-menu"]'
-    ).first()
-
-    // Either menu button exists or navigation is visible
-    const hasMenuButton = await menuButton.isVisible().catch(() => false)
-    const sidebar = page.locator('nav, [role="navigation"]').first()
-    const hasSidebar = await sidebar.isVisible().catch(() => false)
-
-    expect(hasMenuButton || hasSidebar).toBeTruthy()
+    // On a phone the sidebar is off-canvas, opened from this button. Asked for by
+    // name: the old fallback, the first 'nav' on the page, is now the house bar,
+    // so it passed whether or not Vigil's own menu was there.
+    await expect(page.getByRole('button', { name: /open navigation menu/i })).toBeVisible()
   })
 
   test('should navigate between pages on mobile', async ({ page }) => {
-    await openApp(page, '/dashboard')
+    await openApp(page)
 
     // The sidebar is rendered off-canvas on a phone, so its links are present but
     // not clickable until the drawer is opened.
@@ -41,7 +38,7 @@ test.describe('Mobile Navigation', () => {
   })
 
   test('should display dashboard properly on mobile', async ({ page }) => {
-    await openApp(page, '/dashboard')
+    await openApp(page)
 
     // Main content should be visible
     const mainContent = page.locator('main, [role="main"], .dashboard')
@@ -58,7 +55,7 @@ test.describe('Mobile Navigation', () => {
 
 test.describe('Mobile Search', () => {
   test('should open search on mobile', async ({ page }) => {
-    await openApp(page, '/dashboard')
+    await openApp(page)
 
     // Find search trigger
     const searchTrigger = page.locator(
@@ -211,7 +208,7 @@ test.describe('Mobile Forms', () => {
 
 test.describe('Mobile Touch Interactions', () => {
   test('should support swipe gestures if applicable', async ({ page }) => {
-    await openApp(page, '/dashboard')
+    await openApp(page)
     await page.waitForLoadState('networkidle')
 
     // This is a basic touch interaction test
@@ -228,7 +225,7 @@ test.describe('Mobile Performance', () => {
   test('should load dashboard within acceptable time', async ({ page }) => {
     const startTime = Date.now()
 
-    await openApp(page, '/dashboard')
+    await openApp(page)
     await page.waitForLoadState('networkidle')
 
     const loadTime = Date.now() - startTime
