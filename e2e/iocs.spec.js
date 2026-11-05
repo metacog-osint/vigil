@@ -13,10 +13,10 @@ test.describe('IOC Search Page', () => {
   test('should have search input', async ({ page }) => {
     await page.waitForLoadState('networkidle')
 
-    // Look for the main search input
-    const searchInput = page
-      .locator('input[placeholder*="search" i], input[placeholder*="ioc" i], input[type="text"]')
-      .first()
+    // The page's own search box, found by its label. Not "the first text input on
+    // the page": that was the header's quick IOC box, so this test was checking
+    // the header, and that box is hidden below 1280 px.
+    const searchInput = page.getByLabel(/search indicators by hash/i)
     await expect(searchInput).toBeVisible({ timeout: 10000 })
   })
 
@@ -37,16 +37,17 @@ test.describe('IOC Search Page', () => {
   test('should search for IP addresses', async ({ page }) => {
     await page.waitForLoadState('networkidle')
 
-    const searchInput = page.locator('input[placeholder*="search" i], input[type="text"]').first()
+    // The page's own search box (see above): the first text input on the page
+    // was the header's quick IOC box, so this used to type into the header.
+    const searchInput = page.getByLabel(/search indicators by hash/i)
+    await expect(searchInput).toBeVisible({ timeout: 10000 })
 
-    if (await searchInput.isVisible({ timeout: 5000 })) {
-      // Enter an IP address pattern
-      await searchInput.fill('8.8.8.8')
-      await searchInput.press('Enter')
+    // Enter an IP address pattern
+    await searchInput.fill('8.8.8.8')
+    await searchInput.press('Enter')
 
-      // Wait for results
-      await page.waitForTimeout(1000)
-    }
+    // Wait for results
+    await page.waitForTimeout(1000)
   })
 
   test('should display enrichment links for results', async ({ page }) => {
