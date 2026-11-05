@@ -1,8 +1,11 @@
 /**
  * Vigil's one-line daily summary, for The Intelligence Company's home page
  * (GET /api/summary). The hub shows `brief` beside its Noisefloor and
- * Watchfloor lines, with `day` and `built_at`, and keeps a static line when this
- * fails. A pure function of database rows, so it is tested without a network.
+ * Watchfloor lines, with `day`, and keeps a static line when this fails. Its
+ * "Updated ... ago" line reads `data_as_of`, the last successful RansomLook run,
+ * which is when Vigil last took in claims; `built_at` is only when this summary
+ * was assembled. A pure function of database rows, so it is tested without a
+ * network.
  *
  * WHAT IT COUNTS
  *
@@ -33,6 +36,14 @@
  * posts and nothing can have scrolled out of the window. If yesterday cannot
  * be shown complete, the day before is tried, back to LOOKBACK_DAYS.
  *
+ * A longer gap is accepted when the run that closes it skipped posts Vigil
+ * already held (`metadata.result.skipped` > 0 in sync_log): its fetch reached
+ * back to claims stored before the gap, so nothing in between scrolled out. The
+ * 35-hour database outage of 3-4 Nov 2026 closed this way: the first run after
+ * it added 88 and skipped 12. The worker matches stored claims from any source,
+ * so the proof is firmest when the gap was Vigil's own, as then, when nothing
+ * was stored by anyone. A run with no skip count recorded proves nothing.
+ *
  * ABSENCE AND ZERO
  *
  * A failed count is null and there is no summary. A count of zero is not
@@ -42,7 +53,7 @@
  */
 
 export const SITE = 'https://vigil.theintelligence.company'
-export const METHOD = 'vigil-summary-1'
+export const METHOD = 'vigil-summary-2'
 export const MAX_GAP_HOURS = 12
 export const LOOKBACK_DAYS = 3
 /** RansomLook's day starts this many hours before the UTC day (CET/CEST). */
@@ -84,34 +95,68 @@ export function runsSince(now = new Date()) {
 }
 
 /**
+ * How many fetched posts a run found already stored, from its sync_log
+ * metadata; 0 when none is recorded. Other feeds put `true` or a reason string
+ * in `skipped`, so only a number counts.
+ */
+export function skippedOf(metadata) {
+  const n = metadata?.result?.skipped
+  return typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : 0
+}
+
+/**
+ * Successful runs as { t, overlap }, oldest first. Each is a sync_log row
+ * ({ completed_at, metadata }) or a bare completed_at string, which carries no
+ * skip count. `overlap` says the run's fetch reached claims already stored.
+ */
+function toRuns(runs) {
+  return runs
+    .map((r) =>
+      typeof r === 'string'
+        ? { t: Date.parse(r), overlap: false }
+        : { t: Date.parse(r?.completed_at), overlap: skippedOf(r?.metadata) > 0 }
+    )
+    .filter((r) => Number.isFinite(r.t))
+    .sort((a, b) => a.t - b.t)
+}
+
+/**
  * Whether `day`'s claims are all in: a successful run after the day ended, and
  * no gap over MAX_GAP_HOURS between successful runs from LEAD_HOURS before the
- * day began. Returns the first run after the day ended, or null.
+ * day began, unless the run closing the gap overlapped claims already stored.
+ * Returns the first run after the day ended, or null.
  */
-export function confirmedAt(day, runTimes) {
+export function confirmedAt(day, runList) {
   const begin = startOf(day) - LEAD_HOURS * HOUR_MS
   const end = startOf(day) + DAY_MS
   const maxGap = MAX_GAP_HOURS * HOUR_MS
-  const runs = runTimes
-    .map((t) => Date.parse(t))
-    .filter(Number.isFinite)
-    .sort((a, b) => a - b)
-  const after = runs.find((t) => t >= end)
-  if (after == null) return null
-  const seq = runs.filter((t) => t >= begin - maxGap && t <= after)
-  if (!seq.length || seq[0] > begin) return null
-  for (let i = 1; i < seq.length; i++) if (seq[i] - seq[i - 1] > maxGap) return null
-  return utc(after)
+  const runs = toRuns(runList)
+  const after = runs.find((r) => r.t >= end)
+  if (!after) return null
+  const seq = runs.filter((r) => r.t >= begin - maxGap && r.t <= after.t)
+  // No run in the MAX_GAP_HOURS before the day began is itself a gap of more than
+  // MAX_GAP_HOURS, closed by the first run in the window.
+  if (seq[0].t > begin && !seq[0].overlap) return null
+  for (let i = 1; i < seq.length; i++) {
+    if (seq[i].t - seq[i - 1].t > maxGap && !seq[i].overlap) return null
+  }
+  return utc(after.t)
 }
 
 /** The most recent day, from yesterday (UTC) back, whose ingestion is confirmed. */
-export function latestConfirmedDay(runTimes, now = new Date()) {
+export function latestConfirmedDay(runList, now = new Date()) {
   for (let k = 1; k <= LOOKBACK_DAYS; k++) {
     const day = isoDay(now.getTime() - k * DAY_MS)
-    const at = confirmedAt(day, runTimes)
+    const at = confirmedAt(day, runList)
     if (at) return { day, confirmedAt: at }
   }
   return null
+}
+
+/** The latest successful run: when Vigil last took in RansomLook's claims. Null if none. */
+export function lastRunAt(runList) {
+  const runs = toRuns(runList)
+  return runs.length ? utc(runs[runs.length - 1].t) : null
 }
 
 /** Claims per group, and the group(s) with the most. Rows are { actor_id }. */
@@ -137,6 +182,7 @@ function leaderClause(names, most) {
  * @param {object} p
  * @param {string} p.day            YYYY-MM-DD, from latestConfirmedDay
  * @param {string} p.confirmedAt    first successful run after the day ended
+ * @param {string|null} [p.dataAsOf] latest successful run, from lastRunAt
  * @param {number|null} p.claims    the database's exact count for the day; null if the count failed
  * @param {Array} p.rows            { actor_id } for the day's claims, as returned
  * @param {object} p.names          actor_id -> name, from threat_actors_commercial
@@ -144,7 +190,7 @@ function leaderClause(names, most) {
  * @returns {object|null} null when nothing true can be said
  */
 export function buildSummary(
-  { day, confirmedAt: ingestAt, claims, rows = [], names = {} },
+  { day, confirmedAt: ingestAt, dataAsOf = null, claims, rows = [], names = {} },
   now = new Date()
 ) {
   if (typeof claims !== 'number' || !Number.isFinite(claims)) return null
@@ -188,6 +234,7 @@ export function buildSummary(
 
   return {
     built_at: utc(now),
+    data_as_of: dataAsOf,
     day,
     brief,
     claims,
