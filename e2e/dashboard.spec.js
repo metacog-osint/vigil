@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { openApp } from './support/app'
+import { openApp, sidebarMenu } from './support/app'
 
 test.describe('Dashboard', () => {
   test.beforeEach(async ({ page }) => {
@@ -24,12 +24,12 @@ test.describe('Dashboard', () => {
   })
 
   test('should have working sidebar navigation', async ({ page }) => {
-    // Check sidebar is visible on desktop
-    const sidebar = page.locator('nav, aside').first()
+    // Check sidebar is visible on desktop. By name: the house bar is the first nav.
+    const sidebar = sidebarMenu(page)
     await expect(sidebar).toBeVisible()
 
-    // Named as they appear in the sidebar; .first() because each entry is rendered
-    // twice, for the collapsed and expanded states.
+    // Named as they appear in the sidebar; .first() because an entry can also
+    // appear under Pinned.
     for (const name of ['Activity', 'Threat Actors', 'Settings']) {
       await expect(sidebar.getByRole('link', { name, exact: true }).first()).toBeVisible()
     }

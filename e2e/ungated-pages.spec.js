@@ -35,7 +35,9 @@ const PAGES = [
   ['/api-docs', 'API Documentation'],
   ['/status', 'System Status'],
   ['/benchmarks', null],
-  ['/chat-integrations', null],
+  // The route is /chat. '/chat-integrations' is not one: it redirected to the
+  // dashboard, so this checked the dashboard and passed only mid-redirect.
+  ['/chat', 'Chat Integrations'],
 ]
 
 test.describe('Previously gated pages render', () => {
