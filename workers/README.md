@@ -50,15 +50,17 @@ npx wrangler secret put CENSYS_API_KEY
 npm run deploy
 ```
 
-## Cron Schedule
+## Schedule
 
-| Schedule | Frequency | Feeds |
-|----------|-----------|-------|
-| `*/30 * * * *` | Every 30 min | Ransomlook, CISA KEV, ThreatFox, Feodo, URLhaus |
-| `0 */6 * * *` | Every 6 hours | NVD, VulnCheck, EPSS |
-| `0 0 * * *` | Daily midnight UTC | Malpedia, MISP Galaxy, MITRE ATT&CK |
-| `0 6 * * *` | Daily 6am UTC | MalwareBazaar, Tor Exits |
-| `0 12 * * *` | Daily noon UTC | Pulsedive, Censys |
+One cron trigger, `15,45 * * * *`, wakes the worker twice an hour. It does not
+choose feeds. Every tick runs the scheduler (`src/lib/scheduler.js`) over the job
+registry (`src/feeds/registry.js`): whatever is overdue runs, most starved first,
+within the invocation's subrequest budget. Each feed's cadence (hourly, 6-hourly,
+daily or weekly) is its `intervalMinutes` in the registry.
+
+`src/lib/__tests__/capacity.test.js` fails if the registry's declared costs
+outgrow what the ticks can admit. Until 6 Nov 2026 there were four triggers;
+merging them left four of the account's five free for its other Workers.
 
 ## Manual Triggers
 

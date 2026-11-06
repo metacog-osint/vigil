@@ -36,7 +36,9 @@ it:
 
 Every cron trigger runs the **same scheduler** (`workers/src/lib/scheduler.js`)
 over a **job registry** (`workers/src/feeds/registry.js`). No cron owns a list of
-feeds; the four triggers are just ticks.
+feeds; the trigger is just a tick. Since 6 Nov 2026 there is one, `15,45 * * * *`
+(it replaced four), and `workers/src/lib/__tests__/capacity.test.js` checks the
+registry's declared costs still fit its 48 ticks a day.
 
 - Each job declares `priority`, `cost` and `intervalMinutes`, and writes **its own
   `sync_log` row as it finishes**, under its own id.
@@ -245,7 +247,8 @@ Still `never`: `mitre`, `mitre-atlas` and `tor-exits` (weeklies, not yet due),
 - Supabase project ref is **`faqazkwdkajhxmwxchop`**. A wrong ref returns "You do
   not have permission", which reads like an auth failure and is not.
 - **Workers Free: 50 subrequests, 10 ms CPU, 15 min wall clock per invocation;
-  5 cron triggers per account.** Four are used; the spare is deliberate.
+  5 cron triggers per account.** Vigil uses one (four until 6 Nov 2026); the
+  account's other Workers share the rest.
 - OFAC ignores `If-Modified-Since` — returns 200 and the whole document — but
   `Last-Modified` on a HEAD is reliable.
 - **Batch size is a subrequest decision, not a throughput one.** KEV, ThreatFox,
