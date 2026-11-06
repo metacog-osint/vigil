@@ -139,8 +139,8 @@ Public feeds ──► Cloudflare Worker (cron) ──► Supabase Postgres ─�
                   hourly / 6h / daily / weekly   126 migrations
 ```
 
-- **Ingestion** runs on a **Cloudflare Worker** with four cron schedules — hourly for ransomware
-  leak sites and fresh IOCs, six-hourly for IOC and vulnerability feeds, daily for actor databases
+- **Ingestion** runs on a **Cloudflare Worker** woken twice an hour by one cron trigger; a job
+  registry sets each feed's cadence — hourly for ransomware leak sites and fresh IOCs, six-hourly for IOC and vulnerability feeds, daily for actor databases
   and enrichment, weekly for MITRE reference data. The free plan allows 10 ms CPU per trigger, so
   feeds stream and filter rather than parsing whole documents. (The OFAC SDN feed reads a 29 MB XML
   export and keeps the 99 entries carrying a digital currency address.)
