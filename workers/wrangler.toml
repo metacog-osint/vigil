@@ -6,23 +6,24 @@ name = "vigil-ingestion"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
-# Cron triggers - these replace GitHub Actions schedules.
+# Cron trigger - this replaces GitHub Actions schedules.
 #
-# Every trigger runs the same scheduler over the same registry; none of them owns
-# a list of feeds any more. What runs is decided by which jobs are overdue
+# The trigger runs the scheduler over the registry; it does not own a list of
+# feeds. What runs is decided by which jobs are overdue
 # (workers/src/feeds/registry.js) and how much of the 50-subrequest budget is
-# left. So these are ticks, not schedules: more ticks drain the backlog faster,
+# left. So this is a tick, not a schedule: more ticks drain the backlog faster,
 # and a feed's cadence is set in the registry.
 #
-# Workers Free allows 5 cron triggers per account. Four are used here; the spare
-# is deliberate, so adding one elsewhere does not silently fail.
+# One trigger, at :15 and :45: 48 ticks a day, room for about 1,536 subrequests
+# against the roughly 900 the registry declares. Until 6 Nov 2026 there were four
+# triggers (15 * * * *, 0 */6 * * *, 0 3 * * *, 0 4 * * SUN): about 29 ticks, room
+# for about 930. An hourly trigger alone (768) would be too few.
+# workers/src/lib/__tests__/capacity.test.js fails if the registry outgrows it.
+#
+# Workers Free allows 5 cron triggers per account, shared with the account's
+# other Workers. Using one leaves them four.
 [triggers]
-crons = [
-  "15 * * * *",      # the workhorse: 24 ticks a day
-  "0 */6 * * *",
-  "0 3 * * *",
-  "0 4 * * SUN"
-]
+crons = ["15,45 * * * *"]
 
 # Environment variables (set via `wrangler secret put`)
 # SUPABASE_URL

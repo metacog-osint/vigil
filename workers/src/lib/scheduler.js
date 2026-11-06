@@ -68,8 +68,8 @@ export function createTimeBudget({
  *
  * Nothing is starved by this. The admission loop skips a job it cannot afford and
  * keeps looking, so a cheap job still runs behind an expensive one that was passed
- * over, and the expensive one is picked up by a trigger with more room - the
- * 6-hourly and daily ticks, where the hourly feeds are not due.
+ * over, and the expensive one is picked up by a tick with more room - the
+ * ticks between the hourly feeds' runs, where those feeds are not due.
  */
 const REQUIRE_FULL_COST = 1
 

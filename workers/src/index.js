@@ -13,13 +13,8 @@
 import { JOBS, JOBS_BY_ID, SCHEDULED_JOBS } from './feeds/registry.js'
 import { runDueJobs, runJob, createTimeBudget } from './lib/scheduler.js'
 import { createSupabaseClient, createSubrequestBudget } from './lib/supabase.js'
-
-// Workers Free refuses the 51st subrequest of an invocation. The reserve covers
-// this run's own bookkeeping - reading feed_health, a sync_log row per job, the
-// summary row - plus the fetch() calls feeds make directly, which the client
-// cannot see and so cannot count.
-const SUBREQUEST_LIMIT = 50
-const SUBREQUEST_RESERVE = 18
+// Why 50 and 18: see lib/limits.js. The schedule capacity test reads them too.
+import { SUBREQUEST_LIMIT, SUBREQUEST_RESERVE } from './lib/limits.js'
 
 export default {
   // Cron trigger handler
