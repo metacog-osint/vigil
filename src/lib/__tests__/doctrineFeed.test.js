@@ -209,6 +209,22 @@ describe('doctrineFeed', () => {
       countries: ['US'],
       precision_class: 'country',
       sector: ['healthcare_and_public_health'],
+      actors: [
+        {
+          name: 'Akira',
+          role: 'responsible',
+          actor_type: 'criminal_group',
+          status_class: 'claimed',
+          source_ids: ['ransomlook'],
+        },
+        {
+          name: 'Example Dental Group',
+          role: 'affected',
+          actor_type: 'company',
+          status_class: 'claimed',
+          country: 'US',
+        },
+      ],
     })
     expect(i1.geometry.type).toBe('Point')
     expect(i1.properties.title).toBe('Akira claims Example Dental Group (healthcare, US)')
@@ -220,6 +236,70 @@ describe('doctrineFeed', () => {
       title: 'An unnamed group claims an unnamed victim',
     })
     expect(i3.properties.visual.url).toMatch(/\/incidents$/)
+  })
+
+  it('puts an attributed origin on the actor, cited to its own source, and places the item by victims', () => {
+    const input = rows()
+    input.actors = [
+      {
+        id: 'a-akira',
+        name: 'Akira',
+        incidents_7d: 14,
+        origin_country: 'RU',
+        origin_source: 'misp-galaxy',
+      },
+    ]
+    const actor = byId(buildFeed(input, NOW))['vigil:2026-10-30:actor:a-akira']
+    expect(actor.properties.countries).toEqual(['US'])
+    expect(actor.geometry).toBeNull()
+    expect(actor.properties.precision_class).toBe('none')
+    expect(actor.properties.actors).toEqual([
+      {
+        name: 'Akira',
+        role: 'responsible',
+        actor_type: 'criminal_group',
+        status_class: 'claimed',
+        source_ids: ['ransomlook', 'misp-galaxy'],
+        country: 'RU',
+      },
+    ])
+    expect(actor.properties.measures).toMatchObject({
+      origin_country: 'RU',
+      origin_source: 'misp-galaxy',
+    })
+    expect(actor.properties.sources.map((s) => s.id)).toContain('misp-galaxy')
+  })
+
+  it('cites MITRE ATT&CK for an origin from ATT&CK, and leaves out an origin it cannot cite', () => {
+    const input = rows()
+    input.actors = [
+      {
+        id: 'a-akira',
+        name: 'Akira',
+        incidents_7d: 14,
+        origin_country: 'ru',
+        origin_source: 'mitre-attack',
+      },
+      {
+        id: 'a-other',
+        name: 'Other',
+        incidents_7d: 9,
+        origin_country: 'CN',
+        origin_source: 'etda',
+      },
+    ]
+    const f = byId(buildFeed(input, NOW))
+    const akira = f['vigil:2026-10-30:actor:a-akira'].properties
+    expect(akira.actors[0]).toMatchObject({
+      country: 'RU',
+      source_ids: ['ransomlook', 'mitre-attack'],
+    })
+    expect(akira.sources.map((s) => s.id)).toEqual(['vigil', 'ransomlook', 'mitre-attack'])
+    const other = f['vigil:2026-10-30:actor:a-other'].properties
+    expect(other.actors[0].country).toBeUndefined()
+    expect(other.actors[0].source_ids).toEqual(['ransomlook'])
+    expect(other.measures.origin_country).toBeUndefined()
+    expect(other.sources.map((s) => s.id)).not.toContain('misp-galaxy')
   })
 
   it('raises the EPSS alert only on a current score with known ransomware use', () => {

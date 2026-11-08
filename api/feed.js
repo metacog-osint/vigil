@@ -90,18 +90,38 @@ export default async function handler(request) {
         [...escalating.map((a) => a.id), ...claims.map((c) => c.actor_id)].filter(Boolean)
       ),
     ]
-    const listed = ids.length
-      ? await rest(
-          base,
-          key,
-          `threat_actors_commercial?select=actor_id,name&actor_id=in.(${ids.join(',')})`
-        )
-      : []
+    const escalatingIds = [...new Set(escalating.map((a) => a.id).filter(Boolean))]
+    const [listed, origins] = await Promise.all([
+      ids.length
+        ? rest(
+            base,
+            key,
+            `threat_actors_commercial?select=actor_id,name&actor_id=in.(${ids.join(',')})`
+          )
+        : [],
+      escalatingIds.length
+        ? rest(
+            base,
+            key,
+            `actor_origins_commercial?select=actor_id,origin_country,origin_source&actor_id=in.(${escalatingIds.join(',')})`
+          )
+        : [],
+    ])
     const actorNames = Object.fromEntries(listed.map((r) => [r.actor_id, r.name]))
+    const actorOrigins = Object.fromEntries(
+      origins.map((r) => [
+        r.actor_id,
+        { origin_country: r.origin_country || null, origin_source: r.origin_source || null },
+      ])
+    )
     // A group whose name only a restricted source supplied stays out of the feed.
     const actors = escalating
       .filter((a) => actorNames[a.id])
-      .map((a) => ({ ...a, name: actorNames[a.id] }))
+      .map((a) => ({
+        ...a,
+        name: actorNames[a.id],
+        ...(actorOrigins[a.id] || {}),
+      }))
     const feed = buildFeed({ actors, claims, actorNames, kev, disclosures, counts }, now)
     return new Response(JSON.stringify(feed), {
       status: 200,
