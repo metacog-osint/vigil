@@ -87,7 +87,6 @@
     "data-quality": "node scripts/data-quality-audit.mjs",
     "correlate:vuln-assets": "node scripts/correlate-vulnerabilities-assets.mjs",
     "ingest:umd-cyber-events": "node scripts/ingest-umd-cyber-events.mjs",
-    "process:dunning": "node scripts/process-dunning.mjs",
     "correlate:actor-iocs": "node scripts/correlate-actor-iocs.mjs",
     "correlate:actor-cves": "node scripts/correlate-actor-cves.mjs",
     "build:attack-chains": "node scripts/build-attack-chains.mjs",
@@ -96,8 +95,6 @@
     "detect:temporal-patterns": "node scripts/detect-temporal-patterns.mjs",
     "correlate:all": "node scripts/correlate-actor-iocs.mjs && node scripts/correlate-actor-cves.mjs && node scripts/build-attack-chains.mjs && node scripts/persist-patterns.mjs && node scripts/compute-incident-correlations.mjs",
     "setup:correlations": "node scripts/setup-correlations.mjs",
-    "send:missed-alerts": "node scripts/send-missed-alerts.mjs",
-    "send:missed-alerts:dry-run": "node scripts/send-missed-alerts.mjs --dry-run",
     "prepare": "husky"
   },
   "dependencies": {
