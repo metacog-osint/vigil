@@ -67,7 +67,6 @@ function App() {
 | `/auth` | Auth | Login/register page |
 | `/login` | Redirect | Redirects to `/auth` |
 | `/register` | Redirect | Redirects to `/auth?mode=register` |
-| `/pricing` | Pricing | Public pricing page |
 
 **Protected Routes (auth required):**
 All other routes require authentication. Unauthenticated users are redirected to the Landing page.
@@ -95,7 +94,6 @@ The Landing page (`src/pages/Landing.jsx`) is shown to unauthenticated visitors 
 - Live data preview (blurred for non-users)
 - Data sources showcase
 - Testimonials
-- Pricing preview
 - Call-to-action sections
 
 ## Admin Authentication

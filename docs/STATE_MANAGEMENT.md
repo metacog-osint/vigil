@@ -11,7 +11,7 @@ This document outlines the state management patterns used in Vigil and provides 
 
 Vigil uses a layered approach to state management:
 
-1. **React Context** - Global application state (auth, tenant, subscriptions, toasts)
+1. **React Context** - Global application state (auth, tenant, toasts)
 2. **Local Component State** - UI state, form inputs, temporary data
 3. **Supabase Direct Calls** - Data fetching and mutations
 4. **URL State** - Filter parameters, pagination, view modes
@@ -25,19 +25,16 @@ Vigil uses a layered approach to state management:
 | Context | Location | Purpose |
 |---------|----------|---------|
 | `TenantContext` | `src/contexts/TenantContext.jsx` | Multi-tenant organization data |
-| `SubscriptionContext` | `src/contexts/SubscriptionContext.jsx` | User subscription tier and features |
 | `ToastContext` | `src/contexts/ToastContext.jsx` | Global notifications |
 
 ### Usage Pattern
 
 ```jsx
 import { useTenant } from '../contexts/TenantContext'
-import { useSubscription } from '../contexts/SubscriptionContext'
 import { useToast } from '../contexts/ToastContext'
 
 function MyComponent() {
   const { tenant, loading: tenantLoading } = useTenant()
-  const { tier, hasFeature } = useSubscription()
   const { showToast, showError, showSuccess } = useToast()
 
   // Use context values...
