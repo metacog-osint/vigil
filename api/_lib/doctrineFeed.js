@@ -87,6 +87,30 @@ const SRC = {
     source_type: 'official filing',
     descriptor: 'Form 8-K Item 1.05 (material cybersecurity incident) filed by the victim company.',
   },
+  misp: {
+    id: 'misp-galaxy',
+    publisher: 'MISP Project',
+    title: 'MISP Galaxy threat-actor cluster',
+    url: 'https://github.com/MISP/misp-galaxy',
+    licence: 'CC0 1.0 Universal or 2-clause BSD',
+    grade: 'C3',
+    independence_group: 'misp',
+    source_type: 'dataset',
+    descriptor:
+      'Community threat-actor catalog recording attributed country of origin where published.',
+  },
+  mitre: {
+    id: 'mitre-attack',
+    publisher: 'The MITRE Corporation',
+    title: 'MITRE ATT&CK groups',
+    url: 'https://attack.mitre.org/groups/',
+    licence: 'MITRE ATT&CK terms of use (attribution required)',
+    grade: 'C3',
+    independence_group: 'mitre',
+    source_type: 'dataset',
+    descriptor:
+      'ATT&CK group entries, recording an attributed country where the cited reporting gives one.',
+  },
   vigil: {
     id: 'vigil',
     publisher: 'Vigil, The Intelligence Company',
@@ -98,6 +122,9 @@ const SRC = {
     descriptor: "Vigil's own computation from the claims it holds (migration 077 trend rule).",
   },
 }
+// actor_origins_commercial.origin_source -> the source record cited for it. An origin from any other source
+// (or none) is left out of the feed rather than credited to the wrong publisher.
+const ORIGIN_SRC = { 'misp-galaxy': SRC.misp, 'mitre-attack': SRC.mitre }
 const REGULATOR = { 'ca-ag': 'California', 'wa-ag': 'Washington', 'or-ag': 'Oregon' }
 const BASE_WEEK = {
   id: 'vigil-actor-week',
@@ -143,6 +170,12 @@ const withSources = (accessed, ...list) => list.map((s) => ({ ...s, accessed_at:
 const point = (cc) => {
   const p = countryPoint(cc)
   return p ? { type: 'Point', coordinates: [p[1], p[0]] } : null
+}
+const iso2 = (cc) => {
+  const s = String(cc || '')
+    .trim()
+    .toUpperCase()
+  return /^[A-Z]{2}$/.test(s) ? s : null
 }
 const feature = (geometry, properties) => ({ type: 'Feature', geometry, properties })
 
@@ -194,7 +227,7 @@ export function subjectOf(v) {
 
 /**
  * @param {object} rows
- * @param {Array} rows.actors      escalating active groups: { id, name, incidents_7d }, name from threat_actors_commercial
+ * @param {Array} rows.actors      escalating active groups: { id, name, incidents_7d, origin_country?, origin_source? }, from threat_actors_commercial & actor_origins_commercial
  * @param {Array} rows.claims      incidents_commercial rows from the window
  * @param {object} rows.actorNames actor_id -> name, from threat_actors_commercial
  * @param {Array} rows.kev         vulnerabilities with kev_date in the window
@@ -229,6 +262,25 @@ export function buildFeed(
   const feats = []
 
   for (const a of actors) {
+    // An attributed origin is published only with the source that gave it, and only on the actor: the item's
+    // countries and map point are where victims were claimed, not where a catalog says the group is from.
+    const originSrc = ORIGIN_SRC[a.origin_source] || null
+    const originCc = originSrc ? iso2(a.origin_country) : null
+    const countries = [
+      ...new Set(
+        claims
+          .filter((c) => c.actor_id === a.id && !c.victim_country_withheld)
+          .map((c) => iso2(c.victim_country))
+          .filter(Boolean)
+      ),
+    ].sort()
+    const itemSources = withSources(
+      published,
+      SRC.vigil,
+      SRC.ransomlook,
+      ...(originCc ? [originSrc] : [])
+    )
+    const actorSourceIds = ['ransomlook', ...(originCc ? [originSrc.id] : [])]
     feats.push(
       feature(null, {
         ...base,
@@ -238,7 +290,17 @@ export function buildFeed(
         status_class: 'claimed',
         us_person_data: 'organizations',
         data_as_of: published,
-        countries: [],
+        countries,
+        actors: [
+          {
+            name: a.name,
+            role: 'responsible',
+            actor_type: 'criminal_group',
+            status_class: 'claimed',
+            source_ids: actorSourceIds,
+            ...(originCc ? { country: originCc } : {}),
+          },
+        ],
         baseline_ref: BASE_WEEK,
         warning_problem_id: 'VG-WP-1',
         requirement_ids: ['VG-PIR-1'],
@@ -247,21 +309,43 @@ export function buildFeed(
         direction: 'neutral',
         indicator_state: 'present',
         precision_class: 'none',
-        sources: withSources(published, SRC.vigil, SRC.ransomlook),
-        measures: { victims_7d: a.incidents_7d },
+        sources: itemSources,
+        measures: {
+          victims_7d: a.incidents_7d,
+          ...(originCc ? { origin_country: originCc, origin_source: originSrc.id } : {}),
+        },
         visual: { type: 'page', url: `${SITE}/actors/${a.id}` },
       })
     )
   }
 
   for (const c of claims) {
-    const actor = actorNames[c.actor_id] || 'An unnamed group'
+    const knownActor = actorNames[c.actor_id] || null
+    const actor = knownActor || 'An unnamed group'
     const victim = c.victim_name || 'an unnamed victim'
-    const cc =
-      c.victim_country && !c.victim_country_withheld ? String(c.victim_country).toUpperCase() : null
+    const cc = !c.victim_country_withheld ? iso2(c.victim_country) : null
     const geom = cc ? point(cc) : null
     const sector = sectorsOf([c.victim_sector])
     const where = [c.victim_sector, cc].filter(Boolean).join(', ')
+    const claimActors = []
+    if (c.victim_name) {
+      if (knownActor) {
+        claimActors.push({
+          name: knownActor,
+          role: 'responsible',
+          actor_type: 'criminal_group',
+          status_class: 'claimed',
+          source_ids: ['ransomlook'],
+        })
+      }
+      claimActors.push({
+        name: c.victim_name,
+        role: 'affected',
+        actor_type: 'company',
+        status_class: 'claimed',
+        ...(cc ? { country: cc } : {}),
+      })
+    }
     feats.push(
       feature(geom, {
         ...base,
@@ -272,6 +356,7 @@ export function buildFeed(
         us_person_data: c.victim_name ? 'organizations' : 'none',
         data_as_of: dayStart(c.discovered_date),
         countries: cc ? [cc] : [],
+        ...(claimActors.length ? { actors: claimActors } : {}),
         warning_problem_id: 'VG-WP-1',
         requirement_ids: ['VG-PIR-1'],
         precision_class: geom ? 'country' : 'none',
