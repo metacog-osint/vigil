@@ -9,6 +9,89 @@ documentation in this repository.
 is on screen, what is not, and the two rules the disclosures query layer encodes
 that a careless commit would undo.
 
+**Newest first: §0 (4 November 2026).** §2 onward is dated 24 September or
+earlier; re-measure any number there before trusting it.
+
+---
+
+## 0. Latest: 26 October – 4 November 2026
+
+_Written 4 Nov 2026, about 8:45 p.m. CST, by the session that merged #73–#78
+and #82 and restored the database. Feed health measured live at 02:42 UTC on
+5 Nov._
+
+### Where things stand
+
+- **Merged and live:**
+  - #73: attribution rulings.
+  - #74: EPSS for every KEV CVE, plus the KEV + EPSS priority rule.
+  - #75: ThreatCluster victim-country fills.
+  - #76 (migration 160): licences and the `*_commercial` views.
+  - #77 (migration 161): the claim matcher and the PGlite SQL suite in `supabase/tests/`.
+  - #78: AGPL-3.0, the data-credits footer and `/sources`.
+  - #81: from another session.
+  - #82 (migration 162): the fix for the `threat_actors_commercial` timeout.
+
+  Migrations are applied up to **162**. No PR from this session is open.
+- **The database was paused for about 35 hours on 3–4 Nov** (a hosting-account problem, since fixed).
+  - **Pause:** Supabase paused the project at 09:42 UTC on 3 Nov (3:42 a.m. CST).
+  - **Restore:** the project was restored at about 20:40 UTC on 4 Nov (2:40 p.m. CST).
+  - **Data:** nothing was lost. The database is 2,992 MB, grants are intact, and writes work.
+  - **Gap:** the 21:15 UTC worker run added the 88 claims posted while the database was down. RansomLook's recent list still reached back to 2 Nov.
+  - **Public endpoints:** `/api/feed` and `/api/summary` return 200 again.
+- **Feed health at 02:42 UTC on 5 Nov:** 32 of 36 feeds are fresh. `ingestion_is_healthy()` is false because of one critical feed:
+
+  | Feed                         | State                               | Why                                                                                             |
+  | ---------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------- |
+  | `cisa-advisories` (critical) | stale; last success 08:15 UTC 3 Nov | cisa.gov returns HTTP 403 for `cybersecurity-advisories.xml`                                    |
+  | `cisa-ics`                   | late; last success 2 Nov            | same host, HTTP 403                                                                             |
+  | `misp-galaxy`                | late                                | its last run, on 3 Nov, succeeded; probably the post-outage backlog. Check after the next daily run |
+  | `vulncheck`                  | has never run                       | HTTP 401; waits on Tom's key                                                                    |
+
+- **The cause of the CISA 403 is unconfirmed.**
+  - **Scope:** the request fails from Supabase Edge and from Tom's machine. The KEV JSON on the same host still downloads.
+  - **Searched, nothing current:** CISA has announced no change. In May 2025 CISA planned to stop publishing alerts over RSS, then paused the plan. One undated NewsBlur forum post reports the same 403.
+  - **Do not make the request look like a browser to get past the block.** That gets around bot protection, and auto mode blocks it anyway.
+- **Uncommitted at the time:** this edit, plus another session's feed change (actor and victim lists, attributed
+  origins) and the doctrine kit 0.4.1 copy. All three were reviewed and committed together on 8 Nov 2026.
+- **No worktrees are left.** `git worktree list` shows only the shared tree.
+- **Worker:** this session last deployed it as version `7e1ddbbc` (27 Oct UTC). Not rechecked since.
+  - On the current laptop, deploy with `CLOUDFLARE_API_TOKEN` removed from the environment, which leaves wrangler on its browser login.
+
+### Waiting on Tom
+
+1. **CISA advisories:** whether to look for a legitimate route and propose a fix. Asked, not yet answered.
+   - **Related:** whether `cisa-advisories` stays critical in the meantime. That decides whether Feed health keeps emailing failures.
+2. **VulnCheck:** the API key, which Tom sets as a secret himself.
+3. **The `CLOUDFLARE_API_TOKEN` environment variable on the current laptop:** fix it or remove it.
+   - It has no access to the worker; wrangler's browser login does.
+4. **Unchanged:**
+   - leaked-password protection in Supabase Auth;
+   - the review queue at `/review`;
+   - Dependabot #57 and #66;
+   - ransomware.live step 3 and the refill (the plan is kept with the private commercial notes).
+
+### Next steps, in order
+
+1. **Re-run the feed-health check after the next 6-hourly run.**
+   - `misp-galaxy` should turn fresh, and `cisa-kev` should stay fresh.
+   - If KEV starts returning 403 as well, the block covers the whole of cisa.gov, not one file.
+2. **CISA, on Tom's yes:** find a legitimate replacement for the advisories and ICS listings.
+   - Build it in a worktree.
+   - Ask before applying or deploying anything.
+3. **Finish the three to-do cases in `supabase/tests/claimMatcher.test.js`:** the Citrix Bleed alert pair, the undecided alias pair, and a stale feed.
+4. **Turn claim-matcher results into notifications or review-queue questions.** They must never be applied automatically.
+5. **ransomware.live step 3,** once Tom gives the go-ahead.
+
+### Traps from this stretch
+
+- **Per-row function calls:** a SQL function with `SET search_path` is never inlined. A view that called one per row took 13.9 s. Use an inline CTE instead (160, 162).
+- **Correlated subqueries under `OR`:** a correlated `EXISTS` is checked row by row. An uncorrelated `IN (select ...)` is built once, as a hashed SubPlan.
+  - That was 162's fix, and `supabase/tests/commercialViews.test.js` checks the plan.
+- **Junctioned worktrees:** never run `npm install` inside a worktree whose `node_modules` is a junction to this tree, because it replaces the junction with a real folder.
+  - Before `git worktree remove`, remove each junction with its own `cmd //c "rmdir ..."`.
+- **Everything empty at once:** if Supabase pauses the project, every page shows an empty state. Check the project's status in the Supabase dashboard first.
+
 ---
 
 ## 1. What Vigil is
