@@ -56,6 +56,22 @@
       "cadence_s": 86400,
       "descriptor": "SEC Form 8-K Item 1.05 (material cybersecurity incident) filings by the victim company.",
       "licence": "US public domain"
+    },
+    "misp-galaxy": {
+      "grade": "C3",
+      "independence_group": "misp",
+      "ease_of_faking": "medium",
+      "cadence_s": 86400,
+      "descriptor": "MISP Galaxy threat-actor cluster: community catalog recording attributed country of origin where published.",
+      "licence": "CC0 1.0 Universal or 2-clause BSD"
+    },
+    "mitre-attack": {
+      "grade": "C3",
+      "independence_group": "mitre",
+      "ease_of_faking": "medium",
+      "cadence_s": 86400,
+      "descriptor": "MITRE ATT&CK group entries: attributed country of origin where the cited reporting gives one.",
+      "licence": "MITRE ATT&CK terms of use (attribution required)"
     }
   }
 }
