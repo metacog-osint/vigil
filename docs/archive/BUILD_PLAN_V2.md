@@ -764,10 +764,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 | Metric           | Target |
 | ---------------- | ------ |
 | Registered Users | 500    |
-| Paying Customers | 50     |
-| MRR              | $5,000 |
 | DAU/MAU Ratio    | 30%    |
-| Churn Rate       | <5%/mo |
 
 ### Feature Adoption (12-Month Targets)
 

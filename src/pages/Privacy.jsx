@@ -135,7 +135,6 @@ export default function Privacy() {
                 <ul className="list-disc pl-6 space-y-1">
                   <li>Supabase (database and authentication)</li>
                   <li>Vercel (hosting)</li>
-                  <li>Stripe (payment processing)</li>
                   <li>Resend (email delivery)</li>
                   <li>Sentry (error tracking)</li>
                 </ul>
@@ -178,9 +177,6 @@ export default function Privacy() {
                 </li>
                 <li>
                   <strong>Support communications:</strong> Retained for 2 years
-                </li>
-                <li>
-                  <strong>Billing records:</strong> Retained for 7 years for legal compliance
                 </li>
               </ul>
             </div>
