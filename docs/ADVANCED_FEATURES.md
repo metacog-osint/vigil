@@ -550,34 +550,3 @@ team_watchlists (
 | `/settings/team` | TeamSettings.jsx | Team Management |
 | `/settings/integrations` | ChatIntegrations.jsx | Chat Setup |
 | `/settings/api-keys` | ApiKeys.jsx | API Key Management |
-
----
-
-## Feature Flags
-
-Some features require specific subscription tiers:
-
-| Feature | Required Tier |
-|---------|---------------|
-| Asset Monitoring | Professional |
-| Custom IOC Lists | Professional |
-| Threat Hunts | Free (limited) |
-| Investigations | Professional |
-| Benchmarking | Professional |
-| Multi-Tenancy | Enterprise |
-| SCIM Provisioning | Enterprise |
-| White-Label | Enterprise |
-| API Access | Professional |
-| Chat Integrations | Professional |
-
-Check feature access:
-
-```javascript
-import { useSubscription } from '../contexts/SubscriptionContext'
-
-const { canAccess } = useSubscription()
-
-if (canAccess('asset_monitoring')) {
-  // Show asset monitoring UI
-}
-```
