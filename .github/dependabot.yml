@@ -20,16 +20,16 @@ updates:
         update-types:
           - 'minor'
           - 'patch'
-      # Majors were ungrouped, so each one opened its own PR and they piled up:
-      # seven were open at once on 21 September - vite 5->7, eslint 8->9,
-      # react 18->19, react-router 6->7 and so on. None of those is a merge;
-      # each is a piece of work. One PR to look at is more useful than seven to
-      # ignore, and it stops the count growing every Monday.
-      major-updates:
-        patterns:
-          - '*'
+    # Majors: no version-update PRs at all (12 November 2026). Ungrouped, seven
+    # piled up by 21 September; grouped, they made one PR of 23 updates (#95)
+    # that could never merge, because npm ci fails on it and ESLint 10,
+    # Tailwind 4, React Router 7, Recharts 3 and Vite 8 each need a hand
+    # migration. Each major is now done by hand on its own branch. Security
+    # updates are separate from version updates and still arrive.
+    ignore:
+      - dependency-name: '*'
         update-types:
-          - 'major'
+          - 'version-update:semver-major'
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: 'github-actions'
