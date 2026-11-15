@@ -56,15 +56,15 @@ again, which is intended: the check outranks the rule.
 
 ### Automatable with help (a person still decides)
 
-| Kind                                  | Open | What would cut the work                                                                                                                                                                                                                                                                                                                             |
-| ------------------------------------- | ---: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sec_disclosure_candidate` (real)     |   17 | Show the gap between filing and claim date (13 of 17 within 90 days), and group 8-K with its 8-K/A. Sort by gap.                                                                                                                                                                                                                                    |
-| state notice ↔ claim (not queued)     |    — | **Tom's call.** 141/143 chose not to ask. If wanted, a correctly labelled `breach_notice_candidate` limited to a date window (incident or report date within 90 days of the claim) would keep roughly 350 of the 714 notices (counted per notice, not per finding; not re-measured per finding because the database stopped accepting connections). |
-| `victim_country_disagreement`         |   43 | Pre-fill each victim's website TLD and the address the notice or filing gives; batch by source pair. Re-raised daily, so verdicts stick.                                                                                                                                                                                                            |
-| `advisory_indicators_unread`          |   29 | This is reading work, not a yes/no. A per-document page with the PDF beside an indicator form.                                                                                                                                                                                                                                                      |
-| `claim_value_unverified`              |   17 | Link the primary source and show the stored value beside it; one click sets `verified_on`.                                                                                                                                                                                                                                                          |
-| `vendor_attribution_candidate`        |   14 | Show the sentence around the matched phrase ("Traced to"), not just the title.                                                                                                                                                                                                                                                                      |
-| `leak_site_notice_candidate`/`review` |   16 | Show the post body where the source has one; 3 have none and should be `deferred` with that reason.                                                                                                                                                                                                                                                 |
+| Kind                                  | Open | What would cut the work                                                                                                                  |
+| ------------------------------------- | ---: | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `sec_disclosure_candidate` (real)     |   17 | Show the gap between filing and claim date (13 of 17 within 90 days), and group 8-K with its 8-K/A. Sort by gap.                         |
+| state notice ↔ claim                  |    — | Built in 166: see below.                                                                                                                 |
+| `victim_country_disagreement`         |   43 | Pre-fill each victim's website TLD and the address the notice or filing gives; batch by source pair. Re-raised daily, so verdicts stick. |
+| `advisory_indicators_unread`          |   29 | This is reading work, not a yes/no. A per-document page with the PDF beside an indicator form.                                           |
+| `claim_value_unverified`              |   17 | Link the primary source and show the stored value beside it; one click sets `verified_on`.                                               |
+| `vendor_attribution_candidate`        |   14 | Show the sentence around the matched phrase ("Traced to"), not just the title.                                                           |
+| `leak_site_notice_candidate`/`review` |   16 | Show the post body where the source has one; 3 have none and should be `deferred` with that reason.                                      |
 
 Common to all: the page loads every open finding at once (750) with no filter
 by kind. A filter by `check_name` and bulk "defer with this reason" would make
@@ -87,3 +87,45 @@ each with a recommendation already in its details. Each is one verdict.
 
 Open falls from 750 to 166. Of those, about 100 are mechanical-with-help and
 about 66 are calls only a person can make.
+
+## Done in the second pass (migration 166 and the page)
+
+| Item                          | What shipped                                                                                                                                                                                                                                                                                                                                                                                              |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SEC candidates                | Each card shows the days between claim and filing. Filtering to the kind sorts by company then date, so an 8-K sits beside its 8-K/A, and says how many other filings the company has queued.                                                                                                                                                                                                             |
+| Readable queue                | A kind filter with counts. With one kind chosen, "Defer all shown" records `deferred` with one reason on each item. It is the only bulk verdict: confirm and reject stay one at a time.                                                                                                                                                                                                                   |
+| State notice ↔ claim          | Tom decided on 15 Nov to ask. `breach_notice_candidate`, one per notice whose claim falls within 90 days of the breach or report date, listing every qualifying claim. Never a match: `match_status` stays `unreviewed`. Triggers on new notices and new claims keep it current. **377 notices** (measured 15 Nov: 434 pairs, 285 claims).                                                                |
+| `/disclosures` reviewed count | Counts `corroborated` and `unrelated` only. It counted `candidate` too, which read 731 filings as ruled on when none had been.                                                                                                                                                                                                                                                                            |
+| Country disagreements         | `review_country_evidence`: the victim's website, its domain and, for a country-code domain, which side it agrees with. Shown on the card, never applied. **Today none of the 43 has a victim website on file**: every link held is the ransomware.live page for the claim, which 168 stops the view from reading as the victim's site. The card says so, and uses a real site when a source supplies one. |
+
+## The five design questions, with recommendations
+
+Each needs one verdict on `/review`, recorded by Tom. None is recorded here.
+
+1. **`audit_log_trust`: should browser audit entries go through the API?**
+   Recommend **confirmed**: route `src/lib/auditLogs.js` through
+   `api/_lib/audit.js` (service key, server side) and drop the insert policy
+   for `authenticated`. While Tom is the only user, it changes nothing visible,
+   and it makes the log evidence rather than self-report.
+2. **`review_authority`: should a verdict need a server-side reviewer list?**
+   Recommend **deferred**, with the reason "only the operator signs in today".
+   It matters once Vigil has users other than Tom. The fix then is a
+   `reviewers` table checked inside `record_verdict`.
+3. **`ioc_actor_backfill`: derive `iocs.actor_id` from `malware_family`?**
+   Recommend **rejected** (do not backfill). This is already the
+   recommendation in the finding: a name match is not an attribution (Mirai,
+   Snake, XWorm), and 3.8% match at all. The defensible route is a provenance
+   column set at ingestion.
+4. **`victim_name_quality`: lift the names out of six HTML descriptions?**
+   Recommend **confirmed**: lift the five names, keep the raw markup in
+   `raw_data`, and mark the sixth (an empty list) placeholder. Each is
+   identifiable by reading it, so this is a cleanup and not a guess.
+5. **`vulnerability_key_quality`: remove the 100 malformed KEV duplicates?**
+   Recommend **confirmed**, with an archive copy first, per migration 094's
+   rule. Every one has a well-formed twin that is already KEV and carries
+   more. Removing them ends the 1,825 vs 1,925 KEV count disagreement.
+
+## After 166
+
+The open queue is 166 + 377 new state-notice questions, about 543. The new
+ones are sortable by gap, and 220 of them are within 30 days.

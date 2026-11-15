@@ -98,6 +98,37 @@ export const reviewQueue = {
       p_rationale: rationale,
     })
   },
+
+  /**
+   * Defer many findings with one reason (they stay open). Deferring is the
+   * only verdict offered in bulk: confirming or rejecting is read one at a
+   * time. Returns how many were recorded and every failure, never a shrug.
+   */
+  async deferMany({ findingIds, rationale }) {
+    const failed = []
+    let recorded = 0
+    for (const findingId of findingIds) {
+      const { error } = await supabase.rpc('record_verdict', {
+        p_finding_id: findingId,
+        p_verdict: 'deferred',
+        p_rationale: rationale,
+      })
+      if (error) failed.push({ findingId, message: error.message })
+      else recorded += 1
+    }
+    return { recorded, failed }
+  },
+
+  /**
+   * What Vigil holds about each victim in a country disagreement (166):
+   * website, its domain, and which side a country-code domain agrees with.
+   * Keyed by finding id.
+   */
+  async getCountryEvidence() {
+    const { data, error } = await supabase.from('review_country_evidence').select('*')
+    if (error) return { data: null, error }
+    return { data: Object.fromEntries((data || []).map((r) => [r.finding_id, r])), error: null }
+  },
 }
 
 export default reviewQueue

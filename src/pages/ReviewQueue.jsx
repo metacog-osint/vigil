@@ -8,11 +8,14 @@ import { fmt, fmtDate } from '../lib/time'
  *
  * The page is deliberately evidence-first. A reviewer sees the question the
  * check asked and everything it found, and cannot record a verdict without
- * writing down why. There is no bulk action and no "clear all", because
+ * writing down why. There is no bulk confirm, reject or "clear all", because
  * clearing a queue quickly is the failure this mechanism exists to prevent.
+ * The one bulk action is "defer with this reason": it leaves every item open
+ * and puts the reason on the record.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { reviewQueue, VERDICTS } from '../lib/supabase/reviewQueue'
+import { daysApart, kindCounts, orderForKind, sameCompanyCount } from '../lib/reviewQueueView'
 import { figure } from '../lib/format'
 import { useAuth } from '../hooks/useAuth'
 
@@ -207,8 +210,105 @@ function VerdictForm({ finding, onRecorded }) {
   )
 }
 
-function FindingCard({ finding, onRecorded }) {
+function BulkDefer({ findings, onDone }) {
+  const [rationale, setRationale] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [result, setResult] = useState(null)
+  const tooShort = rationale.trim().length < 10
+
+  async function submit(e) {
+    e.preventDefault()
+    if (tooShort || saving) return
+    if (
+      !window.confirm(
+        `Defer all ${findings.length} shown? They stay open, each with this reason recorded.`
+      )
+    )
+      return
+    setSaving(true)
+    const out = await reviewQueue.deferMany({
+      findingIds: findings.map((f) => f.id),
+      rationale,
+    })
+    setSaving(false)
+    setResult(out)
+    if (out.failed.length === 0) setRationale('')
+    onDone()
+  }
+
+  return (
+    <form onSubmit={submit} className="cyber-card p-4 space-y-2">
+      <div className="text-xs uppercase tracking-wide text-gray-500">
+        Defer all {figure(findings.length)} shown, with one reason
+      </div>
+      <p className="text-xs text-gray-500">
+        Deferring leaves each item open and puts the reason on the record. Confirming or rejecting
+        is only ever done one item at a time.
+      </p>
+      <textarea
+        value={rationale}
+        onChange={(e) => setRationale(e.target.value)}
+        rows={2}
+        className="cyber-input w-full"
+        placeholder="Why these cannot be decided yet."
+      />
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={tooShort || saving}
+          className="cyber-button disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {saving ? 'Recording…' : 'Defer all shown'}
+        </button>
+        {result && (
+          <span className={`text-xs ${result.failed.length ? 'text-red-400' : 'text-gray-400'}`}>
+            {figure(result.recorded)} deferred
+            {result.failed.length > 0 &&
+              `; ${result.failed.length} not recorded: ${result.failed[0].message}`}
+          </span>
+        )}
+      </div>
+    </form>
+  )
+}
+
+const GAP_KINDS = new Set(['sec_disclosure_candidate', 'breach_notice_candidate'])
+
+function CountryEvidence({ evidence }) {
+  if (!evidence) return null
+  const side =
+    evidence.domain_agrees_with === 'held'
+      ? `agrees with the held value (${evidence.held})`
+      : evidence.domain_agrees_with === 'offered'
+        ? `agrees with the offered value (${evidence.offered})`
+        : evidence.domain_agrees_with === 'neither'
+          ? 'is a country code that matches neither'
+          : 'is not a country code, so it says nothing either way'
+
+  return (
+    <div className="mt-4 p-3 rounded bg-gray-800/50 text-sm">
+      <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+        What Vigil already holds about this victim
+      </div>
+      {evidence.website ? (
+        <p className="text-gray-300">
+          Website <span className="font-mono break-all">{evidence.website}</span>. Its domain (
+          <span className="font-mono">.{(evidence.tld || '?').toLowerCase()}</span>) {side}.
+        </p>
+      ) : (
+        <p className="text-gray-400">No website is recorded for this victim.</p>
+      )}
+      <p className="text-xs text-gray-500 mt-2">
+        {figure(evidence.incidents)} claims name this victim. A domain is evidence, not an answer: a
+        .de brand can be a US company.
+      </p>
+    </div>
+  )
+}
+
+function FindingCard({ finding, onRecorded, siblings = 0, countryEvidence }) {
   const ruled = Boolean(finding.latest_verdict)
+  const gap = GAP_KINDS.has(finding.check_name) ? daysApart(finding) : null
 
   return (
     <article className="cyber-card p-5">
@@ -219,6 +319,18 @@ function FindingCard({ finding, onRecorded }) {
             <span className="font-mono">{finding.check_name}</span>
             {finding.first_seen && <> · first seen {fmtDate(finding.first_seen, { year: true })}</>}
           </div>
+          {(gap !== null || siblings > 0) && (
+            <div className="text-xs text-gray-400 mt-1">
+              {gap !== null && <>{figure(gap)} days between the claim and the regulator record</>}
+              {gap !== null && siblings > 0 && ' · '}
+              {siblings > 0 && (
+                <>
+                  {figure(siblings)} other filing{siblings === 1 ? '' : 's'} from this company in
+                  the queue, listed beside it
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -242,6 +354,10 @@ function FindingCard({ finding, onRecorded }) {
       </header>
 
       <Evidence details={finding.details} />
+
+      {finding.check_name === 'victim_country_disagreement' && (
+        <CountryEvidence evidence={countryEvidence} />
+      )}
 
       {finding.auto_close_rule && (
         <div className="mt-4 p-3 rounded bg-gray-800/50 text-sm">
@@ -287,6 +403,8 @@ export default function ReviewQueue() {
   const [counts, setCounts] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [kind, setKind] = useState('')
+  const [countryEvidence, setCountryEvidence] = useState({})
 
   const load = useCallback(async () => {
     if (!user) return
@@ -310,6 +428,12 @@ export default function ReviewQueue() {
 
     setCounts(countData || null)
     setLoading(false)
+
+    if ((data || []).some((f) => f.check_name === 'victim_country_disagreement')) {
+      // Help, not a gate: if this read fails the cards still show the finding.
+      const { data: ev } = await reviewQueue.getCountryEvidence()
+      setCountryEvidence(ev || {})
+    }
   }, [status, user])
 
   useEffect(() => {
@@ -317,6 +441,13 @@ export default function ReviewQueue() {
   }, [load])
 
   const openCount = useMemo(() => counts?.open, [counts])
+  const kinds = useMemo(() => kindCounts(findings), [findings])
+  const shown = useMemo(() => orderForKind(findings, kind), [findings, kind])
+
+  // A kind that is no longer in the list (all ruled on) falls back to all.
+  useEffect(() => {
+    if (kind && findings && !findings.some((f) => f.check_name === kind)) setKind('')
+  }, [findings, kind])
 
   return (
     <div className="space-y-6">
@@ -382,12 +513,44 @@ export default function ReviewQueue() {
 
       {user && !loading && !error && findings && findings.length > 0 && (
         <>
-          {status === 'open' && typeof openCount === 'number' && (
-            <p className="text-sm text-gray-500">{openCount} waiting on a verdict.</p>
+          <div className="flex flex-wrap items-center gap-3">
+            {status === 'open' && typeof openCount === 'number' && (
+              <p className="text-sm text-gray-500">{figure(openCount)} waiting on a verdict.</p>
+            )}
+            <label className="text-sm text-gray-400 flex items-center gap-2">
+              Kind
+              <select
+                value={kind}
+                onChange={(e) => setKind(e.target.value)}
+                className="cyber-input py-1"
+              >
+                <option value="">All kinds ({figure(findings.length)})</option>
+                {kinds.map((k) => (
+                  <option key={k.kind} value={k.kind}>
+                    {k.kind} ({figure(k.count)})
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {status === 'open' && kind && shown.length > 1 && (
+            <BulkDefer findings={shown} onDone={load} />
           )}
+
           <div className="space-y-4">
-            {findings.map((finding) => (
-              <FindingCard key={finding.id} finding={finding} onRecorded={load} />
+            {shown.map((finding) => (
+              <FindingCard
+                key={finding.id}
+                finding={finding}
+                onRecorded={load}
+                siblings={
+                  finding.check_name === 'sec_disclosure_candidate'
+                    ? sameCompanyCount(finding, findings)
+                    : 0
+                }
+                countryEvidence={countryEvidence[finding.id]}
+              />
             ))}
           </div>
         </>

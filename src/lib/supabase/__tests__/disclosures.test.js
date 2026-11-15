@@ -20,7 +20,18 @@ import { disclosures, DISCLOSURE_SOURCES, COUNT_SCOPES } from '../disclosures'
 /** A chainable stub that resolves to whatever the test hands it. */
 function stubQuery(result) {
   const chain = {}
-  for (const method of ['select', 'order', 'range', 'eq', 'neq', 'not', 'ilike', 'gte', 'lte']) {
+  for (const method of [
+    'select',
+    'order',
+    'range',
+    'eq',
+    'neq',
+    'not',
+    'in',
+    'ilike',
+    'gte',
+    'lte',
+  ]) {
     chain[method] = vi.fn(() => chain)
   }
   chain.then = (resolve, reject) => Promise.resolve(result).then(resolve, reject)
@@ -180,13 +191,14 @@ describe('getCoverage', () => {
     expect(data.withCount).toBeNull()
   })
 
-  it('excludes an unreviewed filing from the ruled-on figure', async () => {
+  it('counts only filings a person ruled on, not ones merely queued', async () => {
     const chain = stubQuery({ count: 16, error: null })
     supabase.from.mockReturnValue(chain)
 
     await disclosures.getCoverage()
 
-    expect(chain.neq).toHaveBeenCalledWith('match_status', 'unreviewed')
+    expect(chain.in).toHaveBeenCalledWith('match_status', ['corroborated', 'unrelated'])
+    expect(chain.in.mock.calls.flat(2)).not.toContain('candidate')
   })
 })
 
