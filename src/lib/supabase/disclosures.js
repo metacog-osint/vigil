@@ -32,6 +32,9 @@
 
 import { supabase } from './client'
 
+/** match_status values that mean a person ruled on the filing. */
+export const RULED_ON = ['corroborated', 'unrelated']
+
 /** The registries Vigil ingests, with what each one does and does not publish. */
 export const DISCLOSURE_SOURCES = {
   'ca-ag': {
@@ -189,7 +192,10 @@ export const disclosures = {
 
     const [total, reviewed, withCount, withDataTypes, withIncidentDate] = await Promise.all([
       count(),
-      count((q) => q.not('match_status', 'is', null).neq('match_status', 'unreviewed')),
+      // Only a verdict counts. 'candidate' means a check asked the question,
+      // not that anyone answered it: counting it here reported 731 filings as
+      // ruled on when none had been (migration 165).
+      count((q) => q.in('match_status', RULED_ON)),
       count((q) => q.not('persons_affected', 'is', null)),
       count((q) => q.not('data_types', 'is', null)),
       count((q) => q.not('incident_date', 'is', null)),
