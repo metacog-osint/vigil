@@ -119,13 +119,6 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      - name: Ingest VulnCheck KEV
-        run: npm run ingest:vulncheck
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VULNCHECK_API_KEY: ${{ secrets.VULNCHECK_API_KEY }}
-
       - name: Ingest NVD
         run: npm run ingest:nvd
         env:

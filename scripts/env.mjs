@@ -41,7 +41,6 @@ export const vapidPublicKey = process.env.VAPID_PUBLIC_KEY
 export const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
 
 // Additional Threat Intelligence API Keys
-export const vulncheckApiKey = process.env.VULNCHECK_API_KEY
 export const pulsediveApiKey = process.env.PULSEDIVE_API_KEY
 export const censysApiKey = process.env.CENSYS_API_KEY
 export const anyrunApiKey = process.env.ANYRUN_API_KEY
