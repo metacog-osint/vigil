@@ -133,9 +133,13 @@ describe('registry', () => {
     expect(JOBS_BY_ID.censys.cost).toBe(CENSYS_BATCH + 1)
   })
 
-  it('keeps paused jobs off the schedule but runnable by hand', () => {
-    expect(JOBS_BY_ID.vulncheck.paused).toBeTruthy()
-    expect(SCHEDULED_JOBS.map((job) => job.id)).not.toContain('vulncheck')
+  it('keeps paused jobs off the schedule', () => {
     expect(SCHEDULED_JOBS).toHaveLength(JOBS.filter((job) => !job.paused).length)
+    expect(SCHEDULED_JOBS.some((job) => job.paused)).toBe(false)
+  })
+
+  it('has no VulnCheck job: retired in migration 164, its terms forbid free redistribution', () => {
+    expect(JOBS_BY_ID.vulncheck).toBeUndefined()
+    expect(JOBS.map((job) => job.id)).not.toContain('vulncheck')
   })
 })
