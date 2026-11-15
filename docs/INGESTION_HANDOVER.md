@@ -59,11 +59,24 @@ registry's declared costs still fit its 48 ticks a day.
 `ingestion_is_healthy()` answers in one boolean whether Vigil may present its data
 as current.
 
+**A run that succeeds and adds nothing is a third case** (163). From 22:15 UTC on
+11 Nov 2026 RansomLook returned the same 100 posts on every run for 32.5 hours, and
+every run was a success. `state` still describes only the check. For feeds where a
+long silence is abnormal, `feed_expectations.stall_after_minutes` sets how long the
+feed goes without adding a record when it is working, and `feed_health.stalled` is
+true past it (null for a feed not watched). Only `ransomlook` is watched, at 18 hours;
+163 has the measurement. A stalled critical feed makes `ingestion_is_healthy()` false
+and fails the Feed health workflow, and `/api/feed` says so in its `health` block.
+
 ```sql
-select feed_id, state, last_status, minutes_since_success, last_error
+select feed_id, state, last_status, minutes_since_success, last_error,
+       stalled, minutes_since_new, stall_after_minutes
 from feed_health order by critical desc, state;
 
 select ingestion_is_healthy();
+
+-- change a threshold, or watch another feed (null stops watching)
+update feed_expectations set stall_after_minutes = 1080 where feed_id = 'ransomlook';
 ```
 
 ### Measuring a feed's cost

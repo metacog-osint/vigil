@@ -11,7 +11,11 @@ import { join, resolve } from 'node:path'
 import {
   buildFeed,
   countFromRange,
+  healthBlock,
+  HEALTH_FEEDS,
+  HEALTH_LANES,
   SECTOR_MAP,
+  stallCaveat,
   subjectOf,
   windowStarts,
 } from '../../../api/_lib/doctrineFeed.js'
@@ -101,6 +105,70 @@ const rows = () => ({
 
 const byId = (fc) => Object.fromEntries(fc.features.map((f) => [f.properties.id, f]))
 const summaryTitle = (fc) => fc.features[0].properties.title
+
+/**
+ * feed_health rows (migration 163) at NOW, shaped like the 11-13 November 2026 stall: ransomlook
+ * runs and succeeds, and has added nothing since 22:15 the day before.
+ */
+const healthRows = () => [
+  {
+    feed_id: 'ransomlook',
+    state: 'fresh',
+    last_status: 'success',
+    last_success_at: '2026-10-30T17:45:39.53+00:00',
+    last_attempt_at: '2026-10-30T17:45:39.53+00:00',
+    stall_after_minutes: 1080,
+    last_new_at: '2026-10-29T22:15:39.208+00:00',
+    stalled: true,
+  },
+  {
+    feed_id: 'data-quality',
+    state: 'fresh',
+    last_status: 'success',
+    last_success_at: '2026-10-30T17:50:00+00:00',
+    last_attempt_at: '2026-10-30T17:50:00+00:00',
+    stall_after_minutes: null,
+    last_new_at: null,
+    stalled: null,
+  },
+  {
+    feed_id: 'cisa-kev',
+    state: 'fresh',
+    last_status: 'success',
+    last_success_at: '2026-10-30T16:00:00+00:00',
+    last_attempt_at: '2026-10-30T16:00:00+00:00',
+    stall_after_minutes: null,
+    last_new_at: '2026-10-28T16:00:00+00:00',
+    stalled: null,
+  },
+  {
+    // An error after the last success: the source was not read on the latest attempt.
+    feed_id: 'sec-edgar',
+    state: 'fresh',
+    last_status: 'error',
+    last_success_at: '2026-10-30T10:00:00+00:00',
+    last_attempt_at: '2026-10-30T16:00:00+00:00',
+    stall_after_minutes: null,
+    last_new_at: null,
+    stalled: null,
+  },
+  {
+    feed_id: 'state-breach-notices',
+    state: 'late',
+    last_status: 'success',
+    last_success_at: '2026-10-29T17:47:03.794+00:00',
+    last_attempt_at: '2026-10-29T17:47:03.794+00:00',
+    stall_after_minutes: null,
+    last_new_at: '2026-10-29T17:47:03.794+00:00',
+    stalled: null,
+  },
+]
+
+// The doctrine kit's rule for a lane read (tic_doctrine.history.lanes_ok), which COP's ledger applies.
+const laneRead = (v) =>
+  Boolean(v.last_ok) &&
+  v.last_ok === v.checked_at &&
+  (v.state == null || ['fresh', 'late', 'up'].includes(v.state))
 
 describe('doctrineFeed', () => {
   it('builds a contract v2 FeatureCollection with a summary first', () => {
@@ -339,16 +407,125 @@ describe('doctrineFeed', () => {
   it("passes the doctrine kit's tradecraft linter", () => {
     const py = ['python3', 'python'].find((cmd) => spawnSync(cmd, ['--version']).status === 0)
     if (!py) return // no Python on this machine; CI has it
-    const file = join(mkdtempSync(join(tmpdir(), 'vigil-feed-')), 'feed.geojson')
-    writeFileSync(file, JSON.stringify(buildFeed(rows(), NOW)))
-    const run = spawnSync(
-      py,
-      [join(ROOT, 'doctrine/kit/tic.py'), 'lint', file, '--doctrine', join(ROOT, 'doctrine')],
-      {
-        encoding: 'utf8',
-      }
+    // Without a health block, and with one carrying the stall and the summary's caveat.
+    for (const fc of [
+      buildFeed(rows(), NOW),
+      buildFeed({ ...rows(), health: healthBlock(healthRows()) }, NOW),
+    ]) {
+      const file = join(mkdtempSync(join(tmpdir(), 'vigil-feed-')), 'feed.geojson')
+      writeFileSync(file, JSON.stringify(fc))
+      const run = spawnSync(
+        py,
+        [join(ROOT, 'doctrine/kit/tic.py'), 'lint', file, '--doctrine', join(ROOT, 'doctrine')],
+        {
+          encoding: 'utf8',
+        }
+      )
+      expect(run.stdout).toContain('Result: PASS')
+      expect(run.status).toBe(0)
+    }
+    // Two linter runs: 9.1 s on a slow drive, past the 5 s default.
+  }, 60_000)
+})
+
+describe('the health block (migration 163)', () => {
+  const health = () => healthBlock(healthRows())
+
+  it('marks a stalled RansomLook as stalled, so its lane is not read', () => {
+    const rl = health().ransomlook
+    expect(rl).toEqual({
+      state: 'stalled',
+      last_ok: '2026-10-30T17:45:39Z',
+      checked_at: '2026-10-30T17:45:39Z',
+      last_status: 'success',
+      last_new: '2026-10-29T22:15:39Z',
+      stall_after_hours: 18,
+      detail:
+        'Runs, but has added no record since 22:15 UTC on 29 Oct 2026, more than its 18-hour limit',
+      feeds: ['ransomlook'],
+    })
+    expect(laneRead(rl)).toBe(false)
+  })
+
+  it("takes Vigil's own lane from the worse of the claims and the trend recompute", () => {
+    const vigil = health().vigil
+    expect(vigil.state).toBe('stalled')
+    expect(vigil.feeds).toEqual(['ransomlook', 'data-quality'])
+    expect(vigil.detail).toMatch(/^ransomlook: Runs, but has added no record since/)
+    expect(laneRead(vigil)).toBe(false)
+
+    // With RansomLook working, the lane was last read when the earlier of the two was.
+    const working = healthRows().map((r) =>
+      r.feed_id === 'ransomlook' ? { ...r, stalled: false, last_new_at: r.last_success_at } : r
     )
-    expect(run.stdout).toContain('Result: PASS')
-    expect(run.status).toBe(0)
+    const ok = healthBlock(working).vigil
+    expect(ok).toMatchObject({
+      state: 'fresh',
+      last_ok: '2026-10-30T17:45:39Z',
+      checked_at: '2026-10-30T17:45:39Z',
+    })
+    expect(laneRead(ok)).toBe(true)
+  })
+
+  it('leaves a lane unread when the latest attempt failed', () => {
+    const sec = health()['sec-edgar']
+    expect(sec.last_ok).toBe('2026-10-30T10:00:00Z')
+    expect(sec.checked_at).toBe('2026-10-30T16:00:00Z')
+    expect(laneRead(sec)).toBe(false)
+  })
+
+  it('reads a late daily feed as read, as the kit does, and names the job behind each state', () => {
+    const h = health()
+    for (const lane of ['ca-ag', 'wa-ag', 'or-ag']) {
+      expect(h[lane]).toMatchObject({ state: 'late', feeds: ['state-breach-notices'] })
+      expect(laneRead(h[lane])).toBe(true)
+    }
+    expect(laneRead(h['cisa-kev'])).toBe(true)
+  })
+
+  it('says when a feed last brought something only for feeds watched for stalls', () => {
+    const h = health()
+    expect(h['cisa-kev']).not.toHaveProperty('last_new')
+    expect(h['cisa-kev']).not.toHaveProperty('stall_after_hours')
+  })
+
+  it('reads a feed the database did not return as never, not as fine', () => {
+    const h = healthBlock(healthRows().filter((r) => r.feed_id !== 'cisa-kev'))
+    expect(h['cisa-kev']).toMatchObject({ state: 'never', last_ok: null, checked_at: null })
+    expect(laneRead(h['cisa-kev'])).toBe(false)
+  })
+
+  it('is null when feed_health could not be read, and the feed then carries no block', () => {
+    expect(healthBlock(null)).toBeNull()
+    expect(buildFeed(rows(), NOW)).not.toHaveProperty('health')
+    expect(buildFeed({ ...rows(), health: healthBlock(null) }, NOW)).not.toHaveProperty('health')
+  })
+
+  it('names a lane for every source an item can come from, so none falls back to the program', () => {
+    const fc = buildFeed({ ...rows(), health: health() }, NOW)
+    const firstSources = new Set(fc.features.map((f) => f.properties.sources[0].id))
+    for (const id of firstSources) expect(Object.keys(fc.health)).toContain(id)
+    expect(new Set(Object.keys(HEALTH_LANES))).toEqual(
+      new Set(['ransomlook', 'cisa-kev', 'sec-edgar', 'ca-ag', 'wa-ag', 'or-ag', 'vigil'])
+    )
+    expect(HEALTH_FEEDS).toEqual([
+      'ransomlook',
+      'cisa-kev',
+      'sec-edgar',
+      'state-breach-notices',
+      'data-quality',
+    ])
+  })
+
+  it('adds a caveat to the summary while RansomLook is stalled, and none otherwise', () => {
+    const stalled = buildFeed({ ...rows(), health: health() }, NOW)
+    expect(summaryTitle(stalled)).toMatch(
+      /\. RansomLook has relayed no new claim since 22:15 UTC on 29 Oct 2026, longer than it goes when working, so the claim count may be incomplete$/
+    )
+    expect(summaryTitle(buildFeed(rows(), NOW))).not.toMatch(/RansomLook/)
+    const working = healthRows().map((r) =>
+      r.feed_id === 'ransomlook' ? { ...r, stalled: false } : r
+    )
+    expect(stallCaveat(healthBlock(working))).toBeNull()
   })
 })

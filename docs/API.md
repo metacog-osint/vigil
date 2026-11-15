@@ -21,6 +21,17 @@ additions and 200 notices. When there are more than the feed lists, the summary 
 how many it names: a group whose name only a restricted source supplied is counted but not listed); a count that
 fails reads "count unavailable", never a number.
 
+**`health`** (migration 163): a top-level block, one entry per source lane, the shape Cordon's and Blackout's feeds
+carry. A lane is an item's first source id: `ransomlook`, `cisa-kev`, `sec-edgar`, `ca-ag`, `wa-ag`, `or-ag`, and
+`vigil` (Vigil's own computation: the escalating groups and the summary). Each entry has `state` (`fresh`, `late`,
+`stale`, `never`, or `stalled`: the job runs and has added nothing for longer than it does when working), `last_ok`,
+`checked_at`, `last_status` and `feeds` (the Vigil jobs it rests on, `feed_health.feed_id`); a feed watched for
+stalls adds `last_new` and `stall_after_hours`, and a stalled one a `detail`. `vigil` takes the worse of
+`ransomlook` and `data-quality`. COP's suite ledger counts a lane read when `last_ok` equals `checked_at` and the
+state is fresh or late, so items of a failed or stalled source do not end. While RansomLook is stalled the summary
+ends with a caveat that the claim count may be incomplete. If `feed_health` cannot be read the block is left out and
+the feed is otherwise unchanged.
+
 ## Daily summary (no key)
 
 `GET https://vigil.theintelligence.company/api/summary` returns one sentence about the latest complete day, for

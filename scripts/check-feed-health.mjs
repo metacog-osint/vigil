@@ -50,6 +50,17 @@
  *
  * If the recent runs cannot be read, the error counts. The rule exists to
  * spare a blip, not to excuse a feed whose history nobody could check.
+ *
+ * A FEED THAT RUNS AND BRINGS NOTHING IS BROKEN TOO (migration 163)
+ *
+ * From 22:15 UTC on 11 November 2026 ransomlook returned the same 100 posts on
+ * every run for 32.5 hours. Every run succeeded, so its state stayed `fresh`
+ * and this check passed with no new claim for a day and a half. feed_health
+ * now says `stalled` when a feed with a stall_after_minutes has gone longer
+ * than that without adding a record, and a stalled critical feed fails here.
+ * Only feeds where silence is abnormal have a threshold (18 h for ransomlook;
+ * the measurement is in 163). `stalled` is null for the rest, which this reads
+ * as not watched, never as fine.
  */
 
 const BROKEN_STATES = new Set(['stale', 'never'])
@@ -83,7 +94,7 @@ export function classify(feeds, recent = {}) {
   const blips = []
 
   for (const f of feeds) {
-    if (BROKEN_STATES.has(f.state)) {
+    if (BROKEN_STATES.has(f.state) || f.stalled === true) {
       broken.push(f)
     } else if (f.last_status !== 'error') {
       continue
@@ -121,11 +132,33 @@ export function dataAge(f) {
   return f.snapshot_published ? `${version}, published ${f.snapshot_published}` : version
 }
 
+/**
+ * Why a stalled feed is stalled, in words: how long since it last added a
+ * record, against how long it goes when working. null when it is not stalled.
+ */
+export function stallNote(f) {
+  if (f.stalled !== true) return null
+  const limit = hoursSince(f.stall_after_minutes)
+  const h = hoursSince(f.minutes_since_new)
+  const since = h === null ? 'has never added a record' : `has added nothing for ${h}h`
+  return `runs, but ${since} (stalls after ${limit}h)`
+}
+
+/** The table's "Hours since new" cell: only for a feed watched for stalls. */
+export function sinceNew(f) {
+  if (f.stalled === null || f.stalled === undefined) return '—'
+  const h = hoursSince(f.minutes_since_new)
+  const cell = h === null ? 'never' : String(h)
+  return f.stalled ? `${cell} (stalled)` : cell
+}
+
 function describe(f) {
   const h = hoursSince(f.minutes_since_success)
   const age = h === null ? 'never succeeded' : `last success ${h}h ago`
   const status = f.last_status ?? 'never ran'
-  const vintage = dataAge(f) ? ` (data: ${dataAge(f)})` : ''
+  const vintage =
+    (dataAge(f) ? ` (data: ${dataAge(f)})` : '') +
+    (stallNote(f) ? `; stalled: ${stallNote(f)}` : '')
   const err = f.last_error ? `\n  - \`${String(f.last_error).slice(0, 200)}\`` : ''
   return `- **${f.feed_id}** — state \`${f.state}\`, last status \`${status}\`, ${age}${vintage}${err}`
 }
@@ -135,12 +168,12 @@ export function table(feeds) {
     .map((f) => {
       const h = hoursSince(f.minutes_since_success)
       const data = dataAge(f) ?? '—'
-      return `| ${f.feed_id} | ${f.state} | ${f.last_status ?? 'never ran'} | ${h ?? 'never'} | ${data} |`
+      return `| ${f.feed_id} | ${f.state} | ${f.last_status ?? 'never ran'} | ${h ?? 'never'} | ${sinceNew(f)} | ${data} |`
     })
     .join('\n')
   return (
-    '| Feed | State | Last status | Hours since success | Data |\n' +
-    '| --- | --- | --- | --- | --- |\n' +
+    '| Feed | State | Last status | Hours since success | Hours since new | Data |\n' +
+    '| --- | --- | --- | --- | --- | --- |\n' +
     rows
   )
 }
@@ -181,7 +214,8 @@ async function main() {
 
   const query =
     'select=feed_id,critical,state,last_status,last_error,minutes_since_success,' +
-    'expected_interval_minutes,snapshot_version,snapshot_published' +
+    'expected_interval_minutes,snapshot_version,snapshot_published,' +
+    'stall_after_minutes,minutes_since_new,stalled' +
     '&critical=is.true&order=feed_id'
 
   let feeds
@@ -239,6 +273,7 @@ async function main() {
     '</details>',
   ].join('\n')
 
+  // eslint-disable-next-line no-console -- the job summary is this script's output
   console.log(summary)
 
   if (process.env.GITHUB_STEP_SUMMARY) {
