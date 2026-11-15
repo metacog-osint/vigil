@@ -236,8 +236,117 @@ export function subjectOf(v) {
  *   ({ actors, claims, kev, disclosures }); a missing or failed count is null
  * @param {Date} [now]
  */
+/**
+ * The feed's per-source `health` block, the shape Cordon's and Blackout's feeds carry: one entry per
+ * source lane, `{ state, last_ok, checked_at, ... }`, read from feed_health (migrations 101, 153, 163).
+ *
+ * A lane is an item's first source id. COP's suite ledger files each item under its lane and ends it
+ * only when that lane was read, which the kit decides as last_ok equal to checked_at and a state of
+ * fresh or late (tic_doctrine.history.lanes_ok). So a source that failed, or stalled, ends nothing.
+ *
+ * Why it exists: from 22:15 UTC on 11 November 2026 RansomLook returned the same posts on every run
+ * for 32.5 hours. Every run succeeded, and this feed read like a quiet day. A lane whose feed is
+ * stalled (163: it runs, and has added nothing for longer than it does when working) has state
+ * `stalled` and is not read.
+ *
+ * Each lane names the Vigil feeds (feed_health.feed_id) it rests on. `vigil` is Vigil's own
+ * computation, the escalating groups and the summary: it rests on the claims and on the hourly trend
+ * recompute, and is only as good as the worse of the two. The state attorney-general lanes all come
+ * from one job.
+ */
+export const HEALTH_LANES = {
+  ransomlook: ['ransomlook'],
+  'cisa-kev': ['cisa-kev'],
+  'sec-edgar': ['sec-edgar'],
+  'ca-ag': ['state-breach-notices'],
+  'wa-ag': ['state-breach-notices'],
+  'or-ag': ['state-breach-notices'],
+  vigil: ['ransomlook', 'data-quality'],
+}
+export const HEALTH_FEEDS = [...new Set(Object.values(HEALTH_LANES).flat())]
+const READ_STATES = new Set(['fresh', 'late'])
+const STATE_RANK = { fresh: 0, late: 1, stalled: 2, stale: 3, never: 4 }
+
+/** "22:15 UTC on 11 Nov 2026". */
+const clock = (d) => `${utc(d).slice(11, 16)} UTC on ${plain(d)}`
+
+/** One Vigil feed's entry. A feed feed_health does not return reads `never`, not fine. */
+export function feedEntry(row) {
+  if (!row) return { state: 'never', last_ok: null, checked_at: null, last_status: null }
+  const state = row.stalled === true ? 'stalled' : row.state || 'never'
+  const entry = {
+    state,
+    last_ok: row.last_success_at ? utc(row.last_success_at) : null,
+    checked_at: row.last_attempt_at ? utc(row.last_attempt_at) : null,
+    last_status: row.last_status ?? null,
+  }
+  // Only a feed watched for stalls says when it last brought something new: null means not watched.
+  if (row.stalled === true || row.stalled === false) {
+    entry.last_new = row.last_new_at ? utc(row.last_new_at) : null
+    entry.stall_after_hours = row.stall_after_minutes / 60
+  }
+  if (state === 'stalled') {
+    entry.detail = row.last_new_at
+      ? `Runs, but has added no record since ${clock(row.last_new_at)}, more than its ${entry.stall_after_hours}-hour limit`
+      : 'Runs, but has never added a record'
+  }
+  return entry
+}
+
+const isRead = (e) => Boolean(e.last_ok) && e.last_ok === e.checked_at && READ_STATES.has(e.state)
+
+/**
+ * `health` from feed_health rows; null when they could not be read. Without the block the kit
+ * counts every lane as read, which is how this feed behaved before 163; a block saying nothing was
+ * read would be false, because the items it carries were read.
+ */
+export function healthBlock(rows) {
+  if (!Array.isArray(rows)) return null
+  const byId = Object.fromEntries(rows.map((r) => [r.feed_id, r]))
+  const out = {}
+  for (const [lane, feeds] of Object.entries(HEALTH_LANES)) {
+    const entries = feeds.map((id) => ({ id, ...feedEntry(byId[id]) }))
+    // The first feed not read decides the lane; if every one was read, the worst state does, and
+    // the lane was last read when the earliest of them was.
+    const unread = entries.find((e) => !isRead(e))
+    const pick =
+      unread || entries.reduce((a, b) => (STATE_RANK[b.state] > STATE_RANK[a.state] ? b : a))
+    const { id, ...entry } = pick
+    if (!unread && entries.length > 1) {
+      const earliest = entries.map((e) => e.last_ok).sort()[0]
+      entry.last_ok = earliest
+      entry.checked_at = earliest
+    }
+    if (entries.length > 1 && unread) {
+      entry.detail = `${id}: ${entry.detail || `state ${entry.state}, last status ${entry.last_status ?? 'none'}`}`
+    }
+    out[lane] = { ...entry, feeds }
+  }
+  return out
+}
+
+/**
+ * The summary's caveat when RansomLook has stalled. The claim count is then what RansomLook relayed,
+ * which may be short of what the leak sites posted: absence and zero are different answers.
+ */
+export function stallCaveat(health) {
+  const rl = health?.ransomlook
+  if (rl?.state !== 'stalled') return null
+  return rl.last_new
+    ? `RansomLook has relayed no new claim since ${clock(rl.last_new)}, longer than it goes when working, so the claim count may be incomplete`
+    : 'RansomLook has relayed no claim at all, so the claim count may be incomplete'
+}
+
 export function buildFeed(
-  { actors = [], claims = [], actorNames = {}, kev = [], disclosures = [], counts = {} },
+  {
+    actors = [],
+    claims = [],
+    actorNames = {},
+    kev = [],
+    disclosures = [],
+    counts = {},
+    health = null,
+  },
   now = new Date()
 ) {
   const published = utc(now)
@@ -487,7 +596,8 @@ export function buildFeed(
           scope: `first seen since ${since(start.disclosures)}`,
           part: latest,
         }),
-      ].join('; '),
+      ].join('; ') +
+      (stallCaveat(health) ? `. ${stallCaveat(health)}` : ''),
     tier: 'routine',
     status_class: 'reported',
     us_person_data: 'none',
@@ -507,6 +617,7 @@ export function buildFeed(
     attribution:
       'Vigil, The Intelligence Company. Leak-site claims: RansomLook (CC BY 4.0). KEV: CISA. EPSS: FIRST.',
     language_key: LANGUAGE_KEY,
+    ...(health ? { health } : {}),
     features: [summary, ...feats],
   }
 }

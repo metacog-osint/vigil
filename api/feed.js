@@ -6,7 +6,13 @@
  * at the edge so a busy reader cannot load the database. Built by api/_lib/doctrineFeed.js.
  */
 
-import { buildFeed, countFromRange, windowStarts } from './_lib/doctrineFeed.js'
+import {
+  buildFeed,
+  countFromRange,
+  healthBlock,
+  HEALTH_FEEDS,
+  windowStarts,
+} from './_lib/doctrineFeed.js'
 
 export const config = { runtime: 'edge' }
 
@@ -47,7 +53,7 @@ export default async function handler(request) {
   // The summary names each window by these same dates.
   const since = windowStarts(now)
   try {
-    const [escalatingPage, claimsPage, kevPage, disclosuresPage] = await Promise.all([
+    const [escalatingPage, claimsPage, kevPage, disclosuresPage, healthRows] = await Promise.all([
       rest(
         base,
         key,
@@ -72,6 +78,16 @@ export default async function handler(request) {
         `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since.disclosures}T00:00:00Z&order=first_seen.desc&limit=200`,
         { count: true }
       ),
+      // The health block (migration 163). Its failure never fails the feed: without it the feed is
+      // what it was before 163, and COP counts every lane as read. 29 ms warm, measured 15 Nov 2026.
+      rest(
+        base,
+        key,
+        `feed_health?select=feed_id,state,last_status,last_success_at,last_attempt_at,stall_after_minutes,last_new_at,stalled&feed_id=in.(${HEALTH_FEEDS.join(',')})`
+      ).catch((err) => {
+        console.error('feed: health read failed', err)
+        return null
+      }),
     ])
     const escalating = escalatingPage.rows
     const claims = claimsPage.rows
@@ -122,7 +138,8 @@ export default async function handler(request) {
         name: actorNames[a.id],
         ...(actorOrigins[a.id] || {}),
       }))
-    const feed = buildFeed({ actors, claims, actorNames, kev, disclosures, counts }, now)
+    const health = healthBlock(healthRows)
+    const feed = buildFeed({ actors, claims, actorNames, kev, disclosures, counts, health }, now)
     return new Response(JSON.stringify(feed), {
       status: 200,
       headers: {
