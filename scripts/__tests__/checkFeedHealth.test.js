@@ -16,6 +16,8 @@ import {
   table,
   errorsInARow,
   allowsOneError,
+  stallNote,
+  sinceNew,
 } from '../check-feed-health.mjs'
 
 const feed = (overrides) => ({
@@ -171,5 +173,55 @@ describe('dataAge', () => {
 
   it('does not count a fresh snapshot feed as broken', () => {
     expect(classify([ransomwhere]).broken).toEqual([])
+  })
+})
+
+describe('a stalled feed (migration 163)', () => {
+  // 11-13 November 2026: ransomlook succeeded on every run for 32.5 hours and
+  // added nothing. state stayed fresh and this check passed. It must not again.
+  const ransomlook = feed({
+    feed_id: 'ransomlook',
+    expected_interval_minutes: 60,
+    stall_after_minutes: 1080,
+    minutes_since_new: 1950,
+    stalled: true,
+  })
+
+  it('fails a critical feed that runs, succeeds and adds nothing past its threshold', () => {
+    expect(ransomlook.state).toBe('fresh')
+    expect(ransomlook.last_status).toBe('success')
+    expect(classify([ransomlook]).broken).toEqual([ransomlook])
+  })
+
+  it('does not fail one inside its threshold', () => {
+    const quiet = { ...ransomlook, minutes_since_new: 1020, stalled: false }
+    expect(classify([quiet]).broken).toEqual([])
+  })
+
+  it('reads null as not watched, which is neither broken nor stalled', () => {
+    const kev = feed({ feed_id: 'cisa-kev', stall_after_minutes: null, stalled: null })
+    expect(classify([kev]).broken).toEqual([])
+    expect(stallNote(kev)).toBeNull()
+  })
+
+  it('says how long it has added nothing, against its threshold', () => {
+    expect(stallNote(ransomlook)).toBe('runs, but has added nothing for 32h (stalls after 18h)')
+    expect(stallNote({ ...ransomlook, minutes_since_new: null })).toBe(
+      'runs, but has never added a record (stalls after 18h)'
+    )
+  })
+
+  it('shows hours since new only for watched feeds, and marks a stall', () => {
+    expect(sinceNew(ransomlook)).toBe('32 (stalled)')
+    expect(sinceNew({ ...ransomlook, minutes_since_new: 300, stalled: false })).toBe('5')
+    expect(sinceNew(feed({ stalled: null }))).toBe('—')
+    expect(sinceNew(feed())).toBe('—')
+  })
+
+  it('puts the stall in the summary table beside the fresh state', () => {
+    const row = table([ransomlook])
+      .split('\n')
+      .find((line) => line.startsWith('| ransomlook'))
+    expect(row).toBe('| ransomlook | fresh | success | 0 | 32 (stalled) | — |')
   })
 })
