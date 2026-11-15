@@ -64,7 +64,14 @@ export const reviewQueue = {
     const { data, error } = await supabase.from('review_queue').select('status')
     if (error) return { data: null, error }
 
-    const counts = { open: 0, resolved: 0, dismissed: 0, auto_resolved: 0, all: data.length }
+    const counts = {
+      open: 0,
+      resolved: 0,
+      dismissed: 0,
+      auto_resolved: 0,
+      auto_closed: 0,
+      all: data.length,
+    }
     for (const row of data) {
       if (row.status in counts) counts[row.status] += 1
     }
