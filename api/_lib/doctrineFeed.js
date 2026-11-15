@@ -286,8 +286,11 @@ export function feedEntry(row) {
     entry.stall_after_hours = row.stall_after_minutes / 60
   }
   if (state === 'stalled') {
-    entry.detail = row.last_new_at
-      ? `Runs, but has added no record since ${clock(row.last_new_at)}, more than its ${entry.stall_after_hours}-hour limit`
+    // 167: the count of new records began at new_counted_since. A feed with
+    // nothing since then has not "never" added one; it has added none since.
+    const since = row.last_new_at || row.new_counted_since
+    entry.detail = since
+      ? `Runs, but has added no record since ${clock(since)}, more than its ${entry.stall_after_hours}-hour limit`
       : 'Runs, but has never added a record'
   }
   return entry

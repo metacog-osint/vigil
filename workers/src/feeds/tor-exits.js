@@ -3,6 +3,7 @@
  * Cloudflare Worker version
  */
 
+import { createInsertTally } from '../lib/inserts.js'
 import { stampListed } from '../lib/sightings.js'
 
 const TOR_EXIT_URL = 'https://check.torproject.org/torbulkexitlist'
@@ -11,6 +12,7 @@ export async function ingestTorExits(supabase) {
   console.log('Starting Tor exit nodes ingestion...')
 
   let updated = 0
+  const inserts = createInsertTally()
   let failed = 0
 
   try {
@@ -50,15 +52,15 @@ export async function ingestTorExits(supabase) {
         }
       }))
 
-      const { error } = await supabase
+      const { error, inserted } = await supabase
         .from('iocs')
-        .upsert(stampListed(records), { onConflict: 'type,value' })
+        .upsert(stampListed(records), { onConflict: 'type,value', countInserted: true })
 
       if (error) {
         console.error(`Batch ${i}-${i+batch.length} failed:`, error.message)
         failed += batch.length
       } else {
-        updated += batch.length
+        updated += batch.length - inserts.record(inserted)
       }
     }
 
@@ -68,5 +70,5 @@ export async function ingestTorExits(supabase) {
   }
 
   console.log(`Tor exits complete: ${updated} updated, ${failed} failed`)
-  return { success: true, source: 'tor-exits', updated, failed }
+  return { success: true, source: 'tor-exits', added: inserts.added, updated, failed }
 }

@@ -3,6 +3,7 @@
  * Cloudflare Worker version
  */
 
+import { createInsertTally } from '../lib/inserts.js'
 import { stampListed } from '../lib/sightings.js'
 
 const THREATFOX_API = 'https://threatfox-api.abuse.ch/api/v1/'
@@ -17,6 +18,7 @@ export async function ingestThreatFox(supabase, env) {
   }
 
   let updated = 0
+  const inserts = createInsertTally()
   let failed = 0
 
   try {
@@ -65,15 +67,15 @@ export async function ingestThreatFox(supabase, env) {
         }
       }))
 
-      const { error } = await supabase
+      const { error, inserted } = await supabase
         .from('iocs')
-        .upsert(stampListed(records), { onConflict: 'type,value' })
+        .upsert(stampListed(records), { onConflict: 'type,value', countInserted: true })
 
       if (error) {
         console.error(`ThreatFox batch failed:`, error.message)
         failed += batch.length
       } else {
-        updated += batch.length
+        updated += batch.length - inserts.record(inserted)
       }
     }
 
@@ -83,7 +85,7 @@ export async function ingestThreatFox(supabase, env) {
   }
 
   console.log(`ThreatFox complete: ${updated} updated, ${failed} failed`)
-  return { success: true, source: 'threatfox', updated, failed }
+  return { success: true, source: 'threatfox', added: inserts.added, updated, failed }
 }
 
 function mapIocType(threatfoxType) {
