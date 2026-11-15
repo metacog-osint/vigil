@@ -81,7 +81,9 @@ beforeAll(async () => {
       ('wa:far', 'Faraway Corporation', 'WA', '2026-08-15', '2026-08-01', 'wa-ag'),
       ('sec:1', 'Sec Only Co', null, '2026-07-05', null, 'sec-edgar');
   `)
-  await db.exec((await import('./pg.js')).migration('166_breach_notice_candidates.sql'))
+  const { migration } = await import('./pg.js')
+  await db.exec(migration('166_breach_notice_candidates.sql'))
+  await db.exec(migration('168_country_evidence_real_sites.sql'))
 }, 60_000)
 
 afterAll(async () => {
@@ -150,7 +152,10 @@ describe('the triggers', () => {
 describe('review_country_evidence', () => {
   it('reads the victim website and says which side a country-code domain agrees with', async () => {
     await db.exec(`
-      insert into incidents (victim_name, victim_website) values ('World Wide Fittings', 'https://www.wwfittings.co.uk/about');
+      insert into incidents (victim_name, victim_website) values
+        ('World Wide Fittings', 'https://www.wwfittings.co.uk/about'),
+        -- What production holds (168): the aggregator's page, not the victim's site.
+        ('Nowhere Ltd', 'https://www.ransomware.live/id/Tm93aGVyZQ==');
       insert into data_quality_findings (check_name, subject, severity, details) values
         ('victim_country_disagreement', 'World Wide Fittings: US or GB', 'info', '{"held":"US","offered":"GB"}'),
         ('victim_country_disagreement', 'Nowhere Ltd: US or DE', 'info', '{"held":"US","offered":"DE"}');
@@ -159,7 +164,7 @@ describe('review_country_evidence', () => {
       `select victim, website, tld, domain_agrees_with, incidents::int from review_country_evidence order by victim`
     )
     expect(rows).toEqual([
-      { victim: 'Nowhere Ltd', website: null, tld: null, domain_agrees_with: null, incidents: 0 },
+      { victim: 'Nowhere Ltd', website: null, tld: null, domain_agrees_with: null, incidents: 1 },
       {
         victim: 'World Wide Fittings',
         website: 'https://www.wwfittings.co.uk/about',
