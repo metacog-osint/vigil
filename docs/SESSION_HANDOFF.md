@@ -9,12 +9,39 @@ documentation in this repository.
 is on screen, what is not, and the two rules the disclosures query layer encodes
 that a careless commit would undo.
 
-**Newest first: §0 (4 November 2026).** §2 onward is dated 24 September or
-earlier; re-measure any number there before trusting it.
+**Newest first: §0 (15 November 2026), then §0b (4 November).** §2 onward is
+dated 24 September or earlier; re-measure any number there before trusting it.
 
 ---
 
-## 0. Latest: 26 October – 4 November 2026
+## 0. Latest: 14–15 November 2026
+
+_Written 15 Nov 2026, about 02:45 UTC (8:45 p.m. CST on 14 Nov). Measured live
+then._
+
+- **Production:** `aa0627a` (house bar tic-nav v1.10), deployed 20:20 UTC 14 Nov.
+  CI and the Feed health workflow green. Supabase `ACTIVE_HEALTHY`, 3,068 MB.
+  Migrations applied to 162.
+- **Feeds:** 30 of 36 fresh. CISA advisories recovered on their own (403 on
+  5 Nov). Five daily feeds were `late` only because the 01:47 UTC daily batch
+  was due. `vulncheck` still 401, waiting on the key.
+- **RansomLook stalled 22:15 UTC 11 Nov to 06:45 UTC 13 Nov (32.5 h)**: the
+  same 100 posts on every run, every run a success, so nothing noticed.
+  RansomLook's own API has no post dated 12 Nov and its counts match Vigil's
+  exactly, so Vigil lost nothing. **Built on branch `feat/feed-stall-check`:**
+  migration 163 (`feed_health.stalled`, ransomlook at 18 h; the measurement is
+  in the file), the Feed health script failing on a stalled critical feed, and
+  a per-source `health` block in `/api/feed` for COP's ledger.
+  **163 is not applied; apply it before merging** (the script names its
+  columns). `docs/INGESTION_HANDOVER.md` has the query.
+- **Review queue:** 750 open (600 `sec_disclosure_candidate`). The last verdict
+  a person recorded is dated 20 Sep.
+- **Dependabot #97** (10 minor and patch) fails `npm ci`: its lockfile is out of
+  sync. Regenerate with npm 10.8.2, which CI's Node 20 uses.
+
+---
+
+## 0b. 26 October – 4 November 2026
 
 _Written 4 Nov 2026, about 8:45 p.m. CST, by the session that merged #73–#78
 and #82 and restored the database. Feed health measured live at 02:42 UTC on
