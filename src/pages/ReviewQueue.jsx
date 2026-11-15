@@ -20,6 +20,7 @@ const STATUS_TABS = [
   { value: 'open', label: 'Open' },
   { value: 'resolved', label: 'Confirmed' },
   { value: 'dismissed', label: 'Not a problem' },
+  { value: 'auto_closed', label: 'Closed by a rule' },
   { value: 'all', label: 'Everything' },
 ]
 
@@ -242,6 +243,21 @@ function FindingCard({ finding, onRecorded }) {
 
       <Evidence details={finding.details} />
 
+      {finding.auto_close_rule && (
+        <div className="mt-4 p-3 rounded bg-gray-800/50 text-sm">
+          <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+            Closed by a rule, not a person
+            <span className="ml-2 normal-case font-mono text-gray-600">
+              {finding.auto_close_rule}
+            </span>
+          </div>
+          <p className="text-gray-300">{finding.auto_close_reason}</p>
+          <p className="text-xs text-gray-500 mt-2">
+            {finding.auto_closed_at && fmt(finding.auto_closed_at, { year: true })}
+          </p>
+        </div>
+      )}
+
       {ruled && (
         <div className="mt-4 p-3 rounded bg-gray-800/50 text-sm">
           <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
@@ -308,7 +324,9 @@ export default function ReviewQueue() {
         <h1 className="text-2xl font-bold text-white">Review Queue</h1>
         <p className="text-gray-400 mt-1">
           Judgment calls Vigil has refused to guess at. Each verdict is kept with the reasoning that
-          supports it, and nothing here is applied to the data automatically.
+          supports it, and nothing here is applied to the data automatically. A few items are closed
+          by a rule when they were raised in error or their condition has gone; each says which rule
+          and why, and can be reopened.
         </p>
       </header>
 
