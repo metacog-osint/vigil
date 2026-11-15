@@ -140,7 +140,13 @@ export function stallNote(f) {
   if (f.stalled !== true) return null
   const limit = hoursSince(f.stall_after_minutes)
   const h = hoursSince(f.minutes_since_new)
-  const since = h === null ? 'has never added a record' : `has added nothing for ${h}h`
+  // 167: with no new record since the count began, say since when, not "never".
+  const since =
+    h !== null
+      ? `has added nothing for ${h}h`
+      : f.new_counted_since
+        ? `has added nothing since its count began, ${f.new_counted_since}`
+        : 'has never added a record'
   return `runs, but ${since} (stalls after ${limit}h)`
 }
 
@@ -215,7 +221,7 @@ async function main() {
   const query =
     'select=feed_id,critical,state,last_status,last_error,minutes_since_success,' +
     'expected_interval_minutes,snapshot_version,snapshot_published,' +
-    'stall_after_minutes,minutes_since_new,stalled' +
+    'stall_after_minutes,minutes_since_new,stalled,new_counted_since' +
     '&critical=is.true&order=feed_id'
 
   let feeds

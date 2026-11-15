@@ -64,16 +64,75 @@ as current.
 every run was a success. `state` still describes only the check. For feeds where a
 long silence is abnormal, `feed_expectations.stall_after_minutes` sets how long the
 feed goes without adding a record when it is working, and `feed_health.stalled` is
-true past it (null for a feed not watched). Only `ransomlook` is watched, at 18 hours;
-163 has the measurement. A stalled critical feed makes `ingestion_is_healthy()` false
-and fails the Feed health workflow, and `/api/feed` says so in its `health` block.
+true past it (null for a feed not watched). A stalled critical feed makes
+`ingestion_is_healthy()` false and fails the Feed health workflow, and `/api/feed` says
+so in its `health` block.
+
+**`records_added` means genuinely new records, or null** (worker change of 15 Nov
+2026, migration 167). Before it, every job but ransomlook and ioc-geo logged 0 there
+whatever it brought: the scheduler read only `added`, the upsert feeds called every
+row written `updated` (ThreatFox: 757,520 "updated" in 30 days, 0 added), and the Edge
+Function feeds reported real insert counts under names nothing read. Now:
+
+- **Upsert feeds** (threatfox, urlhaus, feodo, malwarebazaar, pulsedive, tor-exits,
+  bgpstream, nvd, cisa-kev, cisa-ics, anyrun-trends) pass `countInserted: true`. The
+  same request asks PostgREST for `created_at` back; rows stamped with that
+  statement's transaction time are the inserted ones (`countInsertedRows` in
+  `workers/src/lib/supabase.js`, which also gives the one known overcount).
+  `createInsertTally` (`lib/inserts.js`) sums them. Only for tables whose
+  `created_at` defaults to now() and is not in the payload.
+- **Edge Function feeds** declare `countNew` in the registry, reading `new`,
+  `advisories_new`, `filings_new`, or one count per blog or state.
+- **Everything else** (enrichment, refreshes, the RPC checks) logs **null**, which
+  means "cannot say", not "nothing". The ops page shows it as —.
+- Every row with a real count carries `metadata.new_counted = true`. 167 reads only
+  those rows for `last_new_at` and `stalled`, and adds `new_counted_since` (the first),
+  so years of zeros and legacy counts cannot read as a stall: a feed's clock starts
+  when its count does. A new job that reports a count is watchable the same day.
+
+**Watched (167), from 45 days of history to 15 Nov.** The longest gap for every iocs
+and vulnerabilities feed is the 3–4 Nov database pause; the thresholds sit above the
+longest ordinary gap and below that.
+
+| Feed | Every | Longest ordinary gaps | Stalls after |
+| --- | --- | --- | --- |
+| ransomlook (163) | 1 h | 20, 17, 15 h | 18 h |
+| threatfox (critical) | 1 h | 6, 5, 5 h | 12 h |
+| urlhaus | 6 h | 14, 8, 8 h | 24 h |
+| malwarebazaar | 6 h | 14, 12, 9 h | 24 h |
+| nvd | 6 h | 13, 12, 9 h | 24 h |
+| tor-exits | 1 day | 34, 30, 26 h | 72 h |
+| vendor-research | 6 h | 82, 67, 63 h | 144 h |
+| state-breach-notices | 1 day | 97, 75, 73 h | 144 h |
+
+**Not watched, deliberately:** cisa-kev (a few additions a week, irregular),
+pulsedive (gaps to 256 h), feodo and bgpstream (nothing new in 45 days), cisa-ics
+(gaps to 172 h), anyrun-trends (gaps to 121 h), cisa-advisories, ncsc-advisories,
+sec-edgar, fincen-advisories and ofac-sdn (new records in 1 to 5 runs in 45 days),
+ransomwhere (a snapshot), and the enrichment and check jobs, which add nothing by
+design. The reasoning per feed is in 167.
+
+**Order:** deploy the worker, wait for a ransomlook run, apply 167 (it refuses
+otherwise, because applied first it would leave ransomlook unwatched), then merge:
+`scripts/check-feed-health.mjs` and `/api/feed` read `new_counted_since`. The merge
+waits on 167 and 167 waits on the deployed worker, so the deploy runs from the
+branch's own checkout, not from the shared tree on `main`, which does not have the
+change yet. For this change that was
+`D:\Projects\Vigil\.claude\worktrees\focused-noether-13fb98\workers`, rebased onto
+`main` after #100 so the same deploy also drops the VulnCheck job.
 
 ```sql
 select feed_id, state, last_status, minutes_since_success, last_error,
-       stalled, minutes_since_new, stall_after_minutes
+       stalled, minutes_since_new, stall_after_minutes, new_counted_since
 from feed_health order by critical desc, state;
 
 select ingestion_is_healthy();
+
+-- what the feeds have counted since the deploy
+select source, count(*) runs, sum(records_added) new_records,
+       count(*) filter (where records_added is null) uncounted
+from sync_log where completed_at > now() - interval '1 day'
+group by source order by source;
 
 -- change a threshold, or watch another feed (null stops watching)
 update feed_expectations set stall_after_minutes = 1080 where feed_id = 'ransomlook';

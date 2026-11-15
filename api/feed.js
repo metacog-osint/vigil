@@ -83,7 +83,7 @@ export default async function handler(request) {
       rest(
         base,
         key,
-        `feed_health?select=feed_id,state,last_status,last_success_at,last_attempt_at,stall_after_minutes,last_new_at,stalled&feed_id=in.(${HEALTH_FEEDS.join(',')})`
+        `feed_health?select=feed_id,state,last_status,last_success_at,last_attempt_at,stall_after_minutes,last_new_at,stalled,new_counted_since&feed_id=in.(${HEALTH_FEEDS.join(',')})`
       ).catch((err) => {
         console.error('feed: health read failed', err)
         return null

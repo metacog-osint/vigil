@@ -211,6 +211,19 @@ describe('a stalled feed (migration 163)', () => {
     )
   })
 
+  it('says since when, not never, for a feed whose count began with 167', () => {
+    const threatfox = {
+      ...ransomlook,
+      feed_id: 'threatfox',
+      stall_after_minutes: 720,
+      minutes_since_new: null,
+      new_counted_since: '2026-11-16T02:00:00+00:00',
+    }
+    expect(stallNote(threatfox)).toBe(
+      'runs, but has added nothing since its count began, 2026-11-16T02:00:00+00:00 (stalls after 12h)'
+    )
+  })
+
   it('shows hours since new only for watched feeds, and marks a stall', () => {
     expect(sinceNew(ransomlook)).toBe('32 (stalled)')
     expect(sinceNew({ ...ransomlook, minutes_since_new: 300, stalled: false })).toBe('5')

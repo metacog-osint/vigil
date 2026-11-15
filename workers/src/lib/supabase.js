@@ -41,6 +41,50 @@ export function createSubrequestBudget({ limit = 50, reserve = 12 } = {}) {
   }
 }
 
+/**
+ * How many rows of an upsert were inserted rather than updated, from the rows
+ * PostgREST returns with `select=created_at`.
+ *
+ * Why this works: `created_at` defaults to now(), which is the transaction's
+ * start time, so every row one statement inserts carries the same timestamp,
+ * and it is later than any row that already existed. The feeds never send
+ * created_at, so an update leaves it alone. The rows inserted are therefore
+ * the ones whose created_at equals the newest in the response.
+ *
+ * The newest is only counted when it is no older than the request, less
+ * INSERT_CLOCK_SLACK_MS. Without that, a batch that inserted nothing would
+ * count its most recent existing row as new. The slack absorbs clock
+ * difference between the worker and the database. It leaves one known
+ * overcount: a batch that inserts nothing, but repeats a row another statement
+ * inserted within the slack (the same indicator from two feeds in one tick),
+ * counts the rows sharing that timestamp. It never undercounts a real insert
+ * unless the clocks differ by more than the slack.
+ *
+ * @param rows       the response body: [{ created_at }, ...]
+ * @param sentAtMs   Date.now() taken just before the request
+ * @returns          the count, or null when the response has no created_at to read
+ */
+export const INSERT_CLOCK_SLACK_MS = 10_000
+
+export function countInsertedRows(rows, sentAtMs) {
+  if (!Array.isArray(rows)) return null
+  if (rows.length === 0) return 0
+  const stamps = rows.map((r) => r?.created_at)
+  if (stamps.some((s) => typeof s !== 'string')) return null
+
+  let newest = stamps[0]
+  let newestMs = Date.parse(newest)
+  for (const s of stamps) {
+    const ms = Date.parse(s)
+    if (ms > newestMs) {
+      newest = s
+      newestMs = ms
+    }
+  }
+  if (!Number.isFinite(newestMs) || newestMs < sentAtMs - INSERT_CLOCK_SLACK_MS) return 0
+  return stamps.filter((s) => Date.parse(s) === newestMs).length
+}
+
 export function createSupabaseClient(env, { budget = null } = {}) {
   const supabaseUrl = env.SUPABASE_URL
   const supabaseKey = env.SUPABASE_KEY
@@ -118,18 +162,25 @@ export function createSupabaseClient(env, { budget = null } = {}) {
         },
 
         // UPSERT - using PostgREST syntax
-        async upsert(records, { onConflict = 'id', ignoreDuplicates = false } = {}) {
+        // `countInserted: true` asks for each row's created_at back and returns
+        // `inserted`, how many rows were new (see countInsertedRows). Same one
+        // subrequest; the response carries a timestamp per row. Only for tables
+        // whose created_at defaults to now() and is not in the payload.
+        async upsert(records, { onConflict = 'id', ignoreDuplicates = false, countInserted = false } = {}) {
           const body = Array.isArray(records) ? records : [records]
 
           // PostgREST upsert: POST with Prefer header and on_conflict param
           const resolution = ignoreDuplicates ? 'ignore-duplicates' : 'merge-duplicates'
-          const url = `${supabaseUrl}/rest/v1/${table}?on_conflict=${encodeURIComponent(onConflict)}`
+          const url =
+            `${supabaseUrl}/rest/v1/${table}?on_conflict=${encodeURIComponent(onConflict)}` +
+            (countInserted ? '&select=created_at' : '')
 
+          const sentAtMs = Date.now()
           const response = await request(url, {
             method: 'POST',
             headers: {
               ...baseHeaders,
-              'Prefer': `resolution=${resolution},return=minimal`
+              'Prefer': `resolution=${resolution},return=${countInserted ? 'representation' : 'minimal'}`
             },
             body: JSON.stringify(body)
           })
@@ -140,7 +191,9 @@ export function createSupabaseClient(env, { budget = null } = {}) {
             return { data: null, error: { message: errorText, status: response.status } }
           }
 
-          return { data: null, error: null }
+          if (!countInserted) return { data: null, error: null }
+          const rows = await response.json().catch(() => null)
+          return { data: null, error: null, inserted: countInsertedRows(rows, sentAtMs) }
         },
 
         // UPDATE with filters

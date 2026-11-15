@@ -76,6 +76,27 @@ const DAY = 24 * HOUR
 const WEEK = 7 * DAY
 
 /**
+ * `countNew` reads how many genuinely new records a run brought, for jobs that
+ * report it under a name other than `added` (the scheduler's newRecordCount).
+ * Every count read here is the number of rows the SQL writer behind the Edge
+ * Function inserted (`'new', inserted` in 088/148, `advisories_new` in 131,
+ * `filings_new` in 130, `reports_new` in 139, `'new', v_new` in 143,
+ * `v_after - v_before` in 147), so it is a count of new rows, not of rows
+ * written. A job with no countNew and no `added` logs records_added as null.
+ */
+const field = (name) => (result) => result[name]
+
+/** One count per source in a group: the sum of those that report one, else null. */
+const sumOver = (group, name) => (result) => {
+  const parts = result[group]
+  if (!parts || typeof parts !== 'object') return null
+  const counts = Object.values(parts)
+    .map((part) => part?.[name])
+    .filter(Number.isFinite)
+  return counts.length ? counts.reduce((a, b) => a + b, 0) : null
+}
+
+/**
  * priority 1 jobs are the ones Vigil's freshness claims rest on: leak-site claims
  * and the data-quality pass. They are offered a slot before anything else that is
  * also due, so a backlog of reference feeds can never starve them.
@@ -219,6 +240,8 @@ export const JOBS = [
     priority: 2,
     cost: 1,
     intervalMinutes: DAY,
+    // A run that finds the list unchanged since last time reports no `new`.
+    countNew: (r) => (r.unchanged === true ? 0 : r.new),
     run: (db, env) => ingestOFAC(db, env),
   },
   {
@@ -240,6 +263,7 @@ export const JOBS = [
     priority: 3,
     cost: 1,
     intervalMinutes: DAY,
+    countNew: field('filings_new'),
     run: (db, env) => ingestSecDisclosures(db, env),
   },
   {
@@ -247,6 +271,7 @@ export const JOBS = [
     priority: 2,
     cost: 1,
     intervalMinutes: 6 * HOUR,
+    countNew: field('advisories_new'),
     run: (db, env) => ingestCisaAdvisories(db, env),
   },
   {
@@ -254,6 +279,7 @@ export const JOBS = [
     priority: 2,
     cost: 1,
     intervalMinutes: 6 * HOUR,
+    countNew: field('advisories_new'),
     run: (db, env) => ingestNcscAdvisories(db, env),
   },
   {
@@ -264,6 +290,7 @@ export const JOBS = [
     priority: 2,
     cost: 1,
     intervalMinutes: 24 * HOUR,
+    countNew: field('new'),
     run: (db, env) => ingestFincenAdvisories(db, env),
   },
   {
@@ -336,6 +363,7 @@ export const JOBS = [
     priority: 3,
     cost: 8,
     intervalMinutes: 6 * HOUR,
+    countNew: sumOver('feeds', 'reports_new'),
     run: (db, env) => ingestVendorResearch(db, env),
   },
   // California, Washington and Oregon AG breach registries in one Edge
@@ -346,6 +374,7 @@ export const JOBS = [
     priority: 2,
     cost: 10,
     intervalMinutes: DAY,
+    countNew: sumOver('states', 'new'),
     run: (db, env) => ingestStateBreachNotices(db, env),
   },
   {

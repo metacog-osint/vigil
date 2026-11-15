@@ -5,6 +5,8 @@
  * Fetches BGP hijack and anomaly data from multiple sources
  */
 
+import { createInsertTally } from '../lib/inserts.js'
+
 // RIPE Stat API for routing data
 const RIPE_STAT_API = 'https://stat.ripe.net/data'
 
@@ -15,6 +17,7 @@ export async function ingestBGPStream(supabase) {
   console.log('Starting BGPStream ingestion...')
 
   let updated = 0
+  const inserts = createInsertTally()
   let failed = 0
   let lastError = null
 
@@ -68,16 +71,16 @@ export async function ingestBGPStream(supabase) {
       }
     }))
 
-    const { error } = await supabase
+    const { error, inserted } = await supabase
       .from('iocs')
-      .upsert(records, { onConflict: 'type,value' })
+      .upsert(records, { onConflict: 'type,value', countInserted: true })
 
     if (error) {
       console.error(`BGPStream batch error: ${error.message}`)
       lastError = error.message
       failed += records.length
     } else {
-      updated += records.length
+      updated += records.length - inserts.record(inserted)
     }
 
   } catch (error) {
@@ -87,7 +90,7 @@ export async function ingestBGPStream(supabase) {
   }
 
   console.log(`BGPStream complete: ${updated} updated, ${failed} failed`)
-  return { success: true, source: 'bgpstream', updated, failed, lastError }
+  return { success: true, source: 'bgpstream', added: inserts.added, updated, failed, lastError }
 }
 
 /**

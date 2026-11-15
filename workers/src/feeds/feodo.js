@@ -3,6 +3,7 @@
  * Cloudflare Worker version
  */
 
+import { createInsertTally } from '../lib/inserts.js'
 import { stampListed } from '../lib/sightings.js'
 
 const FEODO_API = 'https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.json'
@@ -11,6 +12,7 @@ export async function ingestFeodo(supabase) {
   console.log('Starting Feodo C2 ingestion...')
 
   let updated = 0
+  const inserts = createInsertTally()
   let failed = 0
 
   try {
@@ -50,14 +52,14 @@ export async function ingestFeodo(supabase) {
         }
       }))
 
-      const { error } = await supabase
+      const { error, inserted } = await supabase
         .from('iocs')
-        .upsert(stampListed(records), { onConflict: 'type,value' })
+        .upsert(stampListed(records), { onConflict: 'type,value', countInserted: true })
 
       if (error) {
         failed += batch.length
       } else {
-        updated += batch.length
+        updated += batch.length - inserts.record(inserted)
       }
     }
 
@@ -67,5 +69,5 @@ export async function ingestFeodo(supabase) {
   }
 
   console.log(`Feodo complete: ${updated} updated, ${failed} failed`)
-  return { success: true, source: 'feodo', updated, failed }
+  return { success: true, source: 'feodo', added: inserts.added, updated, failed }
 }

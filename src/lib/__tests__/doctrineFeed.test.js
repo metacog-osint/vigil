@@ -447,6 +447,19 @@ describe('the health block (migration 163)', () => {
     expect(laneRead(rl)).toBe(false)
   })
 
+  it('times a stall from when the count began, for a feed with nothing new since (167)', () => {
+    const rows = healthRows().map((r) =>
+      r.feed_id === 'ransomlook'
+        ? { ...r, last_new_at: null, new_counted_since: '2026-10-29T22:15:39+00:00' }
+        : r
+    )
+    const rl = healthBlock(rows).ransomlook
+    expect(rl.last_new).toBeNull()
+    expect(rl.detail).toBe(
+      'Runs, but has added no record since 22:15 UTC on 29 Oct 2026, more than its 18-hour limit'
+    )
+  })
+
   it("takes Vigil's own lane from the worse of the claims and the trend recompute", () => {
     const vigil = health().vigil
     expect(vigil.state).toBe('stalled')
