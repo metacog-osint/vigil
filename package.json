@@ -50,7 +50,6 @@
     "ingest:emerging-threats": "node scripts/ingest-emerging-threats.mjs",
     "ingest:blocklist-de": "node scripts/ingest-blocklist-de.mjs",
     "ingest:nuclei-templates": "node scripts/ingest-nuclei-templates.mjs",
-    "ingest:vulncheck": "node scripts/ingest-vulncheck.mjs",
     "ingest:pulsedive": "node scripts/ingest-pulsedive.mjs",
     "ingest:censys": "node scripts/ingest-censys.mjs",
     "ingest:anyrun": "node scripts/ingest-anyrun.mjs",

@@ -200,11 +200,14 @@ The failure is cheap now too — 4.4s instead of 61s.
 
 </details>
 
-### 3. VulnCheck returns 401
+### 3. VulnCheck returns 401 — RESOLVED, retired 15 Nov 2026
 
-`HTTP 401 unauthorized` on every run. The key is invalid or expired. Renew it, or
-remove the feed from `registry.js` **and** `feed_expectations`. Leaving it fails
-every six hours for no benefit.
+A new key was set on 15 Nov 2026, but the feed was retired instead of unpaused:
+VulnCheck's Service Terms (rev. 20 Apr 2026) s7 forbid making its data available
+for free, and Vigil is free and public. Migration 164 registers it in
+`source_licences`, backs up and strips the 201 `vulncheck-kev` rows, and removes
+its `feed_expectations` row; the job is gone from `registry.js`. Its worker would
+also have written `kev_date`, which `/api/feed` publishes as CISA's.
 
 ### 4. Confirm the backlog finishes draining — ANSWERED, it is draining
 

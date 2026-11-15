@@ -25,7 +25,6 @@ import { ingestTorExits } from './tor-exits.js'
 
 // Vulnerability feeds
 import { ingestCISAKEV } from './cisa-kev.js'
-import { ingestVulnCheck } from './vulncheck.js'
 import { ingestNVD } from './nvd.js'
 import { ingestEPSS } from './epss.js'
 import { ingestCISAICS } from './cisa-ics.js'
@@ -151,18 +150,8 @@ export const JOBS = [
     intervalMinutes: 6 * HOUR,
     run: (db, env) => ingestCISAKEV(db, env),
   },
-  {
-    id: 'vulncheck',
-    // HTTP 401 on every run since at least early September: the key was revoked
-    // or expired. A job that has never succeeded is always due, so it was spending
-    // budget on every hourly tick. Rotate VULNCHECK_API_KEY, confirm with a manual
-    // GET /ingest/vulncheck, then delete this line.
-    paused: 'VULNCHECK_API_KEY rejected (HTTP 401)',
-    priority: 3,
-    cost: 6,
-    intervalMinutes: 6 * HOUR,
-    run: (db, env) => ingestVulnCheck(db, env),
-  },
+  // VulnCheck KEV was retired on 15 Nov 2026 (migration 164): its Service Terms
+  // forbid making its data available for free, and Vigil is free and public.
   {
     id: 'nvd',
     priority: 3,
