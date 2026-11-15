@@ -40,7 +40,6 @@ npx wrangler secret put ABUSECH_API_KEY
 
 # Optional API keys
 npx wrangler secret put PULSEDIVE_API_KEY
-npx wrangler secret put VULNCHECK_API_KEY
 npx wrangler secret put CENSYS_API_KEY
 ```
 

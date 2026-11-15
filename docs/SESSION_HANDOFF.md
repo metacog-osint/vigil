@@ -43,10 +43,20 @@ check updated about 15:45 UTC 15 Nov. Measured live then._
   wrote `records_added > 0` in `sync_log`, so another feed would read stalled at
   once until its job writes that count. `docs/INGESTION_HANDOVER.md` has the
   threshold query.
-- **Review queue:** 750 open (600 `sec_disclosure_candidate`). The last verdict
-  a person recorded is dated 20 Sep.
-- **Dependabot #97** (10 minor and patch) fails `npm ci`: its lockfile is out of
-  sync. Regenerate with npm 10.8.2, which CI's Node 20 uses.
+- **Dependabot #97 merged** (15 Nov): lockfile regenerated with npm 10.8.2
+  (`dccc75c`), all checks green, merged as `1d6b390`, production deployed
+  18:31 UTC.
+- **VulnCheck retired** (15 Nov, migration 164). Its Service Terms (rev.
+  20 Apr 2026) s7 forbid making its data available for free, and Vigil is free
+  and public. Its worker had also written `kev_date`, which `/api/feed`
+  publishes as CISA's. Migration 164 registers it in `source_licences`, backs up
+  the 201 `vulncheck-kev` rows to `vulncheck_retired_rows` (internal only), strips
+  them and drops its `feed_expectations` row. Tom is asking VulnCheck for written
+  consent, and wants an independent "known exploited" signal built from primary
+  sources: CISA Vulnrichment (CC0), MSRC, Project Zero's 0day list, CERT and
+  vendor advisories, with PoC aggregators kept separate.
+- **Review queue auto-close** (migration 165, PR #99, merged as `14b6e83`):
+  584 of 750 closed and logged, 166 open. See `docs/REVIEW_QUEUE_AUTOMATION.md`.
 
 ---
 

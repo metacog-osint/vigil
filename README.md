@@ -202,7 +202,7 @@ npm run build
 ## Data sources
 
 Ransomware leak sites (RansomLook, Ransomware.live) · vulnerabilities (CISA KEV, NVD,
-EPSS, VulnCheck, CISA ICS) · indicators (ThreatFox, URLhaus, Feodo, MalwareBazaar, Pulsedive, Tor
+EPSS, CISA ICS) · indicators (ThreatFox, URLhaus, Feodo, MalwareBazaar, Pulsedive, Tor
 exits) · threat actors (MITRE ATT&CK, MITRE ATLAS, Malpedia, MISP Galaxy) · sanctions (OFAC SDN) ·
 payments (Ransomwhere) · routing (BGPStream) · enrichment (Censys, ANY.RUN).
 

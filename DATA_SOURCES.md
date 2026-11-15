@@ -366,7 +366,7 @@ ten items is not a feed that says who did it.
 
 | Source        | Endpoint                                                                  | Data Type                            | Schedule | Script                   | Auth    |
 | ------------- | ------------------------------------------------------------------------- | ------------------------------------ | -------- | ------------------------ | ------- |
-| VulnCheck KEV | `https://api.vulncheck.com/v3`                                            | Extended KEV (173% larger than CISA) | Daily    | `ingest-vulncheck.mjs`   | API Key |
+| VulnCheck KEV | **Retired 15 Nov 2026** (migration 164): Service Terms s7 forbid making its data available for free | — | — | — | — |
 | CISA ICS-CERT | `https://www.cisa.gov/sites/default/files/feeds/ics-cert_advisories.json` | ICS/OT advisories                    | Daily    | `ingest-cisa-alerts.mjs` | None    |
 
 ### Ransomware Payment Tracking
@@ -825,7 +825,7 @@ Independent research was conducted to evaluate proposed sources and identify gap
 
 | Source                | Verdict     | Assessment                                                                                                          |
 | --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| **VulnCheck KEV**     | ✅ Critical | Catalog is 173% larger than CISA KEV and 27 days faster at detecting exploited CVEs. Free community tier available. |
+| **VulnCheck KEV**     | ❌ Retired  | Retired 15 Nov 2026 (migration 164). The free Community tier's Service Terms (rev. 20 Apr 2026) s7 say its data may not be made available for free, and s12 requires prominent attribution; Vigil is free and public. Written consent requested. Other VulnCheck mentions in this file are historical. |
 | **ANY.RUN**           | ✅ Good     | Public sandbox reports provide behavioral analysis context.                                                         |
 | **Triage (Hatching)** | ✅ Good     | Fast automated triage complements ANY.RUN.                                                                          |
 | **SecurityTrails**    | ⚠️ Costly   | Value vs cost questionable when CIRCL provides similar DNS history.                                                 |
