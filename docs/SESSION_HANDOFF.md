@@ -32,8 +32,9 @@ then._
   migration 163 (`feed_health.stalled`, ransomlook at 18 h; the measurement is
   in the file), the Feed health script failing on a stalled critical feed, and
   a per-source `health` block in `/api/feed` for COP's ledger.
-  **163 is not applied; apply it before merging** (the script names its
-  columns). `docs/INGESTION_HANDOVER.md` has the query.
+  **163 was applied 15 Nov 2026, 03:29 UTC**, with the 18 h threshold; checked
+  then and at 15:05 UTC: ransomlook not stalled, `ingestion_is_healthy()` true,
+  the worker running. `docs/INGESTION_HANDOVER.md` has the threshold query.
 - **Review queue:** 750 open (600 `sec_disclosure_candidate`). The last verdict
   a person recorded is dated 20 Sep.
 - **Dependabot #97** (10 minor and patch) fails `npm ci`: its lockfile is out of

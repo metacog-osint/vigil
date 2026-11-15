@@ -1,6 +1,7 @@
 -- 163. A feed that runs and brings nothing new: say so, for the feeds where that is abnormal
 --
--- STATUS: NOT YET APPLIED.
+-- STATUS: APPLIED 15 November 2026, 03:29 UTC (project faqazkwdkajhxmwxchop),
+-- with the 18 h threshold for ransomlook.
 --
 -- WHY
 --
