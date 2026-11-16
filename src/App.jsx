@@ -25,6 +25,7 @@ const Alerts = lazy(() => import('./pages/Alerts'))
 const AdvancedSearch = lazy(() => import('./pages/AdvancedSearch'))
 const TrendAnalysis = lazy(() => import('./pages/TrendAnalysis'))
 const ReviewQueue = lazy(() => import('./pages/ReviewQueue'))
+const ReviewReading = lazy(() => import('./pages/ReviewReading'))
 const ContestedClaims = lazy(() => import('./pages/ContestedClaims'))
 const FinancialCrime = lazy(() => import('./pages/FinancialCrime'))
 const Sanctions = lazy(() => import('./pages/Sanctions'))
@@ -263,6 +264,7 @@ function ProtectedApp() {
                         <Route path="/alerts" element={<Alerts />} />
                         <Route path="/trends" element={<TrendAnalysis />} />
                         <Route path="/review" element={<ReviewQueue />} />
+                        <Route path="/review/reading" element={<ReviewReading />} />
                         <Route path="/contested-claims" element={<ContestedClaims />} />
                         <Route path="/financial-crime" element={<FinancialCrime />} />
                         <Route path="/sanctions" element={<Sanctions />} />
