@@ -100,10 +100,11 @@ function getClientInfo(request) {
   }
 
   return {
-    ipAddress: getHeader('x-forwarded-for')?.split(',')[0]?.trim() ||
-               getHeader('x-real-ip') ||
-               getHeader('cf-connecting-ip') ||
-               'unknown',
+    ipAddress:
+      getHeader('x-forwarded-for')?.split(',')[0]?.trim() ||
+      getHeader('x-real-ip') ||
+      getHeader('cf-connecting-ip') ||
+      'unknown',
     userAgent: getHeader('user-agent') || 'unknown',
   }
 }
@@ -133,6 +134,12 @@ export async function logAuditEvent({
   request = null,
   status = 'success',
   errorMessage = null,
+  // The browser's event columns (src/lib/auditLogs.js), written only through
+  // /api/audit since migration 171. Left out of the row when not given.
+  eventType = null,
+  eventCategory = null,
+  resourceName = null,
+  description = null,
 }) {
   try {
     const supabase = getSupabaseAdmin()
@@ -157,6 +164,10 @@ export async function logAuditEvent({
         user_agent: clientInfo.userAgent,
         status,
         error_message: errorMessage,
+        ...(eventType ? { event_type: eventType } : {}),
+        ...(eventCategory ? { event_category: eventCategory } : {}),
+        ...(resourceName ? { resource_name: resourceName } : {}),
+        ...(description ? { description } : {}),
       })
       .select('id')
       .single()
@@ -215,8 +226,7 @@ export function withAuditLog(handler, auditConfig) {
       throw err
     } finally {
       // Log the audit event
-      const status = error ? 'failure' :
-                     (response?.status >= 400 ? 'failure' : 'success')
+      const status = error ? 'failure' : response?.status >= 400 ? 'failure' : 'success'
 
       await logAuditEvent({
         ...auditConfig,

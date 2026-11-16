@@ -14,9 +14,10 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ---
 
-## 0. Latest: 16 November 2026, stall detection widened (167)
+## 0. Latest: 16 November 2026, stall detection widened (167), review fixes (169–171)
 
-_Written about 04:30 UTC 16 Nov (10:30 p.m. CST 15 Nov). Measured live then._
+_Written about 04:30 UTC 16 Nov (10:30 p.m. CST 15 Nov), and updated about
+05:40 UTC. Measured live then._
 
 - **Worker** version `32ddaf97`, deployed 02:07 UTC 16 Nov from
   `claude/focused-noether-13fb98`. Every job now logs `records_added` as a true
@@ -37,10 +38,37 @@ _Written about 04:30 UTC 16 Nov (10:30 p.m. CST 15 Nov). Measured live then._
   of it in the same tick. Its successful runs use 17 to 32 subrequests, so it
   was already at the edge. This is not from 167's counting, which uses the same
   request. If it keeps failing, give it its own tick.
-- **Review queue:** unchanged at 543 open. There is no
-  `breach_notice_candidate_failed` finding. The five design verdicts are still
-  waiting on Tom.
-- **Migration numbers:** next free is 169.
+- **Production after 167:** PR #103, merged as `808bec8`, deployed 04:49 UTC.
+  `/api/feed`'s health block was fresh on all seven lanes, and Feed health run
+  43806640262 passed.
+- **Review queue:** 543 open. There is no `breach_notice_candidate_failed`
+  finding, so the 166 triggers are working.
+- **Design verdicts:** Tom decided them in chat about 04:55 UTC: `audit_log_trust`
+  confirm, `review_authority` defer, `ioc_actor_backfill` reject,
+  `victim_name_quality` confirm, `vulnerability_key_quality` confirm. They are not
+  in the database yet: at 05:00 UTC `finding_verdicts` had 0 rows, and no
+  `record_verdict` call had reached Supabase that day. **Record them on `/review`
+  signed in.** Once in, they resolve the findings.
+- **The three confirms, built on `claude/review-queue-fixes`:**
+  - **169** archives the 100 JSON-array CVE keys to `vulnerability_malformed_keys`,
+    then removes them. All 100 have a twin and nothing references them. The KEV
+    count disagreement had already ended with 164: `is_kev` and `kev_date` both
+    count 1,789.
+  - **170** lifts five victim names a person read from the posts. The text as
+    received stays in `raw_data.victim_name_as_received`. It also adds an
+    empty-ABOUT-list rule to the generated `incidents.data_quality`, which makes
+    one row a placeholder (74 placeholders become 75). The other 59 victim names
+    holding angle brackets (January ransomwatch and ransomware.live) are queued as
+    `victim_name_markup`, not fixed. A "the gentlemen" post whose title is a
+    template-injection probe already read `placeholder`.
+  - **171:** the browser writes audit entries through `POST /api/audit`, which
+    takes the user from the verified token and the IP address and user agent from
+    the request. 171 drops 121's insert policy, takes everything from anon, leaves
+    authenticated SELECT only, and gives service_role SELECT, INSERT and DELETE.
+    It also closes `cleanup_old_audit_logs` (it was anon-executable) and
+    `log_audit_event` to the browser roles. Nothing in the app calls either writer
+    today. `/api/audit` is the 12th function under `api/`.
+- **Migration numbers:** next free is 172.
 
 ---
 
