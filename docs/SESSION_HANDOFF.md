@@ -68,7 +68,27 @@ _Written about 04:30 UTC 16 Nov (10:30 p.m. CST 15 Nov), and updated about
     It also closes `cleanup_old_audit_logs` (it was anon-executable) and
     `log_audit_event` to the browser roles. Nothing in the app calls either writer
     today. `/api/audit` is the 12th function under `api/`.
-- **Migration numbers:** next free is 172.
+  - **Shipped:** applied about 05:41 UTC. PR #105 merged as `4243e85` and
+    deployed 06:00 UTC. Live, `/api/audit` answers 405 to a GET and 401 to a
+    POST with no token.
+- **Reviewer help (172, `claude/review-reading-help`):** `review_reading_evidence`
+  puts the thing to be read on the card. Signed-in reviewers only.
+  - `vendor_attribution_candidate`: the sentences of the stored summary that
+    contain the phrase. 10 of 14 have one; in the other 4 the phrase is only in
+    the title.
+  - `leak_site_notice_candidate`: the post body, where the source sent one, shown
+    as text. Only 1 of 12 has one, because ransomwatch and ransomware.live send
+    titles only.
+  - `claim_value_unverified`: the value, the claim's question, the publisher and
+    its tier, and the citation. All 17 have `source_url` null: they were carried
+    forward by endnote from Tom's working reference, so the card says no link is
+    stored. Finding the primary documents is the reviewer's job.
+  - `advisory_indicators_unread`: the document, plus a reading page at
+    `/review/reading` listing all 29, newest first, English editions.
+  - The jsdom page tests could not start a worker on D: and were left to CI.
+    The shared tree's `node_modules` still has React Router 6.30, while main
+    needs 7 since #104.
+- **Migration numbers:** next free is 173.
 
 ---
 

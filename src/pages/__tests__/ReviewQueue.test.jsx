@@ -10,12 +10,14 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 const recordVerdict = vi.fn()
 const getFindings = vi.fn()
 const getCounts = vi.fn()
+const getReadingEvidence = vi.fn()
 
 vi.mock('../../lib/supabase/reviewQueue', () => ({
   reviewQueue: {
     getFindings: (...a) => getFindings(...a),
     getCounts: (...a) => getCounts(...a),
     recordVerdict: (...a) => recordVerdict(...a),
+    getReadingEvidence: (...a) => getReadingEvidence(...a),
   },
   VERDICTS: [
     { value: 'confirmed', label: 'Confirmed', summary: 'The finding is real.' },
@@ -56,6 +58,7 @@ beforeEach(() => {
   mockUseAuth.mockReturnValue({ user: { id: 'u-1' }, loading: false })
   getFindings.mockResolvedValue({ data: [FINDING], error: null })
   getCounts.mockResolvedValue({ data: { open: 1, resolved: 0, dismissed: 0, all: 1 }, error: null })
+  getReadingEvidence.mockResolvedValue({ data: {}, error: null })
 })
 
 describe('ReviewQueue', () => {
@@ -174,5 +177,37 @@ describe('ReviewQueue', () => {
     ).toBeTruthy()
     // the history is kept, and the page says so
     expect(screen.getByText(/2 rulings on this finding/)).toBeTruthy()
+  })
+})
+
+describe('reading evidence on the card (172)', () => {
+  it('shows the post body as text beside a leak-site question', async () => {
+    getReadingEvidence.mockResolvedValue({
+      data: {
+        'f-1': { body: '<b>{{7*7}}</b> we are hiring', sources: ['ransomlook'], incidents: 1 },
+      },
+      error: null,
+    })
+    render(<ReviewQueue />)
+    expect(await screen.findByText('<b>{{7*7}}</b> we are hiring')).toBeInTheDocument()
+    expect(screen.getByText('The post, as the source sent it')).toBeInTheDocument()
+  })
+
+  it('says no body is stored rather than showing nothing', async () => {
+    getReadingEvidence.mockResolvedValue({
+      data: { 'f-1': { body: null, sources: ['ransomwatch'], incidents: 1 } },
+      error: null,
+    })
+    render(<ReviewQueue />)
+    expect(
+      await screen.findByText(/No post body is stored \(ransomwatch send titles only\)/)
+    ).toBeInTheDocument()
+  })
+
+  it('still shows the finding when the evidence cannot be read', async () => {
+    getReadingEvidence.mockResolvedValue({ data: null, error: { message: 'denied' } })
+    render(<ReviewQueue />)
+    expect(await screen.findByText('ciphbit / Affiliate')).toBeInTheDocument()
+    expect(screen.queryByText('The post, as the source sent it')).not.toBeInTheDocument()
   })
 })
