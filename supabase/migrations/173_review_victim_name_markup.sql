@@ -1,6 +1,6 @@
 -- 173. Reviewer help for victim_name_markup: each marked-up name read into parts
 --
--- STATUS: written 16 November 2026, not applied.
+-- STATUS: APPLIED 16:02 UTC 16 November 2026.
 --
 -- 170 queued one finding, victim_name_markup, over the incidents whose
 -- victim_name still holds an angle bracket: 59 on 16 Nov 2026, from the January

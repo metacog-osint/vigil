@@ -171,6 +171,23 @@ thing this source was added to avoid. **No notice is matched to an incident**
 either: `match_status` stays `unreviewed`, because whether a California filing
 and a leak-site claim describe one event is a judgment.
 
+**Washington's own cause, since 16 November 2026 (migration 174).** The list
+page still carries no cause, but the Attorney General publishes the same
+notices as an open dataset, "Data Breach Notifications Affecting Washington
+Residents" ([data.wa.gov sb4j-ca4h](https://data.wa.gov/d/sb4j-ca4h)), with
+`databreachcause` (Cyberattack, Unauthorized Access, Theft or Mistake) and
+`cyberattacktype` (Ransomware, Malware, Phishing, Skimmers, Other,
+Unclear/unknown). The `wa-breach-causes` Edge Function reads it daily and
+`apply_wa_breach_causes` copies those two fields, as given, onto Vigil's
+`wa-ag` rows whose name matches (letters and digits, case folded) and whose
+filing date is within three days. It is the AG's category, credited to the AG
+and shown on the review card; it still matches nothing to a claim. Measured
+16 Nov 2026: 1,698 notices, 597 marked Ransomware; 97 of the 104 open
+Washington review cards have a row, 61 of them Ransomware. The dataset states
+no licence; Tom approved storing and showing these two fields on 16 Nov 2026,
+and `source_licences` registers it (`wa-ag-open-data`) as not cleared for
+commercial use. California and Oregon publish no cause anywhere found.
+
 **Why this one is unlike every other source here.** Everything else in this
 document is the attacker's claim. Since December 2023 an SEC registrant has had to
 report a material cybersecurity incident within four business days, filed by the
