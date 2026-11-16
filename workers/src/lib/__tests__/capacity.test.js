@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 
 import { SCHEDULED_JOBS } from '../../feeds/registry.js'
 import { SUBREQUEST_LIMIT, SUBREQUEST_RESERVE } from '../limits.js'
+import { DUE_SLACK_MINUTES } from '../scheduler.js'
 
 /**
  * The cron trigger only wakes the scheduler; the registry decides what runs. If
@@ -32,6 +33,12 @@ function ticksPerDay(expr) {
   return m ? m[1].split(',').length * 24 : null
 }
 
+// Minutes between ticks for "<minutes> * * * *", the smallest gap around the hour.
+function tickGaps(expr) {
+  const minutes = expr.split(' ')[0].split(',').map(Number).sort((a, b) => a - b)
+  return minutes.map((m, i) => (i + 1 < minutes.length ? minutes[i + 1] : minutes[0] + 60) - m)
+}
+
 function dailyDemand(jobs) {
   return jobs.reduce((sum, job) => sum + ((24 * 60) / job.intervalMinutes) * job.cost, 0)
 }
@@ -53,5 +60,22 @@ describe('schedule capacity', () => {
   it('has room for every job at its declared cadence, with headroom', () => {
     const capacity = ticksPerDay(crons()[0]) * PER_TICK
     expect(dailyDemand(SCHEDULED_JOBS)).toBeLessThanOrEqual(capacity * HEADROOM)
+  })
+
+  // selectDueJobs counts a job due DUE_SLACK_MINUTES early, so a run that finished
+  // a few minutes into a tick is still due at the same point in a later tick. More
+  // than half the gap and a job would also be due at the tick right after it ran.
+  it('gives a job no more due-early slack than half the gap between ticks', () => {
+    const gap = Math.min(...tickGaps(crons()[0]))
+    expect(DUE_SLACK_MINUTES).toBeGreaterThan(0)
+    expect(DUE_SLACK_MINUTES * 2).toBeLessThanOrEqual(gap)
+  })
+
+  it('never makes a job due again at the very next tick', () => {
+    const gap = Math.min(...tickGaps(crons()[0]))
+    const tooShort = SCHEDULED_JOBS
+      .filter((job) => job.intervalMinutes - DUE_SLACK_MINUTES <= gap)
+      .map((job) => job.id)
+    expect(tooShort).toEqual([])
   })
 })
