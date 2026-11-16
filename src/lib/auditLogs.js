@@ -83,38 +83,49 @@ export const auditLogs = {
   /**
    * Log an audit event
    */
+  //
+  // Written through POST /api/audit, never straight into audit_log (migration
+  // 171 removed the browser's insert right). The server takes who acted from
+  // the verified token and where from the request, so userId, userEmail,
+  // userName, teamId, ipAddress and userAgent in eventData are ignored: an
+  // entry's subject no longer writes its own record (finding audit_log_trust).
   async log(eventData) {
     const eventInfo = EVENT_TYPES[eventData.eventType] || {}
 
-    const { data, error } = await supabase
-      .from('audit_log')
-      .insert({
-        user_id: eventData.userId,
-        user_email: eventData.userEmail,
-        user_name: eventData.userName,
-        team_id: eventData.teamId,
-        event_type: eventData.eventType,
-        event_category: eventInfo.category || eventData.category || 'data',
-        action: eventData.action || 'read',
-        resource_type: eventData.resourceType,
-        resource_id: eventData.resourceId,
-        resource_name: eventData.resourceName,
-        description: eventData.description,
-        // The API writes the same field as `details`; one column, one name.
-        details: eventData.metadata || {},
-        ip_address: eventData.ipAddress,
-        user_agent: eventData.userAgent,
-        status: eventData.status || 'success',
-        error_message: eventData.errorMessage,
-      })
-      .select()
-      .single()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session?.access_token) return null
 
-    if (error) {
+    try {
+      const res = await fetch('/api/audit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          eventType: eventData.eventType,
+          eventCategory: eventInfo.category || eventData.category || 'data',
+          action: eventData.action || 'read',
+          resourceType: eventData.resourceType,
+          resourceId: eventData.resourceId,
+          resourceName: eventData.resourceName,
+          description: eventData.description,
+          metadata: eventData.metadata || {},
+          status: eventData.status || 'success',
+          errorMessage: eventData.errorMessage,
+        }),
+      })
+      if (!res.ok) {
+        console.error('Failed to log audit event:', res.status)
+        return null
+      }
+      return await res.json()
+    } catch (error) {
       console.error('Failed to log audit event:', error)
       return null
     }
-    return data
   },
 
   /**
