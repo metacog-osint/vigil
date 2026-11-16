@@ -14,6 +14,7 @@ import { fmt, fmtDate } from '../lib/time'
  * and puts the reason on the record.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { reviewQueue, VERDICTS } from '../lib/supabase/reviewQueue'
 import { daysApart, kindCounts, orderForKind, sameCompanyCount } from '../lib/reviewQueueView'
 import { figure } from '../lib/format'
@@ -306,7 +307,147 @@ function CountryEvidence({ evidence }) {
   )
 }
 
-function FindingCard({ finding, onRecorded, siblings = 0, countryEvidence }) {
+const READING_KINDS = new Set([
+  'vendor_attribution_candidate',
+  'leak_site_notice_candidate',
+  'claim_value_unverified',
+  'advisory_indicators_unread',
+])
+
+function ExternalLink({ href, children }) {
+  if (!href) return null
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-cyan-400 hover:text-cyan-300 underline break-all"
+    >
+      {children || href}
+    </a>
+  )
+}
+
+/**
+ * The thing a reading finding asks a person to read, as Vigil holds it (172).
+ * Every string here came from a source, a leak site included, and is rendered
+ * as text. An absent field is said to be absent, never filled in.
+ */
+export function ReadingEvidence({ kind, evidence }) {
+  if (!evidence || !READING_KINDS.has(kind)) return null
+  const box = 'mt-4 p-3 rounded bg-gray-800/50 text-sm text-gray-300'
+  const label = 'text-xs uppercase tracking-wide text-gray-500 mb-1'
+
+  if (kind === 'vendor_attribution_candidate') {
+    const sentences = evidence.sentences || []
+    return (
+      <div className={box}>
+        <div className={label}>
+          Where the report says “{evidence.phrase}” (from the summary Vigil stores)
+        </div>
+        {sentences.length > 0 ? (
+          sentences.map((s, i) => (
+            <blockquote
+              key={i}
+              className="border-l-2 border-gray-600 pl-3 my-1 whitespace-pre-wrap"
+            >
+              {s}
+            </blockquote>
+          ))
+        ) : (
+          <p className="text-gray-400">
+            The phrase is in the title, not the stored summary: “{evidence.title}”.
+          </p>
+        )}
+        <p className="text-xs text-gray-500 mt-2">
+          A summary is not the report. Read it whole before deciding:{' '}
+          <ExternalLink href={evidence.url}>{evidence.title || evidence.url}</ExternalLink>
+        </p>
+      </div>
+    )
+  }
+
+  if (kind === 'leak_site_notice_candidate') {
+    const sources = (evidence.sources || []).join(', ')
+    return (
+      <div className={box}>
+        <div className={label}>The post, as the source sent it</div>
+        {evidence.body ? (
+          <p className="whitespace-pre-wrap break-words font-mono text-xs">{evidence.body}</p>
+        ) : (
+          <p className="text-gray-400">
+            No post body is stored{sources ? ` (${sources} send titles only)` : ''}. The title is
+            all Vigil has; read the post on the leak site or a mirror before deciding.
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  if (kind === 'claim_value_unverified') {
+    const value =
+      evidence.value_text ||
+      (evidence.value_numeric != null
+        ? `${figure(Number(evidence.value_numeric))} ${evidence.unit || ''}`
+        : '—')
+    return (
+      <div className={box}>
+        <div className={label}>The stored value</div>
+        {evidence.question && <p className="text-gray-400 mb-1">{evidence.question}</p>}
+        <p className="text-white">
+          {value}
+          {evidence.measurement && <span className="text-gray-400"> · {evidence.measurement}</span>}
+          {evidence.as_of && <span className="text-gray-400"> · as of {evidence.as_of}</span>}
+        </p>
+        {evidence.window_note && <p className="text-gray-400">{evidence.window_note}</p>}
+        <p className="mt-2">
+          {evidence.publisher && (
+            <>
+              {evidence.publisher}
+              {evidence.publisher_tier && ` (tier ${evidence.publisher_tier})`}
+              {' · '}
+            </>
+          )}
+          {evidence.citation && <>cited as {evidence.citation}</>}
+          {evidence.entered_from && <> in {evidence.entered_from}</>}
+        </p>
+        <p className="text-xs mt-1">
+          {evidence.source_url ? (
+            <>
+              Primary source: <ExternalLink href={evidence.source_url} />
+            </>
+          ) : (
+            <span className="text-amber-400">
+              No primary-source link is stored. Find the publisher’s own document before setting
+              verified_on.
+            </span>
+          )}
+        </p>
+      </div>
+    )
+  }
+
+  // advisory_indicators_unread
+  return (
+    <div className={box}>
+      <div className={label}>The document to read</div>
+      <p className="text-white">{evidence.title}</p>
+      <p className="text-xs text-gray-500">
+        {String(evidence.source || '').toUpperCase()} {evidence.advisory_id}
+        {evidence.published && <> · published {evidence.published}</>}
+      </p>
+      <p className="mt-1">
+        <ExternalLink href={evidence.document_url}>Open the document</ExternalLink>
+        {' · '}
+        <Link to="/review/reading" className="text-cyan-400 hover:text-cyan-300 underline">
+          All advisories waiting to be read
+        </Link>
+      </p>
+    </div>
+  )
+}
+
+function FindingCard({ finding, onRecorded, siblings = 0, countryEvidence, readingEvidence }) {
   const ruled = Boolean(finding.latest_verdict)
   const gap = GAP_KINDS.has(finding.check_name) ? daysApart(finding) : null
 
@@ -359,6 +500,8 @@ function FindingCard({ finding, onRecorded, siblings = 0, countryEvidence }) {
         <CountryEvidence evidence={countryEvidence} />
       )}
 
+      <ReadingEvidence kind={finding.check_name} evidence={readingEvidence} />
+
       {finding.auto_close_rule && (
         <div className="mt-4 p-3 rounded bg-gray-800/50 text-sm">
           <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">
@@ -405,6 +548,7 @@ export default function ReviewQueue() {
   const [error, setError] = useState(null)
   const [kind, setKind] = useState('')
   const [countryEvidence, setCountryEvidence] = useState({})
+  const [readingEvidence, setReadingEvidence] = useState({})
 
   const load = useCallback(async () => {
     if (!user) return
@@ -433,6 +577,12 @@ export default function ReviewQueue() {
       // Help, not a gate: if this read fails the cards still show the finding.
       const { data: ev } = await reviewQueue.getCountryEvidence()
       setCountryEvidence(ev || {})
+    }
+
+    if ((data || []).some((f) => READING_KINDS.has(f.check_name))) {
+      // Help, not a gate, as above.
+      const { data: rev } = await reviewQueue.getReadingEvidence()
+      setReadingEvidence(rev || {})
     }
   }, [status, user])
 
@@ -550,6 +700,7 @@ export default function ReviewQueue() {
                     : 0
                 }
                 countryEvidence={countryEvidence[finding.id]}
+                readingEvidence={readingEvidence[finding.id]}
               />
             ))}
           </div>
