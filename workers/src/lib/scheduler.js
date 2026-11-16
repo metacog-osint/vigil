@@ -87,6 +87,22 @@ export async function readFeedHealth(db) {
 }
 
 /**
+ * How early a job counts as due, in minutes. Half the gap between ticks
+ * (wrangler.toml: "15,45 * * * *", so 30 minutes apart).
+ *
+ * Without it every job slipped a tick each time it ran. A job's clock starts when
+ * its last run finished, which is some seconds or minutes into a tick, while the
+ * check reads the clock at the very start of a tick. A 6-hour feed that finished
+ * at 08:16:08 read 359 minutes at the 14:15:36 tick, so it waited for 14:45. In
+ * the four days to 16 Nov 2026 pulsedive and urlhaus often ran 6.5 hours apart
+ * and nvd 6 to 8, so a 6-hour feed ran fewer than four times a day.
+ *
+ * Half the tick gap is the most it can be: any more and an hourly job would also
+ * be due at the tick 30 minutes after it ran. capacity.test.js holds that.
+ */
+export const DUE_SLACK_MINUTES = 15
+
+/**
  * Due jobs, most starved first. A job that has never run successfully sorts ahead
  * of everything else at its priority, so a newly added or long-broken feed gets a
  * slot instead of waiting behind healthy ones.
@@ -103,7 +119,9 @@ export function selectDueJobs(jobs, health) {
       ? Number.POSITIVE_INFINITY
       : minutesSince / job.intervalMinutes
 
-    if (overdueRatio >= 1) due.push({ job, overdueRatio })
+    if (minutesSince == null || minutesSince >= job.intervalMinutes - DUE_SLACK_MINUTES) {
+      due.push({ job, overdueRatio })
+    }
   }
 
   due.sort((a, b) =>

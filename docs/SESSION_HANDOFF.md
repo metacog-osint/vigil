@@ -16,6 +16,26 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ## 0. Latest: 16 November 2026, stall detection widened (167), review fixes (169–171)
 
+**Later on 16 Nov (about 15:00 UTC, 9:00 a.m. CST).** Measured live then.
+
+- **PR #106** (172, reviewer help) merged as `6f67792` and deployed 07:17 UTC. The
+  worktrees from that work are removed.
+- **The five design verdicts are recorded.** Tom saved them on `/review`, signed in,
+  14:45–14:48 UTC: `audit_log_trust`, `victim_name_quality` and
+  `vulnerability_key_quality` confirmed (resolved), `ioc_actor_backfill` rejected
+  (dismissed), `review_authority` deferred (stays open). Each carries its
+  reasoning. This was the first signed-in use of the page, and it worked. Open
+  findings 544 to 540.
+- **malwarebazaar and tor-exits** have counted runs now (06:45 and 08:46 UTC), and
+  every watched feed reads `stalled = false`.
+- **Scheduler fix (`claude/scheduler-drift`).** Jobs are due 15 minutes early, so
+  they stop slipping a tick each run; three daily feeds declare their true cost
+  (ransomware.live 20, malpedia 24, misp-galaxy 24), so a tick without room defers
+  them rather than failing them. Measurements in `docs/INGESTION_HANDOVER.md` §2.
+  ransomware.live's 04:16 UTC failure was this, not a need for its own tick.
+  **Needs `cd workers && npm run deploy`** (Tom) after merge.
+
+
 _Written about 04:30 UTC 16 Nov (10:30 p.m. CST 15 Nov), and updated about
 05:40 UTC. Measured live then._
 
