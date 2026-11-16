@@ -247,7 +247,11 @@ export const JOBS = [
   {
     id: 'ransomware.live',
     priority: 3,
-    cost: 12,
+    // Measured 17 on every successful run in the 14 days to 16 Nov 2026. Declared
+    // 12, the scheduler started it in ticks with 12 to 16 left and it failed
+    // "subrequest budget exhausted" 5 times in those 14 days. A declared cost has
+    // to cover the whole run, or the full-cost check in scheduler.js cannot work.
+    cost: 20,
     intervalMinutes: DAY,
     run: (db, env) => ingestRansomwareLive(db, env),
   },
@@ -313,14 +317,18 @@ export const JOBS = [
   {
     id: 'malpedia',
     priority: 4,
-    cost: 12,
+    // Measured 23 on every successful run in the 14 days to 16 Nov 2026; declared
+    // 12, it failed on the subrequest budget 7 times. See ransomware.live.
+    cost: 24,
     intervalMinutes: DAY,
     run: (db, env) => ingestMalpedia(db, env),
   },
   {
     id: 'misp-galaxy',
     priority: 4,
-    cost: 12,
+    // Measured 23 on every successful run in the 14 days to 16 Nov 2026; declared
+    // 12, it failed on the subrequest budget 8 times. See ransomware.live.
+    cost: 24,
     intervalMinutes: DAY,
     run: (db, env) => ingestMISPGalaxy(db, env),
   },

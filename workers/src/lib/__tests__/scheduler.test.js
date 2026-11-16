@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 
-import { selectDueJobs, runJob, runDueJobs, createTimeBudget } from '../scheduler.js'
+import { selectDueJobs, runJob, runDueJobs, createTimeBudget, DUE_SLACK_MINUTES } from '../scheduler.js'
 import { createSubrequestBudget, SubrequestBudgetError } from '../supabase.js'
 
 /**
@@ -47,6 +47,24 @@ describe('selectDueJobs', () => {
     const health = { due: { minutes_since_success: 61 } }
 
     expect(selectDueJobs(jobs, health).map(j => j.id)).toEqual(['due'])
+  })
+
+  // 16 Nov 2026: pulsedive finished at 08:16:08 UTC and the 14:15:36 tick read
+  // 359 minutes, so a 6-hour feed waited for 14:45. Every feed slipped a tick a run.
+  it('counts a job due a little before its interval, so it does not slip a tick', () => {
+    const jobs = [job({ id: 'six-hourly', intervalMinutes: 360 })]
+
+    expect(selectDueJobs(jobs, { 'six-hourly': { minutes_since_success: 359 } }).map(j => j.id))
+      .toEqual(['six-hourly'])
+    expect(selectDueJobs(jobs, { 'six-hourly': { minutes_since_success: 360 - DUE_SLACK_MINUTES } }).map(j => j.id))
+      .toEqual(['six-hourly'])
+  })
+
+  it('does not run an hourly job at the tick half an hour after it ran', () => {
+    const jobs = [job({ id: 'hourly', intervalMinutes: 60 })]
+
+    expect(selectDueJobs(jobs, { hourly: { minutes_since_success: 30 } })).toEqual([])
+    expect(selectDueJobs(jobs, { hourly: { minutes_since_success: 60 - DUE_SLACK_MINUTES - 1 } })).toEqual([])
   })
 
   it('treats a job with no successful run on record as due', () => {

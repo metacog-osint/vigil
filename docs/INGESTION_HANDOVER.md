@@ -52,6 +52,16 @@ registry's declared costs still fit its 48 ticks a day.
 - **A job starts only when its whole declared cost is available.** Half-cost
   admission was tried and was wrong: a feed that runs out part-way has already
   spent what it used getting there and writes nothing for it.
+  **The rule only works if the declared cost is true.** On 16 Nov 2026 three daily
+  feeds declared 12 and used more: ransomware.live 17, malpedia 23, misp-galaxy 23.
+  The scheduler started them with 12 to 16 left, and in the 14 days to 16 Nov they
+  failed on the budget 5, 7 and 8 times. They now declare 20, 24 and 24, so a tick
+  without room defers them instead.
+- **Due 15 minutes early** (`DUE_SLACK_MINUTES`, half the tick gap). A job's clock
+  starts when its run finished, some way into a tick, and the check reads it at the
+  start of one, so without the slack every job slipped a tick each run: 6-hour feeds
+  ran 6.5 to 8 hours apart. `capacity.test.js` keeps the slack under half the gap,
+  so no job is due again at the tick right after it ran.
 - `skipped` is not success. Neither is a run that fetched records and wrote none of
   them. **`unchanged` is** success — having checked is the assertion.
 
@@ -150,6 +160,29 @@ console.log(budget.used)
 ```
 
 That is how NVD was found to cost 40 against a ceiling of 32.
+
+Or read it from production. Each job's `sync_log` row carries
+`metadata.subrequests_used`, the invocation's running total when it finished, so a
+job's own cost is the step from the row before it in the same tick:
+
+```sql
+with r as (
+  select source, status, completed_at, (metadata->>'subrequests_used')::int used,
+         date_trunc('hour', started_at)
+           + floor(extract(minute from started_at) / 30) * interval '30 minutes' tick
+  from sync_log
+  where started_at >= now() - interval '14 days'
+    and metadata ? 'subrequests_used' and source <> 'worker-run')
+select source, min(d), max(d), count(*)
+from (select *, used - coalesce(lag(used) over (partition by tick order by completed_at), 0) d
+      from r) x
+where status = 'success'
+group by source order by max(d) desc;
+```
+
+The budget failures are logged with status `error` and the message "subrequest
+budget exhausted", not `budget_exhausted`: the feeds catch the error themselves.
+Search on the message.
 
 ## 3. Commits and migrations
 
