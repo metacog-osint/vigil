@@ -312,6 +312,7 @@ const READING_KINDS = new Set([
   'leak_site_notice_candidate',
   'claim_value_unverified',
   'advisory_indicators_unread',
+  'victim_name_markup',
 ])
 
 function ExternalLink({ href, children }) {
@@ -423,6 +424,66 @@ export function ReadingEvidence({ kind, evidence }) {
             </span>
           )}
         </p>
+      </div>
+    )
+  }
+
+  if (kind === 'victim_name_markup') {
+    const rows = evidence.rows || []
+    const twins = rows.filter((r) => r.clean_twin).length
+    const cell = 'py-1 pr-3 align-top'
+    return (
+      <div className={box}>
+        <div className={label}>Each name, read into its parts (a reading, not a change)</div>
+        <p className="text-gray-400 mb-2">
+          {figure(rows.length)} claims still hold markup. {figure(twins)} of them have a clean twin:
+          the same group’s claim on the same name, already held without markup. Nothing here has
+          been changed; the verdict decides what happens to these rows.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="text-gray-500 text-left">
+              <tr>
+                <th className={cell}>As stored</th>
+                <th className={cell}>Name</th>
+                <th className={cell}>Site</th>
+                <th className={cell}>Labels</th>
+                <th className={cell}>Clean twin</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.incident_id} className="border-t border-gray-700/50">
+                  <td className={`${cell} font-mono break-all`}>
+                    {r.as_stored}
+                    <div className="text-gray-500 font-sans">
+                      {r.group || 'no group'} · {r.source} · {r.posted || 'no date'}
+                    </div>
+                  </td>
+                  <td className={cell}>
+                    {r.name || <span className="text-amber-400">names nobody</span>}
+                  </td>
+                  <td className={`${cell} font-mono break-all`}>
+                    {r.site || '—'}
+                    {r.cut_off && (
+                      <div className="text-amber-400 font-sans">cut off by the source</div>
+                    )}
+                  </td>
+                  <td className={cell}>{(r.labels || []).join(', ') || '—'}</td>
+                  <td className={cell}>
+                    {r.clean_twin ? (
+                      <>
+                        {r.clean_twin.source} · {r.clean_twin.posted || 'no date'}
+                      </>
+                    ) : (
+                      <span className="text-amber-400">none held</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     )
   }

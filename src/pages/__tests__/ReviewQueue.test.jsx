@@ -35,7 +35,7 @@ vi.mock('../../hooks/useAuth', () => ({
   useAuth: () => mockUseAuth(),
 }))
 
-import ReviewQueue from '../ReviewQueue'
+import ReviewQueue, { ReadingEvidence } from '../ReviewQueue'
 
 const FINDING = {
   id: 'f-1',
@@ -209,5 +209,57 @@ describe('reading evidence on the card (172)', () => {
     render(<ReviewQueue />)
     expect(await screen.findByText('ciphbit / Affiliate')).toBeInTheDocument()
     expect(screen.queryByText('The post, as the source sent it')).not.toBeInTheDocument()
+  })
+})
+
+describe('victim name markup on the card (173)', () => {
+  const evidence = {
+    incidents: 2,
+    rows: [
+      {
+        incident_id: 'i-1',
+        group: 'ransomhub',
+        source: 'ransomwatch',
+        posted: '2024-04-24',
+        as_stored: '[Published]Constelacion Savings<www.constelacion.com.sv>',
+        name: 'Constelacion Savings',
+        site: 'www.constelacion.com.sv',
+        labels: ['Published'],
+        cut_off: false,
+        clean_twin: {
+          source: 'ransomware.live',
+          posted: '2024-04-23',
+          name: 'Constelacion Savings',
+        },
+      },
+      {
+        incident_id: 'i-2',
+        group: 'QuantumLocker',
+        source: 'ransomware.live',
+        posted: '2021-11-22',
+        as_stored: '</a>',
+        name: null,
+        site: null,
+        labels: ['</a>'],
+        cut_off: false,
+        clean_twin: null,
+      },
+    ],
+  }
+
+  it('shows each name as stored beside its reading, as text', () => {
+    render(<ReadingEvidence kind="victim_name_markup" evidence={evidence} />)
+    expect(
+      screen.getByText('[Published]Constelacion Savings<www.constelacion.com.sv>')
+    ).toBeInTheDocument()
+    expect(screen.getByText('www.constelacion.com.sv')).toBeInTheDocument()
+    expect(screen.getByText(/a reading, not a change/)).toBeInTheDocument()
+    expect(screen.getByText(/1 of them have a clean twin/)).toBeInTheDocument()
+  })
+
+  it('says when a row names nobody and has no clean copy', () => {
+    render(<ReadingEvidence kind="victim_name_markup" evidence={evidence} />)
+    expect(screen.getByText('names nobody')).toBeInTheDocument()
+    expect(screen.getByText('none held')).toBeInTheDocument()
   })
 })
