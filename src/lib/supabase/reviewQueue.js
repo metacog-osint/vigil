@@ -129,6 +129,39 @@ export const reviewQueue = {
     if (error) return { data: null, error }
     return { data: Object.fromEntries((data || []).map((r) => [r.finding_id, r])), error: null }
   },
+
+  /**
+   * What Vigil holds of the thing a reading finding asks a person to read
+   * (172): the report's sentences around a matched phrase, a leak-site post
+   * body, a claim value beside its citation, an advisory's document. Keyed by
+   * finding id. Evidence only: it decides nothing.
+   */
+  async getReadingEvidence() {
+    const { data, error } = await supabase.from('review_reading_evidence').select('*')
+    if (error) return { data: null, error }
+    return {
+      data: Object.fromEntries((data || []).map((r) => [r.finding_id, r.evidence])),
+      error: null,
+    }
+  },
+
+  /**
+   * The advisories still waiting to be read for their indicators, for the
+   * reading page (/review/reading): open advisory_indicators_unread findings
+   * with their documents, newest first.
+   */
+  async getReadingList() {
+    const { data, error } = await supabase
+      .from('review_reading_evidence')
+      .select('finding_id, subject, status, evidence')
+      .eq('check_name', 'advisory_indicators_unread')
+      .eq('status', 'open')
+    if (error) return { data: null, error }
+    const rows = [...(data || [])].sort((a, b) =>
+      String(b.evidence?.published || '').localeCompare(String(a.evidence?.published || ''))
+    )
+    return { data: rows, error: null }
+  },
 }
 
 export default reviewQueue
