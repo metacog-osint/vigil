@@ -1,8 +1,8 @@
 -- 167. Watch more feeds for stalls, counting only what the worker now counts
 --
--- STATUS: NOT APPLIED. Apply only after the worker deploy that writes
--- metadata.new_counted (cd workers && npm run deploy); the guard below refuses
--- to run before it.
+-- STATUS: APPLIED 04:31 UTC 16 November 2026, after worker version 32ddaf97
+-- (deployed 02:07 UTC) and two counted ransomlook runs. The guard below refuses
+-- to run before the worker that writes metadata.new_counted.
 --
 -- WHY
 --
