@@ -146,7 +146,7 @@ export async function runJob(job, { feedDb, logDb, env, budget, trigger }) {
   }
 
   const completedAt = new Date()
-  const added = numberOr(result?.added, 0)
+  const added = newRecordCount(job, result)
   const updated = numberOr(result?.updated, 0)
   const failed = numberOr(result?.failed, 0)
 
@@ -154,7 +154,7 @@ export async function runJob(job, { feedDb, logDb, env, budget, trigger }) {
   // `success: true` is the same silence in a different place. ThreatFox did
   // exactly this on the first live run of the new scheduler: 1,296 records
   // failed, nothing written, reported as a successful run.
-  if (status === 'success' && failed > 0 && added + updated === 0) {
+  if (status === 'success' && failed > 0 && (added ?? 0) + updated === 0) {
     status = 'error'
     errorMessage = `fetched ${failed} records and wrote none of them`
   }
@@ -167,9 +167,14 @@ export async function runJob(job, { feedDb, logDb, env, budget, trigger }) {
     records_added: added,
     records_updated: updated,
     records_failed: failed,
-    records_processed: added + updated + failed,
+    records_processed: (added ?? 0) + updated + failed,
     error_message: errorMessage,
     metadata: {
+      // Present only when records_added is a real count of new records.
+      // feed_health (migration 167) starts a feed's stall clock at the first
+      // run that carries it, so history written before the count existed,
+      // when records_added was 0 whatever happened, cannot read as a stall.
+      ...(added === null ? {} : { new_counted: true }),
       trigger,
       duration_ms: completedAt - startedAt,
       subrequests_used: budget.used,
@@ -238,6 +243,27 @@ function skipReason(result) {
   }
   if (typeof result?.skipped === 'string') return result.skipped
   return null
+}
+
+/**
+ * How many genuinely new records the run brought, or null when the job cannot
+ * say. Null is written to sync_log as null: 0 would claim the run brought
+ * nothing, and for most feeds that was never known. Until 15 November 2026
+ * every job but ransomlook and ioc-geo logged 0 here because the scheduler
+ * read only `added`, which almost nothing returned.
+ *
+ *   job.countNew(result)  for jobs whose count has another name: the Edge
+ *                         Function feeds return `new`, `advisories_new`,
+ *                         `filings_new`, or one count per source
+ *   result.added          the worker feeds' own count of inserted rows
+ *                         (ransomlook; the upsert feeds via createInsertTally)
+ *
+ * A failed run reports nothing new, but that is a fact, not a guess, only if
+ * the job said so; so failure does not turn null into 0.
+ */
+export function newRecordCount(job, result) {
+  const n = typeof job?.countNew === 'function' ? job.countNew(result ?? {}) : result?.added
+  return Number.isFinite(n) && n >= 0 ? n : null
 }
 
 function numberOr(value, fallback) {

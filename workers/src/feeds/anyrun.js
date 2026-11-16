@@ -7,6 +7,8 @@
  * For full IOC access, a paid API subscription is needed.
  */
 
+import { createInsertTally } from '../lib/inserts.js'
+
 const ANYRUN_TRENDS_URL = 'https://any.run/malware-trends/'
 
 // Malware families we want to track - high-priority threats
@@ -21,6 +23,7 @@ export async function ingestAnyRun(supabase, env) {
   console.log('Starting ANY.RUN malware trends ingestion...')
 
   let updated = 0
+  const inserts = createInsertTally()
   let failed = 0
   let lastError = null
 
@@ -77,16 +80,16 @@ export async function ingestAnyRun(supabase, env) {
 
     // Upsert to malware_families table
     if (records.length > 0) {
-      const { error } = await supabase
+      const { error, inserted } = await supabase
         .from('malware_families')
-        .upsert(records, { onConflict: 'name' })
+        .upsert(records, { onConflict: 'name', countInserted: true })
 
       if (error) {
         console.error(`ANY.RUN batch error: ${error.message}`)
         lastError = error.message
         failed += records.length
       } else {
-        updated += records.length
+        updated += records.length - inserts.record(inserted)
       }
     }
 
@@ -97,7 +100,7 @@ export async function ingestAnyRun(supabase, env) {
   }
 
   console.log(`ANY.RUN complete: ${updated} updated, ${failed} failed`)
-  return { success: true, source: 'anyrun-trends', updated, failed, lastError }
+  return { success: true, source: 'anyrun-trends', added: inserts.added, updated, failed, lastError }
 }
 
 /**

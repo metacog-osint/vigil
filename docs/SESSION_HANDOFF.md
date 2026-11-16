@@ -9,12 +9,42 @@ documentation in this repository.
 is on screen, what is not, and the two rules the disclosures query layer encodes
 that a careless commit would undo.
 
-**Newest first: §0 (15 November 2026), then §0b (4 November).** §2 onward is
+**Newest first: §0 (16 November 2026), §0a (15 November), then §0b (4 November).** §2 onward is
 dated 24 September or earlier; re-measure any number there before trusting it.
 
 ---
 
-## 0. Latest: 14–15 November 2026
+## 0. Latest: 16 November 2026, stall detection widened (167)
+
+_Written about 04:30 UTC 16 Nov (10:30 p.m. CST 15 Nov). Measured live then._
+
+- **Worker** version `32ddaf97`, deployed 02:07 UTC 16 Nov from
+  `claude/focused-noether-13fb98`. Every job now logs `records_added` as a true
+  count of new records, or null when it cannot say. Rows with a real count carry
+  `metadata.new_counted`. In the first two hours, 13 sources logged counted
+  rows, including urlhaus 105 new and nvd 19 new.
+- **Migration 167**, applied at 04:31 UTC 16 Nov, after two counted ransomlook
+  runs. Right after it, nothing read stalled and `ingestion_is_healthy()` was
+  still true. `feed_health`
+  reads only counted rows and adds `new_counted_since`. It also watches threatfox
+  at 12 h, urlhaus, malwarebazaar and nvd at 24 h, tor-exits at 72 h, and
+  vendor-research and state-breach-notices at 144 h. Each feed's clock starts at
+  its first counted run. malwarebazaar and tor-exits had not run since the
+  deploy, so their `stalled` stays null until they do. Thresholds and reasoning
+  are in `docs/INGESTION_HANDOVER.md` and in 167 itself.
+- **Watch:** `ransomware.live` (daily, not critical) failed at 04:16 UTC 16 Nov
+  with "subrequest budget exhausted (32/32, 18 reserved)", because nvd ran ahead
+  of it in the same tick. Its successful runs use 17 to 32 subrequests, so it
+  was already at the edge. This is not from 167's counting, which uses the same
+  request. If it keeps failing, give it its own tick.
+- **Review queue:** unchanged at 543 open. There is no
+  `breach_notice_candidate_failed` finding. The five design verdicts are still
+  waiting on Tom.
+- **Migration numbers:** next free is 169.
+
+---
+
+## 0a. 14–15 November 2026
 
 _Written 15 Nov 2026, about 02:45 UTC (8:45 p.m. CST on 14 Nov); the stall
 check updated about 15:45 UTC 15 Nov. Measured live then._

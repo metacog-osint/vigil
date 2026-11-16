@@ -3,6 +3,7 @@
  * Cloudflare Worker version
  */
 
+import { createInsertTally } from '../lib/inserts.js'
 import { stampListed } from '../lib/sightings.js'
 
 const PULSEDIVE_API = 'https://pulsedive.com/api'
@@ -17,6 +18,7 @@ export async function ingestPulsedive(supabase, env) {
   }
 
   let updated = 0
+  const inserts = createInsertTally()
   let failed = 0
 
   const indicatorTypes = ['ip', 'domain', 'url']
@@ -68,14 +70,14 @@ export async function ingestPulsedive(supabase, env) {
         }))
 
         if (records.length > 0) {
-          const { error } = await supabase
+          const { error, inserted } = await supabase
             .from('iocs')
-            .upsert(stampListed(records), { onConflict: 'type,value' })
+            .upsert(stampListed(records), { onConflict: 'type,value', countInserted: true })
 
           if (error) {
             failed += records.length
           } else {
-            updated += records.length
+            updated += records.length - inserts.record(inserted)
           }
         }
       }
@@ -87,7 +89,7 @@ export async function ingestPulsedive(supabase, env) {
   }
 
   console.log(`Pulsedive complete: ${updated} updated, ${failed} failed`)
-  return { success: true, source: 'pulsedive', updated, failed }
+  return { success: true, source: 'pulsedive', added: inserts.added, updated, failed }
 }
 
 function mapIndicatorType(pulsediveType) {

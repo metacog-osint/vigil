@@ -5,12 +5,15 @@
  * Note: NVD API has rate limits. We fetch only recent CVEs.
  */
 
+import { createInsertTally } from '../lib/inserts.js'
+
 const NVD_API = 'https://services.nvd.nist.gov/rest/json/cves/2.0'
 
 export async function ingestNVD(supabase) {
   console.log('Starting NVD ingestion...')
 
   let updated = 0
+  const inserts = createInsertTally()
   let failed = 0
   let lastError = null
 
@@ -72,16 +75,16 @@ export async function ingestNVD(supabase) {
         }
       })
 
-      const { error } = await supabase
+      const { error, inserted } = await supabase
         .from('vulnerabilities')
-        .upsert(records, { onConflict: 'cve_id' })
+        .upsert(records, { onConflict: 'cve_id', countInserted: true })
 
       if (error) {
         console.error(`NVD batch error: ${error.message}`, error)
         lastError = error.message || JSON.stringify(error)
         failed += batch.length
       } else {
-        updated += batch.length
+        updated += batch.length - inserts.record(inserted)
       }
     }
 
@@ -91,7 +94,7 @@ export async function ingestNVD(supabase) {
   }
 
   console.log(`NVD complete: ${updated} updated, ${failed} failed`)
-  return { success: true, source: 'nvd', updated, failed, lastError }
+  return { success: true, source: 'nvd', added: inserts.added, updated, failed, lastError }
 }
 
 function mapSeverity(cvssScore) {

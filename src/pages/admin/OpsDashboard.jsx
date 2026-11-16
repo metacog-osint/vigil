@@ -188,7 +188,10 @@ function SourceHistoryModal({ source, history, onClose }) {
                       <StatusBadge status={log.status} />
                     </td>
                     <td className="py-2 text-sm text-gray-400">{log.records_processed || 0}</td>
-                    <td className="py-2 text-sm text-gray-400">{log.records_added || 0}</td>
+                    <td className="py-2 text-sm text-gray-400">
+                      {/* null: the job cannot say what was new (worker, 15 Nov 2026) */}
+                      {log.records_added ?? '—'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
