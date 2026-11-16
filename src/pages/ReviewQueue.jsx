@@ -313,6 +313,7 @@ const READING_KINDS = new Set([
   'claim_value_unverified',
   'advisory_indicators_unread',
   'victim_name_markup',
+  'breach_notice_candidate',
 ])
 
 function ExternalLink({ href, children }) {
@@ -484,6 +485,30 @@ export function ReadingEvidence({ kind, evidence }) {
             </tbody>
           </table>
         </div>
+      </div>
+    )
+  }
+
+  if (kind === 'breach_notice_candidate') {
+    return (
+      <div className={box}>
+        <div className={label}>The Attorney General’s record of the cause</div>
+        {evidence.cause ? (
+          <p className="text-white">
+            {evidence.cause}
+            {evidence.attack_type && <> · {evidence.attack_type}</>}
+          </p>
+        ) : (
+          <p className="text-gray-400">
+            The Attorney General’s open dataset has no row matching this notice by name and date.
+          </p>
+        )}
+        <p className="text-xs text-gray-500 mt-2">
+          Washington Attorney General, open dataset{' '}
+          <ExternalLink href={evidence.dataset_url}>data.wa.gov</ExternalLink>. The AG’s category
+          for the breach, not a finding that it is the attack the group claimed: still read the
+          notice.
+        </p>
       </div>
     )
   }
