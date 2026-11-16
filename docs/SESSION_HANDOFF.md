@@ -34,6 +34,14 @@ dated 24 September or earlier; re-measure any number there before trusting it.
   them rather than failing them. Measurements in `docs/INGESTION_HANDOVER.md` §2.
   ransomware.live's 04:16 UTC failure was this, not a need for its own tick.
   **Needs `cd workers && npm run deploy`** (Tom) after merge.
+  Merged as PR #107 (`64e026e`).
+- **Reviewer help for `victim_name_markup` (173, `claude/victim-name-markup`).**
+  `review_reading_evidence` gains a fifth kind: each of the 59 marked-up victim
+  names read into name, site and labels, with the same group's clean copy of
+  the claim where Vigil holds one. Measured live: 54 carry a site, and 58 of 59
+  have a clean twin from ransomware.live posted within 20 days, so the rows look
+  like second copies of claims Vigil already holds. Only "</a>" (QuantumLocker,
+  22 Nov 2021) has none. A reading, not a change: the verdict decides.
 
 
 _Written about 04:30 UTC 16 Nov (10:30 p.m. CST 15 Nov), and updated about
