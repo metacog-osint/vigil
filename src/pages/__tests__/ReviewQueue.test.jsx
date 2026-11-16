@@ -226,7 +226,11 @@ describe('victim name markup on the card (173)', () => {
         site: 'www.constelacion.com.sv',
         labels: ['Published'],
         cut_off: false,
-        clean_twin: { source: 'ransomware.live', posted: '2024-04-23', name: 'Constelacion Savings' },
+        clean_twin: {
+          source: 'ransomware.live',
+          posted: '2024-04-23',
+          name: 'Constelacion Savings',
+        },
       },
       {
         incident_id: 'i-2',
