@@ -6,12 +6,15 @@
  * https://www.cisa.gov/cybersecurity-advisories/ics-advisories
  */
 
+import { createInsertTally } from '../lib/inserts.js'
+
 const CISA_ICS_RSS = 'https://www.cisa.gov/cybersecurity-advisories/ics-advisories.xml'
 
 export async function ingestCISAICS(supabase) {
   console.log('Starting CISA ICS-CERT ingestion...')
 
   let updated = 0
+  const inserts = createInsertTally()
   let failed = 0
   let lastError = null
 
@@ -78,16 +81,16 @@ export async function ingestCISAICS(supabase) {
         }
       })
 
-      const { error } = await supabase
+      const { error, inserted } = await supabase
         .from('ics_advisories')
-        .upsert(records, { onConflict: 'advisory_id' })
+        .upsert(records, { onConflict: 'advisory_id', countInserted: true })
 
       if (error) {
         console.error(`ICS-CERT batch error: ${error.message}`)
         lastError = error.message
         failed += batch.length
       } else {
-        updated += batch.length
+        updated += batch.length - inserts.record(inserted)
       }
     }
 
@@ -97,7 +100,7 @@ export async function ingestCISAICS(supabase) {
   }
 
   console.log(`CISA ICS-CERT complete: ${updated} updated, ${failed} failed`)
-  return { success: true, source: 'cisa-ics', updated, failed, lastError }
+  return { success: true, source: 'cisa-ics', added: inserts.added, updated, failed, lastError }
 }
 
 /**

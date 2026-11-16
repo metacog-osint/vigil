@@ -3,6 +3,7 @@
  * Cloudflare Worker version
  */
 
+import { createInsertTally } from '../lib/inserts.js'
 import { stampListed } from '../lib/sightings.js'
 
 const URLHAUS_API = 'https://urlhaus-api.abuse.ch/v1/urls/recent/'
@@ -17,6 +18,7 @@ export async function ingestURLhaus(supabase, env) {
   }
 
   let updated = 0
+  const inserts = createInsertTally()
   let failed = 0
 
   try {
@@ -58,14 +60,14 @@ export async function ingestURLhaus(supabase, env) {
         }
       }))
 
-      const { error } = await supabase
+      const { error, inserted } = await supabase
         .from('iocs')
-        .upsert(stampListed(records), { onConflict: 'type,value' })
+        .upsert(stampListed(records), { onConflict: 'type,value', countInserted: true })
 
       if (error) {
         failed += batch.length
       } else {
-        updated += batch.length
+        updated += batch.length - inserts.record(inserted)
       }
     }
 
@@ -75,5 +77,5 @@ export async function ingestURLhaus(supabase, env) {
   }
 
   console.log(`URLhaus complete: ${updated} updated, ${failed} failed`)
-  return { success: true, source: 'urlhaus', updated, failed }
+  return { success: true, source: 'urlhaus', added: inserts.added, updated, failed }
 }

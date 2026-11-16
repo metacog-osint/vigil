@@ -3,13 +3,15 @@
  * Cloudflare Worker version
  */
 
+import { createInsertTally } from '../lib/inserts.js'
+
 const CISA_KEV_URL = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json'
 
 export async function ingestCISAKEV(supabase) {
   console.log('Starting CISA KEV ingestion...')
 
-  let added = 0
   let updated = 0
+  const inserts = createInsertTally()
   let failed = 0
 
   try {
@@ -52,15 +54,15 @@ export async function ingestCISAKEV(supabase) {
         }
       }))
 
-      const { error } = await supabase
+      const { error, inserted } = await supabase
         .from('vulnerabilities')
-        .upsert(records, { onConflict: 'cve_id' })
+        .upsert(records, { onConflict: 'cve_id', countInserted: true })
 
       if (error) {
         console.error(`Batch error: ${error.message}`)
         failed += batch.length
       } else {
-        updated += batch.length
+        updated += batch.length - inserts.record(inserted)
       }
     }
 
@@ -74,6 +76,7 @@ export async function ingestCISAKEV(supabase) {
   return {
     success: true,
     source: 'cisa-kev',
+    added: inserts.added,
     updated,
     failed
   }
