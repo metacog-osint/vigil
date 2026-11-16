@@ -106,10 +106,10 @@
     "dotenv": "^17.4.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.21.0",
+    "react-router-dom": "^7.18.5",
     "react-simple-maps": "^3.0.0",
     "recharts": "^2.10.0",
-    "resend": "^4.0.0",
+    "resend": "^6.38.1",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
