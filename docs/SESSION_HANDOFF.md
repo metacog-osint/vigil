@@ -55,8 +55,39 @@ check updated about 15:45 UTC 15 Nov. Measured live then._
   consent, and wants an independent "known exploited" signal built from primary
   sources: CISA Vulnrichment (CC0), MSRC, Project Zero's 0day list, CERT and
   vendor advisories, with PoC aggregators kept separate.
-- **Review queue auto-close** (migration 165, PR #99, merged as `14b6e83`):
-  584 of 750 closed and logged, 166 open. See `docs/REVIEW_QUEUE_AUTOMATION.md`.
+- **Review queue** (15 Nov, PRs #99 and #101, production `662d33c` deployed
+  22:18 UTC). Full reasoning and counts in `docs/REVIEW_QUEUE_AUTOMATION.md`.
+  - **The bug:** 583 of 600 open `sec_disclosure_candidate` findings were state
+    breach notices labelled "filed 8-K Item 1.05": 130's
+    `apply_victim_disclosures` scanned every source. **165** fixes the scan
+    (`sec-edgar` only), adds status `auto_closed`, the `finding_auto_closures`
+    log and `reopen_auto_closed(rule, reason)`, and closed 584 (583
+    `not_an_sec_filing`, 1 `feed_recovered`), resetting 714 notices to
+    `unreviewed`.
+  - **166** asks the state-notice question under its own name,
+    `breach_notice_candidate`: one per notice with a claim on the same
+    `company_key` within 90 days, listing the claims. It never links anything,
+    and `match_status` stays `unreviewed`. Statement-level triggers on new
+    notices and new claims keep it current. They catch their own errors as
+    `breach_notice_candidate_failed`; if one appears, the trigger broke and the
+    ingest did not. 377 raised.
+  - **166** also adds `review_country_evidence`. **168** stops it reading
+    ransomware.live links as victim websites. `incidents.victim_website` holds
+    the aggregator's page, not the victim's site: today no victim in the 43
+    country disagreements has a real website on file.
+  - **`/review`:** a kind filter; "Defer all shown", the only bulk verdict; the
+    day gap on SEC and breach-notice cards; each 8-K beside its 8-K/A; the
+    "Closed by a rule" tab. **`/disclosures`:** "reviewed" counts `corroborated`
+    and `unrelated` only.
+  - **Open: 543** (377 breach-notice, 43 country, 29 advisory, 17 SEC, 77
+    other). No person has recorded a verdict since 20 Sep.
+  - **Waiting on Tom:** five design verdicts on `/review`, with recommendations
+    in the doc: `audit_log_trust` confirm, `review_authority` defer,
+    `ioc_actor_backfill` reject, `victim_name_quality` confirm,
+    `vulnerability_key_quality` confirm. Each confirm then needs its fix built.
+  - **Not checked:** the page signed in.
+  - **Migration numbers:** 167 is another session's (`167_feed_stall_expand`,
+    branch `claude/focused-noether-13fb98`). Next free is 169.
 
 ---
 
