@@ -465,7 +465,9 @@ export function ReadingEvidence({ kind, evidence }) {
                   </td>
                   <td className={`${cell} font-mono break-all`}>
                     {r.site || '—'}
-                    {r.cut_off && <div className="text-amber-400 font-sans">cut off by the source</div>}
+                    {r.cut_off && (
+                      <div className="text-amber-400 font-sans">cut off by the source</div>
+                    )}
                   </td>
                   <td className={cell}>{(r.labels || []).join(', ') || '—'}</td>
                   <td className={cell}>
