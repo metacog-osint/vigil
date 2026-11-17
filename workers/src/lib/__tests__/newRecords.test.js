@@ -8,6 +8,7 @@ import {
   INSERT_CLOCK_SLACK_MS,
 } from '../supabase.js'
 import { createInsertTally } from '../inserts.js'
+import { installFetchMeter, withSubrequestBudget } from '../subrequests.js'
 import { JOBS_BY_ID } from '../../feeds/registry.js'
 
 /**
@@ -69,15 +70,15 @@ describe('upsert with countInserted', () => {
         )
       })
     )
+    installFetchMeter()
     const budget = createSubrequestBudget({ limit: 50, reserve: 0 })
-    const db = createSupabaseClient(
-      { SUPABASE_URL: 'https://x.supabase.co', SUPABASE_KEY: 'k' },
-      { budget }
-    )
+    const db = createSupabaseClient({ SUPABASE_URL: 'https://x.supabase.co', SUPABASE_KEY: 'k' })
 
-    const { error, inserted } = await db
-      .from('iocs')
-      .upsert([{ value: 'a' }, { value: 'b' }], { onConflict: 'type,value', countInserted: true })
+    const { error, inserted } = await withSubrequestBudget(budget, () =>
+      db
+        .from('iocs')
+        .upsert([{ value: 'a' }, { value: 'b' }], { onConflict: 'type,value', countInserted: true })
+    )
 
     expect(error).toBeNull()
     expect(inserted).toBe(1)

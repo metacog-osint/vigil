@@ -129,8 +129,8 @@ describe('ip:port candidates', () => {
 })
 
 describe('registry', () => {
-  it('declares a Censys cost that covers one select and an update per IP', () => {
-    expect(JOBS_BY_ID.censys.cost).toBe(CENSYS_BATCH + 1)
+  it('declares a Censys cost that covers one select, then a lookup and an update per IP', () => {
+    expect(JOBS_BY_ID.censys.cost).toBe(CENSYS_BATCH * 2 + 1)
   })
 
   it('keeps paused jobs off the schedule', () => {

@@ -16,6 +16,28 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ## 0. Latest: 16 November 2026, stall detection widened (167), review fixes (169–171)
 
+**17 Nov, about 03:00–04:30 UTC (9:00–10:30 p.m. CST 16 Nov).** Measured live then.
+
+- **Worker version `77f3c7f0`** deployed by Tom from an export of `b357e18`: #107's
+  scheduler fix and #109's `wa-breach-causes` job. Migrations applied stay at 174;
+  next free is 175.
+- **03:15 UTC tick died silently.** 13 jobs logged, then pulsedive was cut off with
+  no row and no `worker-run` summary. Most likely Workers Free's 50-subrequest cap
+  (the budget did not count the feeds' own `fetch()` calls or the log rows); Free's
+  10 ms CPU limit is the other candidate. The 03:45 tick ran its 5 due jobs cleanly.
+- **`wa-breach-causes` first run, 03:46 UTC:** 1,609 of 1,698 dataset rows matched.
+  97 of 104 open Washington cards carry a cause: 61 Cyberattack/Ransomware,
+  16 Unauthorized Access, 10 Cyberattack/Other, 4 Phishing, 3 Cyberattack/unknown,
+  2 Malware, 1 Unauthorized Access/unknown; 7 have no dataset row. Left
+  non-critical on purpose: its parent `state-breach-notices` is not critical, and
+  it adds no records, so the stall clock cannot watch it.
+- **Workers Paid** from 17 Nov ($5 a month, Tom). **Fetch meter
+  (`claude/worker-paid-limits`):** every subrequest is counted, the worker's own
+  ceiling is 1,000, and the reserve is 5. `docs/INGESTION_HANDOVER.md` §2, "The
+  fetch meter and Workers Paid". **Needs a worker deploy (Tom) after merge.**
+- **Still to measure:** 6-hour feeds running 6 h apart, and ransomware.live,
+  malpedia and misp-galaxy now that a tick has room for them.
+
 **Later on 16 Nov (about 15:00 UTC, 9:00 a.m. CST).** Measured live then.
 
 - **PR #106** (172, reviewer help) merged as `6f67792` and deployed 07:17 UTC. The
@@ -48,8 +70,9 @@ dated 24 September or earlier; re-measure any number there before trusting it.
   new `wa-breach-causes` feed copies `databreachcause` and `cyberattacktype` onto
   Vigil's `wa-ag` rows by name and date, and the breach-notice card shows it as
   the AG's record. 97 of 104 open Washington cards have one, 61 Ransomware.
-  Dataset has no stated licence; Tom approved 16 Nov. **Needs:** 174 applied,
-  the Edge Function deployed, and a worker deploy (Tom) for the daily run.
+  Dataset has no stated licence; Tom approved 16 Nov. 174 was applied (18:37 UTC)
+  and the `wa-breach-causes` Edge Function deployed before the PR merged. Merged
+  as PR #109 (`b357e18`), site deployed 03:08 UTC 17 Nov.
 
 
 _Written about 04:30 UTC 16 Nov (10:30 p.m. CST 15 Nov), and updated about
