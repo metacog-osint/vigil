@@ -2,12 +2,12 @@
  * Lightweight Supabase client for Cloudflare Workers
  * Uses REST API directly with fetch (no npm dependencies)
  *
- * Workers Free allows 50 subrequests per invocation. A run that exceeds it is
- * killed without running its catch block, which is how ingestion failures went
- * unrecorded for months: the feeds spent the whole budget, and the sync_log
- * write at the end of the run was the request that got refused. Pass a budget
- * (createSubrequestBudget) and the client refuses its own calls first, leaving
- * room for the run to record what happened.
+ * A run that exceeds the platform's subrequest cap is refused every further
+ * call, its catch block's sync_log write included. That is how ingestion
+ * failures went unrecorded for months. The budget (createSubrequestBudget) is
+ * spent by the fetch meter (lib/subrequests.js), which sees every call the
+ * invocation makes, this client's included, so a feed is stopped before the
+ * platform stops it and the run can still record what happened.
  */
 
 /** Thrown when a budgeted client is asked for more subrequests than remain. */
@@ -19,19 +19,27 @@ export class SubrequestBudgetError extends Error {
 }
 
 /**
- * @param limit    platform cap per invocation (50 on Workers Free)
- * @param reserve  subrequests held back for logging and the feeds' own fetch()
- *                 calls, which this client cannot see
+ * @param limit    the most subrequests one invocation may make (lib/limits.js)
+ * @param reserve  held back for the bookkeeping that follows a feed: its own
+ *                 sync_log row and the run's summary row. Every earlier call,
+ *                 bookkeeping included, is already in `used`, so the reserve
+ *                 does not grow with the number of jobs.
  */
-export function createSubrequestBudget({ limit = 50, reserve = 12 } = {}) {
+export function createSubrequestBudget({ limit = 50, reserve = 5 } = {}) {
   let used = 0
   const ceiling = limit - reserve
 
   return {
     get used() { return used },
+    /** What a feed may still spend. */
     get remaining() { return Math.max(0, ceiling - used) },
-    spend() {
-      if (used >= ceiling) {
+    /**
+     * Counts one subrequest. A feed's call (`enforce`, the default) is refused at
+     * the ceiling; bookkeeping is counted but never refused, since the reserve
+     * is there for it.
+     */
+    spend({ enforce = true } = {}) {
+      if (enforce && used >= ceiling) {
         throw new SubrequestBudgetError(
           `subrequest budget exhausted (${used}/${ceiling}, ${reserve} reserved)`
         )
@@ -85,7 +93,7 @@ export function countInsertedRows(rows, sentAtMs) {
   return stamps.filter((s) => Date.parse(s) === newestMs).length
 }
 
-export function createSupabaseClient(env, { budget = null } = {}) {
+export function createSupabaseClient(env) {
   const supabaseUrl = env.SUPABASE_URL
   const supabaseKey = env.SUPABASE_KEY
 
@@ -93,12 +101,9 @@ export function createSupabaseClient(env, { budget = null } = {}) {
     throw new Error('Missing SUPABASE_URL or SUPABASE_KEY environment variables')
   }
 
-  // Every call the client makes goes through here so the budget, if there is
-  // one, is spent before the subrequest is.
-  const request = (url, init) => {
-    if (budget) budget.spend()
-    return fetch(url, init)
-  }
+  // Counting happens in the fetch meter (lib/subrequests.js), not here, so a
+  // call is counted once whether it comes from this client or a feed's fetch().
+  const request = (url, init) => fetch(url, init)
 
   const baseHeaders = {
     'apikey': supabaseKey,

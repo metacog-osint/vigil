@@ -1,6 +1,8 @@
 -- 174. Washington's own record of each breach's cause, on the review card
 --
--- STATUS: written 16 November 2026, not applied.
+-- STATUS: applied 16 November 2026, 18:37 UTC, before PR #109 merged (b357e18).
+-- First run 17 Nov 03:46 UTC: 1,609 of 1,698 dataset rows matched; 97 of the
+-- 104 open Washington cards carry a cause, 61 Ransomware.
 --
 -- 377 breach_notice_candidate findings (166) ask whether a state breach notice
 -- is the victim's own account of an attack a group claimed. The reviewer had to

@@ -14,7 +14,7 @@ Not what it looked like. Ingestion had been working the whole time; **the record
 it had stopped.**
 
 Every worker invocation wrote one `sync_log` row named `cloudflare-worker`, at the
-end of the run. Workers Free refuses the 51st subrequest of an invocation, the
+end of the run. Workers Free refused the 51st subrequest of an invocation, the
 feeds spent the budget, and that final write — and the catch block's write — were
 what got refused. 5,869 rows under one name; the last row naming an actual feed was
 dated 31 May.
@@ -153,13 +153,16 @@ update feed_expectations set stall_after_minutes = 1080 where feed_id = 'ransoml
 Do not guess these. Run the feed against an outsized budget and read what it spent:
 
 ```js
+installFetchMeter()
 const budget = createSubrequestBudget({ limit: 10000, reserve: 0 })
-const db = createSupabaseClient(env, { budget })
-await ingestNVD(db)
+const db = createSupabaseClient(env)
+await withSubrequestBudget(budget, () => ingestNVD(db))
 console.log(budget.used)
 ```
 
-That is how NVD was found to cost 40 against a ceiling of 32.
+That is how NVD was found to cost 40 against a ceiling of 32. Since 17 Nov 2026
+`budget.used` counts every call, the feed's own `fetch()` included (see "The
+fetch meter" below); before that it counted only the Supabase client's.
 
 Or read it from production. Each job's `sync_log` row carries
 `metadata.subrequests_used`, the invocation's running total when it finished, so a
@@ -183,6 +186,36 @@ group by source order by max(d) desc;
 The budget failures are logged with status `error` and the message "subrequest
 budget exhausted", not `budget_exhausted`: the feeds catch the error themselves.
 Search on the message.
+
+Rows written before the fetch meter was deployed (below) count only the client's
+calls; rows after it count everything, so the steps between rows are larger.
+
+### The fetch meter and Workers Paid (17 Nov 2026)
+
+At 03:15 UTC on 17 Nov a tick of 14 due jobs was cut off during pulsedive with
+nothing recorded: no pulsedive row, no `worker-run` row. The budget had counted
+only the Supabase client's calls. Each feed's own `fetch()` (its source, its Edge
+Function) and the `sync_log` row per job sat in a fixed reserve of 18, which did
+not grow with the number of jobs, so a busy tick passed Workers Free's 50 while
+the budget still showed room. Every call after that was refused, the log writes
+too. (The 10 ms CPU limit on Free could also have done it; the logs cannot say
+which.)
+
+Two changes:
+
+- **Workers Paid** ($5 a month, Tom, 17 Nov). 10,000 subrequests and 30 s CPU an
+  invocation by default. The worker's own ceiling is 1,000
+  (`workers/src/lib/limits.js`), well under the platform's, so a runaway feed
+  stops with a `budget_exhausted` row.
+- **The fetch meter** (`workers/src/lib/subrequests.js`). The worker's global
+  `fetch` is wrapped once, and every call inside `withSubrequestBudget()` is
+  spent against that invocation's budget, carried in AsyncLocalStorage
+  (`compatibility_flags = ["nodejs_als"]`). A feed's calls are refused at the
+  ceiling; the run's bookkeeping (`feed_health`, `sync_log`) is counted but
+  never refused. The reserve is now 5: one feed's log row, the summary row and
+  its error fallback. Everything earlier is already counted.
+  `workers/src/lib/__tests__/subrequests.test.js` replays the 03:15 tick under a
+  50 cap.
 
 ## 3. Commits and migrations
 
@@ -354,9 +387,11 @@ Still `never`: `mitre`, `mitre-atlas` and `tor-exits` (weeklies, not yet due),
   Check the live schema before trusting a migration.
 - Supabase project ref is **`faqazkwdkajhxmwxchop`**. A wrong ref returns "You do
   not have permission", which reads like an auth failure and is not.
-- **Workers Free: 50 subrequests, 10 ms CPU, 15 min wall clock per invocation;
-  5 cron triggers per account.** Vigil uses one (four until 6 Nov 2026); the
-  account's other Workers share the rest.
+- **Workers Paid since 17 Nov 2026: 10,000 subrequests and 30 s CPU per
+  invocation by default, 15 min wall clock for a cron trigger.** (Free was 50
+  subrequests and 10 ms CPU.) The worker holds itself to 1,000 subrequests
+  (`workers/src/lib/limits.js`). Vigil uses one cron trigger (four until
+  6 Nov 2026).
 - OFAC ignores `If-Modified-Since` — returns 200 and the whole document — but
   `Last-Modified` on a HEAD is reliable.
 - **Batch size is a subrequest decision, not a throughput one.** KEV, ThreatFox,
