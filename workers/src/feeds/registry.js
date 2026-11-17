@@ -59,7 +59,7 @@ import { ingestAnyRun } from './anyrun.js'
  * `cost` is roughly how many subrequests a job needs: one per page of a select, one
  * per upsert batch, one to record the run. It decides whether a job is worth
  * starting with the budget that remains, so a wrong number here is a scheduling
- * problem, not a correctness one - the client's budget is the hard stop, and a job
+ * problem, not a correctness one - the budget is the hard stop, and a job
  * that runs out mid-way is recorded as budget_exhausted rather than taking the
  * invocation down with it.
  *
@@ -67,10 +67,14 @@ import { ingestAnyRun } from './anyrun.js'
  * hourly feeds are incremental: Ransomlook inserts the handful of posts it has not
  * seen, which is one or two batches, not a backfill.
  *
- * A number here can be measured rather than guessed: run the feed with a client
- * built on createSubrequestBudget({ limit: 10000, reserve: 0 }) and read
- * budget.used afterwards. That is how nvd's was found to be 40 against a ceiling
- * of 32 - a feed that could never finish, quietly spending the tail of every run.
+ * A number here can be measured rather than guessed: run the feed inside
+ * withSubrequestBudget() with createSubrequestBudget({ limit: 10000, reserve: 0 })
+ * and read budget.used afterwards (docs/INGESTION_HANDOVER.md, "Measuring a
+ * feed's cost"). That is how nvd's was found to be 40 against a ceiling of 32 - a
+ * feed that could never finish, quietly spending the tail of every run. Since the
+ * fetch meter (17 Nov 2026) every call counts, the feed's own fetch() included, so
+ * a cost measured before then may be low. On Workers Paid's ceiling of 1,000 that
+ * no longer decides whether a job runs.
  */
 const HOUR = 60
 const DAY = 24 * HOUR
@@ -350,8 +354,8 @@ export const JOBS = [
   {
     id: 'censys',
     priority: 4,
-    // One select, then an update per IP looked up. See CENSYS_BATCH.
-    cost: CENSYS_BATCH + 1,
+    // One select, then a lookup and an update per IP. See CENSYS_BATCH.
+    cost: CENSYS_BATCH * 2 + 1,
     intervalMinutes: DAY,
     run: (db, env) => enrichCensys(db, env),
   },
