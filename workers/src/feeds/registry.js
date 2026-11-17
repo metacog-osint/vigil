@@ -41,6 +41,7 @@ import { ingestNcscAdvisories } from './ncsc-advisories.js'
 import { ingestEtdaActors } from './etda-actors.js'
 import { ingestVendorResearch } from './vendor-research.js'
 import { ingestStateBreachNotices } from './state-breach-notices.js'
+import { ingestWaBreachCauses } from './wa-breach-causes.js'
 import { ingestFincenAdvisories } from './fincen-advisories.js'
 
 // Threat actor databases
@@ -384,6 +385,17 @@ export const JOBS = [
     intervalMinutes: DAY,
     countNew: sumOver('states', 'new'),
     run: (db, env) => ingestStateBreachNotices(db, env),
+  },
+  // Washington's own record of each notice's cause, from the Attorney General's
+  // open dataset (migration 174). One subrequest to the wa-breach-causes Edge
+  // Function; it updates causes on rows state-breach-notices wrote, so it adds
+  // no records of its own.
+  {
+    id: 'wa-breach-causes',
+    priority: 4,
+    cost: 1,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestWaBreachCauses(db, env),
   },
   {
     id: 'mitre',
