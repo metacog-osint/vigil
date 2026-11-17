@@ -9,10 +9,10 @@
 const CENSYS_API = 'https://api.platform.censys.io/v3/global'
 
 /**
- * IPs looked up per run. Each one is a fetch() the budget cannot see plus an
- * update it can, so this sets the job's cost: one select and up to BATCH updates
- * on the budget, BATCH more calls inside the reserve. The registry's `cost` for
- * censys must stay at BATCH + 1.
+ * IPs looked up per run. Each one is a lookup fetch() plus an update, both
+ * counted by the fetch meter (lib/subrequests.js) since 17 Nov 2026, so this sets
+ * the job's cost: one select, then two calls per IP. The registry's `cost` for
+ * censys must stay at BATCH * 2 + 1.
  *
  * The old query selected every IOC in the table (about 600,000 rows, one
  * subrequest per thousand) and then filtered on `type`, which it had not

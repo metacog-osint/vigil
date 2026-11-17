@@ -15,6 +15,7 @@
  */
 
 import { SubrequestBudgetError } from './supabase.js'
+import { withSubrequestBudget } from './subrequests.js'
 
 /**
  * Cloudflare gives a Cron Trigger 15 minutes of wall clock. Unlike the subrequest
@@ -144,7 +145,9 @@ export async function runJob(job, { feedDb, logDb, env, budget, trigger }) {
   let errorMessage = null
 
   try {
-    result = await job.run(feedDb, env)
+    // The feed's own calls are refused at the budget's ceiling; the sync_log
+    // write below runs in the caller's scope, where it is counted but not refused.
+    result = await withSubrequestBudget(budget, () => job.run(feedDb, env), { enforce: true })
   } catch (error) {
     result = { success: false, error: error.message }
     // Budget exhaustion is a capacity signal, not a fault in the feed itself.
@@ -195,6 +198,9 @@ export async function runJob(job, { feedDb, logDb, env, budget, trigger }) {
       ...(added === null ? {} : { new_counted: true }),
       trigger,
       duration_ms: completedAt - startedAt,
+      // Every subrequest of the invocation so far, the feeds' own fetch() calls
+      // and the run's bookkeeping included (17 Nov 2026; before that, only the
+      // Supabase client's calls).
       subrequests_used: budget.used,
       result
     }
@@ -207,8 +213,15 @@ export async function runJob(job, { feedDb, logDb, env, budget, trigger }) {
 /**
  * Runs due jobs until the subrequest budget runs low. Whatever does not fit is
  * left for the next trigger, which will find it further overdue and take it first.
+ *
+ * Its own reads and writes are counted against the budget but never refused;
+ * each feed's calls are refused at the ceiling (runJob).
  */
-export async function runDueJobs({ jobs, feedDb, logDb, healthDb, env, budget, clock, trigger }) {
+export function runDueJobs(options) {
+  return withSubrequestBudget(options.budget, () => runDueJobsCounted(options), { enforce: false })
+}
+
+async function runDueJobsCounted({ jobs, feedDb, logDb, healthDb, env, budget, clock, trigger }) {
   const health = await readFeedHealth(healthDb)
   const due = selectDueJobs(jobs, health)
 
