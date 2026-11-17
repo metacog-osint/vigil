@@ -263,3 +263,32 @@ describe('victim name markup on the card (173)', () => {
     expect(screen.getByText('none held')).toBeInTheDocument()
   })
 })
+
+describe('the registry cause on a breach-notice card (174)', () => {
+  it('shows the Attorney General’s recorded cause', () => {
+    render(
+      <ReadingEvidence
+        kind="breach_notice_candidate"
+        evidence={{
+          registry: 'wa-ag',
+          cause: 'Cyberattack',
+          attack_type: 'Ransomware',
+          dataset_url: 'https://data.wa.gov/d/sb4j-ca4h',
+        }}
+      />
+    )
+    expect(screen.getByText(/Cyberattack/)).toBeInTheDocument()
+    expect(screen.getByText(/Ransomware/)).toBeInTheDocument()
+    expect(screen.getByText(/still read the notice/)).toBeInTheDocument()
+  })
+
+  it('says the dataset has no row rather than showing nothing', () => {
+    render(
+      <ReadingEvidence
+        kind="breach_notice_candidate"
+        evidence={{ registry: 'wa-ag', cause: null, attack_type: null }}
+      />
+    )
+    expect(screen.getByText(/has no row matching this notice/)).toBeInTheDocument()
+  })
+})

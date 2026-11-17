@@ -42,6 +42,14 @@ dated 24 September or earlier; re-measure any number there before trusting it.
   have a clean twin from ransomware.live posted within 20 days, so the rows look
   like second copies of claims Vigil already holds. Only "</a>" (QuantumLocker,
   22 Nov 2021) has none. A reading, not a change: the verdict decides.
+  Merged as PR #108 (`5aa9a59`), deployed 16:02 UTC; 173 applied 16:02 UTC.
+- **Washington's cause on breach-notice cards (174, `claude/wa-breach-causes`).**
+  The AG's open dataset (data.wa.gov sb4j-ca4h) records each notice's cause; the
+  new `wa-breach-causes` feed copies `databreachcause` and `cyberattacktype` onto
+  Vigil's `wa-ag` rows by name and date, and the breach-notice card shows it as
+  the AG's record. 97 of 104 open Washington cards have one, 61 Ransomware.
+  Dataset has no stated licence; Tom approved 16 Nov. **Needs:** 174 applied,
+  the Edge Function deployed, and a worker deploy (Tom) for the daily run.
 
 
 _Written about 04:30 UTC 16 Nov (10:30 p.m. CST 15 Nov), and updated about
