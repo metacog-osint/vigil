@@ -2,8 +2,8 @@
  * Vigil in The Intelligence Company's feed contract v2 (tic-feed/2), as GeoJSON.
  *
  * A pure function of database rows, so it is tested without a network. Every item is a
- * measurement (kind observation): escalating groups, leak-site claims, KEV additions and
- * victim disclosures, plus one summary. Judged warnings wait for doctrine/indicators.json.
+ * measurement (kind observation): escalating groups, leak-site claims, KEV additions, CISA's
+ * ADP ratings of exploitation active (176) and victim disclosures, plus one summary. Judged warnings wait for doctrine/indicators.json.
  *
  * Claims and group names come only from the *_commercial views (sources that permit
  * redistribution); Ransomware.live's terms forbid re-serving its raw data. See
@@ -55,6 +55,22 @@ const SRC = {
     independence_group: 'cisa',
     source_type: 'dataset',
     descriptor: 'Official US government listing of vulnerabilities exploited in the wild.',
+  },
+  // CISA's ADP SSVC assessment (migrations 176, 177). CISA too, so the same independence group as
+  // KEV: the two never count as corroborating each other. Proposed A2 (Tom to confirm): the
+  // most reliable source there is, but "active" is CISA's assessment of reliable public
+  // evidence, not the catalog's confirmed listing.
+  adp: {
+    id: 'cisa-vulnrichment',
+    publisher: 'CISA',
+    title: 'Vulnrichment: CISA ADP SSVC assessments',
+    url: 'https://github.com/cisagov/vulnrichment',
+    licence: 'CC0-1.0',
+    grade: 'A2',
+    independence_group: 'cisa',
+    source_type: 'dataset',
+    descriptor:
+      "CISA's SSVC assessment of a CVE (Exploitation, Automatable, Technical Impact) in its ADP container. Not the KEV catalog.",
   },
   epss: {
     id: 'first-epss',
@@ -143,7 +159,7 @@ const DAY_MS = 86400000
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 /** How many days before today (UTC) each window starts. api/feed.js queries from these dates. */
-export const WINDOW_DAYS = { claims: 2, kev: 7, disclosures: 7 }
+export const WINDOW_DAYS = { claims: 2, kev: 7, adp: 7, disclosures: 7 }
 
 /** The first UTC date (YYYY-MM-DD) each window includes. */
 export function windowStarts(now = new Date()) {
@@ -151,6 +167,7 @@ export function windowStarts(now = new Date()) {
   return {
     claims: back(WINDOW_DAYS.claims),
     kev: back(WINDOW_DAYS.kev),
+    adp: back(WINDOW_DAYS.adp),
     disclosures: back(WINDOW_DAYS.disclosures),
   }
 }
@@ -231,9 +248,12 @@ export function subjectOf(v) {
  * @param {Array} rows.claims      incidents_commercial rows from the window
  * @param {object} rows.actorNames actor_id -> name, from threat_actors_commercial
  * @param {Array} rows.kev         vulnerabilities with kev_date in the window
+ * @param {Array} rows.adp         cisa_ssvc rows (176, 177) rated active with assessed_at in the
+ *   window, each with in_kev (true or false, from Vigil's copy of the KEV catalog) and the
+ *   vulnerability's vendor, product and description where Vigil holds it
  * @param {Array} rows.disclosures victim_disclosures first seen in the window
  * @param {object} [rows.counts]   the database's exact counts behind each list
- *   ({ actors, claims, kev, disclosures }); a missing or failed count is null
+ *   ({ actors, claims, kev, adp, disclosures }); a missing or failed count is null
  * @param {Date} [now]
  */
 /**
@@ -257,6 +277,7 @@ export function subjectOf(v) {
 export const HEALTH_LANES = {
   ransomlook: ['ransomlook'],
   'cisa-kev': ['cisa-kev'],
+  'cisa-vulnrichment': ['cisa-vulnrichment'],
   'sec-edgar': ['sec-edgar'],
   'ca-ag': ['state-breach-notices'],
   'wa-ag': ['state-breach-notices'],
@@ -368,6 +389,7 @@ export function buildFeed(
     claims = [],
     actorNames = {},
     kev = [],
+    adp = [],
     disclosures = [],
     counts = {},
     health = null,
@@ -542,6 +564,42 @@ export function buildFeed(
     )
   }
 
+  // CISA's ADP assessment (176): its own line, never labelled KEV. "Not in CISA's KEV catalog"
+  // only where Vigil's copy of the catalog says so (in_kev false); the cisa-kev lane's health says
+  // whether that copy is current.
+  for (const a of adp) {
+    const named = Boolean(a.vendor || a.product || a.description)
+    const subject = named ? subjectOf(a) : null
+    const notKev = a.in_kev === false
+    feats.push(
+      feature(null, {
+        ...base,
+        id: `vigil:adp:${a.cve_id}`,
+        title: `CISA's ADP assessment of ${a.cve_id}${subject && subject !== a.cve_id ? ` (${subject})` : ''}: exploitation active (assessed ${plain(a.assessed_at)})${notKev ? "; not in CISA's KEV catalog" : ''}`,
+        tier: 'routine',
+        status_class: 'reported',
+        us_person_data: named ? 'organizations' : 'none',
+        data_as_of: utc(a.assessed_at),
+        countries: [],
+        // No indicator yet: VG-WP-2's hypotheses are frozen (30 Oct 2026), and an indicator must
+        // name one. Carried like a disclosure, under the warning problem and requirement only.
+        warning_problem_id: 'VG-WP-2',
+        requirement_ids: ['VG-PIR-2'],
+        precision_class: 'none',
+        sources: withSources(published, SRC.adp),
+        measures: {
+          exploitation: 'active',
+          automatable: a.automatable ?? null,
+          technical_impact: a.technical_impact ?? null,
+          assessed_at: utc(a.assessed_at),
+          in_kev: a.in_kev ?? null,
+          kev_date: a.in_kev ? a.kev_date || null : null,
+        },
+        visual: { type: 'page', url: `${SITE}/vulnerabilities` },
+      })
+    )
+  }
+
   for (const d of disclosures) {
     const sec = d.source === 'sec-edgar'
     const to = sec
@@ -583,6 +641,7 @@ export function buildFeed(
   const count = (pred) => feats.filter(pred).length
   const mapped = count((f) => f.properties.id.startsWith('vigil:claim:') && f.geometry)
   const alerts = count((f) => f.properties.indicator_id === 'VG-IND-6')
+  const adpNotKev = adp.filter((a) => a.in_kev === false).length
   // Each window by the first date it includes. The year only when it is not this year's.
   const start = windowStarts(now)
   const since = (d) => (d.startsWith(day.slice(0, 4)) ? plain(d).replace(/ \d{4}$/, '') : plain(d))
@@ -616,6 +675,17 @@ export function buildFeed(
           part: latest,
         }),
         figure({
+          total: counts.adp,
+          rows: adp,
+          noun: [
+            "CVE CISA's ADP assessed as exploitation active",
+            "CVEs CISA's ADP assessed as exploitation active",
+          ],
+          scope: `since ${since(start.adp)}`,
+          detail: `${num(adpNotKev)} not in KEV`,
+          part: latest,
+        }),
+        figure({
           total: counts.disclosures,
           rows: disclosures,
           noun: ['breach notice', 'breach notices'],
@@ -631,7 +701,15 @@ export function buildFeed(
     countries: [],
     requirement_ids: ['VG-PIR-1', 'VG-PIR-2', 'VG-PIR-3'],
     precision_class: 'none',
-    sources: withSources(published, SRC.vigil, SRC.ransomlook, SRC.kev, SRC.stateAg, SRC.sec),
+    sources: withSources(
+      published,
+      SRC.vigil,
+      SRC.ransomlook,
+      SRC.kev,
+      SRC.adp,
+      SRC.stateAg,
+      SRC.sec
+    ),
     visual: { type: 'page', url: SITE },
   })
   return {
@@ -639,9 +717,9 @@ export function buildFeed(
     contract: CONTRACT,
     program: 'vigil',
     generated_at: published,
-    licence: `Vigil terms of use (${SITE}); claims from RansomLook (CC BY 4.0); CISA and SEC data US public domain`,
+    licence: `Vigil terms of use (${SITE}); claims from RansomLook (CC BY 4.0); CISA and SEC data US public domain; CISA Vulnrichment CC0-1.0`,
     attribution:
-      'Vigil, The Intelligence Company. Leak-site claims: RansomLook (CC BY 4.0). KEV: CISA. EPSS: FIRST.',
+      'Vigil, The Intelligence Company. Leak-site claims: RansomLook (CC BY 4.0). KEV: CISA. ADP assessments: CISA Vulnrichment (CC0). EPSS: FIRST.',
     language_key: LANGUAGE_KEY,
     ...(health ? { health } : {}),
     features: [summary, ...feats],
