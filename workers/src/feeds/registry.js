@@ -42,6 +42,7 @@ import { ingestEtdaActors } from './etda-actors.js'
 import { ingestVendorResearch } from './vendor-research.js'
 import { ingestStateBreachNotices } from './state-breach-notices.js'
 import { ingestWaBreachCauses } from './wa-breach-causes.js'
+import { ingestCisaVulnrichment } from './cisa-vulnrichment.js'
 import { ingestFincenAdvisories } from './fincen-advisories.js'
 import { buildPublicSummary } from './public-summary.js'
 
@@ -195,6 +196,16 @@ export const JOBS = [
     cost: 12,
     intervalMinutes: 6 * HOUR,
     run: (db, env) => ingestNVD(db, env),
+  },
+  // CISA's SSVC exploitation judgments from Vulnrichment (migration 176). One
+  // subrequest to the cisa-vulnrichment Edge Function, which reads only the
+  // commits since its cursor. Kept apart from KEV: cisa_ssvc, not vulnerabilities.
+  {
+    id: 'cisa-vulnrichment',
+    priority: 3,
+    cost: 1,
+    intervalMinutes: HOUR,
+    run: (db, env) => ingestCisaVulnrichment(db, env),
   },
   {
     id: 'epss',
