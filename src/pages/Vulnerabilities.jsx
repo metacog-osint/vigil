@@ -7,6 +7,7 @@ import { EmptyVulnerabilities } from '../components/EmptyState'
 import { SeverityBadge, SeverityBar, EPSSBadge } from '../components/SeverityBadge'
 import { NewBadge } from '../components/NewIndicator'
 import { VulnerabilityActorsPanel } from '../components/panels'
+import CisaAdpAssessment from '../components/CisaAdpAssessment'
 import { useDemo } from '../contexts/DemoContext'
 import useDemoData from '../hooks/useDemoData'
 
@@ -21,6 +22,8 @@ export default function Vulnerabilities() {
 
   useEffect(() => {
     loadVulnerabilities()
+    // loadVulnerabilities is redefined each render; listing it would reload on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, isDemoMode])
 
   async function loadVulnerabilities() {
@@ -316,6 +319,12 @@ export default function Vulnerabilities() {
                 )}
               </div>
 
+              <CisaAdpAssessment
+                cveId={selectedVuln.cve_id}
+                isKev={selectedVuln.is_kev === true}
+                demo={isDemoMode}
+              />
+
               {selectedVuln.ransomware_campaign_use && (
                 <div className="p-2 bg-red-900/20 border border-red-800/50 rounded">
                   <div className="text-red-400 text-xs font-medium">
@@ -483,6 +492,12 @@ export default function Vulnerabilities() {
                   </div>
                 )}
               </div>
+
+              <CisaAdpAssessment
+                cveId={selectedVuln.cve_id}
+                isKev={selectedVuln.is_kev === true}
+                demo={isDemoMode}
+              />
 
               {selectedVuln.ransomware_campaign_use && (
                 <div className="p-2 bg-red-900/20 border border-red-800/50 rounded">
