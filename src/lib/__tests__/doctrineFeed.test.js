@@ -79,6 +79,30 @@ const rows = () => ({
       description: 'Bar contains a flaw',
     },
   ],
+  // CISA's ADP ratings of exploitation active (176), joined to Vigil's copy of KEV.
+  adp: [
+    {
+      cve_id: 'CVE-2026-0001',
+      assessed_at: '2026-10-29T14:02:11.123+00:00',
+      automatable: 'yes',
+      technical_impact: 'total',
+      in_kev: true,
+      kev_date: '2026-10-28',
+      vendor: 'Acme',
+      product: 'Gateway',
+    },
+    {
+      cve_id: 'CVE-2026-0009',
+      assessed_at: '2026-10-27T09:00:00+00:00',
+      automatable: 'no',
+      technical_impact: 'partial',
+      in_kev: false,
+      kev_date: null,
+      vendor: null,
+      product: null,
+      description: null,
+    },
+  ],
   disclosures: [
     {
       id: 'd1',
@@ -101,7 +125,7 @@ const rows = () => ({
     },
   ],
   // The database's counts behind each list; here the rows are all of them.
-  counts: { actors: 1, claims: 3, kev: 3, disclosures: 2 },
+  counts: { actors: 1, claims: 3, kev: 3, adp: 2, disclosures: 2 },
 })
 
 const byId = (fc) => Object.fromEntries(fc.features.map((f) => [f.properties.id, f]))
@@ -187,15 +211,17 @@ describe('doctrineFeed', () => {
       'Vigil, 30 Oct 2026: 1 escalating group; ' +
         '3 leak-site claims since 28 Oct (1 placed on the map); ' +
         '3 KEV additions since 23 Oct (1 meets the EPSS alert); ' +
+        "2 CVEs CISA's ADP assessed as exploitation active since 23 Oct (1 not in KEV); " +
         '2 breach notices first seen since 23 Oct'
     )
-    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2)
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 2)
   })
 
   it('dates each window from the same start the queries use, with the year when it differs', () => {
     expect(windowStarts(NOW)).toEqual({
       claims: '2026-10-28',
       kev: '2026-10-23',
+      adp: '2026-10-23',
       disclosures: '2026-10-23',
     })
     const newYear = new Date('2027-01-01T05:00:00Z')
@@ -227,7 +253,7 @@ describe('doctrineFeed', () => {
     expect(title).not.toContain('EPSS alert')
     expect(title).not.toMatch(/\b3 leak-site claims/)
     // The items themselves are unchanged.
-    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2)
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 2)
   })
 
   it('states no figure for a count that failed, and never reads it as zero', () => {
@@ -246,7 +272,7 @@ describe('doctrineFeed', () => {
     expect(title).toContain('count unavailable for breach notices first seen since 23 Oct')
     expect(title).not.toMatch(counted)
     expect(title).not.toContain('placed on the map')
-    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2)
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 2)
 
     // No counts at all is the same as failed counts, not a fallback to the rows.
     const bare = rows()
@@ -395,6 +421,69 @@ describe('doctrineFeed', () => {
     )
   })
 
+  it("gives CISA's ADP assessment its own line, never labelled KEV, and marks what KEV lacks", () => {
+    const fc = buildFeed(rows(), NOW)
+    const f = byId(fc)
+    const listed = f['vigil:adp:CVE-2026-0001'].properties
+    const unlisted = f['vigil:adp:CVE-2026-0009'].properties
+    expect(listed.title).toBe(
+      "CISA's ADP assessment of CVE-2026-0001 (Acme Gateway): exploitation active (assessed 29 Oct 2026)"
+    )
+    expect(unlisted.title).toBe(
+      "CISA's ADP assessment of CVE-2026-0009: exploitation active (assessed 27 Oct 2026); not in CISA's KEV catalog"
+    )
+    for (const p of [listed, unlisted]) {
+      expect(p.title).not.toMatch(/added to CISA's KEV/)
+      expect(p.sources.map((s) => s.id)).toEqual(['cisa-vulnrichment'])
+      expect(p.sources[0]).toMatchObject({
+        publisher: 'CISA',
+        licence: 'CC0-1.0',
+        independence_group: 'cisa',
+      })
+      expect(p).toMatchObject({
+        tier: 'routine',
+        status_class: 'reported',
+        warning_problem_id: 'VG-WP-2',
+      })
+      expect(p).not.toHaveProperty('indicator_id')
+    }
+    // The source's own time, never the request time.
+    expect(listed.data_as_of).toBe('2026-10-29T14:02:11Z')
+    expect(unlisted.data_as_of).toBe('2026-10-27T09:00:00Z')
+    expect(listed.measures).toMatchObject({
+      in_kev: true,
+      kev_date: '2026-10-28',
+      automatable: 'yes',
+    })
+    expect(unlisted.measures).toMatchObject({
+      in_kev: false,
+      kev_date: null,
+      technical_impact: 'partial',
+    })
+    // A CVE Vigil holds no product for names no organization.
+    expect(unlisted.us_person_data).toBe('none')
+    expect(listed.us_person_data).toBe('organizations')
+    // KEV's own item for the same CVE is untouched.
+    expect(f['vigil:kev:CVE-2026-0001'].properties.title).toMatch(/added to CISA's KEV catalog/)
+    expect(fc.attribution).toContain('CISA Vulnrichment (CC0)')
+  })
+
+  it('states the ADP count and leaves out the KEV tally when the rows are not all of them', () => {
+    const title = summaryTitle(
+      buildFeed({ ...rows(), counts: { ...rows().counts, adp: 140 } }, NOW)
+    )
+    expect(title).toContain(
+      "140 CVEs CISA's ADP assessed as exploitation active since 23 Oct (the latest 2 in this feed)"
+    )
+    expect(title).not.toContain('not in KEV')
+    const failed = summaryTitle(
+      buildFeed({ ...rows(), counts: { ...rows().counts, adp: null } }, NOW)
+    )
+    expect(failed).toContain(
+      "count unavailable for CVEs CISA's ADP assessed as exploitation active since 23 Oct"
+    )
+  })
+
   it('takes KEV product names from vendor and product, else the description', () => {
     expect(subjectOf({ vendor: 'Acme', product: 'Gateway' })).toBe('Acme Gateway')
     expect(subjectOf({ description: 'Foo Server contains a path traversal' })).toBe('Foo Server')
@@ -520,11 +609,21 @@ describe('the health block (migration 163)', () => {
     const firstSources = new Set(fc.features.map((f) => f.properties.sources[0].id))
     for (const id of firstSources) expect(Object.keys(fc.health)).toContain(id)
     expect(new Set(Object.keys(HEALTH_LANES))).toEqual(
-      new Set(['ransomlook', 'cisa-kev', 'sec-edgar', 'ca-ag', 'wa-ag', 'or-ag', 'vigil'])
+      new Set([
+        'ransomlook',
+        'cisa-kev',
+        'cisa-vulnrichment',
+        'sec-edgar',
+        'ca-ag',
+        'wa-ag',
+        'or-ag',
+        'vigil',
+      ])
     )
     expect(HEALTH_FEEDS).toEqual([
       'ransomlook',
       'cisa-kev',
+      'cisa-vulnrichment',
       'sec-edgar',
       'state-breach-notices',
       'data-quality',

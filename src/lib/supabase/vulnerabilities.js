@@ -51,6 +51,19 @@ export const vulnerabilities = {
     return supabase.from('vulnerabilities').select('*').eq('cve_id', cveId).single()
   },
 
+  /**
+   * CISA's ADP SSVC assessment of one CVE (cisa_ssvc, 176; public read 177), or data null when
+   * CISA has rated it neither poc nor active (176 stores only those). CISA's assessment, not the KEV catalog: KEV status stays on the
+   * vulnerability row.
+   */
+  async getCisaAdp(cveId) {
+    return supabase
+      .from('cisa_ssvc')
+      .select('cve_id,exploitation,automatable,technical_impact,assessed_at')
+      .eq('cve_id', cveId)
+      .maybeSingle()
+  },
+
   async getCritical(minCvss = 9.0) {
     return supabase
       .from('vulnerabilities')

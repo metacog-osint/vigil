@@ -53,42 +53,55 @@ export default async function handler(request) {
   // The summary names each window by these same dates.
   const since = windowStarts(now)
   try {
-    const [escalatingPage, claimsPage, kevPage, disclosuresPage, healthRows] = await Promise.all([
-      rest(
-        base,
-        key,
-        'threat_actors?select=id,incidents_7d&trend_status=eq.ESCALATING&status=eq.active&order=incidents_7d.desc&limit=50',
-        { count: true }
-      ),
-      rest(
-        base,
-        key,
-        `incidents_commercial?select=incident_id,actor_id,victim_name,discovered_date,victim_country,victim_country_withheld,victim_sector&discovered_date=gte.${since.claims}&order=discovered_date.desc&limit=300`,
-        { count: true }
-      ),
-      rest(
-        base,
-        key,
-        `vulnerabilities?select=cve_id,kev_date,epss_score,epss_date,cvss_score,ransomware_use,ransomware_campaign_use,vendor,product,description&kev_date=gte.${since.kev}&order=kev_date.desc&limit=100`,
-        { count: true }
-      ),
-      rest(
-        base,
-        key,
-        `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since.disclosures}T00:00:00Z&order=first_seen.desc&limit=200`,
-        { count: true }
-      ),
-      // The health block (migration 163). Its failure never fails the feed: without it the feed is
-      // what it was before 163, and COP counts every lane as read. 29 ms warm, measured 15 Nov 2026.
-      rest(
-        base,
-        key,
-        `feed_health?select=feed_id,state,last_status,last_success_at,last_attempt_at,stall_after_minutes,last_new_at,stalled,new_counted_since&feed_id=in.(${HEALTH_FEEDS.join(',')})`
-      ).catch((err) => {
-        console.error('feed: health read failed', err)
-        return null
-      }),
-    ])
+    const [escalatingPage, claimsPage, kevPage, adpPage, disclosuresPage, healthRows] =
+      await Promise.all([
+        rest(
+          base,
+          key,
+          'threat_actors?select=id,incidents_7d&trend_status=eq.ESCALATING&status=eq.active&order=incidents_7d.desc&limit=50',
+          { count: true }
+        ),
+        rest(
+          base,
+          key,
+          `incidents_commercial?select=incident_id,actor_id,victim_name,discovered_date,victim_country,victim_country_withheld,victim_sector&discovered_date=gte.${since.claims}&order=discovered_date.desc&limit=300`,
+          { count: true }
+        ),
+        rest(
+          base,
+          key,
+          `vulnerabilities?select=cve_id,kev_date,epss_score,epss_date,cvss_score,ransomware_use,ransomware_campaign_use,vendor,product,description&kev_date=gte.${since.kev}&order=kev_date.desc&limit=100`,
+          { count: true }
+        ),
+        // CISA's ADP ratings of exploitation active (cisa_ssvc, 176; public read 177), by when CISA
+        // assessed them. A re-assessment that keeps "active" lists the CVE again. Its failure never
+        // fails the feed: the items are left out and the summary says the count is unavailable.
+        rest(
+          base,
+          key,
+          `cisa_ssvc?select=cve_id,assessed_at,automatable,technical_impact&exploitation=eq.active&assessed_at=gte.${since.adp}T00:00:00Z&order=assessed_at.desc&limit=100`,
+          { count: true }
+        ).catch((err) => {
+          console.error('feed: CISA ADP read failed', err)
+          return { rows: [], count: null }
+        }),
+        rest(
+          base,
+          key,
+          `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since.disclosures}T00:00:00Z&order=first_seen.desc&limit=200`,
+          { count: true }
+        ),
+        // The health block (migration 163). Its failure never fails the feed: without it the feed is
+        // what it was before 163, and COP counts every lane as read. 29 ms warm, measured 15 Nov 2026.
+        rest(
+          base,
+          key,
+          `feed_health?select=feed_id,state,last_status,last_success_at,last_attempt_at,stall_after_minutes,last_new_at,stalled,new_counted_since&feed_id=in.(${HEALTH_FEEDS.join(',')})`
+        ).catch((err) => {
+          console.error('feed: health read failed', err)
+          return null
+        }),
+      ])
     const escalating = escalatingPage.rows
     const claims = claimsPage.rows
     const kev = kevPage.rows
@@ -99,6 +112,7 @@ export default async function handler(request) {
       actors: escalatingPage.count,
       claims: claimsPage.count,
       kev: kevPage.count,
+      adp: adpPage.count,
       disclosures: disclosuresPage.count,
     }
     const ids = [
@@ -123,6 +137,33 @@ export default async function handler(request) {
           )
         : [],
     ])
+    // KEV status and the product, for the ADP rows. A CVE Vigil does not hold is not in KEV: the
+    // cisa-kev job writes every entry in CISA's catalog.
+    const adpIds = adpPage.rows.map((r) => r.cve_id).filter(Boolean)
+    // Without KEV status no item is published: a failed lookup must not read as "not in KEV".
+    const adpVulns = adpIds.length
+      ? await rest(
+          base,
+          key,
+          `vulnerabilities?select=cve_id,is_kev,kev_date,vendor,product,description&cve_id=in.(${adpIds.join(',')})`
+        ).catch((err) => {
+          console.error('feed: KEV status for CISA ADP rows failed', err)
+          return null
+        })
+      : []
+    if (adpVulns === null) counts.adp = null
+    const vulnById = Object.fromEntries((adpVulns || []).map((v) => [v.cve_id, v]))
+    const adp = (adpVulns === null ? [] : adpPage.rows).map((r) => {
+      const v = vulnById[r.cve_id]
+      return {
+        ...r,
+        in_kev: v?.is_kev === true,
+        kev_date: v?.kev_date || null,
+        vendor: v?.vendor || null,
+        product: v?.product || null,
+        description: v?.description || null,
+      }
+    })
     const actorNames = Object.fromEntries(listed.map((r) => [r.actor_id, r.name]))
     const actorOrigins = Object.fromEntries(
       origins.map((r) => [
@@ -139,7 +180,10 @@ export default async function handler(request) {
         ...(actorOrigins[a.id] || {}),
       }))
     const health = healthBlock(healthRows)
-    const feed = buildFeed({ actors, claims, actorNames, kev, disclosures, counts, health }, now)
+    const feed = buildFeed(
+      { actors, claims, actorNames, kev, adp, disclosures, counts, health },
+      now
+    )
     return new Response(JSON.stringify(feed), {
       status: 200,
       headers: {
