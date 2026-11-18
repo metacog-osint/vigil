@@ -13,9 +13,8 @@
  * Needs VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the .env given
  * (default: the shared checkout's). Prints counts only, never a key.
  */
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join } from 'node:path'
-import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { execFileSync, spawn } from 'node:child_process'
 import { readSsvc, worthStoring } from '../supabase/functions/_shared/vulnrichment.ts'
 
 const args = process.argv.slice(2)
@@ -38,12 +37,34 @@ function readEnv(path) {
   return out
 }
 
-function* records(dir) {
-  for (const name of readdirSync(dir)) {
-    if (name.startsWith('.')) continue
-    const p = join(dir, name)
-    if (statSync(p).isDirectory()) yield* records(p)
-    else if (/^CVE-\d{4}-\d{4,}\.json$/.test(name)) yield p
+/**
+ * Every CVE record at the clone's HEAD, read from git's own objects with one
+ * `git cat-file --batch` rather than by opening 223,000 files (which took
+ * longer than 28 minutes on 18 Nov 2026).
+ */
+async function* records() {
+  const listing = execFileSync('git', ['-C', clone, 'ls-tree', '-r', 'HEAD'], {
+    encoding: 'utf8',
+    maxBuffer: 256 * 1024 * 1024,
+  })
+  const shas = []
+  for (const line of listing.split('\n')) {
+    const m = /^\d+ blob ([0-9a-f]{40})\t(.*)$/.exec(line)
+    if (m && /(^|\/)CVE-\d{4}-\d{4,}\.json$/.test(m[2])) shas.push(m[1])
+  }
+  const cat = spawn('git', ['-C', clone, 'cat-file', '--batch'])
+  cat.stdin.end(shas.join('\n') + '\n')
+  let buf = Buffer.alloc(0)
+  for await (const chunk of cat.stdout) {
+    buf = buf.length ? Buffer.concat([buf, chunk]) : chunk
+    for (;;) {
+      const nl = buf.indexOf(10)
+      if (nl < 0) break
+      const size = Number(buf.subarray(0, nl).toString().split(' ')[2])
+      if (buf.length < nl + 1 + size + 1) break
+      yield buf.subarray(nl + 1, nl + 1 + size).toString('utf8')
+      buf = buf.subarray(nl + 1 + size + 1)
+    }
   }
 }
 
@@ -53,11 +74,11 @@ const committedAt = git('log', '-1', '--format=%cI')
 
 const counts = { files: 0, unreadable: 0, none: 0, poc: 0, active: 0, active_not_kev: 0 }
 const rows = []
-for (const path of records(clone)) {
+for await (const text of records()) {
   counts.files++
   let row
   try {
-    row = readSsvc(JSON.parse(readFileSync(path, 'utf8')))
+    row = readSsvc(JSON.parse(text))
   } catch {
     row = null
   }
