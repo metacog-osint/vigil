@@ -14,7 +14,46 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ---
 
-## 0. Latest: 18 November 2026, fetch meter live, summary built by the worker (175)
+## 0. Latest: 18 November 2026, summary built by the worker (175), CISA Vulnrichment (176)
+
+**18 Nov, about 19:30–22:00 UTC (1:30–4:00 p.m. CST).** Measured live then.
+
+- **threatfox (#114, `b4d573d`).** From 18:15 UTC each hourly run lost a batch of
+  250: ThreatFox listed one indicator twice in a batch, and Postgres refused the
+  upsert ("ON CONFLICT DO UPDATE command cannot affect row a second time", in
+  postgres_logs at 18:15:43 and 19:15:45). The job now keeps the most recent
+  copy per `(type, value)` and reports `duplicates`. **Live only after Tom's
+  worker deploy**; 20:15 UTC still lost 250 on the old build.
+- **CISA Vulnrichment (#115, 176): item 4's first source.** CC0 1.0. CISA's
+  SSVC judgments go to `cisa_ssvc` (no public grants; Tom chose to store first
+  and decide where it shows). 176 applied 21:05 UTC; `cisa-vulnrichment` Edge
+  Function v1 deployed 21:08 UTC; backfill (`scripts/backfill-cisa-vulnrichment.mjs`,
+  from a depth-1 clone in `C:\Users\PSRA User 4\vigil-data\vulnrichment`, commit
+  `32a25ee`, 16:17 UTC) loaded 49,731 rows about 21:50 UTC and set the cursor.
+  - Full corpus, 223,513 records: Exploitation none 173,224, **poc 47,950**,
+    **active 1,781**; 558 have no CISA-ADP container.
+  - **"active" is KEV, near enough:** 1,776 carry CISA's kev block; of the 5
+    that do not, 3 are KEV entries in Vigil. Only **CVE-2022-21894** and
+    **CVE-2023-24932** (Windows Secure Boot bypasses, assessed 18 Jul 2024) are
+    absent from the live KEV catalog (2026.11.18, 1,786 entries). The value is
+    the poc layer (7,341 of the 47,950 are CVEs Vigil holds) and the
+    Automatable / Technical Impact ratings.
+  - **The hourly job needs two things from Tom:** a fine-grained GitHub token
+    (public repositories, read-only, no permissions) set in Supabase Edge
+    Function secrets as `GITHUB_PUBLIC_READ_TOKEN`, and a worker deploy (the
+    registry entry `cisa-vulnrichment`, hourly, cost 1). Until both, the job
+    does not run or fails with "missing GITHUB_PUBLIC_READ_TOKEN secret".
+  - **Not decided:** where it shows (vulnerability pages, `/api/feed`). Next
+    sources for item 4: MSRC's exploitation flag and Project Zero's 0-day list,
+    after their terms are read; PoC aggregators (nomi-sec) kept separate.
+- **Side observation, not checked:** Vigil holds 1,790 CVEs with `kev_date`;
+  the live catalog lists 1,786. The 4 may be entries CISA removed.
+- **Cleanup:** the merged worktrees were already gone. Deploy folders
+  2c41205, b357e18, test-paid and `vigil-test\summary` removed (junctions first).
+  Left: `vigil-deploy\d79cda9` (live build until the next deploy), the new deploy
+  folder, `vigil-test\threatfox` and `vigil-test\vulnrichment`.
+- **CI flake:** the e2e jobs twice hung in `playwright install --with-deps`
+  until the 20-minute timeout (webkit on #113); a re-run passed.
 
 **18 Nov, about 19:00–19:25 UTC (1:00–1:25 p.m. CST).** #112 shipped. Measured live then.
 
