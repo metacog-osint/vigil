@@ -340,6 +340,28 @@ export function stallCaveat(health) {
     : 'RansomLook has relayed no claim at all, so the claim count may be incomplete'
 }
 
+/**
+ * `data_as_of` for what Vigil computes itself (the escalating groups and the summary): when its
+ * inputs were last taken in, never the request time. Until 18 Nov 2026 both carried the request
+ * time, so a stalled worker still read fresh to COP, which judges Vigil by its newest data_as_of
+ * (suite review of 15 Nov 2026).
+ *
+ * First the `vigil` lane's last_ok, which healthBlock gives as the earlier of the last successful
+ * ransomlook and data-quality runs, or the last success of whichever was not read. When RansomLook
+ * has stalled (it runs and adds nothing, as for 32.5 hours from 11 Nov), the lane carries its
+ * last_new instead, the last time a claim actually arrived. Without the block, the newest claim's
+ * day, a real data time that can only read older than the truth. The request time only when
+ * there is neither, and then nothing in the feed rests on ingestion.
+ */
+export function computedAsOf(health, claims, published) {
+  const lane = health?.vigil
+  if (lane?.state === 'stalled' && lane.last_new) return lane.last_new
+  if (lane?.last_ok) return lane.last_ok
+  const days = claims.map((c) => c.discovered_date).filter(Boolean)
+  if (days.length) return dayStart(days.reduce((a, b) => (String(b) > String(a) ? b : a)))
+  return published
+}
+
 export function buildFeed(
   {
     actors = [],
@@ -353,6 +375,7 @@ export function buildFeed(
   now = new Date()
 ) {
   const published = utc(now)
+  const asOf = computedAsOf(health, claims, published)
   const epssCutoff = new Date(now.getTime() - EPSS_CURRENT_DAYS * 86400000)
     .toISOString()
     .slice(0, 10)
@@ -401,7 +424,7 @@ export function buildFeed(
         tier: 'anomaly',
         status_class: 'claimed',
         us_person_data: 'organizations',
-        data_as_of: published,
+        data_as_of: asOf,
         countries,
         actors: [
           {
@@ -604,7 +627,7 @@ export function buildFeed(
     tier: 'routine',
     status_class: 'reported',
     us_person_data: 'none',
-    data_as_of: published,
+    data_as_of: asOf,
     countries: [],
     requirement_ids: ['VG-PIR-1', 'VG-PIR-2', 'VG-PIR-3'],
     precision_class: 'none',

@@ -9,9 +9,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   buildSummary,
   confirmedAt,
+  isServable,
   lastRunAt,
   latestConfirmedDay,
   plainDate,
+  readSummary,
   runsSince,
   skippedOf,
   tallyGroups,
@@ -281,15 +283,15 @@ describe('the sentence', () => {
   })
 })
 
-describe('GET /api/summary', () => {
-  const ENV = { VITE_SUPABASE_URL: 'https://db.example', VITE_SUPABASE_ANON_KEY: 'anon-key' }
-  let calls
+const reply = (body, headers = {}) =>
+  new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', ...headers },
+  })
 
-  const reply = (body, headers = {}) =>
-    new Response(JSON.stringify(body), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json', ...headers },
-    })
+describe('building the summary from the public reads (readSummary)', () => {
+  const BASE = 'https://db.example'
+  let calls
 
   function stubDb({
     runs = RUNS,
@@ -297,23 +299,128 @@ describe('GET /api/summary', () => {
     count = rows.length,
   } = {}) {
     calls = []
+    return vi.fn(async (url, init) => {
+      calls.push({ url: String(url), headers: init?.headers || {} })
+      const u = String(url)
+      if (u.includes('/rest/v1/sync_log?'))
+        return reply(runs.map((r) => (typeof r === 'string' ? { completed_at: r } : r)))
+      if (u.includes('/rest/v1/incidents_commercial?'))
+        return reply(rows, {
+          'Content-Range': rows.length ? `0-${rows.length - 1}/${count}` : `*/${count}`,
+        })
+      if (u.includes('/rest/v1/threat_actors_commercial?'))
+        return reply([
+          { actor_id: 'qilin', name: 'Qilin' },
+          { actor_id: 'genesis', name: 'genesis' },
+        ])
+      return new Response('{}', { status: 404 })
+    })
+  }
+
+  const build = (fetchImpl, now = NOW) =>
+    readSummary({ base: BASE, key: 'anon-key', now, fetchImpl })
+
+  it('builds the summary, stamped with when it was built', async () => {
+    const { summary, reason } = await build(stubDb())
+    expect(reason).toBeNull()
+    expect(summary.day).toBe('2026-10-30')
+    expect(summary.built_at).toBe('2026-10-31T21:30:00Z')
+    expect(summary.data_as_of).toBe('2026-10-31T21:15:00Z')
+    expect(summary.method).toBe(METHOD)
+    expect(summary.brief).toBe(
+      'Ransomware leak sites showed 20 new victim claims on 30 Oct 2026, from 2 groups; ' +
+        'Qilin posted the most (11). Claims are unverified.'
+    )
+  })
+
+  it('reads only the commercial views, asks for an exact count, and uses the key it is given', async () => {
+    await build(stubDb())
+    const paths = calls.map((c) => c.url.replace(`${BASE}/rest/v1/`, '').split('?')[0])
+    expect(paths).toEqual(['sync_log', 'incidents_commercial', 'threat_actors_commercial'])
+    // metadata holds each run's skip count
+    expect(calls[0].url).toContain('select=completed_at,metadata&')
+    expect(calls[0].url).toContain('source=eq.ransomlook&status=eq.success')
+    expect(calls[1].url).toContain('discovered_date=eq.2026-10-30')
+    expect(calls[1].headers.Prefer).toBe('count=exact')
+    // Names asked for only for the group the sentence names
+    expect(calls[2].url).toContain('actor_id=in.(qilin)')
+    for (const c of calls) expect(c.headers.apikey).toBe('anon-key')
+  })
+
+  it('summarises the day after an outage that the closing run proves complete', async () => {
+    const { summary } = await build(stubDb({ runs: OUTAGE }), OUTAGE_NOW)
+    expect(summary.day).toBe('2026-11-04')
+    expect(summary.ingest_confirmed_at).toBe('2026-11-05T00:15:00Z')
+    expect(summary.data_as_of).toBe('2026-11-05T04:15:00Z')
+    expect(summary.built_at).toBe('2026-11-05T04:40:00Z')
+    expect(calls[1].url).toContain('discovered_date=eq.2026-11-04')
+  })
+
+  it('takes the figure from the count header, not the rows returned', async () => {
+    const { summary } = await build(stubDb({ rows: claimRows({ qilin: 3 }), count: 1500 }))
+    expect(summary.claims).toBe(1500)
+    expect(summary.groups).toBeNull()
+    expect(calls.some((c) => c.url.includes('threat_actors_commercial'))).toBe(false)
+  })
+
+  it('says why there is nothing, rather than building one, when no day has confirmed ingestion', async () => {
+    const { summary, reason } = await build(stubDb({ runs: [] }))
+    expect(summary).toBeNull()
+    expect(reason).toMatch(/no day with confirmed RansomLook ingestion/)
+  })
+
+  it('does not build a zero', async () => {
+    const { summary, reason } = await build(stubDb({ rows: [], count: 0 }))
+    expect(summary).toBeNull()
+    expect(reason).toMatch(/nothing to state for 2026-10-30/)
+  })
+
+  it('builds nothing when the count header is missing', async () => {
+    const f = vi.fn(async (url) =>
+      String(url).includes('sync_log')
+        ? reply(RUNS.map((t) => ({ completed_at: t })))
+        : reply([{ actor_id: 'qilin' }])
+    )
+    expect((await build(f)).summary).toBeNull()
+  })
+
+  it('throws on a failed read, so the job is logged as failed', async () => {
+    const f = vi.fn(async () => new Response('{}', { status: 500 }))
+    await expect(build(f)).rejects.toThrow(/sync_log: HTTP 500/)
+  })
+
+  it('refuses to run without the anonymous key', async () => {
+    const f = stubDb()
+    await expect(readSummary({ base: BASE, key: '', now: NOW, fetchImpl: f })).rejects.toThrow()
+    expect(f).not.toHaveBeenCalled()
+  })
+})
+
+describe('GET /api/summary', () => {
+  const ENV = { VITE_SUPABASE_URL: 'https://db.example', VITE_SUPABASE_ANON_KEY: 'anon-key' }
+  const STORED = buildSummary(
+    {
+      day: '2026-10-30',
+      confirmedAt: '2026-10-31T00:15:00Z',
+      dataAsOf: '2026-10-31T20:15:00Z',
+      claims: 20,
+      rows: claimRows({ qilin: 11, genesis: 9 }),
+      names: { qilin: 'Qilin', genesis: 'genesis' },
+    },
+    new Date('2026-10-31T20:16:00Z')
+  )
+  let calls
+
+  function stubStored(rows = [{ summary: STORED }], status = 200) {
+    calls = []
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url, init) => {
         calls.push({ url: String(url), headers: init?.headers || {} })
-        const u = String(url)
-        if (u.includes('/rest/v1/sync_log?'))
-          return reply(runs.map((r) => (typeof r === 'string' ? { completed_at: r } : r)))
-        if (u.includes('/rest/v1/incidents_commercial?'))
-          return reply(rows, {
-            'Content-Range': rows.length ? `0-${rows.length - 1}/${count}` : `*/${count}`,
-          })
-        if (u.includes('/rest/v1/threat_actors_commercial?'))
-          return reply([
-            { actor_id: 'qilin', name: 'Qilin' },
-            { actor_id: 'genesis', name: 'genesis' },
-          ])
-        return new Response('{}', { status: 404 })
+        return new Response(JSON.stringify(rows), {
+          status,
+          headers: { 'Content-Type': 'application/json' },
+        })
       })
     )
   }
@@ -333,94 +440,60 @@ describe('GET /api/summary', () => {
 
   const get = () => handler(new Request('https://vigil.example/api/summary'))
 
-  it('answers with the summary, open to any origin and cached at the edge', async () => {
-    stubDb()
+  it('serves the stored summary with the time the worker built it, not the request time', async () => {
+    stubStored()
     const res = await get()
     expect(res.status).toBe(200)
     expect(res.headers.get('access-control-allow-origin')).toBe('*')
     expect(res.headers.get('cache-control')).toBe(
-      'public, s-maxage=3600, stale-while-revalidate=86400'
+      'public, s-maxage=900, stale-while-revalidate=3600'
     )
     const body = await res.json()
+    expect(body).toEqual(STORED)
+    expect(body.built_at).toBe('2026-10-31T20:16:00Z')
+    // The fields the hub depends on
     expect(body.day).toBe('2026-10-30')
-    expect(body.built_at).toBe('2026-10-31T21:30:00Z')
-    expect(body.data_as_of).toBe('2026-10-31T21:15:00Z')
-    expect(body.method).toBe(METHOD)
-    expect(body.brief).toBe(
-      'Ransomware leak sites showed 20 new victim claims on 30 Oct 2026, from 2 groups; ' +
-        'Qilin posted the most (11). Claims are unverified.'
-    )
+    expect(typeof body.brief).toBe('string')
   })
 
-  it('reads only the commercial views, asks for an exact count, and uses the anonymous key', async () => {
+  it('reads one row of public_summary, with the anonymous key', async () => {
     vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
-    stubDb()
+    stubStored()
     await get()
-    const paths = calls.map((c) => c.url.replace('https://db.example/rest/v1/', '').split('?')[0])
-    expect(paths).toEqual(['sync_log', 'incidents_commercial', 'threat_actors_commercial'])
-    // metadata holds each run's skip count
-    expect(calls[0].url).toContain('select=completed_at,metadata&')
-    expect(calls[0].url).toContain('source=eq.ransomlook&status=eq.success')
-    expect(calls[1].url).toContain('discovered_date=eq.2026-10-30')
-    expect(calls[1].headers.Prefer).toBe('count=exact')
-    // Names asked for only for the group the sentence names
-    expect(calls[2].url).toContain('actor_id=in.(qilin)')
-    for (const c of calls) {
-      expect(c.headers.apikey).toBe('anon-key')
-      expect(JSON.stringify(c.headers)).not.toContain('service-role-key')
-    }
+    expect(calls).toHaveLength(1)
+    expect(calls[0].url).toBe(
+      'https://db.example/rest/v1/public_summary?select=summary&id=eq.latest'
+    )
+    expect(calls[0].headers.apikey).toBe('anon-key')
+    expect(JSON.stringify(calls[0].headers)).not.toContain('service-role-key')
   })
 
-  it('summarises the day after an outage that the closing run proves complete', async () => {
-    vi.setSystemTime(OUTAGE_NOW)
-    stubDb({ runs: OUTAGE })
+  it('keeps serving a summary the worker has not rebuilt, so its built_at shows the age', async () => {
+    stubStored()
+    vi.setSystemTime(new Date('2026-11-02T12:00:00Z'))
     const body = await (await get()).json()
-    expect(body.day).toBe('2026-11-04')
-    expect(body.ingest_confirmed_at).toBe('2026-11-05T00:15:00Z')
-    expect(body.data_as_of).toBe('2026-11-05T04:15:00Z')
-    expect(body.built_at).toBe('2026-11-05T04:40:00Z')
-    expect(calls[1].url).toContain('discovered_date=eq.2026-11-04')
+    expect(body.built_at).toBe('2026-10-31T20:16:00Z')
   })
 
-  it('takes the figure from the count header, not the rows returned', async () => {
-    stubDb({ rows: claimRows({ qilin: 3 }), count: 1500 })
-    const body = await (await get()).json()
-    expect(body.claims).toBe(1500)
-    expect(body.groups).toBeNull()
-    expect(calls.some((c) => c.url.includes('threat_actors_commercial'))).toBe(false)
+  it('stops calling it the latest once its day is older than any day the builder could pick', async () => {
+    stubStored()
+    vi.setSystemTime(new Date('2026-11-03T00:30:00Z'))
+    expect((await get()).status).toBe(503)
   })
 
   it('is unavailable, uncached and silent about why, when the database fails', async () => {
-    stubDb()
-    fetch.mockImplementationOnce(
-      async () => new Response('{"message":"secret detail"}', { status: 500 })
-    )
+    stubStored({ message: 'secret detail' }, 500)
     const res = await get()
     expect(res.status).toBe(503)
     expect(res.headers.get('cache-control')).toBe('no-store')
     expect(res.headers.get('access-control-allow-origin')).toBe('*')
     const text = await res.text()
     expect(text).not.toContain('secret')
-    expect(text).not.toContain('sync_log')
+    expect(text).not.toContain('public_summary')
   })
 
-  it('is unavailable when no day has confirmed ingestion', async () => {
-    stubDb({ runs: [] })
-    expect((await get()).status).toBe(503)
-  })
-
-  it('is unavailable rather than reporting a zero', async () => {
-    stubDb({ rows: [], count: 0 })
-    expect((await get()).status).toBe(503)
-  })
-
-  it('is unavailable when the count header is missing', async () => {
-    stubDb()
-    fetch.mockImplementation(async (url) => {
-      const u = String(url)
-      if (u.includes('sync_log')) return reply(RUNS.map((t) => ({ completed_at: t })))
-      return reply([{ actor_id: 'qilin' }])
-    })
+  it('is unavailable when nothing has been stored yet', async () => {
+    stubStored([])
     expect((await get()).status).toBe(503)
   })
 
@@ -428,7 +501,7 @@ describe('GET /api/summary', () => {
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
     vi.stubEnv('SUPABASE_ANON_KEY', '')
     vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
-    stubDb()
+    stubStored()
     expect((await get()).status).toBe(503)
     expect(calls).toHaveLength(0)
   })
@@ -441,5 +514,15 @@ describe('GET /api/summary', () => {
     expect(pre.headers.get('access-control-allow-origin')).toBe('*')
     const post = await handler(new Request('https://vigil.example/api/summary', { method: 'POST' }))
     expect(post.status).toBe(405)
+  })
+})
+
+describe('isServable', () => {
+  it('serves a day the builder could still pick, and not an older one', () => {
+    const at = new Date('2026-11-03T12:00:00Z')
+    expect(isServable({ day: '2026-10-31', brief: 'x' }, at)).toBe(true)
+    expect(isServable({ day: '2026-10-30', brief: 'x' }, at)).toBe(false)
+    expect(isServable({ day: '2026-11-02' }, at)).toBe(false)
+    expect(isServable(null, at)).toBe(false)
   })
 })

@@ -35,6 +35,9 @@ npx wrangler secret put SUPABASE_URL
 npx wrangler secret put SUPABASE_KEY
 # Enter your Supabase service role key when prompted
 
+# The public anon key (175): the public-summary job reads as the public does
+npx wrangler secret put SUPABASE_ANON_KEY
+
 # Required for abuse.ch APIs (ThreatFox, URLhaus, MalwareBazaar)
 npx wrangler secret put ABUSECH_API_KEY
 

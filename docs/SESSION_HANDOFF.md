@@ -14,7 +14,34 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ---
 
-## 0. Latest: 16 November 2026, stall detection widened (167), review fixes (169–171)
+## 0. Latest: 18 November 2026, fetch meter live, summary built by the worker (175)
+
+**18 Nov, about 15:00–17:00 UTC (9:00–11:00 a.m. CST).** Measured live then.
+
+- **#111 (fetch meter, Workers Paid limits) is live:** worker version `0d58658d`,
+  deployed by Tom about 15:10 UTC from an export of `2c41205`. Workers Paid was
+  confirmed active on the account first (Cloudflare follow-ups session, about
+  15:10 UTC). The 15:15 tick ran 7 jobs and wrote its worker-run row, with 27
+  subrequests counted (like ticks counted 14 or 15 before) and nothing refused.
+  Tom deployed the same folder again about 16:15 UTC (version `c201cda0`, same
+  199.52 KiB build); ticks to 16:45 all succeeded, cisa-kev 6 h after its last.
+  Before the deploy, every tick from 03:46 UTC 17 Nov had its worker-run row and
+  nothing failed in 36 hours; NVD ran 6 h apart; ransomware.live (04:45),
+  malpedia (06:45) and misp-galaxy (11:45) ran daily on 17 and 18 Nov.
+- **Summary precompute and feed stamps (`claude/summary-precompute`, 175).** Tom
+  approved the precompute in the "Cloudflare paid plan improvements" session and
+  chose, on 18 Nov, to include the feed's stamps and to add the anon key as a
+  worker secret.
+  - The worker's `public-summary` job builds `/api/summary` hourly with the anon
+    key and stores it in `public_summary`; the endpoint serves that row, so
+    `built_at` is real. The builder moved to `workers/src/lib/publicSummary.js`.
+  - `/api/feed`'s escalating groups and summary take `data_as_of` from the
+    `vigil` lane (`last_ok`, or `last_new` while RansomLook is stalled), not the
+    request time, so COP can see Vigil go late.
+  - **Ship order:** apply 175; Tom runs `wrangler secret put SUPABASE_ANON_KEY`
+    and deploys the worker; check a `public_summary` row exists; then merge
+    (Vercel). Merging first would serve 503 until the job runs.
+- Migrations applied stay at 174; 175 is written, not applied.
 
 **17 Nov, about 03:00–04:30 UTC (9:00–10:30 p.m. CST 16 Nov).** Measured live then.
 
