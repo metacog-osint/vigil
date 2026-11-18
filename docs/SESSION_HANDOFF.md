@@ -16,6 +16,32 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ## 0. Latest: 18 November 2026, fetch meter live, summary built by the worker (175)
 
+**18 Nov, about 19:00–19:25 UTC (1:00–1:25 p.m. CST).** #112 shipped. Measured live then.
+
+- **175 applied** 19:00 UTC as `175_public_summary`. anon and authenticated have
+  SELECT only, RLS on, `public-summary` expected every 60 min, not critical.
+  service_role holds all seven table privileges, like every other table here
+  (project default privileges), not only the three 175 grants. Next free is 176.
+- **Worker version `77ab33a3`**, deployed by Tom about 19:12 UTC from an export of
+  `d79cda9` (208.28 KiB), after `wrangler secret put SUPABASE_ANON_KEY` (the
+  legacy anon JWT from the dashboard's API keys page; the job sends it as Bearer
+  too, so not the `sb_publishable_` key).
+- **First build, 19:15 UTC tick:** `public-summary` success, `stored: true`, day
+  17 Nov, 48 claims, 5 subrequests. The tick ran 7 jobs, 29 subrequests, nothing
+  deferred or refused. `public_summary.built_at` = 19:15:55 UTC.
+- **#112 merged** as `552b0b4` at the checked head `2571611`; Vercel production
+  deploy succeeded 19:20 UTC. Live: `/api/summary` serves `built_at`
+  19:15:55Z (an edge HIT on the next request). Vercel strips `s-maxage` from the
+  header browsers see, so the client reads `Cache-Control: public`; the code
+  still sets `public, s-maxage=900, stale-while-revalidate=3600`. `/api/feed`
+  (generated 19:20:29Z): the summary and nine escalating-group items carry
+  `data_as_of` 19:15:39Z, the `vigil` lane's `last_ok`.
+- **Not this change:** threatfox reports `failed: 250` at 18:15 and 19:15 UTC,
+  after 0 every hour before; 18:15 ran on the old build. Not yet looked into.
+- **Still to watch:** ransomware.live (~04:45), malpedia (~06:45) and misp-galaxy
+  (~11:45 UTC) on 19 Nov on the new build; COP reading Vigil's newest
+  `data_as_of` at most about an hour old.
+
 **18 Nov, about 15:00–17:00 UTC (9:00–11:00 a.m. CST).** Measured live then.
 
 - **#111 (fetch meter, Workers Paid limits) is live:** worker version `0d58658d`,
@@ -38,10 +64,9 @@ dated 24 September or earlier; re-measure any number there before trusting it.
   - `/api/feed`'s escalating groups and summary take `data_as_of` from the
     `vigil` lane (`last_ok`, or `last_new` while RansomLook is stalled), not the
     request time, so COP can see Vigil go late.
-  - **Ship order:** apply 175; Tom runs `wrangler secret put SUPABASE_ANON_KEY`
-    and deploys the worker; check a `public_summary` row exists; then merge
-    (Vercel). Merging first would serve 503 until the job runs.
-- Migrations applied stay at 174; 175 is written, not applied.
+  - **Ship order** (followed 19:00–19:20 UTC, above): apply 175; secret and
+    worker deploy; a `public_summary` row; then merge. Merging first would
+    serve 503 until the job runs.
 
 **17 Nov, about 03:00–04:30 UTC (9:00–10:30 p.m. CST 16 Nov).** Measured live then.
 
