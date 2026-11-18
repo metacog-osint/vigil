@@ -14,7 +14,31 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ---
 
-## 0. Latest: 18 November 2026, summary built by the worker (175), CISA Vulnrichment (176)
+## 0. Latest: 18 November 2026, summary built by the worker (175), CISA Vulnrichment (176, 177)
+
+**18 Nov, about 22:40-23:40 UTC (4:40-5:40 p.m. CST).** Vulnrichment shown (177, #2). Measured live then.
+
+- **Repo swapped:** this is the new `metacog-osint/vigil` (old one archived as `vigil-archive`); PR numbers
+  restarted, so the old #115 is **#1**. Actions run; Vercel's Git link moved and deployed `ef083b3` (#1's
+  merge) to Production at 23:21 UTC, success.
+- **#1 merged** as `ef083b3` at the checked head `c6fa8db`, on Tom's yes, with webkit e2e not green: it hit
+  the 20-minute timeout twice inside `playwright install --with-deps webkit` (the runner's Ubuntu mirror served
+  ~60 kB/s; the new repo has no Actions cache). lint-and-test, build, CodeQL, chromium and firefox passed.
+- **177 applied** 23:22 UTC (`20261118232239`): anon and authenticated SELECT on `cisa_ssvc`, policy
+  `cisa_ssvc_read`, index on active rows by `assessed_at`. As anon: 49,731 rows, 3 active assessed in the
+  last 7 days (all in KEV). `cisa_vulnrichment_cursor` stays closed.
+- **#2** puts CISA's ADP line on `/api/feed` (`vigil:adp:<CVE>`, "not in CISA's KEV catalog" where Vigil's KEV
+  copy lacks it, summary clause, `cisa-vulnrichment` health lane) and on the vulnerability panel (with
+  Automatable and Technical Impact). Never a KEV label. Source grade **A2 confirmed by Tom** 18 Nov.
+- **`GITHUB_PUBLIC_READ_TOKEN`** is set in Supabase Edge Function secrets (Tom, 18 Nov) and works: a manual
+  invoke at 23:03 UTC returned 200, 0 commits past cursor `32a25ee`. **It expires about 18 Nov 2027**; after
+  that the job fails with GitHub HTTP 401 and Tom renews it.
+- **Worker:** Tom deployed `ede5388f` at 22:27 UTC from `b4d573d` (threatfox fix; no `cisa-vulnrichment`).
+  threatfox's 23:15 UTC run: failed 0, added 126, `duplicates` 1 (every run 18:15-22:15 lost 250).
+  **The hourly Vulnrichment job runs only after a second worker deploy from main** (a clean export at main's
+  sha, dry-run first, `CLOUDFLARE_API_TOKEN` cleared).
+- **Keep** `C:\Users\PSRA User 4\vigil-data\vulnrichment` (2.2 GB clone) until the hourly job has moved the
+  cursor past `32a25ee` once, in case a re-backfill is needed.
 
 **18 Nov, about 19:30–22:00 UTC (1:30–4:00 p.m. CST).** Measured live then.
 
@@ -737,9 +761,9 @@ central claim and no human has ever exercised it end to end.
 
 ### 4b. Owner decisions, unchanged
 
-- **The git history still holds the three commercial documents**, readable at
-  any commit before 21 September. Removing them means `git filter-repo` and a
-  force-push that breaks every clone and open PR.
+- **The three commercial documents are out of the git history** since the
+  18 Nov 2026 swap to a new repository with scrubbed history (the old one is
+  archived as `vigil-archive`).
 - **ransomware.live is personal-use-only** and supplies all group profiles plus
   11,256 victim countries — the largest commercial exposure in the project.
 - **VulnCheck's key 401s on every run**; the feed has never succeeded.
@@ -930,8 +954,8 @@ wrong:
   applied and its tables remain, as does `tenants.subscription_tier` — which a
   view in `021_tenants.sql` still selects. Nothing writes the column any more.
   Dropping it would destroy records, which this project does not do.
-- **The git history still holds all of it**, the same caveat as the three
-  commercial documents above.
+- **The git history still holds all of it** (not re-checked after the 18 Nov
+  2026 history swap, which removed the three commercial documents).
 - **Production keeps serving the old bundle until someone deploys.** See §2a.
 
 **On the `iocs.actor_id` backfill, because the proposal keeps coming back.**

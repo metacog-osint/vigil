@@ -1,6 +1,7 @@
 -- 177. CISA's SSVC judgments readable by the public site and /api/feed
 --
--- STATUS: NOT APPLIED. Written 18 November 2026.
+-- STATUS: APPLIED 18 Nov 2026, 23:22 UTC, as 177_cisa_ssvc_public_read
+-- (version 20261118232239). Written 18 November 2026.
 --
 -- 176 stored CISA's SSVC decision points from Vulnrichment (CC0 1.0) in
 -- cisa_ssvc with no public grants: Tom chose to store first and decide where
