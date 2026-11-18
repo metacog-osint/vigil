@@ -217,6 +217,22 @@ Two changes:
   `workers/src/lib/__tests__/subrequests.test.js` replays the 03:15 tick under a
   50 cap.
 
+Deployed 15:10 UTC 18 Nov 2026 as version `0d58658d` (from `2c41205`). Its first
+tick, 15:15 UTC, ran 7 jobs and counted 27 subrequests, where like ticks had
+counted 14 or 15 before the meter; nothing was refused. Redeployed unchanged
+about 16:15 UTC as `c201cda0`.
+
+### The hub's daily line, built here (175, 18 Nov 2026)
+
+The `public-summary` job (hourly, priority 2) builds the summary
+`GET /api/summary` serves, with the same three reads the endpoint used to make
+on every request, and upserts it into `public_summary`. It reads with
+`SUPABASE_ANON_KEY`, a worker secret, never the service role, so the public
+policies decide what counts. Without that secret it fails and says so.
+`workers/src/lib/publicSummary.js` holds the builder because the worker is
+deployed from an export of `workers/` alone; `api/_lib/publicSummary.js`
+re-exports it.
+
 ## 3. Commits and migrations
 
 | Commit    | What                                                                                                                |
