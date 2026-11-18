@@ -1,6 +1,8 @@
 -- 176. CISA's own judgment of exploitation, from Vulnrichment, kept apart from KEV
 --
--- STATUS: not applied.
+-- STATUS: applied 18 Nov 2026 21:05 UTC (as 176_cisa_vulnrichment). Backfill
+-- loaded 21:50 UTC from commit 32a25ee: 49,731 rows (1,781 active, 47,950 poc),
+-- cursor at 32a25ee. service_role holds the project's default seven privileges.
 --
 -- WHY
 --
