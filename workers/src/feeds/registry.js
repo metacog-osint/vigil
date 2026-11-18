@@ -43,6 +43,7 @@ import { ingestVendorResearch } from './vendor-research.js'
 import { ingestStateBreachNotices } from './state-breach-notices.js'
 import { ingestWaBreachCauses } from './wa-breach-causes.js'
 import { ingestFincenAdvisories } from './fincen-advisories.js'
+import { buildPublicSummary } from './public-summary.js'
 
 // Threat actor databases
 import { ingestMalpedia } from './malpedia.js'
@@ -166,6 +167,16 @@ export const JOBS = [
     cost: 2,
     intervalMinutes: HOUR,
     run: (db) => rpc(db, 'evaluate_alert_rules', { p_since: '3 hours', p_max_matches: 5 }),
+  },
+  // The hub's daily line, stored with the time it was built (175). Hourly, so
+  // built_at says whether the worker is running and data_as_of follows each
+  // RansomLook run. Three reads as anon and one upsert.
+  {
+    id: 'public-summary',
+    priority: 2,
+    cost: 4,
+    intervalMinutes: HOUR,
+    run: (db, env) => buildPublicSummary(db, env),
   },
 
   // --- Vulnerabilities: what R1/R2 in the offshoot spec depend on ---

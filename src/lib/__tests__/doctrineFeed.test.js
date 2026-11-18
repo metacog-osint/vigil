@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import {
   buildFeed,
+  computedAsOf,
   countFromRange,
   healthBlock,
   HEALTH_FEEDS,
@@ -540,5 +541,46 @@ describe('the health block (migration 163)', () => {
       r.feed_id === 'ransomlook' ? { ...r, stalled: false } : r
     )
     expect(stallCaveat(healthBlock(working))).toBeNull()
+  })
+})
+
+describe('data_as_of of what Vigil computes itself, never the request time', () => {
+  // RansomLook working: it last added a claim on its last run.
+  const working = () =>
+    healthRows().map((r) =>
+      r.feed_id === 'ransomlook' ? { ...r, stalled: false, last_new_at: r.last_success_at } : r
+    )
+  const computed = (fc) =>
+    fc.features.filter(
+      (f) => f.properties.id.endsWith(':summary') || f.properties.id.includes(':actor:')
+    )
+
+  it('stamps the summary and the escalating groups with when their inputs were last taken in', () => {
+    const fc = buildFeed({ ...rows(), health: healthBlock(working()) }, NOW)
+    const items = computed(fc)
+    expect(items.some((f) => f.properties.id.includes(':actor:'))).toBe(true)
+    // The earlier of ransomlook (17:45:39) and data-quality (17:50:00).
+    for (const f of items) expect(f.properties.data_as_of).toBe('2026-10-30T17:45:39Z')
+    expect(fc.generated_at).toBe('2026-10-30T18:00:00Z')
+  })
+
+  it('keeps that time when the worker stops, so a reader sees Vigil age', () => {
+    const later = new Date('2026-10-31T06:00:00Z')
+    const fc = buildFeed({ ...rows(), health: healthBlock(working()) }, later)
+    for (const f of computed(fc)) expect(f.properties.data_as_of).toBe('2026-10-30T17:45:39Z')
+    expect(fc.generated_at).toBe('2026-10-31T06:00:00Z')
+  })
+
+  it('uses the last claim that arrived while RansomLook is stalled', () => {
+    const fc = buildFeed({ ...rows(), health: healthBlock(healthRows()) }, NOW)
+    for (const f of computed(fc)) expect(f.properties.data_as_of).toBe('2026-10-29T22:15:39Z')
+  })
+
+  it('falls back to the newest claim day without the health block, and to the request time only with nothing', () => {
+    const claims = [{ discovered_date: '2026-10-28' }, { discovered_date: '2026-10-30' }, {}]
+    expect(computedAsOf(null, claims, 'REQUEST')).toBe('2026-10-30T00:00:00Z')
+    expect(computedAsOf(null, [], 'REQUEST')).toBe('REQUEST')
+    const fc = buildFeed(rows(), NOW)
+    for (const f of computed(fc)) expect(f.properties.data_as_of).not.toBe('2026-10-30T18:00:00Z')
   })
 })
