@@ -1,6 +1,10 @@
 -- 175. The hub's daily line, built by the worker and stored with its real time
 --
--- STATUS: not applied.
+-- STATUS: applied 18 Nov 2026 19:00 UTC (as 175_public_summary). Checked then:
+-- anon and authenticated SELECT only, RLS on, feed_expectations public-summary
+-- 60 min, not critical. service_role holds all seven table privileges, as on
+-- every other table here (the project's default privileges), not only the
+-- three granted below.
 --
 -- GET /api/summary (31 Oct 2026) built "Latest from Vigil" on every request:
 -- three reads, 4.3 s measured on 12 Nov 2026, and a built_at that was always
