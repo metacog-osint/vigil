@@ -32,12 +32,26 @@ state is fresh or late, so items of a failed or stalled source do not end. While
 ends with a caveat that the claim count may be incomplete. If `feed_health` cannot be read the block is left out and
 the feed is otherwise unchanged.
 
+**`data_as_of` of the escalating groups and the summary** (18 Nov 2026) is when their inputs were last taken in,
+never the request time: the `vigil` lane's `last_ok`, or its `last_new` while RansomLook is stalled; without the
+health block, the newest claim's day (`computedAsOf` in `doctrineFeed.js`). `generated_at` stays the request time.
+So when the worker stops, these items age, and COP, which judges Vigil by its newest `data_as_of`, reads it late
+and then stale. Until then they carried the request time, and a stopped worker still read fresh (suite review of
+15 Nov 2026).
+
 ## Daily summary (no key)
 
 `GET https://vigil.theintelligence.company/api/summary` returns one sentence about the latest complete day, for
-The Intelligence Company's home page. No key, `Access-Control-Allow-Origin: *`, cached for an hour at the edge
-(`s-maxage=3600, stale-while-revalidate=86400`). Any failure is a 503 with no detail and `no-store`; a reader
+The Intelligence Company's home page. No key, `Access-Control-Allow-Origin: *`, cached for 15 minutes at the edge
+(`s-maxage=900, stale-while-revalidate=3600`). Any failure is a 503 with no detail and `no-store`; a reader
 should ignore it and keep its own text.
+
+**Built by the worker, not per request** (migration 175, 18 Nov 2026). The worker's `public-summary` job builds it
+every hour with the reads below, as the anonymous key makes them, and stores it in `public_summary` (one row);
+this endpoint serves that row. So `built_at` is when the worker last built it: if the worker stops, `built_at`
+stops with it. A build with nothing true to state leaves the last row in place. The endpoint answers 503 once the
+stored `day` is older than any day the builder could pick (three days back). Until 18 Nov it built the summary on
+every request, which took 4.3 s (12 Nov) and stamped `built_at` with the request time.
 
 The live response on 31 Oct 2026, run locally against the production database:
 
@@ -77,8 +91,9 @@ The live response on 31 Oct 2026, run locally against the production database:
 - Claims and names come only from the `*_commercial` views, read with the anonymous key. Showing `brief` means
   crediting RansomLook (CC BY 4.0); `attribution` is the line to use.
 
-Built by `api/_lib/publicSummary.js`, whose header carries the measurements behind each rule;
-`src/lib/__tests__/publicSummary.test.js` holds them.
+Built by `workers/src/lib/publicSummary.js` (re-exported as `api/_lib/publicSummary.js`), whose header carries the
+measurements behind each rule; `src/lib/__tests__/publicSummary.test.js` holds them, and
+`workers/src/feeds/__tests__/public-summary.test.js` the job that stores it.
 
 ---
 
