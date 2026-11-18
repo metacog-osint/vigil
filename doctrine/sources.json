@@ -33,6 +33,15 @@
       "licence": "US public domain",
       "probe": {"url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json", "expect": "json", "time_path": "dateReleased"}
     },
+    "cisa-vulnrichment": {
+      "grade": "A2",
+      "independence_group": "cisa",
+      "ease_of_faking": "low",
+      "cadence_s": 3600,
+      "descriptor": "CISA Vulnrichment: CISA's ADP SSVC assessment per CVE (Exploitation none, poc or active; Automatable; Technical Impact). CISA's assessment, not the KEV catalog. Grade A2 confirmed by Tom 18 Nov 2026.",
+      "licence": "CC0-1.0",
+      "probe": {"url": "https://api.github.com/repos/cisagov/vulnrichment/commits?sha=develop&per_page=1", "expect": "json"}
+    },
     "first-epss": {
       "grade": "B2",
       "independence_group": "first",
