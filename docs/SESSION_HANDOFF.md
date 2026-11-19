@@ -22,6 +22,25 @@ dated 24 September or earlier; re-measure any number there before trusting it.
   DECLINING, INACTIVE and STABLE stay 077's. Before: 10 groups labelled Escalating against the feed's 1
   (pixelleaks); after, both say pixelleaks. Tooltips, the actor table's trend tooltip, Help and `CLAUDE.md`
   reminder 5 now describe the rule; Help said 90 days for INACTIVE where the code uses 30.
+- **189 applied** 04:23 UTC (`20261119042317`): 1 ESCALATING, 58 STABLE, 14 DECLINING, 332 INACTIVE.
+
+**19 Nov, about 03:00-04:00 UTC (9-10 p.m. CST 18 Nov).** Vendors' and CERT-FR's own words (187, 188). Measured then.
+
+- **Worker redeployed** by Tom from an export of `fc6c632` at 02:58 UTC (version `30f7df23`, 211.11 KiB, holds
+  `reconcile_kev_catalog`); 22 runs succeeded in the next 50 minutes. Deployed again at 03:58 UTC (`81b3bebe`) from `8ab9842` for the
+  retention migrations 181-186, so this work was renumbered 187 and 188.
+- **187** `vendor_exploit_statements`: Android bulletins (7 families, 406 read: 51 notes, 44 CVEs, 3 not in KEV:
+  CVE-2020-0500, -20415 of 2022, -21096 of 2023) and Mozilla advisories (1,636: 29 sentences about the wild, 12
+  saying this flaw was attacked, 9 CVEs, all in KEV), each sentence verbatim with its kind; a new wording is
+  `unclassified` and opens a `vendor_statement_unclassified` finding. **188** `certfr_alerts`: 401 CERT-FR alerts
+  as notices, 502 CVEs (218 in KEV). Both closed to anon until Tom picks where they show; grades proposed A2.
+- **Applied** 04:22 UTC (187 `20261119042244`, 188 `20261119042256`). Edge Functions `vendor-exploited` and
+  `certfr-alerts` deployed; their history was loaded by calling them by hand with a larger batch (a POST body the
+  worker never sends), not with the SQL from `scripts/backfill-vendor-exploited.mjs` (too large for the MCP).
+  Daily worker feeds of the same names run only after Tom's next worker deploy.
+- **Trap:** source.android.com served the edge German, Polish and Farsi pages (17 notes found of 51). The
+  function now asks for `?hl=en` and refuses a page not in English; the 142 bookkeeping rows from those pages were
+  cleared and the bulletins read again. CERT-FR's API is now `cert.cyber.gouv.fr`.
 
 **19 Nov, about 02:00-02:45 UTC (8:00-8:45 p.m. CST 18 Nov).** KEV matches CISA's catalogue (180). Measured live then.
 
