@@ -23,8 +23,8 @@ import { figure } from '../lib/format'
 
 const PAGE_SIZE = 50
 
-/** A dozen or so states publish a readable list. Three of them are in. */
-const STATES_INGESTED = 3
+/** A dozen or so states publish a readable list. Eight of them are in (190). */
+const STATES_INGESTED = 8
 
 function formatDate(value) {
   if (!value) return '—'
@@ -188,8 +188,9 @@ export default function Disclosures() {
       <header>
         <h1 className="text-xl sm:text-2xl font-bold text-white">Regulator disclosures</h1>
         <p className="text-gray-400 mt-1 max-w-3xl">
-          What organisations filed about themselves, with a state attorney general or the SEC,
-          because the law required it. Every other source in Vigil records what an attacker claimed.
+          What organisations filed about themselves, with a state attorney general, HHS&apos;s
+          Office for Civil Rights or the SEC, because the law required it. Every other source in
+          Vigil records what an attacker claimed.
         </p>
       </header>
 
