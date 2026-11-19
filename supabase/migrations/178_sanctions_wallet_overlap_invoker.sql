@@ -1,6 +1,8 @@
 -- 178. sanctions_wallet_overlap() runs as its caller, not its owner
 --
--- STATUS: not applied. Written 19 November 2026.
+-- STATUS: APPLIED 19 Nov 2026, 01:52 UTC, as 178_sanctions_wallet_overlap_invoker
+-- (version 20261119015250). Written 19 November 2026. After it, as anon: same
+-- counts, prosecdef false, and lint 0028 no longer lists the function.
 --
 -- 151 made the function SECURITY DEFINER and granted it to anon and
 -- authenticated, on purpose: the public /financial-crime page calls it
