@@ -1,6 +1,8 @@
 -- 189. The site's "Escalating" label follows the surge rule (179), so the site and /api/feed agree
 --
--- STATUS: not applied.
+-- STATUS: APPLIED 19 Nov 2026, 04:23 UTC, as 189_trend_label_follows_surge (version
+-- 20261119042317). Live after: 1 group ESCALATING (pixelleaks), 58 STABLE, 14 DECLINING,
+-- 332 INACTIVE.
 --
 -- WHY
 --
