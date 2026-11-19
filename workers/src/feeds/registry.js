@@ -184,7 +184,8 @@ export const JOBS = [
   {
     id: 'cisa-kev',
     priority: 2,
-    cost: 10,
+    // fetch + 8 batches of 250 + the reconcile call (180)
+    cost: 11,
     intervalMinutes: 6 * HOUR,
     run: (db, env) => ingestCISAKEV(db, env),
   },
