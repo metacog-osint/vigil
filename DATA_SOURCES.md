@@ -147,6 +147,7 @@ contradicting itself rather than reporting a disagreement.
 | --------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------- | -------------------------- |
 | SEC EDGAR 8-K Item 1.05                 | `https://efts.sec.gov/LATEST/search-index?q="Item 1.05"&forms=8-K` | Material cybersecurity incidents **disclosed by the victim** | Daily    | `workers/src/feeds/sec-disclosures.js` → `sec-cyber-disclosures` Edge Function     | None (User-Agent required) |
 | State AG breach registries (CA, WA, OR, VT, MT, SC, ID, DE) | `oag.ca.gov`, `atg.wa.gov`, `justice.oregon.gov`; five more (190) | **8,812 + about 8,700 notifications, every cause**           | Daily    | `workers/src/feeds/state-breach-notices.js` → `state-breach-notices` Edge Function | None                       |
+| HHS OCR breach portal (HIPAA, 500+ people) | `ocrportal.hhs.gov/ocr/breach`, both lists, CSV export | **8,092 reports from Oct 2009, every cause** (192) | Daily | `workers/src/feeds/hhs-ocr-breaches.js` → `hhs-ocr-breaches` Edge Function | None (form posts, session cookie) |
 
 **The California source is the one that stops Vigil being a ransomware-only
 platform.** All 39,575 incidents it holds are ransomware leak-site claims;
@@ -209,6 +210,44 @@ Washington review cards have a row, 61 of them Ransomware. The dataset states
 no licence; Tom approved storing and showing these two fields on 16 Nov 2026,
 and `source_licences` registers it (`wa-ag-open-data`) as not cleared for
 commercial use. California and Oregon publish no cause anywhere found.
+
+**HHS Office for Civil Rights breach portal, since 19 November 2026 (migration 192).**
+HIPAA requires a covered entity or its business associate to report a breach of
+unsecured protected health information to the Secretary of HHS, and HITECH
+section 13402(e)(4) requires the Secretary to publish those affecting 500 or more
+people. OCR's [Breach Portal](https://ocrportal.hhs.gov/ocr/breach/breach_report.jsf)
+lists them in two parts, both read every day: **Under Investigation** (reports from
+the last 24 months OCR has open; 701 on 19 Nov 2026, 12 Oct 2023 to 16 Oct 2026)
+and **Archive** (closed or older; 7,391, 21 Oct 2009 to 6 Oct 2026). The portal
+is a JavaServer Faces form with no API and no page per report; the
+`hhs-ocr-breaches` Edge Function posts the form as a browser would and takes each
+list's CSV export (`supabase/functions/_shared/hhsOcr.ts`).
+
+HHS's own fields are kept as given: name of covered entity, the entity's state
+(in `business_location`, because `state` is the registry's state and HHS is not a
+state registry), covered entity type, individuals affected (`total` scope),
+breach submission date (`filed_date`), type of breach (`breach_cause`,
+`cause_source = 'hhs-ocr'`), location of breached information, business associate
+present, and OCR's Web Description, verbatim, which OCR writes when it closes a
+case (7,146 of the archive). Type of breach on 19 Nov: Hacking/IT Incident 4,885,
+Unauthorized Access/Disclosure 1,697, Theft 1,005, Loss 216, Improper Disposal
+117, Other 75, a few combined. **Nothing is derived:** 1,274 descriptions contain
+the word "ransom", and they stay OCR's words; no report is called ransomware
+from its name or its text.
+
+HHS publishes no report number, so a report is name, state and submission date,
+plus its place among reports the same filer sent the same day (46 such groups;
+one business associate filed seven on 11 Aug 2025). Counts are taken as current
+on every run, because OCR revises them, and a report moving to the archive keeps
+its row. A new report filed in the last 90 days that names a claimed victim goes
+to the review queue with HHS's fields on the card. Not on `/api/feed` until about
+a week of clean daily runs.
+
+Licence: a list the Secretary publishes by statute, a work of the US government
+(17 U.S.C. 105); no terms on the portal and no robots.txt (404), checked 19 Nov
+2026. HHS's web disclaimers restrict only licensed stock images and its seals and
+logos. Registered as `hhs-ocr`, commercial use allowed. Not read: the portal's
+separate list of 42 CFR Part 2 (substance-use treatment records) breaches.
 
 **Why this one is unlike every other source here.** Everything else in this
 document is the attacker's claim. Since December 2023 an SEC registrant has had to
