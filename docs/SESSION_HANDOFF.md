@@ -16,6 +16,13 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ## 0. Latest: 18 November 2026, summary built by the worker (175), CISA Vulnrichment (176, 177)
 
+**19 Nov, about 04:00 UTC (10 p.m. CST 18 Nov).** The site's "Escalating" follows the surge rule (189).
+
+- `apply_actor_trends` sets `trend_status = 'ESCALATING'` only when `threat_actors.surge` (179) is true;
+  DECLINING, INACTIVE and STABLE stay 077's. Before: 10 groups labelled Escalating against the feed's 1
+  (pixelleaks); after, both say pixelleaks. Tooltips, the actor table's trend tooltip, Help and `CLAUDE.md`
+  reminder 5 now describe the rule; Help said 90 days for INACTIVE where the code uses 30.
+
 **19 Nov, about 02:00-02:45 UTC (8:00-8:45 p.m. CST 18 Nov).** KEV matches CISA's catalogue (180). Measured live then.
 
 - **Before:** 1,794 rows `is_kev`, CISA 2026.11.18 lists 1,786. All CISA entries present; 8 extra. 5 were

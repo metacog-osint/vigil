@@ -194,7 +194,7 @@ the shared tree: see reminder 6.
 2. **API helpers in `api/_lib/`** - Use underscore prefix to avoid Vercel function deployment
 3. **Barrel exports** - Components organized in subdirectories with `index.js` files
 4. **Pre-commit hooks** - Husky runs ESLint/Prettier on staged files
-5. **Trend status**: ESCALATING (>25% increase), DECLINING (>25% decrease), STABLE (else)
+5. **Trend status**: ESCALATING = 179's surge (unusual against the group's own 8 weeks; 189), DECLINING (>25% decrease), INACTIVE, STABLE (else)
 6. **The worker has no CI deploy.** Merging a feed does not schedule it; only
    Tom's deploy from a dry-run-checked export of main does
    (`docs/INGESTION_HANDOVER.md`, "Deploying the worker"). Never
