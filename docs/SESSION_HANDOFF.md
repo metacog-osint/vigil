@@ -14,7 +14,21 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ---
 
-## 0. Latest: 18 November 2026, summary built by the worker (175), CISA Vulnrichment (176, 177)
+## 0. Latest: 19 November 2026, vendors' and CERT-FR's words on the vulnerability panel (191)
+
+**19 Nov, about 15:35-15:50 UTC (9:35-9:50 a.m. CST).** 191 shipped and applied.
+
+- [vigil#10](https://github.com/metacog-osint/vigil/pull/10) merged (`47ed200`), production deploy of
+  `47ed200` success. 191 applied about 15:45 UTC on Tom's yes. Checked live: anon reads
+  `vendor_exploit_statements` (80 rows, 0 `unclassified`) and `certfr_alerts` (401) but not `raw`, not
+  `vendor_documents_read`, and writes nothing.
+- On the live site: the Vulnerabilities page's box lists CVE-2023-21096, CVE-2022-20415 and CVE-2020-0500 in
+  Google's words with links; the panel for CVE-2026-123158 shows CERTFR-2026-ALE-015 as a notice. No console
+  errors. A Mozilla line was not seen on screen: the page lists the 100 newest KEVs, and every CVE with a Mozilla
+  statement is older. The component's tests cover it.
+- Next: about 26 Nov, after a week of clean daily `vendor-exploited` and `certfr-alerts` runs, propose them on
+  `/api/feed` as separate per-source fields. Next Vigil build: ideas#50 (HHS OCR). Fable review of this diff:
+  ideas#55.
 
 **19 Nov, about 05:00-05:30 UTC (11-11:30 p.m. CST 18 Nov).** Worker deployed; the new sources on the panel (191).
 
