@@ -1,6 +1,6 @@
 -- 191. Vendors' and CERT-FR's own words readable by the site (the vulnerability panel)
 --
--- STATUS: not applied.
+-- STATUS: applied 19 Nov 2026, about 15:45 UTC, on Tom's yes (ideas#1), after vigil#10 merged.
 --
 -- WHY
 --
