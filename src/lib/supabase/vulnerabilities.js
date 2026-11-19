@@ -64,6 +64,58 @@ export const vulnerabilities = {
       .maybeSingle()
   },
 
+  /**
+   * Android's and Mozilla's own sentences about exploitation of one CVE (187; public read 191),
+   * each verbatim with its kind. The vendors' words, not the KEV catalog.
+   */
+  async getVendorStatements(cveId) {
+    return supabase
+      .from('vendor_exploit_statements')
+      .select('source_id,family,document_id,document_url,document_date,statement,kind')
+      .eq('cve_id', cveId)
+      .order('document_date', { ascending: true })
+  },
+
+  /** CERT-FR's alerts naming one CVE (188; public read 191): CERT-FR's notices, in French. */
+  async getCertfrAlerts(cveId) {
+    return supabase
+      .from('certfr_alerts')
+      .select('reference,title,url,first_published,last_revision,closed_at')
+      .contains('cve_ids', [cveId])
+      .order('first_published', { ascending: true })
+  },
+
+  /**
+   * CVEs a vendor says were or may be exploited (kind 'exploited') that CISA's KEV catalog does
+   * not list, newest bulletin first. Small: 63 such statements on 19 Nov 2026. A CVE Vigil holds no
+   * row for is not in KEV here either, which is how the three Android CVEs show.
+   */
+  async getVendorExploitedNotInKev() {
+    const { data: rows, error } = await supabase
+      .from('vendor_exploit_statements')
+      .select('cve_id,source_id,family,document_id,document_url,document_date,statement')
+      .eq('kind', 'exploited')
+      .order('document_date', { ascending: false })
+      .limit(1000)
+    if (error) return { data: null, error }
+    const ids = [...new Set((rows ?? []).map((r) => r.cve_id))]
+    if (ids.length === 0) return { data: [], error: null }
+    const { data: kev, error: kevError } = await supabase
+      .from('vulnerabilities')
+      .select('cve_id')
+      .in('cve_id', ids)
+      .eq('is_kev', true)
+    if (kevError) return { data: null, error: kevError }
+    const listed = new Set((kev ?? []).map((v) => v.cve_id))
+    const seen = new Set()
+    const data = rows.filter((r) => {
+      if (listed.has(r.cve_id) || seen.has(r.cve_id)) return false
+      seen.add(r.cve_id)
+      return true
+    })
+    return { data, error: null }
+  },
+
   async getCritical(minCvss = 9.0) {
     return supabase
       .from('vulnerabilities')

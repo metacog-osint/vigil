@@ -8,6 +8,9 @@ import { SeverityBadge, SeverityBar, EPSSBadge } from '../components/SeverityBad
 import { NewBadge } from '../components/NewIndicator'
 import { VulnerabilityActorsPanel } from '../components/panels'
 import CisaAdpAssessment from '../components/CisaAdpAssessment'
+import VendorExploitStatements, {
+  VendorExploitedNotInKev,
+} from '../components/VendorExploitStatements'
 import { useDemo } from '../contexts/DemoContext'
 import useDemoData from '../hooks/useDemoData'
 
@@ -87,6 +90,8 @@ export default function Vulnerabilities() {
           CISA KEV catalog - actively exploited vulnerabilities
         </p>
       </div>
+
+      <VendorExploitedNotInKev demo={isDemoMode} />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
@@ -325,6 +330,12 @@ export default function Vulnerabilities() {
                 demo={isDemoMode}
               />
 
+              <VendorExploitStatements
+                cveId={selectedVuln.cve_id}
+                isKev={selectedVuln.is_kev === true}
+                demo={isDemoMode}
+              />
+
               {selectedVuln.ransomware_campaign_use && (
                 <div className="p-2 bg-red-900/20 border border-red-800/50 rounded">
                   <div className="text-red-400 text-xs font-medium">
@@ -494,6 +505,12 @@ export default function Vulnerabilities() {
               </div>
 
               <CisaAdpAssessment
+                cveId={selectedVuln.cve_id}
+                isKev={selectedVuln.is_kev === true}
+                demo={isDemoMode}
+              />
+
+              <VendorExploitStatements
                 cveId={selectedVuln.cve_id}
                 isKev={selectedVuln.is_kev === true}
                 demo={isDemoMode}
