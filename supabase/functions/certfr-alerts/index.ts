@@ -10,9 +10,12 @@
  *   3. Upserts them into certfr_alerts as CERT-FR published them
  *      (_shared/certfr.ts). Nothing is deleted.
  *
- * The 400 alerts held on 19 Nov 2026 were loaded once from a local copy
- * (scripts/backfill-vendor-exploited.mjs --certfr), so a daily run reads the
- * list and the few alerts CERT-FR opened or revised.
+ * A daily run reads the list and the few alerts CERT-FR opened or revised.
+ *
+ * BACKFILL
+ *
+ * A POST body {"budget": n} reads up to n alerts (at most MAX). Called by hand
+ * on 19 Nov 2026 to read all 401; the worker sends no body.
  */
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
@@ -20,7 +23,9 @@ import { CERTFR_ORIGIN, readCertfrAlert, readCertfrList } from '../_shared/certf
 
 const UA = 'Vigil-ThreatIntel/1.0 (+https://vigil.theintelligence.company)'
 const BUDGET = 60
+const MAX = 450
 const CONCURRENCY = 4
+const CHUNK = 50
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -50,8 +55,10 @@ async function pool<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>
   return out
 }
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
   const started = Date.now()
+  const body = await req.json().catch(() => ({}))
+  const budget = Math.min(MAX, Math.max(1, Number(body?.budget) || BUDGET))
   const url = Deno.env.get('SUPABASE_URL')
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   if (!url || !key) {
@@ -84,13 +91,18 @@ Deno.serve(async () => {
         return !have || x.last_revision_date.slice(0, 10) > have
       })
       .sort((a, b) => b.last_revision_date.localeCompare(a.last_revision_date))
-    const batch = due.slice(0, BUDGET)
+    const batch = due.slice(0, budget)
 
     let fetchErrors = 0
     const rows = (
       await pool(batch, CONCURRENCY, async (x) => {
         try {
-          return readCertfrAlert(await getJson(x.json_url))
+          const row = readCertfrAlert(await getJson(x.json_url))
+          // The list's date is what `due` compares against; keep the later of
+          // it and the alert's own revisions, so an alert is not re-read daily.
+          const listed = x.last_revision_date.slice(0, 10)
+          if (row && (!row.last_revision || listed > row.last_revision)) row.last_revision = listed
+          return row
         } catch (_e) {
           fetchErrors++
           return null
@@ -100,10 +112,10 @@ Deno.serve(async () => {
 
     const now = new Date().toISOString()
     const write = rows.map((r) => ({ ...r, last_seen_at: now }))
-    if (write.length) {
+    for (let i = 0; i < write.length; i += CHUNK) {
       const { error: upsertError } = await supabase
         .from('certfr_alerts')
-        .upsert(write, { onConflict: 'reference' })
+        .upsert(write.slice(i, i + CHUNK), { onConflict: 'reference' })
       if (upsertError) throw new Error(`certfr_alerts upsert: ${upsertError.message}`)
     }
     const added = write.filter((r) => !held.has(r.reference)).length
