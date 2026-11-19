@@ -24,8 +24,18 @@ import {
 const ROOT = resolve(__dirname, '../../..')
 const NOW = new Date('2026-10-30T18:00:00Z')
 
+// threat_actors' surge columns (migration 179) for a group whose claims are unusual for it.
+const SURGE = {
+  surge_claims_7d: 14,
+  surge_days_7d: 4,
+  surge_baseline_mean: 3.25,
+  surge_p: 0.0004,
+  surge_new_group: false,
+  surge_window_end: '2026-10-29',
+}
+
 const rows = () => ({
-  actors: [{ id: 'a-akira', name: 'Akira', incidents_7d: 14 }],
+  actors: [{ id: 'a-akira', name: 'Akira', ...SURGE }],
   actorNames: { 'a-akira': 'Akira', 'a-qilin': 'Qilin' },
   claims: [
     {
@@ -208,7 +218,7 @@ describe('doctrineFeed', () => {
     expect(head.id).toBe('vigil:2026-10-30:summary')
     // Each window is named by the first date it includes, which is the date queried from.
     expect(head.title).toBe(
-      'Vigil, 30 Oct 2026: 1 escalating group; ' +
+      'Vigil, 30 Oct 2026: 1 group with unusual claims; ' +
         '3 leak-site claims since 28 Oct (1 placed on the map); ' +
         '3 KEV additions since 23 Oct (1 meets the EPSS alert); ' +
         "2 CVEs CISA's ADP assessed as exploitation active since 23 Oct (1 not in KEV); " +
@@ -237,14 +247,14 @@ describe('doctrineFeed', () => {
   })
 
   it("states the database's count when there are more than the rows returned", () => {
-    // A busy stretch: the row queries stop at their caps, the counts do not. Escalating
+    // A busy stretch: the row queries stop at their caps, the counts do not. Surge
     // groups also outnumber the rows when a group's name only a restricted source supplied.
     const fc = buildFeed(
       { ...rows(), counts: { actors: 3, claims: 4500, kev: 120, disclosures: 2 } },
       NOW
     )
     const title = summaryTitle(fc)
-    expect(title).toContain('3 escalating groups (1 named in this feed)')
+    expect(title).toContain('3 groups with unusual claims (1 named in this feed)')
     expect(title).toContain('4,500 leak-site claims since 28 Oct (the latest 3 in this feed)')
     expect(title).toContain('120 KEV additions since 23 Oct (the latest 3 in this feed)')
     expect(title).toContain('2 breach notices first seen since 23 Oct')
@@ -257,7 +267,7 @@ describe('doctrineFeed', () => {
   })
 
   it('states no figure for a count that failed, and never reads it as zero', () => {
-    const counted = /\d+ (escalating group|leak-site claim|KEV addition|breach notice)/
+    const counted = /\d+ (groups? with unusual claims|leak-site claim|KEV addition|breach notice)/
     const fc = buildFeed(
       {
         ...rows(),
@@ -266,7 +276,7 @@ describe('doctrineFeed', () => {
       NOW
     )
     const title = summaryTitle(fc)
-    expect(title).toContain('count unavailable for escalating groups')
+    expect(title).toContain('count unavailable for groups with unusual claims')
     expect(title).toContain('count unavailable for leak-site claims since 28 Oct')
     expect(title).toContain('count unavailable for KEV additions since 23 Oct')
     expect(title).toContain('count unavailable for breach notices first seen since 23 Oct')
@@ -333,13 +343,69 @@ describe('doctrineFeed', () => {
     expect(i3.properties.visual.url).toMatch(/\/incidents$/)
   })
 
+  it("states a surge against the group's own 8 weeks, and says when there is no baseline", () => {
+    const input = rows()
+    input.actors = [
+      { id: 'a-akira', name: 'Akira', ...SURGE },
+      {
+        id: 'a-qilin',
+        name: 'Qilin',
+        ...SURGE,
+        surge_claims_7d: 25,
+        surge_days_7d: 5,
+        surge_baseline_mean: 0,
+        surge_p: 0,
+        surge_new_group: true,
+      },
+    ]
+    const f = byId(buildFeed(input, NOW))
+    const akira = f['vigil:2026-10-30:actor:a-akira'].properties
+    expect(akira.title).toBe(
+      'Akira claimed 14 victims on 4 days in the 7 days to 29 Oct 2026, unusual for the group: about 3.3 a week in the 8 weeks before'
+    )
+    expect(akira).toMatchObject({
+      tier: 'anomaly',
+      indicator_id: 'VG-IND-1',
+      warning_problem_id: 'VG-WP-1',
+      direction: 'neutral',
+      status_class: 'claimed',
+    })
+    expect(akira.title).not.toMatch(/escalat|1\.25x/)
+    expect(akira.baseline_ref).toEqual({
+      id: 'vigil-actor-8wk',
+      window: "the group's own 8 weeks before the last 7 complete UTC days",
+      type: 'rolling',
+      version: '179',
+    })
+    expect(akira.measures).toMatchObject({
+      victims_7d: 14,
+      posting_days_7d: 4,
+      window_end: '2026-10-29',
+      baseline_mean_per_week: 3.25,
+      baseline_weeks: 8,
+      p_value: 0.0004,
+      new_group: false,
+    })
+    const qilin = f['vigil:2026-10-30:actor:a-qilin'].properties
+    expect(qilin.title).toBe(
+      'Qilin claimed 25 victims on 5 days in the 7 days to 29 Oct 2026, with none in the 8 weeks before'
+    )
+    expect(qilin.measures.new_group).toBe(true)
+  })
+
+  it("reads the surge flag (179), not 077's trend status", () => {
+    const src = readFileSync(resolve(ROOT, 'api/feed.js'), 'utf8')
+    expect(src).toContain('surge=is.true&status=eq.active&order=surge_claims_7d.desc')
+    expect(src).not.toContain('trend_status=eq.ESCALATING')
+  })
+
   it('puts an attributed origin on the actor, cited to its own source, and places the item by victims', () => {
     const input = rows()
     input.actors = [
       {
         id: 'a-akira',
         name: 'Akira',
-        incidents_7d: 14,
+        ...SURGE,
         origin_country: 'RU',
         origin_source: 'misp-galaxy',
       },
@@ -371,14 +437,15 @@ describe('doctrineFeed', () => {
       {
         id: 'a-akira',
         name: 'Akira',
-        incidents_7d: 14,
+        ...SURGE,
         origin_country: 'ru',
         origin_source: 'mitre-attack',
       },
       {
         id: 'a-other',
         name: 'Other',
-        incidents_7d: 9,
+        ...SURGE,
+        surge_claims_7d: 9,
         origin_country: 'CN',
         origin_source: 'etda',
       },
