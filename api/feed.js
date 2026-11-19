@@ -58,7 +58,8 @@ export default async function handler(request) {
         rest(
           base,
           key,
-          'threat_actors?select=id,incidents_7d&trend_status=eq.ESCALATING&status=eq.active&order=incidents_7d.desc&limit=50',
+          // VG-IND-1 (migration 179): unusual against the group's own 8 weeks, not 077's trend_status.
+          'threat_actors?select=id,surge_claims_7d,surge_days_7d,surge_baseline_mean,surge_p,surge_new_group,surge_window_end&surge=is.true&status=eq.active&order=surge_claims_7d.desc&limit=50',
           { count: true }
         ),
         rest(

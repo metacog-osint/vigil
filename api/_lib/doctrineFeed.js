@@ -2,7 +2,7 @@
  * Vigil in The Intelligence Company's feed contract v2 (tic-feed/2), as GeoJSON.
  *
  * A pure function of database rows, so it is tested without a network. Every item is a
- * measurement (kind observation): escalating groups, leak-site claims, KEV additions, CISA's
+ * measurement (kind observation): groups whose claims are unusual for them, leak-site claims, KEV additions, CISA's
  * ADP ratings of exploitation active (176) and victim disclosures, plus one summary. Judged warnings wait for doctrine/indicators.json.
  *
  * Claims and group names come only from the *_commercial views (sources that permit
@@ -135,18 +135,27 @@ const SRC = {
     grade: 'B2',
     independence_group: 'vigil',
     source_type: 'derived',
-    descriptor: "Vigil's own computation from the claims it holds (migration 077 trend rule).",
+    descriptor:
+      "Vigil's own computation from the claims it holds (migration 179 surge rule: each group against its own 8 weeks before).",
   },
 }
 // actor_origins_commercial.origin_source -> the source record cited for it. An origin from any other source
 // (or none) is left out of the feed rather than credited to the wrong publisher.
 const ORIGIN_SRC = { 'misp-galaxy': SRC.misp, 'mitre-attack': SRC.mitre }
 const REGULATOR = { 'ca-ag': 'California', 'wa-ag': 'Washington', 'or-ag': 'Oregon' }
-const BASE_WEEK = {
-  id: 'vigil-actor-week',
-  window: 'previous 7 days',
+// VG-IND-1 since migration 179: the last 7 complete UTC days against the group's own 8 weeks before
+// (negative binomial, p < 0.01, at least 5 claims on at least 3 days). Until 179 it was 077's
+// "more than 1.25x the week before", which flagged 17 groups a day (backtest in 179's header).
+const BASE_GROUP = {
+  id: 'vigil-actor-8wk',
+  window: "the group's own 8 weeks before the last 7 complete UTC days",
   type: 'rolling',
-  version: '077',
+  version: '179',
+}
+/** "6.3", "0.6", "12": a baseline mean for a title. */
+const perWeek = (m) => {
+  const n = Number(m) || 0
+  return n >= 10 ? String(Math.round(n)) : String(Math.round(n * 10) / 10)
 }
 const BASE_EPSS = {
   id: 'epss-0.5',
@@ -244,7 +253,10 @@ export function subjectOf(v) {
 
 /**
  * @param {object} rows
- * @param {Array} rows.actors      escalating active groups: { id, name, incidents_7d, origin_country?, origin_source? }, from threat_actors_commercial & actor_origins_commercial
+ * @param {Array} rows.actors      active groups whose claims are unusual for them (threat_actors.surge, 179):
+ *   { id, name, surge_claims_7d, surge_days_7d, surge_baseline_mean, surge_p, surge_new_group,
+ *   surge_window_end, origin_country?, origin_source? }; names from threat_actors_commercial,
+ *   origins from actor_origins_commercial
  * @param {Array} rows.claims      incidents_commercial rows from the window
  * @param {object} rows.actorNames actor_id -> name, from threat_actors_commercial
  * @param {Array} rows.kev         vulnerabilities with kev_date in the window
@@ -270,7 +282,7 @@ export function subjectOf(v) {
  * `stalled` and is not read.
  *
  * Each lane names the Vigil feeds (feed_health.feed_id) it rests on. `vigil` is Vigil's own
- * computation, the escalating groups and the summary: it rests on the claims and on the hourly trend
+ * computation, the surge groups (179) and the summary: it rests on the claims and on the hourly trend
  * recompute, and is only as good as the worse of the two. The state attorney-general lanes all come
  * from one job.
  */
@@ -362,7 +374,7 @@ export function stallCaveat(health) {
 }
 
 /**
- * `data_as_of` for what Vigil computes itself (the escalating groups and the summary): when its
+ * `data_as_of` for what Vigil computes itself (the surge groups and the summary): when its
  * inputs were last taken in, never the request time. Until 18 Nov 2026 both carried the request
  * time, so a stalled worker still read fresh to COP, which judges Vigil by its newest data_as_of
  * (suite review of 15 Nov 2026).
@@ -442,7 +454,11 @@ export function buildFeed(
       feature(null, {
         ...base,
         id: `vigil:${day}:actor:${a.id}`,
-        title: `${a.name} is escalating: ${a.incidents_7d} victims claimed in 7 days, more than 1.25x the week before`,
+        title:
+          `${a.name} claimed ${a.surge_claims_7d} victims on ${a.surge_days_7d} days in the 7 days to ${plain(a.surge_window_end)}, ` +
+          (a.surge_new_group
+            ? 'with none in the 8 weeks before'
+            : `unusual for the group: about ${perWeek(a.surge_baseline_mean)} a week in the 8 weeks before`),
         tier: 'anomaly',
         status_class: 'claimed',
         us_person_data: 'organizations',
@@ -458,7 +474,7 @@ export function buildFeed(
             ...(originCc ? { country: originCc } : {}),
           },
         ],
-        baseline_ref: BASE_WEEK,
+        baseline_ref: BASE_GROUP,
         warning_problem_id: 'VG-WP-1',
         requirement_ids: ['VG-PIR-1'],
         indicator_id: 'VG-IND-1',
@@ -468,7 +484,14 @@ export function buildFeed(
         precision_class: 'none',
         sources: itemSources,
         measures: {
-          victims_7d: a.incidents_7d,
+          victims_7d: a.surge_claims_7d,
+          posting_days_7d: a.surge_days_7d,
+          window_end: a.surge_window_end,
+          baseline_mean_per_week:
+            a.surge_baseline_mean == null ? null : Number(a.surge_baseline_mean),
+          baseline_weeks: 8,
+          p_value: a.surge_p == null ? null : Number(a.surge_p),
+          new_group: Boolean(a.surge_new_group),
           ...(originCc ? { origin_country: originCc, origin_source: originSrc.id } : {}),
         },
         visual: { type: 'page', url: `${SITE}/actors/${a.id}` },
@@ -655,7 +678,7 @@ export function buildFeed(
         figure({
           total: counts.actors,
           rows: actors,
-          noun: ['escalating group', 'escalating groups'],
+          noun: ['group with unusual claims', 'groups with unusual claims'],
           part: (k) => `${num(k)} named in this feed`,
         }),
         figure({

@@ -5,10 +5,11 @@
   "indicators": [
     {
       "id": "VG-IND-1",
-      "text": "An extortion group is escalating",
-      "series": "threat_actors.trend_status (apply_actor_trends, migration 077)",
-      "rule": ">= 3 victims claimed in the last 7 days and > 1.25x the 7 days before; active groups only",
-      "baseline": "the previous 7 days (rolling)",
+      "text": "An extortion group's claims are unusual for it",
+      "series": "threat_actors.surge (apply_actor_surges, migration 179)",
+      "rule": "in the last 7 complete UTC days, >= 5 victims claimed on >= 3 different days, and P(X >= that count) < 0.01 under a negative binomial with the mean (at least 1 a week) and variance (at least the mean) of the group's weekly counts over the 8 weeks before; placeholders left out; active groups only. A group with no claims in those 8 weeks is marked as having no baseline",
+      "baseline": "the group's own 8 weeks before the window (rolling)",
+      "revised": "2026-11-19: migration 179 replaced 077's '>= 3 victims and > 1.25x the 7 days before', which flagged 17.1 groups a day (26 Aug - 19 Nov 2026) against 1.0 for this rule; backtest in 179's header",
       "gentry": {"predictive": true, "diagnostic": false, "unambiguous": true, "collectable": true}
     },
     {
@@ -65,8 +66,9 @@
       "id": "VG-WP-1",
       "title": "An extortion group's surge (any group)",
       "frozen": "2026-10-30",
-      "watch_condition": {"current": "set per group from VG-IND-1", "levels": ["normal", "escalating"]},
-      "issue_on_change": "Issue a notice only when a group starts or stops escalating; stay silent while it holds.",
+      "watch_condition": {"current": "set per group from VG-IND-1 (migration 179)", "levels": ["normal", "unusual"]},
+      "issue_on_change": "Issue a notice only when a group's claims start or stop being unusual for it; stay silent while it holds.",
+      "revised": "2026-11-19: VG-IND-1 now judges each group against its own 8 weeks (migration 179); the hypotheses are unchanged",
       "deactivation": "A group returns to normal after two weeks without VG-IND-1.",
       "hypotheses": [
         {"id": "VG-WP-1-H1", "statement": "The group is attacking more victims", "emerging": ["VG-IND-1", "VG-IND-2"], "not_emerging": ["VG-IND-3"]},
