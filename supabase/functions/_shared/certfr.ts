@@ -60,8 +60,9 @@ function plainSummary(s: unknown): string | null {
     .replace(/<[^>]+>/g, ' ')
     .replace(/\\([[\]*_])/g, '$1')
     .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
     .replace(/&#(\d+);/g, (_m, n) => String.fromCharCode(Number(n)))
+    // Last, so "&amp;#39;" stays "&#39;" rather than becoming "'".
+    .replace(/&amp;/g, '&')
     .replace(/\s+/g, ' ')
     .trim()
   return t || null
