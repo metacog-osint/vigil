@@ -10,7 +10,7 @@
 
 `GET https://vigil.theintelligence.company/api/feed` returns Vigil's current picture as GeoJSON in The
 Intelligence Company's feed contract v2 (`tic-feed/2`, described in `doctrine/kit/docs/feed-contract-v2.md`):
-escalating groups; leak-site claims dated from two days before the current UTC date (three calendar dates, today's
+groups whose claims are unusual for them (VG-IND-1, migration 179); leak-site claims dated from two days before the current UTC date (three calendar dates, today's
 included); CISA KEV additions dated from seven days before; and victim breach disclosures Vigil first saw from
 midnight UTC seven days before, plus a summary item. It needs no key, is cached for 15 minutes, and reads claims
 and group names only from the `*_commercial` views, so nothing a restricted source supplied is re-served.
@@ -21,9 +21,16 @@ additions and 200 notices. When there are more than the feed lists, the summary 
 how many it names: a group whose name only a restricted source supplied is counted but not listed); a count that
 fails reads "count unavailable", never a number.
 
+**Groups with unusual claims** (VG-IND-1, migration 179, 19 Nov 2026): an active group whose victims claimed in the
+last 7 complete UTC days, at least 5 of them on at least 3 different days, are unusual against the group's own 8
+weeks before (negative binomial, p < 0.01). Tier `anomaly`: unusual against Vigil's own baseline, never a warning.
+`measures` carry `victims_7d`, `posting_days_7d`, `window_end`, `baseline_mean_per_week`, `baseline_weeks` (8),
+`p_value` and `new_group` (no claims in the 8 weeks, so no baseline, and the title says so). Until 179 these items
+were 077's "more than 1.25x the week before", which flagged about 17 groups a day; the site's trend label still is.
+
 **`health`** (migration 163): a top-level block, one entry per source lane, the shape Cordon's and Blackout's feeds
 carry. A lane is an item's first source id: `ransomlook`, `cisa-kev`, `sec-edgar`, `ca-ag`, `wa-ag`, `or-ag`, and
-`vigil` (Vigil's own computation: the escalating groups and the summary). Each entry has `state` (`fresh`, `late`,
+`vigil` (Vigil's own computation: the surge groups and the summary). Each entry has `state` (`fresh`, `late`,
 `stale`, `never`, or `stalled`: the job runs and has added nothing for longer than it does when working), `last_ok`,
 `checked_at`, `last_status` and `feeds` (the Vigil jobs it rests on, `feed_health.feed_id`); a feed watched for
 stalls adds `last_new` and `stall_after_hours`, and a stalled one a `detail`. `vigil` takes the worse of
@@ -32,7 +39,7 @@ state is fresh or late, so items of a failed or stalled source do not end. While
 ends with a caveat that the claim count may be incomplete. If `feed_health` cannot be read the block is left out and
 the feed is otherwise unchanged.
 
-**`data_as_of` of the escalating groups and the summary** (18 Nov 2026) is when their inputs were last taken in,
+**`data_as_of` of the surge groups and the summary** (18 Nov 2026) is when their inputs were last taken in,
 never the request time: the `vigil` lane's `last_ok`, or its `last_new` while RansomLook is stalled; without the
 health block, the newest claim's day (`computedAsOf` in `doctrineFeed.js`). `generated_at` stays the request time.
 So when the worker stops, these items age, and COP, which judges Vigil by its newest `data_as_of`, reads it late
