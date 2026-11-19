@@ -210,10 +210,12 @@ export function ActorTableView({
                 <Tooltip
                   content={
                     actor.trend_status === 'ESCALATING'
-                      ? `Activity increased ${actor.incidents_7d > 0 && actor.incidents_prev_7d > 0 ? Math.round(((actor.incidents_7d - actor.incidents_prev_7d) / actor.incidents_prev_7d) * 100) : ''}% vs previous week.`
+                      ? actor.surge_new_group
+                        ? `${actor.surge_claims_7d ?? actor.incidents_7d} claims in the 7 days to ${actor.surge_window_end ?? 'yesterday'}, with none in the 8 weeks before. Unusual, not a warning.`
+                        : `${actor.surge_claims_7d ?? actor.incidents_7d} claims in the 7 days to ${actor.surge_window_end ?? 'yesterday'}, against about ${Number(actor.surge_baseline_mean ?? 0).toFixed(1)} a week in the 8 weeks before. Unusual for this group, not a warning.`
                       : actor.trend_status === 'DECLINING'
                         ? `Activity decreased vs previous week.`
-                        : 'Activity is stable compared to previous week.'
+                        : 'Not unusual for this group this week.'
                   }
                   source={FIELD_TOOLTIPS.trend_status.source}
                   position="right"
