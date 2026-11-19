@@ -14,7 +14,25 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ---
 
-## 0. Latest: 19 November 2026, vendors' and CERT-FR's words on the vulnerability panel (191)
+## 0. Latest: 19 November 2026, HHS OCR's breach portal as a source (192)
+
+**19 Nov, about 16:20-17:00 UTC (10:20-11 a.m. CST).** HHS OCR breach reports in `victim_disclosures` (192, ideas#50).
+
+- **192 applied** 16:45 UTC (`20261119164547`) on Tom's yes ("Yes, ship all"). Edge Function `hhs-ocr-breaches` deployed (v1) and run
+  by hand: 701 under investigation + 7,391 archived = 8,092 new, 41 s; a second run 0 new, 0 changed, 13 s. Anon reads
+  the rows and cannot call `apply_hhs_breach_reports`. 13 `breach_notice_candidate` cards opened (reports filed in
+  the last 90 days naming a claimed victim), each carrying HHS's fields (`hhs_*` in details). `breach_notices_by_state`
+  unchanged (8 rows); no HHS row has `state`.
+- **Rules:** HHS's fields as given; type of breach in `breach_cause` with `cause_source = 'hhs-ocr'`; the entity's
+  state in `business_location`; OCR's Web Description verbatim (7,146); nothing called ransomware. Accession is
+  name key, state, submission date and place among same-day reports (49 groups; largest Alvaria, Inc., 13).
+- **Not live until Tom's worker deploy** (registry entry `hhs-ocr-breaches`, daily, cost 1). Until then nothing reads
+  the portal; `feed_expectations` has the row, not critical.
+- **Next:** about 26 Nov, after a week of clean daily runs, propose `hhs-ocr` on `/api/feed` (excluded by
+  `source=neq.hhs-ocr` until then). Not read: the portal's 42 CFR Part 2 list. The portal is offline 20 Nov 03:00 UTC
+  to 21 Nov 16:59 UTC for maintenance; a run then fails and the next catches up.
+
+**Earlier on 19 Nov (191).**
 
 **19 Nov, about 15:35-15:50 UTC (9:35-9:50 a.m. CST).** 191 shipped and applied.
 

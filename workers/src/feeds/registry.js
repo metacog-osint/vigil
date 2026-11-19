@@ -42,6 +42,7 @@ import { ingestEtdaActors } from './etda-actors.js'
 import { ingestVendorResearch } from './vendor-research.js'
 import { ingestStateBreachNotices } from './state-breach-notices.js'
 import { ingestWaBreachCauses } from './wa-breach-causes.js'
+import { ingestHhsOcrBreaches } from './hhs-ocr-breaches.js'
 import { ingestCisaVulnrichment } from './cisa-vulnrichment.js'
 import { ingestVendorExploited } from './vendor-exploited.js'
 import { ingestCertfrAlerts } from './certfr-alerts.js'
@@ -457,6 +458,17 @@ export const JOBS = [
     cost: 1,
     intervalMinutes: DAY,
     run: (db, env) => ingestWaBreachCauses(db, env),
+  },
+  // HHS OCR's breach portal, both lists, into victim_disclosures (migration
+  // 192). One subrequest to the hhs-ocr-breaches Edge Function, which reads the
+  // whole of both lists each run because OCR revises counts and closes cases.
+  {
+    id: 'hhs-ocr-breaches',
+    priority: 3,
+    cost: 1,
+    intervalMinutes: DAY,
+    countNew: field('new'),
+    run: (db, env) => ingestHhsOcrBreaches(db, env),
   },
   {
     id: 'mitre',
