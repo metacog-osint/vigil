@@ -43,6 +43,8 @@ import { ingestVendorResearch } from './vendor-research.js'
 import { ingestStateBreachNotices } from './state-breach-notices.js'
 import { ingestWaBreachCauses } from './wa-breach-causes.js'
 import { ingestCisaVulnrichment } from './cisa-vulnrichment.js'
+import { ingestVendorExploited } from './vendor-exploited.js'
+import { ingestCertfrAlerts } from './certfr-alerts.js'
 import { ingestFincenAdvisories } from './fincen-advisories.js'
 import { buildPublicSummary } from './public-summary.js'
 
@@ -218,6 +220,27 @@ export const JOBS = [
     cost: 1,
     intervalMinutes: HOUR,
     run: (db, env) => ingestCisaVulnrichment(db, env),
+  },
+  // Android bulletins' and Mozilla advisories' own exploitation statements
+  // (migration 187). One subrequest to the vendor-exploited Edge Function, which
+  // reads the bulletin index pages, new and recent bulletins, and Mozilla's
+  // advisories as one tarball. Kept apart from KEV: vendor_exploit_statements.
+  {
+    id: 'vendor-exploited',
+    priority: 4,
+    cost: 1,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestVendorExploited(db, env),
+  },
+  // CERT-FR's alerts (migration 188), kept as CERT-FR's notices, never as an
+  // exploitation claim. One subrequest to the certfr-alerts Edge Function,
+  // which reads CERT-FR's list and the alerts it opened or revised.
+  {
+    id: 'certfr-alerts',
+    priority: 4,
+    cost: 1,
+    intervalMinutes: DAY,
+    run: (db, env) => ingestCertfrAlerts(db, env),
   },
   {
     id: 'epss',
