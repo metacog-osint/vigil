@@ -65,6 +65,9 @@ interface Registry {
   dataSep?: string
   /** Idaho writes its header in an ordinary row, not <th>. */
   skipFirstRow?: boolean
+  /** toIsoDate's loose reading. Set on the five registries added in 190, which
+   *  were loaded that way; never on CA, WA or OR. */
+  looseDates?: boolean
   /** Column positions, by index into the row's <td> cells. */
   cols: {
     company: number
@@ -113,6 +116,7 @@ const REGISTRIES: Record<string, Registry> = {
   // Added 19 Nov 2026 (migration 190), each one page holding the whole list.
   'vt-ag': {
     source: 'vt-ag',
+    looseDates: true,
     state: 'VT',
     base: 'https://ago.vermont.gov/categories/security-breach-notices',
     page: null,
@@ -125,6 +129,7 @@ const REGISTRIES: Record<string, Registry> = {
   },
   'mt-ag': {
     source: 'mt-ag',
+    looseDates: true,
     state: 'MT',
     base: 'https://dojmt.gov/office-of-consumer-protection/reported-data-breaches/',
     page: null,
@@ -136,6 +141,7 @@ const REGISTRIES: Record<string, Registry> = {
   },
   'sc-ag': {
     source: 'sc-ag',
+    looseDates: true,
     state: 'SC',
     base: 'https://consumer.sc.gov/identity-theft-unit/security-breach-notices',
     page: null,
@@ -147,6 +153,7 @@ const REGISTRIES: Record<string, Registry> = {
   },
   'id-ag': {
     source: 'id-ag',
+    looseDates: true,
     state: 'ID',
     base: 'https://www.ag.idaho.gov/consumer-protection/security-breaches/',
     page: null,
@@ -164,6 +171,7 @@ const REGISTRIES: Record<string, Registry> = {
     recentPages: 1,
     maxPages: 1,
     scope: 'state_residents',
+    looseDates: true,
     // Organization Name | Date(s) of Breach | Reported Date | Potentially Affected Delaware Residents | Notice
     cols: { company: 0, incident: 1, reported: 2, affected: 3 },
   },
@@ -208,13 +216,22 @@ function decode(s: string): string {
  * taken, because that is when the breach began. Taking the last would say the
  * intrusion started on the day it ended.
  */
-export function toIsoDate(raw: string | null | undefined): string | null {
+export function toIsoDate(raw: string | null | undefined, loose = false): string | null {
   if (!raw) return null
-  // Vermont writes 4-17-2026, so a hyphen splits a range only with spaces
-  // round it; an en dash (Delaware) splits either way.
-  const first = raw.split(/\s+-\s+|\s*–\s*/)[0].trim()
-  // Delaware's addenda put words after the date: "06/27/2025 (Addendum notices)".
-  const m = first.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:\s|$)/)
+  // The accession holds the dates, so a registry must be read the same way on
+  // every run: a date the parser used to leave blank gives a known notice a
+  // second row. On 19 Nov 2026 reading California's "03/25/2026, 03/26/2026"
+  // cells the loose way made 67 duplicates, removed by hand. So there are two
+  // readings, each fixed:
+  //   strict (CA, WA, OR, as before 190): split a range on any dash, then
+  //     exactly M/D/YYYY.
+  //   loose (the five added in 190, as they were loaded): split only on a
+  //     spaced hyphen or an en dash (Vermont writes 4-17-2026), then M/D/YYYY
+  //     or M-D-YYYY, with words allowed after it (Delaware's addenda).
+  const first = (loose ? raw.split(/\s+-\s+|\s*–\s*/) : raw.split(/\s*[-–]\s*/))[0].trim()
+  const m = loose
+    ? first.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:\s|$)/)
+    : first.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
   if (!m) return null
   const [, mm, dd, yyyy] = m
   const iso = `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`
@@ -270,9 +287,9 @@ export function parseList(html: string, reg: Registry): NoticeRow[] {
     rows.push({
       company_name: company,
       state: reg.state,
-      reported_date: toIsoDate(at(reg.cols.reported)),
-      incident_date: toIsoDate(at(reg.cols.incident)),
-      discovered_date: toIsoDate(at(reg.cols.discovered)),
+      reported_date: toIsoDate(at(reg.cols.reported), reg.looseDates),
+      incident_date: toIsoDate(at(reg.cols.incident), reg.looseDates),
+      discovered_date: toIsoDate(at(reg.cols.discovered), reg.looseDates),
       persons_affected: toCount(at(reg.cols.affected)),
       persons_affected_scope: reg.scope ?? null,
       data_types: toDataTypes(at(reg.cols.dataTypes), reg.dataSep),

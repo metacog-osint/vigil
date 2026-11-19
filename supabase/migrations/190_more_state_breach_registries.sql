@@ -1,6 +1,7 @@
 -- 190. Five more state breach registries, every notice's scope recorded, old notices not queued
 --
--- STATUS: not applied.
+-- STATUS: APPLIED 19 Nov 2026, about 05:00 UTC, as 190_more_state_breach_registries. Backfill
+-- 05:07 UTC: VT 564, MT 6,638, SC 912, ID 262, DE 295; 56 skipped with no reported date.
 --
 -- WHY
 --
