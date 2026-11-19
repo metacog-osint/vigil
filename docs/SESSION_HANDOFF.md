@@ -16,6 +16,17 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ## 0. Latest: 18 November 2026, summary built by the worker (175), CISA Vulnrichment (176, 177)
 
+**19 Nov, about 05:00-05:30 UTC (11-11:30 p.m. CST 18 Nov).** Worker deployed; the new sources on the panel (191).
+
+- **Worker deployed** by Tom from an export of `c5b18c2` at 05:03 UTC (`6d2b369c`). First runs 05:16 UTC:
+  `vendor-exploited` (21 Android bulletins, 1,636 Mozilla advisories, nothing new) and `certfr-alerts` (401
+  listed, none due), both success. KEV reconcile ran 04:45 UTC: cleared 0, `is_kev` 1,786.
+- **191** (Tom, 19 Nov: "Yes, panel only"): anon and authenticated read `vendor_exploit_statements` (never
+  `unclassified`) and `certfr_alerts` (never `raw`). `VendorExploitStatements` on the vulnerability panel: one
+  line per source, its own words and link, "not in CISA's KEV catalog" where it applies; CERT-FR as a notice.
+  `VendorExploitedNotInKev` on the Vulnerabilities page lists the three Android CVEs KEV lacks. Not on
+  `/api/feed` until about a week of clean daily runs, then as separate per-source fields.
+
 **19 Nov, about 04:50-05:00 UTC (10:50-11 p.m. CST 18 Nov).** Five more state breach registries (190).
 
 - Vermont, Montana, South Carolina, Idaho, Delaware: `REGISTRIES` entries in `state-breach-notices`, each one
