@@ -146,7 +146,7 @@ contradicting itself rather than reporting a disagreement.
 | Source                                  | Endpoint                                                           | Data Type                                                    | Schedule | Script                                                                             | Auth                       |
 | --------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------ | -------- | ---------------------------------------------------------------------------------- | -------------------------- |
 | SEC EDGAR 8-K Item 1.05                 | `https://efts.sec.gov/LATEST/search-index?q="Item 1.05"&forms=8-K` | Material cybersecurity incidents **disclosed by the victim** | Daily    | `workers/src/feeds/sec-disclosures.js` → `sec-cyber-disclosures` Edge Function     | None (User-Agent required) |
-| State AG breach registries (CA, WA, OR) | `oag.ca.gov`, `atg.wa.gov`, `justice.oregon.gov`                   | **8,812 breach notifications, every cause**                  | Daily    | `workers/src/feeds/state-breach-notices.js` → `state-breach-notices` Edge Function | None                       |
+| State AG breach registries (CA, WA, OR, VT, MT, SC, ID, DE) | `oag.ca.gov`, `atg.wa.gov`, `justice.oregon.gov`; five more (190) | **8,812 + about 8,700 notifications, every cause**           | Daily    | `workers/src/feeds/state-breach-notices.js` → `state-breach-notices` Edge Function | None                       |
 
 **The California source is the one that stops Vigil being a ransomware-only
 platform.** All 39,575 incidents it holds are ransomware leak-site claims;
@@ -171,6 +171,8 @@ the global figure. `persons_affected_scope` is `state_residents` or `total`,
 and `breach_notices_by_state` reports the two separately rather than summing
 them. Adding them would produce a number about nobody, and the first version of
 the view did exactly that.
+
+**Five more states, 19 November 2026 (migration 190).** Vermont (566 notices from 17 Apr 2026; Vermont residents; data categories), Montana (6,689 from May 2015; Montanans; breach start date), South Carolina (915 from Jan 2015; South Carolina residents), Idaho (262 from Jan 2021; no count) and Delaware (322 from Jan 2021, none after 11 Jul 2025; Delaware residents). Each publishes its whole list as one HTML table. A notice listed with no reported date (56 across the five) is counted and left out, because `filed_date` is required. Every row now carries its registry's `persons_affected_scope`; until 190, notices added after 144 had none and fell out of `breach_notices_by_state`'s totals (39 Washington and 47 Oregon on 19 Nov). New notices filed in the last 90 days are queued for review against leak-site claims; older ones loaded by a backfill are stored and not queued. Still not available: Hawaii (stale since Apr 2024), Maryland (yearly SharePoint lists, none for 2026), Iowa and Wisconsin (cards and free text), Texas (Salesforce), and Maine, New Hampshire and Massachusetts, which answer scripted clients with 403. The survey is kept outside the repo, in `C:\Users\PSRA User 4\vigil-data\state-ag-survey`.
 
 **"All fifty states" is not available**, checked 22 September: Texas is a
 Salesforce portal behind auth (401), New Hampshire blocks non-browser clients
