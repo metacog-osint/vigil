@@ -1,6 +1,7 @@
 -- 188. CERT-FR's alerts, kept as CERT-FR's notices
 --
--- STATUS: not applied.
+-- STATUS: APPLIED 19 Nov 2026, 04:22 UTC, as 188_certfr_alerts (version
+-- 20261119042256). Loaded by the function itself at 04:33 UTC: all 401 alerts.
 --
 -- WHY
 --
@@ -15,8 +16,8 @@
 -- WHAT THERE IS
 --
 -- 401 alerts from CERTA-2000-ALE-003 to CERTFR-2026-ALE-012, read 19 Nov 2026
--- from cert.cyber.gouv.fr (www.cert.ssi.gouv.fr redirects there). 268 name at
--- least one CVE, 499 CVEs in all; 215 of those are in KEV and Vigil holds no
+-- from cert.cyber.gouv.fr (www.cert.ssi.gouv.fr redirects there). 269 name at
+-- least one CVE, 502 CVEs in all; 218 of those are in KEV and Vigil holds no
 -- row at all for 284. The title, summary and risks are in French and are kept
 -- in French; any translation shown later is labelled as one.
 --

@@ -23,13 +23,16 @@ dated 24 September or earlier; re-measure any number there before trusting it.
   retention migrations 181-186, so this work was renumbered 187 and 188.
 - **187** `vendor_exploit_statements`: Android bulletins (7 families, 406 read: 51 notes, 44 CVEs, 3 not in KEV:
   CVE-2020-0500, -20415 of 2022, -21096 of 2023) and Mozilla advisories (1,636: 29 sentences about the wild, 12
-  saying this flaw was attacked, 8 CVEs, all in KEV), each sentence verbatim with its kind; a new wording is
+  saying this flaw was attacked, 9 CVEs, all in KEV), each sentence verbatim with its kind; a new wording is
   `unclassified` and opens a `vendor_statement_unclassified` finding. **188** `certfr_alerts`: 401 CERT-FR alerts
-  as notices, 499 CVEs (215 in KEV). Both closed to anon until Tom picks where they show; grades proposed A2.
-- Edge Functions `vendor-exploited` and `certfr-alerts`, daily worker feeds of the same names (need Tom's deploy).
-  Backfills: `scripts/backfill-vendor-exploited.mjs` writes SQL from local copies, kept in
-  `[local path]`. CERT-FR's API is now `cert.cyber.gouv.fr`. Defender
-  quarantined one alert file (CERTFR-2024-ALE-013) locally; the job reads it server-side.
+  as notices, 502 CVEs (218 in KEV). Both closed to anon until Tom picks where they show; grades proposed A2.
+- **Applied** 04:22 UTC (187 `20261119042244`, 188 `20261119042256`). Edge Functions `vendor-exploited` and
+  `certfr-alerts` deployed; their history was loaded by calling them by hand with a larger batch (a POST body the
+  worker never sends), not with the SQL from `scripts/backfill-vendor-exploited.mjs` (too large for the MCP).
+  Daily worker feeds of the same names run only after Tom's next worker deploy.
+- **Trap:** source.android.com served the edge German, Polish and Farsi pages (17 notes found of 51). The
+  function now asks for `?hl=en` and refuses a page not in English; the 142 bookkeeping rows from those pages were
+  cleared and the bulletins read again. CERT-FR's API is now `cert.cyber.gouv.fr`.
 
 **19 Nov, about 02:00-02:45 UTC (8:00-8:45 p.m. CST 18 Nov).** KEV matches CISA's catalogue (180). Measured live then.
 
