@@ -16,6 +16,16 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ## 0. Latest: 18 November 2026, summary built by the worker (175), CISA Vulnrichment (176, 177)
 
+**19 Nov, about 04:50-05:00 UTC (10:50-11 p.m. CST 18 Nov).** Five more state breach registries (190).
+
+- Vermont, Montana, South Carolina, Idaho, Delaware: `REGISTRIES` entries in `state-breach-notices`, each one
+  page. The parser now reads `4-17-2026` dates, hex entities (`&#x2013;`) and a comma-separated data list, and
+  skips Idaho's header row. The User-Agent is the site address, not a mailbox.
+- **190:** licences; `apply_breach_notices` stores each row's `persons_affected_scope` (86 WA/OR counts since
+  144 had none) and skips, with a count, notices with no reported date; three Oregon names with entities fixed
+  with their accession; the review queue asks only about notices filed in the last 90 days.
+- Survey of the other states: `[local path]`.
+
 **19 Nov, about 04:00 UTC (10 p.m. CST 18 Nov).** The site's "Escalating" follows the surge rule (189).
 
 - `apply_actor_trends` sets `trend_status = 'ESCALATING'` only when `threat_actors.surge` (179) is true;

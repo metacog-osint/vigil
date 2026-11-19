@@ -21,6 +21,17 @@
  * "All fifty states" is not on offer. About a dozen publish a list a machine
  * can read, and these are the three largest of those.
  *
+ * RE-CHECKED 19 NOVEMBER 2026 (migration 190): Vermont, Montana, South
+ * Carolina, Idaho and Delaware added, each one page holding its whole list
+ * (Delaware has not updated since July 2025). Not added: Hawaii (stale since
+ * April 2024), Maryland (yearly SharePoint lists, none for 2026), Iowa and
+ * Wisconsin (cards and free text), Texas (Salesforce); Maine, New Hampshire and
+ * Massachusetts answer scripted clients with 403. Survey notes, outside the
+ * repo: vigil-data/state-ag-survey/SURVEY.md in Tom's profile.
+ *
+ * Each row carries its registry's persons_affected_scope, so a Montana count
+ * (Montanans) is never added to an Oregon one (everyone).
+ *
  * WHAT IS TAKEN AND WHAT IS NOT
  *
  * The states publish more than California does: Washington gives the number of
@@ -36,7 +47,8 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-const UA = 'Vigil Threat Intelligence metacog@theintelligence.company'
+// A site address, not a person's: no mailbox goes out to the registries.
+const UA = 'Vigil-ThreatIntel/1.0 (+https://vigil.theintelligence.company)'
 
 interface Registry {
   source: string
@@ -47,6 +59,12 @@ interface Registry {
   /** Pages read on a scheduled run. Lists are newest-first. */
   recentPages: number
   maxPages: number
+  /** What the registry's count of people means (migration 190). */
+  scope?: 'state_residents' | 'total'
+  /** How the data categories are separated. Washington: ";". Vermont: ",". */
+  dataSep?: string
+  /** Idaho writes its header in an ordinary row, not <th>. */
+  skipFirstRow?: boolean
   /** Column positions, by index into the row's <td> cells. */
   cols: {
     company: number
@@ -75,6 +93,8 @@ const REGISTRIES: Record<string, Registry> = {
     page: (n) => `https://www.atg.wa.gov/data-breach-notifications?page=${n}`,
     recentPages: 3,
     maxPages: 60,
+    scope: 'state_residents',
+    dataSep: ';',
     // Date Reported | Organization | Date of Breach | Washingtonians Affected | Information Compromised
     cols: { reported: 0, company: 1, incident: 2, affected: 3, dataTypes: 4 },
   },
@@ -86,8 +106,66 @@ const REGISTRIES: Record<string, Registry> = {
     page: null,
     recentPages: 1,
     maxPages: 1,
+    scope: 'total',
     // Organization | Reported | Dates of Breach | Dates of Discovery | Notice Sent | Number Affected
     cols: { company: 0, reported: 1, incident: 2, discovered: 3, affected: 5 },
+  },
+  // Added 19 Nov 2026 (migration 190), each one page holding the whole list.
+  'vt-ag': {
+    source: 'vt-ag',
+    state: 'VT',
+    base: 'https://ago.vermont.gov/categories/security-breach-notices',
+    page: null,
+    recentPages: 1,
+    maxPages: 1,
+    scope: 'state_residents',
+    dataSep: ',',
+    // Date Reported to AGO | Organization Name | Organization Type | VT Residents Affected | Categories of Data
+    cols: { reported: 0, company: 1, affected: 3, dataTypes: 4 },
+  },
+  'mt-ag': {
+    source: 'mt-ag',
+    state: 'MT',
+    base: 'https://dojmt.gov/office-of-consumer-protection/reported-data-breaches/',
+    page: null,
+    recentPages: 1,
+    maxPages: 1,
+    scope: 'state_residents',
+    // Business Name | Notification Documents | Start of Breach | End of Breach | Date Reported | Montanans Affected
+    cols: { company: 0, incident: 2, reported: 4, affected: 5 },
+  },
+  'sc-ag': {
+    source: 'sc-ag',
+    state: 'SC',
+    base: 'https://consumer.sc.gov/identity-theft-unit/security-breach-notices',
+    page: null,
+    recentPages: 1,
+    maxPages: 1,
+    scope: 'state_residents',
+    // Organization Name | Date Reported | Affected SC Residents
+    cols: { company: 0, reported: 1, affected: 2 },
+  },
+  'id-ag': {
+    source: 'id-ag',
+    state: 'ID',
+    base: 'https://www.ag.idaho.gov/consumer-protection/security-breaches/',
+    page: null,
+    recentPages: 1,
+    maxPages: 1,
+    skipFirstRow: true,
+    // Notifying Agency or Entity | Notification Date (no count published)
+    cols: { company: 0, reported: 1 },
+  },
+  'de-ag': {
+    source: 'de-ag',
+    state: 'DE',
+    base: 'https://attorneygeneral.delaware.gov/fraud/cpu/securitybreachnotification/database/',
+    page: null,
+    recentPages: 1,
+    maxPages: 1,
+    scope: 'state_residents',
+    // Organization Name | Date(s) of Breach | Reported Date | Potentially Affected Delaware Residents | Notice
+    cols: { company: 0, incident: 1, reported: 2, affected: 3 },
   },
 }
 
@@ -98,21 +176,29 @@ export interface NoticeRow {
   incident_date: string | null
   discovered_date: string | null
   persons_affected: number | null
+  persons_affected_scope: 'state_residents' | 'total' | null
   data_types: string[] | null
   url: string
 }
 
 function decode(s: string): string {
-  return s
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&#039;|&apos;|&#8217;|&#39;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+  return (
+    s
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&#039;|&apos;|&#8217;|&#39;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&ndash;/g, '–')
+      // Delaware writes its date ranges with &#x2013;.
+      .replace(/&#x([0-9a-f]+);/gi, (_m, h) => String.fromCodePoint(parseInt(h, 16)))
+      .replace(/&#(\d+);/g, (_m, d) => String.fromCodePoint(Number(d)))
+      // Last, so "&amp;lt;" stays "&lt;" rather than becoming "<".
+      .replace(/&amp;/g, '&')
+      .replace(/\s+/g, ' ')
+      .trim()
+  )
 }
 
 /**
@@ -124,8 +210,11 @@ function decode(s: string): string {
  */
 export function toIsoDate(raw: string | null | undefined): string | null {
   if (!raw) return null
-  const first = raw.split(/\s*[-–]\s*/)[0].trim()
-  const m = first.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  // Vermont writes 4-17-2026, so a hyphen splits a range only with spaces
+  // round it; an en dash (Delaware) splits either way.
+  const first = raw.split(/\s+-\s+|\s*–\s*/)[0].trim()
+  // Delaware's addenda put words after the date: "06/27/2025 (Addendum notices)".
+  const m = first.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:\s|$)/)
   if (!m) return null
   const [, mm, dd, yyyy] = m
   const iso = `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`
@@ -142,11 +231,11 @@ export function toCount(raw: string | null | undefined): number | null {
   return Number.isSafeInteger(n) ? n : null
 }
 
-/** Washington separates the categories with semicolons. */
-export function toDataTypes(raw: string | null | undefined): string[] | null {
+/** Washington separates the categories with semicolons, Vermont with commas. */
+export function toDataTypes(raw: string | null | undefined, sep = ';'): string[] | null {
   if (!raw) return null
   const parts = raw
-    .split(';')
+    .split(sep)
     .map((p) => p.trim())
     .filter((p) => p.length > 0 && p.length < 120)
   return parts.length ? [...new Set(parts)] : null
@@ -155,9 +244,15 @@ export function toDataTypes(raw: string | null | undefined): string[] | null {
 export function parseList(html: string, reg: Registry): NoticeRow[] {
   const rows: NoticeRow[] = []
 
+  let first = true
   for (const tr of html.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) ?? []) {
     const rawCells = tr.match(/<td[^>]*>[\s\S]*?<\/td>/gi) ?? []
     if (rawCells.length < 2) continue
+    if (first && reg.skipFirstRow) {
+      first = false
+      continue
+    }
+    first = false
 
     const cells = rawCells.map(decode)
     const company = cells[reg.cols.company]
@@ -179,7 +274,8 @@ export function parseList(html: string, reg: Registry): NoticeRow[] {
       incident_date: toIsoDate(at(reg.cols.incident)),
       discovered_date: toIsoDate(at(reg.cols.discovered)),
       persons_affected: toCount(at(reg.cols.affected)),
-      data_types: toDataTypes(at(reg.cols.dataTypes)),
+      persons_affected_scope: reg.scope ?? null,
+      data_types: toDataTypes(at(reg.cols.dataTypes), reg.dataSep),
       url,
     })
   }
@@ -193,7 +289,10 @@ Deno.serve(async (req) => {
   const url = Deno.env.get('SUPABASE_URL')
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   if (!url || !key) {
-    return json({ success: false, source: 'state-breach-notices', error: 'missing SUPABASE_URL or key' }, 500)
+    return json(
+      { success: false, source: 'state-breach-notices', error: 'missing SUPABASE_URL or key' },
+      500
+    )
   }
 
   let backfill = false
