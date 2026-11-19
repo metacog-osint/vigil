@@ -16,6 +16,24 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ## 0. Latest: 18 November 2026, summary built by the worker (175), CISA Vulnrichment (176, 177)
 
+**19 Nov, about 01:30-02:30 UTC (7:30-8:30 p.m. CST 18 Nov).** Small fixes (178). Measured live then.
+
+- All 38 feeds fresh, `ingestion_is_healthy()` true; `/api/v1` answers 200 (it was 500 at the 15 Nov
+  suite review). Open review findings: 557 (385 breach-notice, 49 country disagreements).
+- **178:** `sanctions_wallet_overlap()` becomes `SECURITY INVOKER`. It is public on purpose (the
+  `/financial-crime` page) and returns three counts, but it was the only `SECURITY DEFINER` function the
+  security advisor found anon could run. anon already reads `iocs` and `sanctioned_addresses` through
+  `true` policies; as anon the same query gave the same counts (9,900 wallets, 1,064 addresses, 0 on the
+  SDN list) in 16 ms.
+- **CI:** the e2e jobs run in Playwright's image (`mcr.microsoft.com/playwright:v1.65.0-noble`), which has
+  the browsers and their system packages installed, so they no longer use apt; the Ubuntu mirror timed
+  webkit out twice on #1. **Keep the tag at `@playwright/test`'s version in `package-lock.json`.** If a bump
+  lands first, `npx playwright install <browser>` fetches the browser from Playwright's CDN.
+- **Worker deploy method** written down in `docs/INGESTION_HANDOVER.md`, "Deploying the worker";
+  `CLAUDE.md` no longer says `cd workers && npm run deploy`, and is trimmed under its 12 KB cap.
+- **Not this change:** the surge rule behind every "escalating" anomaly (10 of 10 at 01:35 UTC) and MSRC /
+  Project Zero sources, each in its own session; 179 and later are theirs.
+
 **18 Nov, about 22:40-23:40 UTC (4:40-5:40 p.m. CST).** Vulnrichment shown (177, #2). Measured live then.
 
 - **Repo swapped:** this is the new `metacog-osint/vigil` (old one archived as `vigil-archive`); PR numbers
@@ -35,10 +53,10 @@ dated 24 September or earlier; re-measure any number there before trusting it.
   that the job fails with GitHub HTTP 401 and Tom renews it.
 - **Worker:** Tom deployed `ede5388f` at 22:27 UTC from `b4d573d` (threatfox fix; no `cisa-vulnrichment`).
   threatfox's 23:15 UTC run: failed 0, added 126, `duplicates` 1 (every run 18:15-22:15 lost 250).
-  **The hourly Vulnrichment job runs only after a second worker deploy from main** (a clean export at main's
-  sha, dry-run first, `CLOUDFLARE_API_TOKEN` cleared).
-- **Keep** `C:\Users\PSRA User 4\vigil-data\vulnrichment` (2.2 GB clone) until the hourly job has moved the
-  cursor past `32a25ee` once, in case a re-backfill is needed.
+  **Second deploy, 19 Nov:** Tom deployed from an export of main `25909b4` (dry run 210.26 KiB, holding
+  `cisa-vulnrichment`) before the 01:15 UTC tick. That tick ran the hourly job: cursor `32a25ee` to
+  `8883489` (Vulnrichment commit 00:17 UTC), `cisa_ssvc` 49,731 to 49,789 rows (58 new, all poc).
+- The 2.2 GB clone and the C: deploy and test folders were deleted 19 Nov, after that run.
 
 **18 Nov, about 19:30–22:00 UTC (1:30–4:00 p.m. CST).** Measured live then.
 
