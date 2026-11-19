@@ -46,8 +46,9 @@ async function ingestTorExitNodes() {
   const exitIPs = lines.filter(isValidIPv4)
   console.log(`Found ${exitIPs.length} Tor exit node IPs`)
 
-  // First, clear old Tor exit indicators that are no longer on the list
-  // (IPs rotate as relays go offline)
+  // Existing rows are read only to tell added from updated. An IP that leaves the
+  // list is NOT deleted: its row keeps last_seen (when it was last listed) and its
+  // ioc_sightings history, which a delete would cascade away. Retention rule, 18 Nov 2026.
   const { data: existingTorIocs } = await supabase
     .from('iocs')
     .select('value')
@@ -56,22 +57,7 @@ async function ingestTorExitNodes() {
 
   const existingIPs = new Set(existingTorIocs?.map(i => i.value) || [])
   const newIPSet = new Set(exitIPs)
-
-  // Find IPs to remove (no longer exit nodes)
-  const ipsToRemove = [...existingIPs].filter(ip => !newIPSet.has(ip))
-  if (ipsToRemove.length > 0) {
-    console.log(`Removing ${ipsToRemove.length} IPs no longer acting as exit nodes...`)
-    const { error } = await supabase
-      .from('iocs')
-      .delete()
-      .eq('source', 'tor_project')
-      .eq('type', 'ip')
-      .in('value', ipsToRemove)
-
-    if (error) {
-      console.error('Error removing old Tor IPs:', error.message)
-    }
-  }
+  const ipsNoLongerListed = [...existingIPs].filter(ip => !newIPSet.has(ip))
 
   let added = 0
   let updated = 0
@@ -125,7 +111,7 @@ async function ingestTorExitNodes() {
   console.log(`\nTor Exit Nodes Ingestion Complete:`)
   console.log(`  Added: ${added}`)
   console.log(`  Updated: ${updated}`)
-  console.log(`  Removed (no longer exits): ${ipsToRemove.length}`)
+  console.log(`  No longer listed (kept): ${ipsNoLongerListed.length}`)
   console.log(`  Failed: ${failed}`)
 
   await supabase.from('sync_log').insert({
@@ -135,12 +121,12 @@ async function ingestTorExitNodes() {
     records_processed: exitIPs.length,
     records_added: added,
     metadata: {
-      removed: ipsToRemove.length,
+      no_longer_listed: ipsNoLongerListed.length,
       updated: updated
     }
   })
 
-  return { added, updated, removed: ipsToRemove.length, failed }
+  return { added, updated, no_longer_listed: ipsNoLongerListed.length, failed }
 }
 
 ingestTorExitNodes().catch(console.error)

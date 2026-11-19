@@ -149,6 +149,17 @@ export const JOBS = [
     intervalMinutes: HOUR,
     run: (db) => rpc(db, 'apply_actor_status'),
   },
+  // One row per active actor per UTC day into actor_trend_history (181). It
+  // replaces the GitHub script that wrote it with the anon key and stopped on
+  // 30 May 2026. snapshot_actor_trends() is idempotent per day, so the hourly
+  // scheduler may run it any number of times without adding rows.
+  {
+    id: 'actor-trend-snapshot',
+    priority: 2,
+    cost: 2,
+    intervalMinutes: DAY,
+    run: (db) => rpc(db, 'snapshot_actor_trends'),
+  },
   {
     id: 'ioc-geo',
     priority: 1,

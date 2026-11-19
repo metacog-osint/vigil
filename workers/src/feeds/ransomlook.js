@@ -83,7 +83,7 @@ export async function ingestRansomlook(supabase) {
   }
 }
 
-function toIncident(post, actorMap) {
+export function toIncident(post, actorMap) {
   // Parse discovered date - format is "2026-01-16 21:44:10.064656"
   let incidentDate = null
   if (post.discovered) {
@@ -101,11 +101,15 @@ function toIncident(post, actorMap) {
     discovered_date: incidentDate || new Date().toISOString().split('T')[0],
     victim_sector: inferSector(post.post_title),
     status: 'claimed',
+    // The whole post as RansomLook returned it (retention rule, 18 Nov 2026): the
+    // description used to be cut at 1,000 characters and any other field dropped.
+    // The named keys stay, so readers of raw_data.group_name and the rest still work.
     raw_data: {
+      ...post,
       post_title: post.post_title,
       link: post.link,
       group_name: post.group_name,
-      description: post.description?.substring(0, 1000) || null,
+      description: post.description || null,
       screen: post.screen
     }
   }
