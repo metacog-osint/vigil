@@ -16,6 +16,24 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ## 0. Latest: 18 November 2026, summary built by the worker (175), CISA Vulnrichment (176, 177)
 
+**19 Nov, about 02:00-02:45 UTC (8:00-8:45 p.m. CST 18 Nov).** KEV matches CISA's catalogue (180). Measured live then.
+
+- **Before:** 1,794 rows `is_kev`, CISA 2026.11.18 lists 1,786. All CISA entries present; 8 extra. 5 were
+  VulnCheck leftovers 164 missed (metadata still had `xdb` / `reported_exploitation`; the EPSS job had rewritten
+  `source`): CVE-2026-23744, -3584, -4020, -24477, -27971. 2 had no recorded origin (164's "left for a person"):
+  CVE-2026-0740, -22679. 1 was removed by CISA: CVE-2026-69836 (Entra ID, added 21 Aug; its CVE record now has no
+  KEV entry and SSVC Exploitation "none").
+- **180 applied** 02:37 UTC (`20261119023743`): the 8 archived in `kev_unlisted_rows` (internal), the 5 also in
+  `vulncheck_retired_rows` (201 to 206) and stripped like 164; now 1,786 `is_kev` and 1,786 `kev_date`.
+  `reconcile_kev_catalog(cve_ids, version)` is service_role only: refuses a list under 1,000, holds more than 25
+  (a `kev_unlisted_bulk` warning finding), otherwise archives and clears, with an info `kev_unlisted` finding each.
+  The first apply failed on severity `low` (allowed: info, warning, error) and rolled back; the test stub now
+  carries the live check constraints.
+- **cisa-kev calls it after a complete run** (cost 10 to 11). **Live only after Tom's worker deploy**; until then
+  a CVE CISA removes stays KEV here, as before.
+- Licence findings for MSRC, Project Zero, vendor and CERT advisories and PoC aggregators (item 4's next
+  sources): `DATA_SOURCES.md`, "Known exploited: sources checked, 19 Nov 2026".
+
 **19 Nov, about 01:40-02:40 UTC (7:40-8:40 p.m. CST 18 Nov).** The surge rule (179, #4). Measured live then.
 
 - **`VG-IND-1` is now `threat_actors.surge`** (`apply_actor_surges`, run by `apply_actor_trends` each hour):
