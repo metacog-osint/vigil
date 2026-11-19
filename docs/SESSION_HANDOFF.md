@@ -19,7 +19,8 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 **19 Nov, about 03:00-04:00 UTC (9-10 p.m. CST 18 Nov).** Vendors' and CERT-FR's own words (187, 188). Measured then.
 
 - **Worker redeployed** by Tom from an export of `fc6c632` at 02:58 UTC (version `30f7df23`, 211.11 KiB, holds
-  `reconcile_kev_catalog`); 22 runs succeeded in the next 50 minutes. The first cisa-kev run after it is ~04:45 UTC.
+  `reconcile_kev_catalog`); 22 runs succeeded in the next 50 minutes. Deployed again at 03:58 UTC (`81b3bebe`) from `8ab9842` for the
+  retention migrations 181-186, so this work was renumbered 187 and 188.
 - **187** `vendor_exploit_statements`: Android bulletins (7 families, 406 read: 51 notes, 44 CVEs, 3 not in KEV:
   CVE-2020-0500, -20415 of 2022, -21096 of 2023) and Mozilla advisories (1,636: 29 sentences about the wild, 12
   saying this flaw was attacked, 8 CVEs, all in KEV), each sentence verbatim with its kind; a new wording is
