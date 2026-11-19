@@ -1,6 +1,9 @@
 -- 179. A group's surge, judged against the group's own last eight weeks (VG-WP-1)
 --
--- STATUS: NOT APPLIED. Written 19 November 2026. Tom chose rule G on 19 Nov 2026.
+-- STATUS: APPLIED 19 Nov 2026, 02:16 UTC, as 179_actor_surge_rule (version
+-- 20261119021646). Written 19 November 2026. Tom chose rule G on 19 Nov 2026.
+-- First run, live: one group flagged, pixelleaks (25 claims on 5 days in the
+-- 7 days to 18 Nov, against 0.63 a week; p = 1.1e-5).
 --
 -- WHY
 -- /api/feed raises a group as an anomaly (VG-WP-1, VG-IND-1) and COP shows it.
