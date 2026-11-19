@@ -13,6 +13,7 @@ export async function ingestCISAKEV(supabase) {
   let updated = 0
   const inserts = createInsertTally()
   let failed = 0
+  let reconcile = null
 
   try {
     // Fetch KEV catalog
@@ -66,6 +67,14 @@ export async function ingestCISAKEV(supabase) {
       }
     }
 
+    // An entry CISA removes would otherwise stay KEV in Vigil for good: this
+    // job only upserts, and sync_kev_columns (102) only sets is_kev true.
+    // Only after a complete run, so a failed batch cannot unflag anything;
+    // the function itself refuses a short list and holds a large one (180).
+    if (failed === 0) {
+      reconcile = await reconcileCatalog(supabase, vulnerabilities, data.catalogVersion)
+    }
+
   } catch (error) {
     console.error('CISA KEV ingestion error:', error.message)
     return { success: false, error: error.message }
@@ -78,8 +87,25 @@ export async function ingestCISAKEV(supabase) {
     source: 'cisa-kev',
     added: inserts.added,
     updated,
-    failed
+    failed,
+    reconcile
   }
+}
+
+export async function reconcileCatalog(supabase, vulnerabilities, catalogVersion) {
+  const ids = vulnerabilities.map(v => v.cveID).filter(Boolean)
+  const { data, error } = await supabase.rpc('reconcile_kev_catalog', {
+    p_cve_ids: ids,
+    p_catalog_version: catalogVersion || null
+  })
+  if (error) {
+    // Reported, not thrown: the catalogue itself was stored, which is the job.
+    console.error(`KEV reconcile error: ${error.message}`)
+    return { error: error.message }
+  }
+  if (data?.cleared) console.log(`KEV reconcile: cleared ${data.cleared} unlisted rows`)
+  if (data?.held) console.warn(`KEV reconcile: held ${data.held} unlisted rows for review`)
+  return data
 }
 
 function mapSeverity(vuln) {
