@@ -489,7 +489,7 @@ Alias lists from public sources are treated as **candidates, not facts** — the
 
 ### Trends
 
-A group is **ESCALATING** when its last 7 days exceed the previous 7 by more than 25%, and **DECLINING** on the same threshold downward. A rise from 1 victim to 2 is not a trend, so a group needs at least 3 victims in the window to escalate. A group with no activity in 90 days is **INACTIVE** rather than stable — stability implies ongoing operations.
+A group is **ESCALATING** when its claims in the last 7 complete days are unusual for that group: at least 5, posted on at least 3 different days, and less than a 1% chance under its own last 8 weeks (a negative binomial fitted to its weekly counts). A busy group's ordinary week is not a surge, and one batch dump is not either. Unusual is not a warning. The same rule raises a group on the public feed. A group is **DECLINING** when it posted more than 25% fewer than the week before (with at least 3 then). A group with no claims in 30 days is **INACTIVE** rather than stable — stability implies ongoing operations.
 
 ### Active, dormant and defunct
 

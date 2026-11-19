@@ -16,6 +16,14 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ## 0. Latest: 18 November 2026, summary built by the worker (175), CISA Vulnrichment (176, 177)
 
+**19 Nov, about 04:00 UTC (10 p.m. CST 18 Nov).** The site's "Escalating" follows the surge rule (189).
+
+- `apply_actor_trends` sets `trend_status = 'ESCALATING'` only when `threat_actors.surge` (179) is true;
+  DECLINING, INACTIVE and STABLE stay 077's. Before: 10 groups labelled Escalating against the feed's 1
+  (pixelleaks); after, both say pixelleaks. Tooltips, the actor table's trend tooltip, Help and `CLAUDE.md`
+  reminder 5 now describe the rule; Help said 90 days for INACTIVE where the code uses 30.
+- **189 applied** 04:23 UTC (`20261119042317`): 1 ESCALATING, 58 STABLE, 14 DECLINING, 332 INACTIVE.
+
 **19 Nov, about 03:00-04:00 UTC (9-10 p.m. CST 18 Nov).** Vendors' and CERT-FR's own words (187, 188). Measured then.
 
 - **Worker redeployed** by Tom from an export of `fc6c632` at 02:58 UTC (version `30f7df23`, 211.11 KiB, holds

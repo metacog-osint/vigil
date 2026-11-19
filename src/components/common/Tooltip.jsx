@@ -136,7 +136,7 @@ export const FIELD_TOOLTIPS = {
   },
   trend_status: {
     content:
-      'ESCALATING: >25% more incidents vs prior week. STABLE: ±25% change. DECLINING: >25% fewer incidents. Updated every 6 hours.',
+      'ESCALATING: claims in the last 7 complete days are unusual for this group against its own 8 weeks before (at least 5, on at least 3 days). DECLINING: more than 25% fewer than the week before. STABLE: everything else. INACTIVE: none in 30 days. Updated hourly. Unusual is not a warning.',
     source: 'Calculated from ransomware.live',
   },
   incidents_7d: {
@@ -177,12 +177,12 @@ export const FIELD_TOOLTIPS = {
   },
   escalating_summary: {
     content:
-      'Actors with >25% increase in incidents compared to the previous 7-day period. Click to filter.',
+      'Groups whose claims in the last 7 complete days are unusual against their own 8 weeks before. Click to filter.',
     source: 'Calculated from ransomware.live',
   },
   stable_summary: {
     content:
-      'Actors with incident counts within ±25% of the previous 7-day period. Click to filter.',
+      'Groups neither unusual this week nor more than 25% down on the week before. Click to filter.',
     source: 'Calculated from ransomware.live',
   },
   declining_summary: {
