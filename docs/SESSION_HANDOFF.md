@@ -16,6 +16,20 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ## 0. Latest: 18 November 2026, summary built by the worker (175), CISA Vulnrichment (176, 177)
 
+**19 Nov, about 03:00-04:00 UTC (9-10 p.m. CST 18 Nov).** Vendors' and CERT-FR's own words (187, 188). Measured then.
+
+- **Worker redeployed** by Tom from an export of `fc6c632` at 02:58 UTC (version `30f7df23`, 211.11 KiB, holds
+  `reconcile_kev_catalog`); 22 runs succeeded in the next 50 minutes. The first cisa-kev run after it is ~04:45 UTC.
+- **187** `vendor_exploit_statements`: Android bulletins (7 families, 406 read: 51 notes, 44 CVEs, 3 not in KEV:
+  CVE-2020-0500, -20415 of 2022, -21096 of 2023) and Mozilla advisories (1,636: 29 sentences about the wild, 12
+  saying this flaw was attacked, 8 CVEs, all in KEV), each sentence verbatim with its kind; a new wording is
+  `unclassified` and opens a `vendor_statement_unclassified` finding. **188** `certfr_alerts`: 401 CERT-FR alerts
+  as notices, 499 CVEs (215 in KEV). Both closed to anon until Tom picks where they show; grades proposed A2.
+- Edge Functions `vendor-exploited` and `certfr-alerts`, daily worker feeds of the same names (need Tom's deploy).
+  Backfills: `scripts/backfill-vendor-exploited.mjs` writes SQL from local copies, kept in
+  `[local path]`. CERT-FR's API is now `cert.cyber.gouv.fr`. Defender
+  quarantined one alert file (CERTFR-2024-ALE-013) locally; the job reads it server-side.
+
 **19 Nov, about 02:00-02:45 UTC (8:00-8:45 p.m. CST 18 Nov).** KEV matches CISA's catalogue (180). Measured live then.
 
 - **Before:** 1,794 rows `is_kev`, CISA 2026.11.18 lists 1,786. All CISA entries present; 8 extra. 5 were
