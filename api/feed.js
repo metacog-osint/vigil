@@ -89,7 +89,9 @@ export default async function handler(request) {
         rest(
           base,
           key,
-          `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since.disclosures}T00:00:00Z&order=first_seen.desc&limit=200`,
+          // HHS OCR (192) stays out until about a week of clean daily runs, as 191's sources did, and
+          // so its backfill of 8,092 reports first seen on one day is never served as new.
+          `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since.disclosures}T00:00:00Z&source=neq.hhs-ocr&order=first_seen.desc&limit=200`,
           { count: true }
         ),
         // The health block (migration 163). Its failure never fails the feed: without it the feed is

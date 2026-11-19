@@ -55,6 +55,45 @@ export const DISCLOSURE_SOURCES = {
     authority: 'Oregon Department of Justice',
     countScope: 'total',
   },
+  // Added in 190; the page listed none of them until 192.
+  'vt-ag': {
+    label: 'Vermont AG',
+    short: 'VT',
+    authority: 'Vermont Attorney General',
+    countScope: 'state_residents',
+  },
+  'mt-ag': {
+    label: 'Montana DOJ',
+    short: 'MT',
+    authority: 'Montana Department of Justice',
+    countScope: 'state_residents',
+  },
+  'sc-ag': {
+    label: 'South Carolina DCA',
+    short: 'SC',
+    authority: 'South Carolina Department of Consumer Affairs',
+    countScope: 'state_residents',
+  },
+  'id-ag': {
+    label: 'Idaho AG',
+    short: 'ID',
+    authority: 'Idaho Attorney General',
+    countScope: null,
+  },
+  'de-ag': {
+    label: 'Delaware AG',
+    short: 'DE',
+    authority: 'Delaware Attorney General',
+    countScope: 'state_residents',
+  },
+  // HIPAA breach reports to the Secretary of HHS (192). Not a state registry:
+  // `state` is null and the entity's own state is in business_location.
+  'hhs-ocr': {
+    label: 'HHS OCR',
+    short: 'HHS',
+    authority: 'US Department of Health and Human Services, Office for Civil Rights',
+    countScope: 'total',
+  },
   'sec-edgar': {
     label: 'SEC 8-K',
     short: 'SEC',
