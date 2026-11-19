@@ -16,6 +16,18 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ## 0. Latest: 18 November 2026, summary built by the worker (175), CISA Vulnrichment (176, 177)
 
+**19 Nov, about 01:40-02:40 UTC (7:40-8:40 p.m. CST 18 Nov).** The surge rule (179, #4). Measured live then.
+
+- **`VG-IND-1` is now `threat_actors.surge`** (`apply_actor_surges`, run by `apply_actor_trends` each hour):
+  the last 7 complete UTC days; at least 5 claims on at least 3 days; P(X >= count) < 0.01 under a negative
+  binomial fitted to the group's own 8 weeks before. `/api/feed` reads `surge=is.true`. 077's `trend_status`
+  and the site's trend label are unchanged.
+- **Backtest, 26 Aug - 19 Nov:** 077 flagged 17.1 groups a day (277 episodes, 88 groups, 28% posted on one
+  day). The new rule flags 1.0 a day (25 episodes, 20 groups, none posted on one day). n0n's "Company #NNN"
+  posts stay counted: each one names a sector and a country.
+- **179 applied** 02:16 UTC (version 20261119021646). First run: pixelleaks only (25 claims on 5 days,
+  0.63 a week before). Next free migration is 180.
+
 **19 Nov, about 01:30-02:30 UTC (7:30-8:30 p.m. CST 18 Nov).** Small fixes (178). Measured live then.
 
 - All 38 feeds fresh, `ingestion_is_healthy()` true; `/api/v1` answers 200 (it was 500 at the 15 Nov
