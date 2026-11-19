@@ -1,13 +1,10 @@
 # CLAUDE.md - AI Assistant Context
 
-> **Last Updated:** 3 October 2026 | **Version:** 2.5.0
+> **Last Updated:** 19 November 2026 | **Version:** 2.5.0
 >
-> **Parts of this file are dated.** Read
-> [`docs/SESSION_HANDOFF.md`](./docs/SESSION_HANDOFF.md) first: it carries current
-> state, what is outstanding, the rules for working alongside the other sessions
-> that share this working tree, and the traps that have bitten more than once.
-
-Essential context for AI assistants. **For detailed docs, see the `docs/` folder.**
+> Read [`docs/SESSION_HANDOFF.md`](./docs/SESSION_HANDOFF.md) first: current
+> state, open work, the rules for sharing this tree, and repeat traps. This file
+> holds rules and pointers only (12 KB cap).
 
 ## Documentation Index
 
@@ -81,11 +78,8 @@ export { threatActors } from './supabase/threatActors'
 ```
 
 `src/lib/__tests__/queryLayerSurface.test.js` fails if the two drift apart.
-
-The reason this mattered is worth keeping even though the duplication is gone:
-**a missing method is not an error anyone sees.** It is `undefined`, it throws
-at the call site, a `try/catch` swallows it, and the page renders an empty
-state that reads exactly like "there is nothing here".
+**A missing method is not an error anyone sees:** it throws, a `try/catch`
+swallows it, and the page shows an empty state.
 
 ### Component Imports (Barrel Exports)
 
@@ -146,8 +140,9 @@ where there is CPU for them.
 5. Query functions in `src/lib/supabase/`, exported from `index.js` **and
    re-exported from the monolith**
 6. Licence and reasoning in `DATA_SOURCES.md`
-7. **`cd workers && npm run deploy`** — there is no CI deploy for the worker,
-   so a source that is merged is not a source that runs
+7. **A worker deploy (Tom)** — no CI deploy, so a merged source does not run
+   until one. Never from the shared tree: `docs/INGESTION_HANDOVER.md`,
+   "Deploying the worker"
 
 ### Modify schema
 
@@ -186,9 +181,10 @@ npm run lint                # ESLint (325-warning ceiling, set in package.json o
 npm run ingest              # All data sources (legacy scripts/ path)
 npm run process:alerts      # Alert queue
 npm run send:digests        # Email digests
-
-cd workers && npm run deploy   # The scheduled feeds. NOT run by CI.
 ```
+
+The worker (the scheduled feeds) is not deployed by CI or by an npm script in
+the shared tree: see reminder 6.
 
 ---
 
@@ -200,7 +196,10 @@ cd workers && npm run deploy   # The scheduled feeds. NOT run by CI.
 4. **Pre-commit hooks** - Husky runs ESLint/Prettier on staged files
 5. **Trend status**: ESCALATING (>25% increase), DECLINING (>25% decrease), STABLE (else)
 6. **The worker has no CI deploy.** Merging a feed does not schedule it; only
-   `cd workers && npm run deploy` does. This has been missed in three sessions.
+   Tom's deploy from a dry-run-checked export of main does
+   (`docs/INGESTION_HANDOVER.md`, "Deploying the worker"). Never
+   `npm run deploy` in the shared tree: it is often behind main and rolls the
+   live worker back.
 7. **Judgment calls are queued, never guessed.** `record_finding(...)` puts the
    question in `data_quality_findings` for a person. A regular expression
    deciding whether "Pro-Russia hacktivists" means the Russian state is how
@@ -210,38 +209,28 @@ cd workers && npm run deploy   # The scheduled feeds. NOT run by CI.
    source rather than writing rows nobody can judge for resale. Two sources are
    NonCommercial; `actor_origins_commercial` is how they come out of a paid
    tier.
-9. **Building a page? Read `docs/SESSION_HANDOFF.md` §2b first.** The regulator
-   disclosures, the contested claims and the FinCEN register all have pages now
-   and are deployed. **319 vendor reports and the whole licence layer still have
-   no page at all** — that is the largest remaining build. §2b also records the
-   two rules `src/lib/supabase/disclosures.js` encodes — no single total of
-   people affected, and every figure a database count rather than a tally of
-   returned rows — both of which a careless commit would undo.
+9. **Building a page? Read `docs/SESSION_HANDOFF.md` §2b first.** It lists what
+   still has no page, and the two rules `src/lib/supabase/disclosures.js`
+   encodes: no single total of people affected, and every figure a database
+   count rather than a tally of returned rows.
 
-10. **There is no subscription tier system.** Removed 22 September; the code is
-    archived outside this repository. If you meet `canAccess`, `FeatureGate`, a
-    tier or a paywall, it is either `src/lib/tenants.js` (unrelated — tenant
-    membership) or something that should not be there. The database schema
-    deliberately survives and nothing writes it.
+10. **There is no subscription tier system** (removed 22 Sep 2026). `canAccess`,
+    `FeatureGate` or a paywall should not be there; `src/lib/tenants.js` is
+    unrelated (tenant membership). The schema survives and nothing writes it.
 
 11. **Work in a `git worktree`, not the shared directory.** Several sessions
     share one working tree and last write wins. `docs/SESSION_HANDOFF.md` §5 has
     the commands, and the `merge-base` check that tells you whether a branch is
     actually finished.
 
-12. **Say who can reach every object you create.** Two gaps, one cause:
-    Supabase's default privileges used to grant everything in `public` to
-    anon, authenticated and service_role.
-    - **Tables, views and sequences:** from 30 October 2026 Supabase stops
-      granting new ones (changelog 45329). Without a `GRANT`, supabase-js
-      gets "permission denied", a `try/catch` swallows it, and the page shows
-      an empty state, the same silent failure as the old query-layer trap
-      above.
-    - **Functions** are not part of that change and stay executable by all
-      three. A `SECURITY DEFINER` writer left that way can be called with
-      the browser's anon key: `apply_ransom_payments` was, from 152 until
-      154. Revoking from `public` alone is not enough, because Supabase
-      grants `authenticated` by name, which is what 145 and 147 missed.
+12. **Say who can reach every object you create** ("Modify schema" above).
+    Since 30 Oct 2026 a new table or view without a `GRANT` gives "permission
+    denied", which a `try/catch` turns into an empty page. Functions are still
+    executable by all three roles by default, so a `SECURITY DEFINER` writer
+    left open can be called with the browser's anon key
+    (`apply_ransom_payments`, 152 to 154). Revoke from `authenticated` by name
+    too, not only `public` (what 145 and 147 missed). A public read is
+    `SECURITY INVOKER` over tables anon can already read (178).
 
 ---
 
@@ -269,10 +258,8 @@ cd workers && npm run deploy   # The scheduled feeds. NOT run by CI.
 
 ## Deployment
 
-**Vercel deploys production from `main` automatically.** Merging is the deploy.
-You do not normally run anything — but check it went out rather than assuming,
-because treating a commit as a deploy is what left the pricing page selling for
-a day:
+**Vercel deploys production from `main` automatically.** Merging is the deploy,
+but check it went out:
 
 ```bash
 gh api "repos/metacog-osint/vigil/deployments?environment=Production&per_page=1"   --jq '.[]|{sha:.sha[0:7],created:.created_at}'
