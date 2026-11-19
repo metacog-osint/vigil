@@ -233,6 +233,30 @@ policies decide what counts. Without that secret it fails and says so.
 deployed from an export of `workers/` alone; `api/_lib/publicSummary.js`
 re-exports it.
 
+### Deploying the worker (Tom runs it)
+
+There is no CI deploy, and the shared checkout `D:\Projects\Vigil` is usually
+behind main, so `cd workers && npm run deploy` there can roll the live worker
+back. Every deploy since 16 Nov 2026 has gone this way instead:
+
+1. Export main's `workers/` at a named sha to a folder on C:, using the full
+   path, never the 8.3 short name (`PSRAUS~1`):
+   `git archive <sha> workers | tar -x -C "C:/Users/PSRA User 4/vigil-deploy/<sha>"`.
+2. Add a `node_modules` junction at the export's root pointing to
+   `D:\Projects\Vigil\node_modules`. `src/feeds/mitre-atlas.js` needs `js-yaml`
+   from there.
+3. In PowerShell, from `<export>\workers`, clear the machine's
+   `CLOUDFLARE_API_TOKEN` (`Remove-Item Env:CLOUDFLARE_API_TOKEN`); it cannot reach
+   this worker, and wrangler should use the browser login. Run the shared
+   tree's `D:\Projects\Vigil\workers\node_modules\.bin\wrangler.cmd deploy` with
+   `--config <export>\workers\wrangler.toml`.
+4. Run `--dry-run --outdir <export>\dist` first, and check the size (about
+   210 KiB on 18 Nov 2026) and that the bundle holds the change. Run from an 8.3
+   short path, wrangler silently bundled a 0.33 KiB no-op worker ("No bindings
+   found"), which would have replaced ingestion with a 404 stub.
+5. After the deploy, check the next tick's rows in `sync_log`. Remove the
+   junction (`rmdir`, not a recursive delete) before deleting the export.
+
 ## 3. Commits and migrations
 
 | Commit    | What                                                                                                                |
