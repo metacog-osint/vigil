@@ -46,8 +46,8 @@
 -- IDENTITY
 --
 -- HHS publishes no report number. Name, state and submission date identify a
--- report except in 46 groups on 19 Nov 2026 (one business associate filed 7
--- reports on 11 Aug 2025, each for a different client), so the accession is
+-- report except in 49 groups on 19 Nov 2026 (the largest: Alvaria, Inc., 13
+-- reports on 26 May 2023), so the accession is
 --   hhs-ocr:<actor_key(name)>:<state or na>:<submission date>:<n>
 -- where n is the report's place in its group, ordered by entity type, breach
 -- type, location, business associate flag and count. The Edge Function builds

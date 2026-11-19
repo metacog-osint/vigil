@@ -192,8 +192,8 @@ export function readHhsCsv(
  * Gives every report its accession, over both lists at once.
  *
  * HHS publishes no report number. Name, state and submission date identify a
- * report except where one filer sent several the same day (46 groups on
- * 19 Nov 2026, one of 7), so the last part is the report's place in its group,
+ * report except where one filer sent several the same day (49 groups on
+ * 19 Nov 2026, the largest 13), so the last part is the report's place in its group,
  * ordered by fields that do not change when OCR closes a case. Run over both
  * lists together so a report moving to the archive keeps its accession.
  */

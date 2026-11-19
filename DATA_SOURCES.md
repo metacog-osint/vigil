@@ -236,8 +236,8 @@ the word "ransom", and they stay OCR's words; no report is called ransomware
 from its name or its text.
 
 HHS publishes no report number, so a report is name, state and submission date,
-plus its place among reports the same filer sent the same day (46 such groups;
-one business associate filed seven on 11 Aug 2025). Counts are taken as current
+plus its place among reports the same filer sent the same day (49 such groups;
+the largest is Alvaria, Inc., 13 reports on 26 May 2023). Counts are taken as current
 on every run, because OCR revises them, and a report moving to the archive keeps
 its row. A new report filed in the last 90 days that names a claimed victim goes
 to the review queue with HHS's fields on the card. Not on `/api/feed` until about
