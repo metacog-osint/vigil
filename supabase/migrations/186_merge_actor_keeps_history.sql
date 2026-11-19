@@ -1,6 +1,6 @@
 -- 186. merge_actor keeps the merged-away actor's history rows
 --
--- STATUS: NOT YET APPLIED. Replaces merge_actor as defined in 094.
+-- STATUS: APPLIED 19 Nov 2026, 03:56 UTC, as 186_merge_actor_keeps_history (version 20261119035641). Replaces merge_actor as defined in 094.
 --
 -- WHY
 --
