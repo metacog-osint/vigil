@@ -1,6 +1,6 @@
 -- 181. Daily actor trend snapshots, written by the worker with the service role
 --
--- STATUS: NOT YET APPLIED.
+-- STATUS: APPLIED 19 Nov 2026, 03:54 UTC, as 181_actor_trend_snapshot_daily (version 20261119035446).
 --
 -- WHY
 --

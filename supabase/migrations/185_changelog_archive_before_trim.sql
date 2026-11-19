@@ -1,6 +1,6 @@
 -- 185. trim_entity_changelog() archives before it deletes
 --
--- STATUS: NOT YET APPLIED.
+-- STATUS: APPLIED 19 Nov 2026, 03:56 UTC, as 185_changelog_archive_before_trim (version 20261119035607).
 --
 -- WHY
 --

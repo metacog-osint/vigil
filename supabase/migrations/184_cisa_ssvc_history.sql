@@ -1,6 +1,6 @@
 -- 184. CISA's earlier SSVC judgments, kept when they change
 --
--- STATUS: NOT YET APPLIED. Builds on 176 (cisa_ssvc).
+-- STATUS: APPLIED 19 Nov 2026, 03:56 UTC, as 184_cisa_ssvc_history (version 20261119035606). Builds on 176 (cisa_ssvc).
 --
 -- WHY
 --

@@ -1,6 +1,6 @@
 -- 183. The daily EPSS series per CVE
 --
--- STATUS: NOT YET APPLIED. Builds on 158 (apply_epss_scores).
+-- STATUS: APPLIED 19 Nov 2026, 03:55 UTC, as 183_epss_history (version 20261119035529). Builds on 158 (apply_epss_scores).
 --
 -- WHY
 --
