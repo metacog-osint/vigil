@@ -85,6 +85,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 20
+    # Playwright's own image: browsers and their system packages are already
+    # installed. `playwright install --with-deps` fetched webkit's packages from
+    # the runner's Ubuntu mirror, which served about 60 kB/s on 18 Nov 2026 and
+    # ran PR #1's webkit job into this 20-minute timeout twice. Keep the tag at
+    # the @playwright/test version in package-lock.json. HOME=/root is what
+    # Playwright's CI docs require for Firefox in this container.
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --ipc=host
+    env:
+      HOME: /root
     strategy:
       fail-fast: false
       matrix:
@@ -103,8 +114,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browser (${{ matrix.browser }})
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+      # A no-op while the image tag matches package-lock.json. If a Playwright
+      # bump lands before the tag does, this downloads the matching browser
+      # (from Playwright's CDN, not apt) instead of failing on a missing one.
+      - name: Check Playwright browser (${{ matrix.browser }})
+        run: npx playwright install ${{ matrix.browser }}
 
       - name: Download build artifacts
         uses: actions/download-artifact@v8

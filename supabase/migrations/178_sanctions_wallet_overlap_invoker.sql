@@ -1,0 +1,25 @@
+-- 178. sanctions_wallet_overlap() runs as its caller, not its owner
+--
+-- STATUS: not applied. Written 19 November 2026.
+--
+-- 151 made the function SECURITY DEFINER and granted it to anon and
+-- authenticated, on purpose: the public /financial-crime page calls it
+-- (src/lib/supabase/sanctions.js) to state how many held wallets appear on
+-- the SDN list, so the page cannot imply a victim paid a sanctioned address.
+-- It returns three counts and a timestamp, never rows.
+--
+-- DEFINER is not needed for that. anon and authenticated already read both
+-- tables through policies that pass every row (iocs_public_read and
+-- sanctioned_addresses_public_read, both `true`), so the caller's own rights
+-- give the same answer. Measured live 19 Nov 2026, about 01:45 UTC: as anon,
+-- the function's query returned 9,900 wallets, 1,064 sanctioned addresses and
+-- 0 on the list, the same as the DEFINER call, in 16 ms (a hash semi join
+-- over two index-only scans, as 151 recorded).
+--
+-- It was the only SECURITY DEFINER function the Supabase security advisor
+-- found anon could run (lint 0028), and a DEFINER function reads past RLS, so
+-- a later edit to its body would expose whatever it selected. As INVOKER it
+-- can never show more than the caller could read directly. Grants are
+-- unchanged: the page still calls it with the anonymous key.
+
+alter function public.sanctions_wallet_overlap() security invoker;
