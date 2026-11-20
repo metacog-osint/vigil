@@ -14,7 +14,21 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ---
 
-## 0. Latest: 19 November 2026, HHS OCR's breach portal as a source (192)
+## 0. Latest: 20 November 2026, vendor statements on re-read (193)
+
+**20 Nov, about 18:15-19:00 UTC (12:15-1 p.m. CST).** ideas#75 B, C and D.1, on Tom's yes ("defaults").
+
+- **193** (`193_vendor_statements_reread.sql`): `record_vendor_statements` updates a held row's `kind` (logged as
+  `vendor_statement_kind_changed`), retires statements a re-read document no longer carries (`retired_at`; rows
+  kept, cleared if the statement returns), and stores `note_flags`; the five note-only Android rows are flagged
+  in the migration with `vendor_statement_note_only` findings; the public grant is a column list.
+- **Parser** (`_shared/vendorExploited.ts`): `note_flags` per Android note CVE (`not_in_tables`,
+  `later_than_bulletin`). Checked on the 32 live bulletins that hold a note: exactly the five the review named.
+- **Panel:** "named in Google's note only, not in this bulletin's tables" after the quote; retired rows skipped.
+- Order: 193 before the `vendor-exploited` deploy. The old function still works against 193 (it sends no flags,
+  and flags stay as stored). Check the issue (ideas#75) for whether 193 and the deploy went out.
+
+**Earlier: 19 Nov 2026, HHS OCR's breach portal as a source (192)**
 
 **19 Nov, about 16:20-17:00 UTC (10:20-11 a.m. CST).** HHS OCR breach reports in `victim_disclosures` (192, ideas#50).
 
