@@ -5,6 +5,9 @@
 
 import { supabase } from './client'
 
+// CVE ids per KEV lookup: keeps each request URL well under PostgREST's limits.
+const KEV_BATCH = 100
+
 export const vulnerabilities = {
   async getAll(options = {}) {
     const { limit = 100, offset = 0, search = '', minCvss = null, kevOnly = false } = options
@@ -100,13 +103,17 @@ export const vulnerabilities = {
     if (error) return { data: null, error }
     const ids = [...new Set((rows ?? []).map((r) => r.cve_id))]
     if (ids.length === 0) return { data: [], error: null }
-    const { data: kev, error: kevError } = await supabase
-      .from('vulnerabilities')
-      .select('cve_id')
-      .in('cve_id', ids)
-      .eq('is_kev', true)
-    if (kevError) return { data: null, error: kevError }
-    const listed = new Set((kev ?? []).map((v) => v.cve_id))
+    // In batches: one .in() of several hundred ids overruns the request URL (ideas#75 D.3).
+    const listed = new Set()
+    for (let i = 0; i < ids.length; i += KEV_BATCH) {
+      const { data: kev, error: kevError } = await supabase
+        .from('vulnerabilities')
+        .select('cve_id')
+        .in('cve_id', ids.slice(i, i + KEV_BATCH))
+        .eq('is_kev', true)
+      if (kevError) return { data: null, error: kevError }
+      for (const v of kev ?? []) listed.add(v.cve_id)
+    }
     const seen = new Set()
     const data = rows.filter((r) => {
       if (listed.has(r.cve_id) || seen.has(r.cve_id)) return false
