@@ -65,8 +65,10 @@ export default function Sources() {
             The licence register could not be read just now. The credits below still apply.
           </p>
         ) : (
+          // data-tic-fold (public/tic-fold.js): a window about ten rows tall that scrolls, with "Show all N".
+          // The table stays the only child of this div, so the div itself becomes the window.
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm" data-tic-fold="">
               <thead>
                 <tr className="text-left text-gray-500 border-b border-gray-800">
                   <th className="py-2 pr-4 font-medium">Source</th>
