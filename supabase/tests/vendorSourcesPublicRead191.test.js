@@ -67,10 +67,28 @@ describe('migration 191', () => {
     expect(await column('anon', 'raw')).toBe(false)
   })
 
-  it('never shows an unclassified wording', async () => {
-    const policy = await db.query(
-      `select qual from pg_policies where tablename = 'vendor_exploit_statements' and policyname = 'vendor_exploit_statements_read'`
-    )
-    expect(policy.rows[0].qual).toMatch(/unclassified/)
+  it("keeps CERT-FR's raw JSON from authenticated too", async () => {
+    expect(await column('authenticated', 'raw')).toBe(false)
+    expect(await column('authenticated', 'title')).toBe(true)
+  })
+
+  // ideas#75 D.2: read as the role, so the test fails if the policy is inverted or dropped.
+  it('never shows an unclassified wording to anon or authenticated', async () => {
+    await db.query(`
+      insert into vendor_exploit_statements (source_id, document_id, cve_id, statement, kind)
+      values ('mozilla-mfsa', 'mfsa2099-1', 'CVE-2099-0001', 'classified', 'exploited'),
+             ('mozilla-mfsa', 'mfsa2099-1', 'CVE-2099-0001', 'nobody has read this', 'unclassified')
+    `)
+    for (const role of ['anon', 'authenticated']) {
+      await db.query(`set role ${role}`)
+      try {
+        const { rows } = await db.query(
+          `select statement, kind from vendor_exploit_statements where cve_id = 'CVE-2099-0001'`
+        )
+        expect(rows).toEqual([{ statement: 'classified', kind: 'exploited' }])
+      } finally {
+        await db.query('reset role')
+      }
+    }
   })
 })
