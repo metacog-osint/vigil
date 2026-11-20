@@ -31,6 +31,7 @@ const FinancialCrime = lazy(() => import('./pages/FinancialCrime'))
 const Sanctions = lazy(() => import('./pages/Sanctions'))
 const RansomPayments = lazy(() => import('./pages/RansomPayments'))
 const Disclosures = lazy(() => import('./pages/Disclosures'))
+const UpperMidwest = lazy(() => import('./pages/UpperMidwest'))
 const ThreatHunts = lazy(() => import('./pages/ThreatHunts'))
 const ApiDocs = lazy(() => import('./pages/ApiDocs'))
 const Reports = lazy(() => import('./pages/Reports'))
@@ -270,6 +271,7 @@ function ProtectedApp() {
                         <Route path="/sanctions" element={<Sanctions />} />
                         <Route path="/ransom-payments" element={<RansomPayments />} />
                         <Route path="/disclosures" element={<Disclosures />} />
+                        <Route path="/upper-midwest" element={<UpperMidwest />} />
                         <Route path="/threat-hunts" element={<ThreatHunts />} />
                         <Route path="/api-docs" element={<ApiDocs />} />
                         <Route path="/reports" element={<Reports />} />

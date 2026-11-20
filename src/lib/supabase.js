@@ -143,6 +143,7 @@ export {
 } from './supabase/contestedClaims'
 // REGULATOR DISCLOSURES
 export { disclosures, DISCLOSURE_SOURCES, COUNT_SCOPES } from './supabase/disclosures'
+export { upperMidwest, UPPER_MIDWEST, UPPER_MIDWEST_CODES } from './supabase/upperMidwest'
 
 // ============================================
 // FINANCIAL CRIME ADVISORIES
