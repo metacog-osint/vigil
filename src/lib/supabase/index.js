@@ -136,6 +136,7 @@ export {
 } from './contestedClaims'
 // What victims told a regulator, and what their counts actually count
 export { disclosures, DISCLOSURE_SOURCES, COUNT_SCOPES } from './disclosures'
+export { upperMidwest, UPPER_MIDWEST, UPPER_MIDWEST_CODES } from './upperMidwest'
 
 // What a regulator told institutions to look for, as opposed to what happened
 export { advisoryRegister, ADVISORY_KINDS, ADVISORY_SOURCES } from './advisoryRegister'

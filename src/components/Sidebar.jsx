@@ -266,6 +266,7 @@ const navigationGroups = [
       { name: 'Vendor Research', href: '/research', icon: icons.reports },
       { name: 'Contested Claims', href: '/contested-claims', icon: icons.compare },
       { name: 'Disclosures', href: '/disclosures', icon: icons.reports },
+      { name: 'Upper Midwest', href: '/upper-midwest', icon: icons.reports },
       { name: 'Financial Crime', href: '/financial-crime', icon: icons.investigations },
       { name: 'Sanctions', href: '/sanctions', icon: icons.compare },
       { name: 'Ransom Payments', href: '/ransom-payments', icon: icons.trends },

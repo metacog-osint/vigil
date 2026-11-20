@@ -14,7 +14,21 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ---
 
-## 0. Latest: 20 November 2026, vendor statements on re-read (193)
+## 0. Latest: 20 November 2026, Upper Midwest watch page (ideas#51)
+
+**20 Nov, about 19:15-19:40 UTC (1:15-1:40 p.m. CST).** `/upper-midwest`, scope A (Tom: page only, no migration,
+no worker change). Query layer `src/lib/supabase/upperMidwest.js` (exported from the index and the monolith).
+
+- **Lanes, never summed:** HHS OCR by `business_location` = state code (462 rows on 20 Nov); SEC 8-K by
+  `business_location` like `"%, ST"` (8); leak-site claims, which have no state field, in two marked groups: exact
+  `victim_name` = a placed filing's `company_name` (9), and `raw_data->>description` names the state (any country).
+  Both claim groups are labelled criminals' claims and unverified. State AG registries are not used: their `state`
+  is the registry's.
+- Counts are `head: true`; no total of people affected. Feed slice is a page filter only; `/api/feed` unchanged.
+- **Next (scope B/C, ask):** IA and WI AG registries as a "notified this state" lane; a stored `victim_state` with
+  how it was placed, for reviewer placement.
+
+## 0-. Earlier on 20 November 2026, vendor statements on re-read (193)
 
 **20 Nov, about 18:15-19:00 UTC (12:15-1 p.m. CST).** ideas#75 B, C and D.1, on Tom's yes ("defaults").
 
@@ -745,6 +759,7 @@ commit is not the fix, the deploy is.
 | `regulatory_advisories`    |    183 | `advisoryRegister.js`   | **yes** — /financial-crime  |
 | `attributed_activity`      |     16 | `attributedActivity.js` | **yes** — map layer         |
 | `ransomware_payments`      |    136 | `ransomPayments.js`     | **yes** — /ransom-payments  |
+| Upper Midwest slice        |      — | `upperMidwest.js`       | **yes** — /upper-midwest    |
 
 `ransomPayments.js` carries the rule migration 152 stated: no single total of
 ransom paid, because two thirds of it is "Unlabeled". A test asserts the
