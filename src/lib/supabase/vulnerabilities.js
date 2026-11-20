@@ -69,13 +69,15 @@ export const vulnerabilities = {
 
   /**
    * Android's and Mozilla's own sentences about exploitation of one CVE (187; public read 191),
-   * each verbatim with its kind. The vendors' words, not the KEV catalog.
+   * each verbatim with its kind. The vendors' words, not the KEV catalog. A statement a re-read of
+   * its document no longer carried is retired (193) and skipped here; the row is kept.
    */
   async getVendorStatements(cveId) {
     return supabase
       .from('vendor_exploit_statements')
-      .select('source_id,family,document_id,document_url,document_date,statement,kind')
+      .select('source_id,family,document_id,document_url,document_date,statement,kind,note_flags')
       .eq('cve_id', cveId)
+      .is('retired_at', null)
       .order('document_date', { ascending: true })
   },
 
@@ -96,8 +98,9 @@ export const vulnerabilities = {
   async getVendorExploitedNotInKev() {
     const { data: rows, error } = await supabase
       .from('vendor_exploit_statements')
-      .select('cve_id,source_id,family,document_id,document_url,document_date,statement')
+      .select('cve_id,source_id,family,document_id,document_url,document_date,statement,note_flags')
       .eq('kind', 'exploited')
+      .is('retired_at', null)
       .order('document_date', { ascending: false })
       .limit(1000)
     if (error) return { data: null, error }
