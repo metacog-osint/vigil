@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 /* Long-table window and its "Show all" button (public/tic-fold.css) in Vigil's dark theme */
-.tic-fold-box, .tic-fold-bar, .tic-fold-find {
+.tic-fold-box,
+.tic-fold-bar,
+.tic-fold-find {
   --panel: #060a12;
   --line: #1f2937;
   --muted: #9ca3af;
