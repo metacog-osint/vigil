@@ -66,43 +66,45 @@ function StateTotals({ rows }) {
   if (!rows?.length) return null
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {rows.map((row) => {
-        const count = row.residents_affected ?? row.people_affected_worldwide
-        const scope = COUNT_SCOPES[row.scope]
+    <FoldWindow>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-tic-fold="">
+        {rows.map((row) => {
+          const count = row.residents_affected ?? row.people_affected_worldwide
+          const scope = COUNT_SCOPES[row.scope]
 
-        return (
-          <div key={row.state} className="cyber-card p-4">
-            <div className="flex items-baseline justify-between">
-              <h3 className="text-white font-medium">{row.state}</h3>
-              <span className="text-2xl font-semibold text-white">{figure(row.notices)}</span>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              notices, {formatDate(row.earliest)} to {formatDate(row.latest)}
-            </p>
+          return (
+            <div key={row.state} className="cyber-card p-4">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-white font-medium">{row.state}</h3>
+                <span className="text-2xl font-semibold text-white">{figure(row.notices)}</span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                notices, {formatDate(row.earliest)} to {formatDate(row.latest)}
+              </p>
 
-            <div className="mt-3 pt-3 border-t border-gray-800">
-              {count === null ? (
-                <p className="text-xs text-gray-500">
-                  This registry publishes no count of people affected.
-                </p>
-              ) : (
-                <>
-                  <p className="text-sm text-gray-300">
-                    {count.toLocaleString()}{' '}
-                    <span className="text-gray-500">{scope?.label || 'people'}</span>
+              <div className="mt-3 pt-3 border-t border-gray-800">
+                {count === null ? (
+                  <p className="text-xs text-gray-500">
+                    This registry publishes no count of people affected.
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    From {figure(row.notices_with_a_count)} of {figure(row.notices)} notices.{' '}
-                    {scope?.note}
-                  </p>
-                </>
-              )}
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-300">
+                      {count.toLocaleString()}{' '}
+                      <span className="text-gray-500">{scope?.label || 'people'}</span>
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      From {figure(row.notices_with_a_count)} of {figure(row.notices)} notices.{' '}
+                      {scope?.note}
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        )
-      })}
-    </div>
+          )
+        })}
+      </div>
+    </FoldWindow>
   )
 }
 

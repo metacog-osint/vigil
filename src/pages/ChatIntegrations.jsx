@@ -10,6 +10,7 @@ import {
 } from '../lib/chat'
 import { generateOAuthState } from '../lib/oauthSecurity'
 import { useAuth } from '../hooks/useAuth'
+import { FoldWindow } from '../components/common'
 
 export default function ChatIntegrations() {
   const { user } = useAuth()
@@ -168,50 +169,52 @@ export default function ChatIntegrations() {
           <div className="lg:col-span-1">
             <div className="cyber-card p-4">
               <h3 className="text-lg font-semibold text-white mb-4">Connected</h3>
-              <div className="space-y-2">
-                {integrations.map((integration) => {
-                  const platform = PLATFORMS[integration.platform]
-                  const isSelected = selectedIntegration?.id === integration.id
+              <FoldWindow>
+                <div className="space-y-2" data-tic-fold="">
+                  {integrations.map((integration) => {
+                    const platform = PLATFORMS[integration.platform]
+                    const isSelected = selectedIntegration?.id === integration.id
 
-                  return (
-                    <button
-                      key={integration.id}
-                      onClick={() => setSelectedIntegration(integration)}
-                      className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                        isSelected
-                          ? 'bg-cyber-accent/20 border-cyber-accent'
-                          : 'bg-gray-800/30 border-gray-700 hover:border-gray-600'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-8 h-8 rounded-lg flex items-center justify-center"
-                          style={{ backgroundColor: platform?.color + '30' }}
-                        >
-                          <span className="text-lg">
-                            {integration.platform === 'slack'
-                              ? '📱'
-                              : integration.platform === 'teams'
-                                ? '💬'
-                                : '🎮'}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-white truncate">
-                            {integration.workspace_name || platform?.name}
+                    return (
+                      <button
+                        key={integration.id}
+                        onClick={() => setSelectedIntegration(integration)}
+                        className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                          isSelected
+                            ? 'bg-cyber-accent/20 border-cyber-accent'
+                            : 'bg-gray-800/30 border-gray-700 hover:border-gray-600'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style={{ backgroundColor: platform?.color + '30' }}
+                          >
+                            <span className="text-lg">
+                              {integration.platform === 'slack'
+                                ? '📱'
+                                : integration.platform === 'teams'
+                                  ? '💬'
+                                  : '🎮'}
+                            </span>
                           </div>
-                          <div className="text-xs text-gray-500">{platform?.name}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-white truncate">
+                              {integration.workspace_name || platform?.name}
+                            </div>
+                            <div className="text-xs text-gray-500">{platform?.name}</div>
+                          </div>
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              integration.is_active ? 'bg-green-500' : 'bg-gray-500'
+                            }`}
+                          />
                         </div>
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            integration.is_active ? 'bg-green-500' : 'bg-gray-500'
-                          }`}
-                        />
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </FoldWindow>
 
               <button
                 onClick={() => setShowConnectModal(true)}
@@ -284,56 +287,60 @@ export default function ChatIntegrations() {
                           </p>
                         </div>
                       ) : (
-                        subscriptions.map((sub) => (
-                          <div
-                            key={sub.id}
-                            className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg"
-                          >
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-white">
-                                  #{sub.channel_name || sub.channel_id}
-                                </span>
-                                <span className="text-xs px-2 py-0.5 bg-gray-700 rounded text-gray-300">
-                                  {sub.subscription_type}
-                                </span>
-                              </div>
-                              <div className="text-xs text-gray-500 mt-1">
-                                {sub.notification_count} notifications sent
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleToggleSubscription(sub)}
-                                className={`px-3 py-1 text-xs rounded ${
-                                  sub.is_active
-                                    ? 'bg-green-500/20 text-green-400'
-                                    : 'bg-gray-700 text-gray-400'
-                                }`}
+                        <FoldWindow>
+                          <div className="space-y-3" data-tic-fold="">
+                            {subscriptions.map((sub) => (
+                              <div
+                                key={sub.id}
+                                className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg"
                               >
-                                {sub.is_active ? 'Active' : 'Paused'}
-                              </button>
-                              <button
-                                onClick={() => handleDeleteSubscription(sub)}
-                                className="p-1 text-gray-500 hover:text-red-400"
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-white">
+                                      #{sub.channel_name || sub.channel_id}
+                                    </span>
+                                    <span className="text-xs px-2 py-0.5 bg-gray-700 rounded text-gray-300">
+                                      {sub.subscription_type}
+                                    </span>
+                                  </div>
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {sub.notification_count} notifications sent
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleToggleSubscription(sub)}
+                                    className={`px-3 py-1 text-xs rounded ${
+                                      sub.is_active
+                                        ? 'bg-green-500/20 text-green-400'
+                                        : 'bg-gray-700 text-gray-400'
+                                    }`}
+                                  >
+                                    {sub.is_active ? 'Active' : 'Paused'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteSubscription(sub)}
+                                    className="p-1 text-gray-500 hover:text-red-400"
+                                  >
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        ))
+                        </FoldWindow>
                       )}
                     </div>
                   )}
@@ -365,32 +372,34 @@ export default function ChatIntegrations() {
                           No commands executed yet
                         </div>
                       ) : (
-                        <div className="space-y-2">
-                          {logs.map((log) => (
-                            <div
-                              key={log.id}
-                              className="flex items-center justify-between p-2 bg-gray-800/30 rounded text-sm"
-                            >
-                              <div className="flex items-center gap-3">
-                                <span
-                                  className={`w-2 h-2 rounded-full ${
-                                    log.response_status === 'success'
-                                      ? 'bg-green-500'
-                                      : 'bg-red-500'
-                                  }`}
-                                />
-                                <span className="font-mono text-gray-300">/{log.command}</span>
-                                {log.arguments && (
-                                  <span className="text-gray-500">{log.arguments}</span>
-                                )}
+                        <FoldWindow>
+                          <div className="space-y-2" data-tic-fold="">
+                            {logs.map((log) => (
+                              <div
+                                key={log.id}
+                                className="flex items-center justify-between p-2 bg-gray-800/30 rounded text-sm"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span
+                                    className={`w-2 h-2 rounded-full ${
+                                      log.response_status === 'success'
+                                        ? 'bg-green-500'
+                                        : 'bg-red-500'
+                                    }`}
+                                  />
+                                  <span className="font-mono text-gray-300">/{log.command}</span>
+                                  {log.arguments && (
+                                    <span className="text-gray-500">{log.arguments}</span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-gray-500">
+                                  <span>@{log.platform_user_name || 'unknown'}</span>
+                                  <span>{fmtTime(log.executed_at, { seconds: true })}</span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-3 text-xs text-gray-500">
-                                <span>@{log.platform_user_name || 'unknown'}</span>
-                                <span>{fmtTime(log.executed_at, { seconds: true })}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        </FoldWindow>
                       )}
                     </div>
                   )}
