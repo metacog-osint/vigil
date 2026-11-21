@@ -46,6 +46,28 @@ So when the worker stops, these items age, and COP, which judges Vigil by its ne
 and then stale. Until then they carried the request time, and a stopped worker still read fresh (suite review of
 15 Nov 2026).
 
+## STIX 2.1 feed (no key)
+
+`GET https://vigil.theintelligence.company/api/feed?format=stix` returns a STIX 2.1 bundle
+(`application/stix+json;version=2.1`) of what Vigil may redistribute. `days` is `7` (default), `30` or `90`. It is
+cached for 15 minutes. Built by `api/_lib/stixFeed.js`; tested in `src/lib/__tests__/stixFeed.test.js`.
+
+| Content | STIX object | Source |
+| --- | --- | --- |
+| CVEs added to CISA's KEV catalog in the window (up to 200) | `vulnerability` with a KEV external reference | CISA |
+| CISA ADP ratings of exploitation active (up to 200) | `note` by CISA on a `vulnerability` | CISA Vulnrichment |
+| Leak-site claims (up to 1,000, newest first) | `note` referring to a `threat-actor` and an `identity` | RansomLook, from `incidents_commercial` |
+| What the bundle holds against the database's counts | one coverage `note` | Vigil |
+
+- **Licences:** each object carries TLP:WHITE, a statement marking and an external reference for its source, read
+  from `source_licences` on every build. A source that is unregistered or not cleared there is left out.
+- **Claims are claims.** A claim is a note, never a `targets` relationship, and says the group's claim is unverified.
+  Leak-site addresses and `raw_data` are not included.
+- **KEV means CISA's catalog.** Only a CVE in that catalog carries the KEV reference. An ADP rating of a CVE outside
+  it says "Not in CISA's KEV catalog".
+- **Ids are stable.** The same CVE, claim, group or organization name keeps its STIX id between builds.
+- This is a static bundle, not a TAXII server. The tables from migration 046 are not used.
+
 ## Daily summary (no key)
 
 `GET https://vigil.theintelligence.company/api/summary` returns one sentence about the latest complete day, for
