@@ -30,6 +30,7 @@ import {
   VERIFICATION_STATES,
 } from '../lib/supabase'
 import { figure } from '../lib/format'
+import { FoldWindow } from '../components/common'
 
 const TIER_STYLES = {
   1: 'border-emerald-700/60 bg-emerald-900/30 text-emerald-300',
@@ -171,8 +172,8 @@ function ClaimCard({ claim, values }) {
       {claim.scope_note && <p className="text-sm text-gray-400 mt-3">{claim.scope_note}</p>}
 
       {values?.length > 0 && (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-sm">
+        <FoldWindow className="mt-4 overflow-x-auto">
+          <table className="w-full text-sm" data-tic-fold="">
             <thead>
               <tr className="text-left text-xs text-gray-500">
                 <th className="pb-2 pr-3 font-normal">Publisher</th>
@@ -188,7 +189,7 @@ function ClaimCard({ claim, values }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </FoldWindow>
       )}
 
       {/* What a person ruled, which is the only thing that resolves a claim. */}
@@ -347,11 +348,13 @@ export default function ContestedClaims() {
         <p className="text-gray-500">No claims match that filter.</p>
       )}
 
-      <div className="space-y-4">
-        {claims.map((claim) => (
-          <ClaimCard key={claim.id} claim={claim} values={valuesByClaim[claim.claim_key]} />
-        ))}
-      </div>
+      <FoldWindow>
+        <div className="space-y-4" data-tic-fold="">
+          {claims.map((claim) => (
+            <ClaimCard key={claim.id} claim={claim} values={valuesByClaim[claim.claim_key]} />
+          ))}
+        </div>
+      </FoldWindow>
     </div>
   )
 }

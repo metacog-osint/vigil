@@ -13,6 +13,7 @@ import VendorExploitStatements, {
 } from '../components/VendorExploitStatements'
 import { useDemo } from '../contexts/DemoContext'
 import useDemoData from '../hooks/useDemoData'
+import { FoldWindow } from '../components/common'
 
 export default function Vulnerabilities() {
   const { isDemoMode } = useDemo()
@@ -168,8 +169,8 @@ export default function Vulnerabilities() {
           ) : vulnList.length === 0 ? (
             <EmptyVulnerabilities />
           ) : (
-            <div className="cyber-card overflow-x-auto">
-              <table className="cyber-table">
+            <FoldWindow className="cyber-card overflow-x-auto">
+              <table className="cyber-table" data-tic-fold="">
                 <thead>
                   <tr>
                     <th>CVE ID</th>
@@ -239,7 +240,7 @@ export default function Vulnerabilities() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </FoldWindow>
           )}
         </div>
 

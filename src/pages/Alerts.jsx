@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { alerts as alertsApi } from '../lib/supabase'
 import { SkeletonTable, EmptyState, ErrorMessage, TimeAgo, SeverityBadge } from '../components'
+import { FoldWindow } from '../components/common'
 
 const CATEGORIES = [
   { value: '', label: 'All Categories' },
@@ -189,11 +190,13 @@ export default function Alerts() {
           description="No security alerts match your current filters"
         />
       ) : (
-        <div className="space-y-4">
-          {alerts.map((alert) => (
-            <AlertCard key={alert.id} alert={alert} />
-          ))}
-        </div>
+        <FoldWindow>
+          <div className="space-y-4" data-tic-fold="">
+            {alerts.map((alert) => (
+              <AlertCard key={alert.id} alert={alert} />
+            ))}
+          </div>
+        </FoldWindow>
       )}
 
       {/* Pagination */}

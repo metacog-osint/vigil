@@ -24,6 +24,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ransomPayments, RANSOMWHERE_CITATION } from '../lib/supabase'
 import { figure, usd } from '../lib/format'
+import { FoldWindow } from '../components/common'
 
 /**
  * The dataset's dates are calendar days. Parsed as local time, "2024-08-19"
@@ -215,34 +216,36 @@ function Families({ families }) {
       </div>
 
       <div className="cyber-card overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
-              <th className="px-4 py-2">Family</th>
-              <th className="px-4 py-2 text-right">USD at time of payment</th>
-              <th className="px-4 py-2 text-right">Payments</th>
-              <th className="px-4 py-2 text-right">Addresses</th>
-              <th className="px-4 py-2">First payment</th>
-              <th className="px-4 py-2">Last payment</th>
-            </tr>
-          </thead>
-          <tbody>
-            {shown.map((f) => (
-              <tr key={f.name} className="border-b border-gray-800/60">
-                <td className="px-4 py-2 text-white">{f.name}</td>
-                <td className="px-4 py-2 text-gray-300 text-right tabular-nums">{usd(f.usd)}</td>
-                <td className="px-4 py-2 text-gray-300 text-right tabular-nums">
-                  {figure(f.payments)}
-                </td>
-                <td className="px-4 py-2 text-gray-400 text-right tabular-nums">
-                  {figure(f.addresses)}
-                </td>
-                <td className="px-4 py-2 text-gray-400">{formatDay(f.firstPayment)}</td>
-                <td className="px-4 py-2 text-gray-400">{formatDay(f.lastPayment)}</td>
+        <FoldWindow className="overflow-x-auto">
+          <table className="min-w-full text-sm" data-tic-fold="">
+            <thead>
+              <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
+                <th className="px-4 py-2">Family</th>
+                <th className="px-4 py-2 text-right">USD at time of payment</th>
+                <th className="px-4 py-2 text-right">Payments</th>
+                <th className="px-4 py-2 text-right">Addresses</th>
+                <th className="px-4 py-2">First payment</th>
+                <th className="px-4 py-2">Last payment</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {shown.map((f) => (
+                <tr key={f.name} className="border-b border-gray-800/60">
+                  <td className="px-4 py-2 text-white">{f.name}</td>
+                  <td className="px-4 py-2 text-gray-300 text-right tabular-nums">{usd(f.usd)}</td>
+                  <td className="px-4 py-2 text-gray-300 text-right tabular-nums">
+                    {figure(f.payments)}
+                  </td>
+                  <td className="px-4 py-2 text-gray-400 text-right tabular-nums">
+                    {figure(f.addresses)}
+                  </td>
+                  <td className="px-4 py-2 text-gray-400">{formatDay(f.firstPayment)}</td>
+                  <td className="px-4 py-2 text-gray-400">{formatDay(f.lastPayment)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </FoldWindow>
         {!shown.length && (
           <p className="p-4 text-sm text-gray-400">No named family matches that search.</p>
         )}

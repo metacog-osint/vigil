@@ -5,6 +5,7 @@ import { useState, useCallback } from 'react'
 import { iocs, vulnerabilities } from '../../lib/supabase'
 import { detectIOCType } from '../../lib/utils'
 import { SkeletonList } from '../../components/Skeleton'
+import { FoldWindow } from '../../components/common'
 
 const MAX_BULK_ITEMS = 1000
 
@@ -239,8 +240,8 @@ export default function BulkSearchContent() {
           {loading ? (
             <SkeletonList items={5} />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="cyber-table w-full">
+            <FoldWindow className="overflow-x-auto">
+              <table className="cyber-table w-full" data-tic-fold="">
                 <thead>
                   <tr>
                     <th>Status</th>
@@ -278,7 +279,7 @@ export default function BulkSearchContent() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </FoldWindow>
           )}
         </div>
       )}

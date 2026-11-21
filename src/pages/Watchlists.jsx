@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { watchlists as watchlistsApi } from '../lib/supabase'
 import { EmptyState, SkeletonCard, ErrorMessage, TimeAgo } from '../components'
+import { FoldWindow } from '../components/common'
 
 const ENTITY_TYPES = [
   { value: 'actor', label: 'Threat Actors', icon: '👤', color: 'bg-red-500' },
@@ -267,11 +268,13 @@ export default function Watchlists() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {watchlists.map((watchlist) => (
-            <WatchlistCard key={watchlist.id} watchlist={watchlist} onDelete={handleDelete} />
-          ))}
-        </div>
+        <FoldWindow>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-tic-fold="">
+            {watchlists.map((watchlist) => (
+              <WatchlistCard key={watchlist.id} watchlist={watchlist} onDelete={handleDelete} />
+            ))}
+          </div>
+        </FoldWindow>
       )}
 
       {/* Create Modal */}
