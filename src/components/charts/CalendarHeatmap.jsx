@@ -195,14 +195,16 @@ export default function CalendarHeatmap({
       ) : (
         <div className="overflow-x-auto">
           {/* Month labels */}
-          <div className="flex mb-1" style={{ marginLeft: labelWidth }}>
+          {/* The row is the labels' positioning box, so they scroll with the
+              grid instead of being placed against the page */}
+          <div className="relative h-4 mb-1" style={{ marginLeft: labelWidth }}>
             {monthLabels.map((label, i) => (
               <div
                 key={i}
                 className="text-xs text-gray-500"
                 style={{
                   position: 'absolute',
-                  left: `${labelWidth + label.weekIndex * (cellSize + cellGap)}px`,
+                  left: `${label.weekIndex * (cellSize + cellGap)}px`,
                 }}
               >
                 {label.month}
