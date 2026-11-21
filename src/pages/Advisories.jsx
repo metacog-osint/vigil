@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { SkeletonTable } from '../components/Skeleton'
 import { SeverityBadge } from '../components/SeverityBadge'
 import { NewBadge } from '../components/NewIndicator'
+import { FoldWindow } from '../components/common'
 
 // Map GHSA severity to our severity levels
 function mapSeverity(ghsaSeverity) {
@@ -163,8 +164,8 @@ export default function Advisories() {
               <p className="text-gray-500 text-sm">Run the GHSA ingestion to populate this data.</p>
             </div>
           ) : (
-            <div className="cyber-card overflow-x-auto">
-              <table className="cyber-table">
+            <FoldWindow className="cyber-card overflow-x-auto">
+              <table className="cyber-table" data-tic-fold="">
                 <thead>
                   <tr>
                     <th>Advisory</th>
@@ -212,7 +213,7 @@ export default function Advisories() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </FoldWindow>
           )}
         </div>
 

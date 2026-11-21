@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { upperMidwest, UPPER_MIDWEST, DISCLOSURE_SOURCES, COUNT_SCOPES } from '../lib/supabase'
 import { figure } from '../lib/format'
 import { fmt, fmtDate } from '../lib/time'
+import { FoldWindow } from '../components/common'
 
 const PAGE_SIZE = 50
 
@@ -136,8 +137,8 @@ function FilingLane({ lane, state }) {
         </div>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+      <FoldWindow className="overflow-x-auto">
+        <table className="w-full text-sm" data-tic-fold="">
           <thead>
             <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
               <th className="py-2 pr-4 font-medium">Organization</th>
@@ -193,7 +194,7 @@ function FilingLane({ lane, state }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </FoldWindow>
 
       {!loading && rows.length === 0 && !error && (
         <p className="text-gray-500 text-sm py-4">No filing in this lane for that state.</p>
@@ -226,8 +227,8 @@ function FilingLane({ lane, state }) {
 
 function ClaimTable({ rows, why }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <FoldWindow className="overflow-x-auto">
+      <table className="w-full text-sm" data-tic-fold="">
         <thead>
           <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
             <th className="py-2 pr-4 font-medium">Claimed victim</th>
@@ -254,7 +255,7 @@ function ClaimTable({ rows, why }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </FoldWindow>
   )
 }
 

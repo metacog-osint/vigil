@@ -25,6 +25,7 @@ import { fmtDate } from '../lib/time'
 import { useEffect, useState } from 'react'
 import { sanctions, SANCTIONS_PROGRAMS, SANCTIONS_VERDICTS } from '../lib/supabase'
 import { figure } from '../lib/format'
+import { FoldWindow } from '../components/common'
 
 function formatDate(value) {
   if (!value) return 'an unknown date'
@@ -185,8 +186,8 @@ function ActorLinks({ links }) {
         </p>
       )}
       {links?.length > 0 && (
-        <div className="cyber-card overflow-x-auto">
-          <table className="min-w-full text-sm">
+        <FoldWindow className="cyber-card overflow-x-auto">
+          <table className="min-w-full text-sm" data-tic-fold="">
             <thead>
               <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
                 <th className="px-4 py-2">Vigil actor</th>
@@ -221,7 +222,7 @@ function ActorLinks({ links }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </FoldWindow>
       )}
     </div>
   )
@@ -272,8 +273,8 @@ function Entities({ entities }) {
   return (
     <div className="space-y-2">
       <h2 className="text-lg font-medium text-white">Designated entities</h2>
-      <div className="cyber-card overflow-x-auto">
-        <table className="min-w-full text-sm">
+      <FoldWindow className="cyber-card overflow-x-auto">
+        <table className="min-w-full text-sm" data-tic-fold="">
           <thead>
             <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
               <th className="px-4 py-2">Entity</th>
@@ -306,7 +307,7 @@ function Entities({ entities }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </FoldWindow>
     </div>
   )
 }

@@ -15,6 +15,7 @@ import {
 } from '../../components'
 import { useDemo } from '../../contexts/DemoContext'
 import useDemoData from '../../hooks/useDemoData'
+import { FoldWindow } from '../../components/common'
 
 const IOC_TYPES = [
   { key: '', label: 'All Types' },
@@ -221,142 +222,144 @@ export default function IOCSearchContent() {
         ) : displayList.length === 0 ? (
           <EmptyIOCs />
         ) : (
-          <div className="space-y-2">
-            {displayList.map((ioc) => (
-              <div key={ioc.id} className="cyber-card">
-                <div className="flex flex-col md:flex-row md:items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className={getTypeBadge(ioc.type)}>
-                      {ioc.type.replace('hash_', '').toUpperCase()}
-                    </span>
-                    <span className={getConfidenceBadge(ioc.confidence)}>{ioc.confidence}</span>
-                  </div>
+          <FoldWindow>
+            <div className="space-y-2" data-tic-fold="">
+              {displayList.map((ioc) => (
+                <div key={ioc.id} className="cyber-card">
+                  <div className="flex flex-col md:flex-row md:items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className={getTypeBadge(ioc.type)}>
+                        {ioc.type.replace('hash_', '').toUpperCase()}
+                      </span>
+                      <span className={getConfidenceBadge(ioc.confidence)}>{ioc.confidence}</span>
+                    </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="font-mono text-sm text-white break-all">{ioc.value}</div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                      {ioc.malware_family && (
-                        <span className="text-orange-400">{ioc.malware_family}</span>
-                      )}
-                      {/* Groups reached through the reviewed family mapping, not a
+                    <div className="flex-1 min-w-0">
+                      <div className="font-mono text-sm text-white break-all">{ioc.value}</div>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                        {ioc.malware_family && (
+                          <span className="text-orange-400">{ioc.malware_family}</span>
+                        )}
+                        {/* Groups reached through the reviewed family mapping, not a
                           direct actor column - no feed sets one. */}
-                      {ioc.actor_names?.length > 0
-                        ? ioc.actor_names.map((name) => (
-                            <span key={name} className="text-cyber-accent">
-                              {name}
-                            </span>
-                          ))
-                        : ioc.threat_actor?.name && (
-                            <span className="text-cyber-accent">{ioc.threat_actor.name}</span>
-                          )}
-                      {/* Where the infrastructure sits, for the indicators that
+                        {ioc.actor_names?.length > 0
+                          ? ioc.actor_names.map((name) => (
+                              <span key={name} className="text-cyber-accent">
+                                {name}
+                              </span>
+                            ))
+                          : ioc.threat_actor?.name && (
+                              <span className="text-cyber-accent">{ioc.threat_actor.name}</span>
+                            )}
+                        {/* Where the infrastructure sits, for the indicators that
                           resolve to an address (migration 097) */}
-                      {ioc.country_code && (
-                        <span
-                          className="font-mono text-gray-300"
-                          title="Country the address is located in"
-                        >
-                          {ioc.country_code}
-                        </span>
-                      )}
-                      {ioc.sanctioned_by && (
-                        <span
-                          className="text-red-400"
-                          title={`OFAC designated: ${ioc.sanctioned_by}`}
-                        >
-                          OFAC: {ioc.sanctioned_by}
-                        </span>
-                      )}
-                      {ioc.sighting_count > 1 && <span>seen {ioc.sighting_count}×</span>}
-                      {ioc.tags?.length > 0 && <span>{ioc.tags.slice(0, 3).join(', ')}</span>}
+                        {ioc.country_code && (
+                          <span
+                            className="font-mono text-gray-300"
+                            title="Country the address is located in"
+                          >
+                            {ioc.country_code}
+                          </span>
+                        )}
+                        {ioc.sanctioned_by && (
+                          <span
+                            className="text-red-400"
+                            title={`OFAC designated: ${ioc.sanctioned_by}`}
+                          >
+                            OFAC: {ioc.sanctioned_by}
+                          </span>
+                        )}
+                        {ioc.sighting_count > 1 && <span>seen {ioc.sighting_count}×</span>}
+                        {ioc.tags?.length > 0 && <span>{ioc.tags.slice(0, 3).join(', ')}</span>}
+                      </div>
+                      <EnrichmentBadges metadata={ioc.metadata} ioc={ioc} />
                     </div>
-                    <EnrichmentBadges metadata={ioc.metadata} ioc={ioc} />
+
+                    <div className="text-right text-xs text-gray-500">
+                      <div>
+                        First:{' '}
+                        {ioc.first_seen
+                          ? formatDistanceToNow(new Date(ioc.first_seen), { addSuffix: true })
+                          : 'Unknown'}
+                      </div>
+                      <div>
+                        Last:{' '}
+                        {ioc.last_seen
+                          ? formatDistanceToNow(new Date(ioc.last_seen), { addSuffix: true })
+                          : 'Unknown'}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="text-right text-xs text-gray-500">
-                    <div>
-                      First:{' '}
-                      {ioc.first_seen
-                        ? formatDistanceToNow(new Date(ioc.first_seen), { addSuffix: true })
-                        : 'Unknown'}
-                    </div>
-                    <div>
-                      Last:{' '}
-                      {ioc.last_seen
-                        ? formatDistanceToNow(new Date(ioc.last_seen), { addSuffix: true })
-                        : 'Unknown'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-800">
-                  {ioc.type.includes('hash') && (
-                    <>
+                  {/* Actions */}
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-800">
+                    {ioc.type.includes('hash') && (
+                      <>
+                        <a
+                          href={`https://www.virustotal.com/gui/file/${ioc.value}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-cyber-accent hover:underline"
+                        >
+                          VirusTotal →
+                        </a>
+                        <a
+                          href={`https://bazaar.abuse.ch/browse.php?search=${ioc.value}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-cyber-accent hover:underline"
+                        >
+                          MalwareBazaar →
+                        </a>
+                      </>
+                    )}
+                    {ioc.type === 'ip' && (
+                      <>
+                        <a
+                          href={`https://www.abuseipdb.com/check/${ioc.value}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-cyber-accent hover:underline"
+                        >
+                          AbuseIPDB →
+                        </a>
+                        <a
+                          href={`https://www.shodan.io/host/${ioc.value}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-cyber-accent hover:underline"
+                        >
+                          Shodan →
+                        </a>
+                      </>
+                    )}
+                    {ioc.type === 'domain' && (
                       <a
-                        href={`https://www.virustotal.com/gui/file/${ioc.value}`}
+                        href={`https://www.virustotal.com/gui/domain/${ioc.value}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-cyber-accent hover:underline"
                       >
                         VirusTotal →
                       </a>
+                    )}
+                    {ioc.source_url && (
                       <a
-                        href={`https://bazaar.abuse.ch/browse.php?search=${ioc.value}`}
+                        href={ioc.source_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-cyber-accent hover:underline"
+                        className="text-xs text-gray-400 hover:underline ml-auto"
                       >
-                        MalwareBazaar →
+                        Source: {ioc.source}
                       </a>
-                    </>
-                  )}
-                  {ioc.type === 'ip' && (
-                    <>
-                      <a
-                        href={`https://www.abuseipdb.com/check/${ioc.value}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-cyber-accent hover:underline"
-                      >
-                        AbuseIPDB →
-                      </a>
-                      <a
-                        href={`https://www.shodan.io/host/${ioc.value}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-cyber-accent hover:underline"
-                      >
-                        Shodan →
-                      </a>
-                    </>
-                  )}
-                  {ioc.type === 'domain' && (
-                    <a
-                      href={`https://www.virustotal.com/gui/domain/${ioc.value}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-cyber-accent hover:underline"
-                    >
-                      VirusTotal →
-                    </a>
-                  )}
-                  {ioc.source_url && (
-                    <a
-                      href={ioc.source_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-gray-400 hover:underline ml-auto"
-                    >
-                      Source: {ioc.source}
-                    </a>
-                  )}
-                </div>
+                    )}
+                  </div>
 
-                <EnrichmentPanel ioc={ioc} />
-              </div>
-            ))}
-          </div>
+                  <EnrichmentPanel ioc={ioc} />
+                </div>
+              ))}
+            </div>
+          </FoldWindow>
         )}
       </div>
     </div>

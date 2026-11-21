@@ -17,6 +17,7 @@ import {
   SeverityBadge,
   ExportButton,
 } from '../components'
+import { FoldWindow } from '../components/common'
 
 const ENTITY_TYPES = [
   { value: 'actors', label: 'Threat Actors', table: 'threat_actors' },
@@ -237,11 +238,13 @@ export default function AdvancedSearch() {
       ) : results.length === 0 && query ? (
         <EmptySearch query={query} />
       ) : (
-        <div className="space-y-2">
-          {results.map((item, i) => (
-            <ResultCard key={item.id || i} item={item} entityType={entityType} />
-          ))}
-        </div>
+        <FoldWindow>
+          <div className="space-y-2" data-tic-fold="">
+            {results.map((item, i) => (
+              <ResultCard key={item.id || i} item={item} entityType={entityType} />
+            ))}
+          </div>
+        </FoldWindow>
       )}
 
       {/* Pagination */}

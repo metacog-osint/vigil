@@ -5,6 +5,7 @@ import { SkeletonTable } from '../components/Skeleton'
 import { EmptyState } from '../components/EmptyState'
 import { AttackMatrixHeatmap } from '../components/AttackMatrixHeatmap'
 import { TechniqueActorsPanel } from '../components/panels'
+import { FoldWindow } from '../components/common'
 
 const TACTICS = [
   'Reconnaissance',
@@ -257,8 +258,8 @@ export default function Techniques() {
                 description="Run the MITRE ATT&CK ingestion script to populate techniques, or adjust your search criteria."
               />
             ) : (
-              <div className="cyber-card overflow-hidden">
-                <table className="cyber-table">
+              <FoldWindow className="cyber-card overflow-hidden">
+                <table className="cyber-table" data-tic-fold="">
                   <thead>
                     <tr>
                       <th>ID</th>
@@ -333,7 +334,7 @@ export default function Techniques() {
                       ))}
                   </tbody>
                 </table>
-              </div>
+              </FoldWindow>
             )}
           </div>
 

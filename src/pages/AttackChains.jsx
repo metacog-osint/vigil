@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom'
 import { correlations } from '../lib/supabase'
 import { useDemo } from '../contexts/DemoContext'
 import useDemoData from '../hooks/useDemoData'
+import { FoldWindow } from '../components/common'
 
 const CONFIDENCE_COLORS = {
   high: 'bg-green-900/50 text-green-400 border-green-700/50',
@@ -488,16 +489,18 @@ export default function AttackChains() {
         </div>
       ) : (
         <div className="flex gap-6">
-          <div className="flex-1 space-y-4">
-            {filteredChains.map((chain) => (
-              <AttackChainCard
-                key={chain.id}
-                chain={chain}
-                onSelect={setSelectedChain}
-                isSelected={selectedChain?.id === chain.id}
-              />
-            ))}
-          </div>
+          <FoldWindow outerClassName="flex-1 min-w-0">
+            <div className="space-y-4" data-tic-fold="">
+              {filteredChains.map((chain) => (
+                <AttackChainCard
+                  key={chain.id}
+                  chain={chain}
+                  onSelect={setSelectedChain}
+                  isSelected={selectedChain?.id === chain.id}
+                />
+              ))}
+            </div>
+          </FoldWindow>
 
           {selectedChain && (
             <ChainDetailPanel chain={selectedChain} onClose={() => setSelectedChain(null)} />

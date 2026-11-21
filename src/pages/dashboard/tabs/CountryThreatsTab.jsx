@@ -11,6 +11,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { correlations } from '../../../lib/supabase'
 import { SkeletonTable, CoverageNote } from '../../../components'
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps'
+import { FoldWindow } from '../../../components/common'
 
 // ISO-2 to ISO-3 mapping for common countries
 const ISO2_TO_ISO3 = {
@@ -405,8 +406,8 @@ export default function CountryThreatsTab({ countryThreats, loading }) {
 
       {/* Country Table + Detail */}
       <div className="flex gap-6">
-        <div className="flex-1 cyber-card overflow-hidden">
-          <table className="cyber-table">
+        <FoldWindow className="flex-1 cyber-card overflow-hidden" outerClassName="flex-1 min-w-0">
+          <table className="cyber-table" data-tic-fold="">
             <thead>
               <tr>
                 <th>Country</th>
@@ -426,7 +427,7 @@ export default function CountryThreatsTab({ countryThreats, loading }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </FoldWindow>
 
         {selectedCountry && (
           <CountryDetailPanel country={selectedCountry} onClose={() => setSelectedCountry(null)} />
