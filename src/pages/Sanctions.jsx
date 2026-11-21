@@ -244,25 +244,27 @@ function Decisions({ decisions }) {
           queue.
         </p>
       )}
-      <div className="space-y-2">
-        {(decisions ?? []).map((d) => (
-          <div
-            key={`${d.actor_key}-${d.entity_uid}`}
-            className={`cyber-card p-4 ${d.verdict === 'rejected' ? 'border-amber-800/50' : ''}`}
-          >
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="text-white font-mono text-sm">{d.actor_key}</span>
-              <span className={d.verdict === 'confirmed' ? 'badge-low' : 'badge-medium'}>
-                {SANCTIONS_VERDICTS[d.verdict] ?? d.verdict}
-              </span>
+      <FoldWindow>
+        <div className="space-y-2" data-tic-fold="">
+          {(decisions ?? []).map((d) => (
+            <div
+              key={`${d.actor_key}-${d.entity_uid}`}
+              className={`cyber-card p-4 ${d.verdict === 'rejected' ? 'border-amber-800/50' : ''}`}
+            >
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-white font-mono text-sm">{d.actor_key}</span>
+                <span className={d.verdict === 'confirmed' ? 'badge-low' : 'badge-medium'}>
+                  {SANCTIONS_VERDICTS[d.verdict] ?? d.verdict}
+                </span>
+              </div>
+              {d.rationale && <p className="text-sm text-gray-300 mt-2">{d.rationale}</p>}
+              <p className="text-xs text-gray-500 mt-2">
+                {d.decided_by ? `Decided by ${d.decided_by}` : 'No decider recorded'}
+              </p>
             </div>
-            {d.rationale && <p className="text-sm text-gray-300 mt-2">{d.rationale}</p>}
-            <p className="text-xs text-gray-500 mt-2">
-              {d.decided_by ? `Decided by ${d.decided_by}` : 'No decider recorded'}
-            </p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </FoldWindow>
     </div>
   )
 }
