@@ -47,3 +47,6 @@ nul
 
 # Wrangler local state (workers/)
 .wrangler/
+
+# Claude Code local permissions (per machine, never shared)
+.claude/settings.local.json
