@@ -149,13 +149,24 @@ export default function ActorRelationshipGraph({
   const containerRef = useRef(null)
   const [dimensions, setDimensions] = useState({ width: 800, height: 500 })
 
-  // Get container dimensions
+  // Lay the graph out for the box it is really in. The box only exists once
+  // loading ends, so measure then, and again whenever its width changes.
   useEffect(() => {
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect()
-      setDimensions({ width: rect.width, height })
+    const el = containerRef.current
+    if (!el) return undefined
+
+    const measure = () => {
+      const width = Math.round(el.getBoundingClientRect().width)
+      if (width <= 0) return
+      setDimensions((d) => (d.width === width && d.height === height ? d : { width, height }))
     }
-  }, [height])
+
+    measure()
+    if (typeof ResizeObserver === 'undefined') return undefined
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [height, loading])
 
   // Fetch actors
   useEffect(() => {
@@ -285,8 +296,8 @@ export default function ActorRelationshipGraph({
   return (
     <div className="space-y-4">
       {/* Legend */}
-      <div className="flex items-center justify-between text-xs">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {Object.entries(TYPE_COLORS)
             .filter(([k]) => k !== 'default')
             .map(([type, color]) => (
