@@ -13,6 +13,7 @@ import {
   HEALTH_FEEDS,
   windowStarts,
 } from './_lib/doctrineFeed.js'
+import { buildStixBundle, loadStixRows, parseDays, STIX_DAYS } from './_lib/stixFeed.js'
 
 export const config = { runtime: 'edge' }
 
@@ -50,6 +51,29 @@ export default async function handler(request) {
   if (!base || !key) return json(503, { error: 'Feed not configured' })
 
   const now = new Date()
+  const params = new URL(request.url).searchParams
+  if (params.get('format') === 'stix') {
+    const days = parseDays(params.get('days'))
+    if (days === null) {
+      return json(400, { error: `days must be one of ${STIX_DAYS.join(', ')}` })
+    }
+    try {
+      const rows = await loadStixRows((path, opts) => rest(base, key, path, opts), days, now)
+      const bundle = await buildStixBundle(rows, now)
+      return new Response(JSON.stringify(bundle), {
+        status: 200,
+        headers: {
+          ...CORS,
+          'Content-Type': 'application/stix+json;version=2.1',
+          'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=3600',
+        },
+      })
+    } catch (err) {
+      console.error('feed: STIX build failed', err)
+      return json(503, { error: 'Feed temporarily unavailable' })
+    }
+  }
+
   // The summary names each window by these same dates.
   const since = windowStarts(now)
   try {
