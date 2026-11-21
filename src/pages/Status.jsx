@@ -13,6 +13,7 @@ import {
   getTimeRelative,
 } from '../lib/status'
 import { SmartTime } from '../components/TimeDisplay'
+import { FoldWindow } from '../components/common'
 
 // The uptime target this page measures against.
 const SLA_TARGET = 99.9
@@ -95,9 +96,13 @@ export default function Status() {
       {incidents && incidents.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-white">Active Incidents</h2>
-          {incidents.map((incident) => (
-            <IncidentCard key={incident.id} incident={incident} />
-          ))}
+          <FoldWindow>
+            <div className="space-y-4" data-tic-fold="">
+              {incidents.map((incident) => (
+                <IncidentCard key={incident.id} incident={incident} />
+              ))}
+            </div>
+          </FoldWindow>
         </div>
       )}
 
@@ -105,9 +110,13 @@ export default function Status() {
       {maintenance && maintenance.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-white">Scheduled Maintenance</h2>
-          {maintenance.map((maint) => (
-            <MaintenanceCard key={maint.id} maintenance={maint} />
-          ))}
+          <FoldWindow>
+            <div className="space-y-4" data-tic-fold="">
+              {maintenance.map((maint) => (
+                <MaintenanceCard key={maint.id} maintenance={maint} />
+              ))}
+            </div>
+          </FoldWindow>
         </div>
       )}
 
@@ -149,9 +158,13 @@ export default function Status() {
               No incidents in the past 30 days
             </div>
           ) : (
-            recentIncidents.map((incident) => (
-              <IncidentHistoryCard key={incident.id} incident={incident} />
-            ))
+            <FoldWindow>
+              <div className="space-y-4" data-tic-fold="">
+                {recentIncidents.map((incident) => (
+                  <IncidentHistoryCard key={incident.id} incident={incident} />
+                ))}
+              </div>
+            </FoldWindow>
           )}
         </div>
       )}
@@ -280,11 +293,13 @@ function ComponentGroup({ name, components }) {
       <div className="px-4 py-3 bg-gray-800/50 border-b border-gray-700">
         <h3 className="font-medium text-white">{name}</h3>
       </div>
-      <div className="divide-y divide-gray-800">
-        {components.map((component) => (
-          <ComponentRow key={component.id} component={component} />
-        ))}
-      </div>
+      <FoldWindow>
+        <div className="divide-y divide-gray-800" data-tic-fold="">
+          {components.map((component) => (
+            <ComponentRow key={component.id} component={component} />
+          ))}
+        </div>
+      </FoldWindow>
     </div>
   )
 }
