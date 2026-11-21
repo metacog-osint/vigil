@@ -20,6 +20,7 @@ import {
   Pie,
   Cell,
 } from 'recharts'
+import { FoldWindow } from './common'
 
 const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#6366f1']
 
@@ -236,8 +237,8 @@ export default function AnalyticsDashboard() {
             At-Risk Users
             <span className="ml-2 text-sm text-red-400">({atRiskUsers.length})</span>
           </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <FoldWindow className="overflow-x-auto">
+            <table className="w-full" data-tic-fold="">
               <thead>
                 <tr className="border-b border-gray-700">
                   <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">User ID</th>
@@ -271,7 +272,7 @@ export default function AnalyticsDashboard() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </FoldWindow>
         </div>
       )}
     </div>

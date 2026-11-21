@@ -24,6 +24,7 @@ import {
 } from '../lib/alerts'
 import { formatDistanceToNow } from 'date-fns'
 import { Tooltip } from './Tooltip'
+import { FoldWindow } from './common'
 
 const TIMEZONES = [
   { value: 'UTC', label: 'UTC' },
@@ -905,58 +906,60 @@ export default function AlertSettingsSection() {
                       </p>
                     </div>
                   ) : (
-                    <table className="w-full">
-                      <thead>
-                        <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
-                          <th className="pb-2 font-medium">Time</th>
-                          <th className="pb-2 font-medium">Event</th>
-                          <th className="pb-2 font-medium">Status</th>
-                          <th className="pb-2 font-medium">Response</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-800/50">
-                        {deliveryLogs.map((log) => (
-                          <tr key={log.id} className="text-sm">
-                            <td className="py-3 text-gray-400">
-                              {log.queued_at
-                                ? formatDistanceToNow(new Date(log.queued_at), {
-                                    addSuffix: true,
-                                  })
-                                : '—'}
-                            </td>
-                            <td className="py-3 text-gray-300">{log.event_type || '—'}</td>
-                            <td className="py-3">
-                              <span
-                                className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded ${
-                                  log.status === 'delivered' || log.status === 'sent'
-                                    ? 'bg-green-500/20 text-green-400'
-                                    : log.status === 'failed'
-                                      ? 'bg-red-500/20 text-red-400'
-                                      : log.status === 'pending' || log.status === 'queued'
-                                        ? 'bg-yellow-500/20 text-yellow-400'
-                                        : 'bg-gray-500/20 text-gray-400'
-                                }`}
-                              >
-                                {log.status === 'delivered' || log.status === 'sent'
-                                  ? '✓'
-                                  : log.status === 'failed'
-                                    ? '✗'
-                                    : '○'}{' '}
-                                {log.status}
-                              </span>
-                            </td>
-                            <td className="py-3 text-gray-500 text-xs font-mono">
-                              {log.response_code ? `HTTP ${log.response_code}` : '—'}
-                              {log.retry_count > 0 && (
-                                <span className="ml-2 text-yellow-500">
-                                  ({log.retry_count} retries)
-                                </span>
-                              )}
-                            </td>
+                    <FoldWindow className="overflow-x-auto">
+                      <table className="w-full" data-tic-fold="">
+                        <thead>
+                          <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
+                            <th className="pb-2 font-medium">Time</th>
+                            <th className="pb-2 font-medium">Event</th>
+                            <th className="pb-2 font-medium">Status</th>
+                            <th className="pb-2 font-medium">Response</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800/50">
+                          {deliveryLogs.map((log) => (
+                            <tr key={log.id} className="text-sm">
+                              <td className="py-3 text-gray-400">
+                                {log.queued_at
+                                  ? formatDistanceToNow(new Date(log.queued_at), {
+                                      addSuffix: true,
+                                    })
+                                  : '—'}
+                              </td>
+                              <td className="py-3 text-gray-300">{log.event_type || '—'}</td>
+                              <td className="py-3">
+                                <span
+                                  className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded ${
+                                    log.status === 'delivered' || log.status === 'sent'
+                                      ? 'bg-green-500/20 text-green-400'
+                                      : log.status === 'failed'
+                                        ? 'bg-red-500/20 text-red-400'
+                                        : log.status === 'pending' || log.status === 'queued'
+                                          ? 'bg-yellow-500/20 text-yellow-400'
+                                          : 'bg-gray-500/20 text-gray-400'
+                                  }`}
+                                >
+                                  {log.status === 'delivered' || log.status === 'sent'
+                                    ? '✓'
+                                    : log.status === 'failed'
+                                      ? '✗'
+                                      : '○'}{' '}
+                                  {log.status}
+                                </span>
+                              </td>
+                              <td className="py-3 text-gray-500 text-xs font-mono">
+                                {log.response_code ? `HTTP ${log.response_code}` : '—'}
+                                {log.retry_count > 0 && (
+                                  <span className="ml-2 text-yellow-500">
+                                    ({log.retry_count} retries)
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </FoldWindow>
                   )}
                 </div>
 

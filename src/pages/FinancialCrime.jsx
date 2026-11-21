@@ -18,6 +18,7 @@ import { fmtDate } from '../lib/time'
 import { useEffect, useState } from 'react'
 import { advisoryRegister, ADVISORY_KINDS, ADVISORY_SOURCES } from '../lib/supabase'
 import { figure } from '../lib/format'
+import { FoldWindow } from '../components/common'
 
 const PAGE_SIZE = 50
 
@@ -253,8 +254,8 @@ export default function FinancialCrime() {
             )}
           </p>
 
-          <div className="cyber-card overflow-x-auto">
-            <table className="w-full text-sm">
+          <FoldWindow className="cyber-card overflow-x-auto">
+            <table className="w-full text-sm" data-tic-fold="">
               <thead>
                 <tr className="text-left text-xs text-gray-500">
                   <th className="py-2 px-3 font-normal">Identifier</th>
@@ -270,7 +271,7 @@ export default function FinancialCrime() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </FoldWindow>
 
           {rows.length === 0 && <p className="text-gray-500">Nothing matches that.</p>}
 

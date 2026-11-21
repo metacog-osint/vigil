@@ -20,6 +20,7 @@ import { fmtDate } from '../lib/time'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { disclosures, DISCLOSURE_SOURCES, COUNT_SCOPES } from '../lib/supabase'
 import { figure } from '../lib/format'
+import { FoldWindow } from '../components/common'
 
 const PAGE_SIZE = 50
 
@@ -298,8 +299,8 @@ export default function Disclosures() {
           {appliedSearch && ` Filtered to names containing "${appliedSearch}".`}
         </p>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <FoldWindow className="overflow-x-auto">
+          <table className="w-full text-sm" data-tic-fold="">
             <thead>
               <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
                 <th className="py-2 pr-4 font-medium">Organisation</th>
@@ -354,7 +355,7 @@ export default function Disclosures() {
               ))}
             </tbody>
           </table>
-        </div>
+        </FoldWindow>
 
         {!loading && rows.length === 0 && !error && (
           <p className="text-gray-500 text-sm py-8 text-center">No filing matches those filters.</p>

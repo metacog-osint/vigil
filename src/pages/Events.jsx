@@ -29,6 +29,7 @@ import {
   BarChart,
   Bar,
 } from 'recharts'
+import { FoldWindow } from '../components/common'
 
 const TIME_RANGES = [
   { label: '7d', value: 7 },
@@ -436,8 +437,8 @@ function TableView({
 
   return (
     <div className="cyber-card overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="cyber-table w-full">
+      <FoldWindow className="overflow-x-auto">
+        <table className="cyber-table w-full" data-tic-fold="">
           <thead>
             <tr>
               <th className="w-24">Type</th>
@@ -499,7 +500,7 @@ function TableView({
             ))}
           </tbody>
         </table>
-      </div>
+      </FoldWindow>
 
       {/* Load more */}
       {events.length < totalCount && (

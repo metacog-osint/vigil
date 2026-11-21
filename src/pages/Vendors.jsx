@@ -14,6 +14,7 @@ import {
 } from '../lib/vendors'
 import { SmartTime } from '../components/TimeDisplay'
 import { calendarDay } from '../lib/format'
+import { FoldWindow } from '../components/common'
 
 const RISK_COLORS = {
   critical: 'bg-red-500',
@@ -204,20 +205,26 @@ export default function Vendors() {
         </div>
       ) : view === 'grid' ? (
         /* Grid View */
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredVendors.map((vendor) => (
-            <VendorCard key={vendor.id} vendor={vendor} onClick={() => setSelectedVendor(vendor)} />
-          ))}
-          {filteredVendors.length === 0 && (
-            <div className="col-span-full text-center text-gray-500 py-8">
-              No vendors match the filters
-            </div>
-          )}
-        </div>
+        <FoldWindow>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4" data-tic-fold="">
+            {filteredVendors.map((vendor) => (
+              <VendorCard
+                key={vendor.id}
+                vendor={vendor}
+                onClick={() => setSelectedVendor(vendor)}
+              />
+            ))}
+            {filteredVendors.length === 0 && (
+              <div className="col-span-full text-center text-gray-500 py-8">
+                No vendors match the filters
+              </div>
+            )}
+          </div>
+        </FoldWindow>
       ) : (
         /* List View */
-        <div className="cyber-card overflow-hidden">
-          <table className="cyber-table w-full">
+        <FoldWindow className="cyber-card overflow-hidden">
+          <table className="cyber-table w-full" data-tic-fold="">
             <thead>
               <tr>
                 <th className="text-left">Vendor</th>
@@ -266,7 +273,7 @@ export default function Vendors() {
               ))}
             </tbody>
           </table>
-        </div>
+        </FoldWindow>
       )}
 
       {/* Vendor Detail Modal */}

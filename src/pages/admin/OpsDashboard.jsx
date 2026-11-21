@@ -9,6 +9,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { syncLog } from '../../lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
 import { isSystemAdmin } from '../../lib/adminAuth'
+import { FoldWindow } from '../../components/common'
 
 // Status badge component
 function StatusBadge({ status }) {
@@ -171,31 +172,33 @@ function SourceHistoryModal({ source, history, onClose }) {
           {history?.length === 0 ? (
             <div className="text-center py-8 text-gray-500">No history available</div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-gray-400 text-sm border-b border-gray-700">
-                  <th className="pb-2">Time</th>
-                  <th className="pb-2">Status</th>
-                  <th className="pb-2">Processed</th>
-                  <th className="pb-2">Added</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history?.map((log) => (
-                  <tr key={log.id} className="border-b border-gray-800">
-                    <td className="py-2 text-sm text-gray-300">{fmt(log.completed_at)}</td>
-                    <td className="py-2">
-                      <StatusBadge status={log.status} />
-                    </td>
-                    <td className="py-2 text-sm text-gray-400">{log.records_processed || 0}</td>
-                    <td className="py-2 text-sm text-gray-400">
-                      {/* null: the job cannot say what was new (worker, 15 Nov 2026) */}
-                      {log.records_added ?? '—'}
-                    </td>
+            <FoldWindow className="overflow-x-auto">
+              <table className="w-full" data-tic-fold="">
+                <thead>
+                  <tr className="text-left text-gray-400 text-sm border-b border-gray-700">
+                    <th className="pb-2">Time</th>
+                    <th className="pb-2">Status</th>
+                    <th className="pb-2">Processed</th>
+                    <th className="pb-2">Added</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {history?.map((log) => (
+                    <tr key={log.id} className="border-b border-gray-800">
+                      <td className="py-2 text-sm text-gray-300">{fmt(log.completed_at)}</td>
+                      <td className="py-2">
+                        <StatusBadge status={log.status} />
+                      </td>
+                      <td className="py-2 text-sm text-gray-400">{log.records_processed || 0}</td>
+                      <td className="py-2 text-sm text-gray-400">
+                        {/* null: the job cannot say what was new (worker, 15 Nov 2026) */}
+                        {log.records_added ?? '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </FoldWindow>
           )}
         </div>
       </div>
@@ -374,8 +377,8 @@ export default function OpsDashboard() {
               <div className="p-4 border-b border-gray-700">
                 <h2 className="font-bold text-white">Data Sources Status</h2>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <FoldWindow className="overflow-x-auto">
+                <table className="w-full" data-tic-fold="">
                   <thead>
                     <tr className="text-left text-gray-400 text-sm border-b border-gray-700">
                       <th className="py-3 px-4">Source</th>
@@ -410,7 +413,7 @@ export default function OpsDashboard() {
                     )}
                   </tbody>
                 </table>
-              </div>
+              </FoldWindow>
             </div>
 
             {/* Recent Errors */}

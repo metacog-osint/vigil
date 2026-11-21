@@ -9,6 +9,7 @@ import {
   ACTIONS,
 } from '../lib/auditLogs'
 import { SmartTime } from '../components/TimeDisplay'
+import { FoldWindow } from '../components/common'
 
 const TIME_RANGES = [
   { value: 7, label: '7 days' },
@@ -421,8 +422,8 @@ export default function AuditLogs() {
                 No audit logs found for the selected filters.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="cyber-table w-full">
+              <FoldWindow className="overflow-x-auto">
+                <table className="cyber-table w-full" data-tic-fold="">
                   <thead>
                     <tr>
                       <th className="text-left">Timestamp</th>
@@ -461,7 +462,7 @@ export default function AuditLogs() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </FoldWindow>
             )}
           </div>
 

@@ -20,6 +20,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from 'recharts'
+import { FoldWindow } from '../../../components/common'
 
 const ACTOR_TYPE_COLORS = {
   'Nation-State': '#ef4444',
@@ -254,8 +255,8 @@ export default function IndustryThreatsTab({ industryThreats, loading }) {
 
       {/* Industry Table + Detail */}
       <div className="flex gap-6">
-        <div className="flex-1 cyber-card overflow-hidden">
-          <table className="cyber-table">
+        <FoldWindow className="flex-1 cyber-card overflow-hidden" outerClassName="flex-1 min-w-0">
+          <table className="cyber-table" data-tic-fold="">
             <thead>
               <tr>
                 <th>Industry</th>
@@ -279,7 +280,7 @@ export default function IndustryThreatsTab({ industryThreats, loading }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </FoldWindow>
 
         {selectedIndustry && (
           <IndustryDetailPanel
