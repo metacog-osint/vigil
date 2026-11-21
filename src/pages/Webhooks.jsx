@@ -9,6 +9,7 @@ import {
   validateWebhookUrl,
 } from '../lib/webhooks'
 import { SmartTime } from '../components/TimeDisplay'
+import { FoldWindow } from '../components/common'
 
 const STATUS_COLORS = {
   success: 'bg-green-500',
@@ -122,28 +123,32 @@ export default function Webhooks() {
               </button>
             </div>
           ) : (
-            hookList.map((hook) => (
-              <div
-                key={hook.id}
-                onClick={() => setSelectedHook(hook)}
-                className={`cyber-card p-3 cursor-pointer transition-colors ${
-                  selectedHook?.id === hook.id ? 'border-cyber-accent' : 'hover:border-gray-700'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-white truncate">{hook.name}</span>
-                  <span
-                    className={`w-2 h-2 rounded-full ${hook.is_enabled ? 'bg-green-500' : 'bg-gray-500'}`}
-                  />
-                </div>
-                <div className="text-xs text-gray-500 truncate">{hook.url}</div>
-                <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
-                  <span>{hook.events?.length || 0} events</span>
-                  <span>•</span>
-                  <span>{hook.total_sent || 0} sent</span>
-                </div>
+            <FoldWindow>
+              <div className="space-y-2" data-tic-fold="">
+                {hookList.map((hook) => (
+                  <div
+                    key={hook.id}
+                    onClick={() => setSelectedHook(hook)}
+                    className={`cyber-card p-3 cursor-pointer transition-colors ${
+                      selectedHook?.id === hook.id ? 'border-cyber-accent' : 'hover:border-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium text-white truncate">{hook.name}</span>
+                      <span
+                        className={`w-2 h-2 rounded-full ${hook.is_enabled ? 'bg-green-500' : 'bg-gray-500'}`}
+                      />
+                    </div>
+                    <div className="text-xs text-gray-500 truncate">{hook.url}</div>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                      <span>{hook.events?.length || 0} events</span>
+                      <span>•</span>
+                      <span>{hook.total_sent || 0} sent</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))
+            </FoldWindow>
           )}
         </div>
 
