@@ -8,7 +8,7 @@ import { fmtDate } from '../lib/time'
 
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { Skeleton } from './common'
+import { Skeleton, FoldWindow } from './common'
 
 // ============================================
 // CONSTANTS
@@ -232,8 +232,8 @@ function NoisyRulesTable({ rules, onDisableRule }) {
       {rules.length === 0 ? (
         <p className="text-sm text-gray-500">No noisy rules detected</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <FoldWindow className="overflow-x-auto">
+          <table className="w-full text-sm" data-tic-fold="">
             <thead>
               <tr className="text-left text-gray-400 border-b border-gray-700">
                 <th className="pb-2">Rule Name</th>
@@ -264,7 +264,7 @@ function NoisyRulesTable({ rules, onDisableRule }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </FoldWindow>
       )}
     </div>
   )

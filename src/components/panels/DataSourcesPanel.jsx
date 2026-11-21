@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { dataSources } from '../../lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
+import { FoldWindow } from '../common'
 
 export default function DataSourcesPanel() {
   const [sources, setSources] = useState([])
@@ -123,8 +124,8 @@ export default function DataSourcesPanel() {
           <span className="text-xs text-gray-500">Updates every 6 hours via GitHub Actions</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <FoldWindow className="overflow-x-auto">
+          <table className="w-full text-sm" data-tic-fold="">
             <thead>
               <tr className="text-gray-400 text-left border-b border-gray-700">
                 <th className="pb-2 font-medium">Source</th>
@@ -154,7 +155,7 @@ export default function DataSourcesPanel() {
               ))}
             </tbody>
           </table>
-        </div>
+        </FoldWindow>
       </div>
 
       {/* Manual Sources */}
@@ -199,8 +200,8 @@ export default function DataSourcesPanel() {
         </div>
 
         {manualSources.length > 0 && (
-          <div className="mt-4">
-            <table className="w-full text-sm">
+          <FoldWindow className="mt-4">
+            <table className="w-full text-sm" data-tic-fold="">
               <tbody>
                 {manualSources.map((source) => (
                   <tr key={source.id} className="text-gray-300 border-t border-gray-700/50">
@@ -216,7 +217,7 @@ export default function DataSourcesPanel() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </FoldWindow>
         )}
       </div>
 

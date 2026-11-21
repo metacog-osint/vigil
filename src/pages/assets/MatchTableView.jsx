@@ -5,6 +5,7 @@ import { MATCH_TYPES } from '../../lib/assets'
 import SeverityBadge from '../../components/SeverityBadge'
 import { SmartTime } from '../../components/TimeDisplay'
 import { MatchStatusBadge } from './AssetConstants.jsx'
+import { FoldWindow } from '../../components/common'
 
 export default function MatchTableView({ matches, onSelectMatch }) {
   if (matches.length === 0) {
@@ -32,8 +33,8 @@ export default function MatchTableView({ matches, onSelectMatch }) {
   }
 
   return (
-    <div className="cyber-card overflow-hidden">
-      <table className="w-full">
+    <FoldWindow className="cyber-card overflow-hidden">
+      <table className="w-full" data-tic-fold="">
         <thead className="bg-gray-900/50">
           <tr>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
@@ -89,6 +90,6 @@ export default function MatchTableView({ matches, onSelectMatch }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </FoldWindow>
   )
 }

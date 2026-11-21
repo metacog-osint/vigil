@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { threatHunts } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { ThreatHuntCard, Tooltip } from '../components'
+import { FoldWindow } from '../components/common'
 
 const CONFIDENCE_FILTERS = [
   { value: '', label: 'All Confidence' },
@@ -264,18 +265,20 @@ export default function ThreatHunts() {
                 <span className="text-cyan-400">In Progress</span>
                 <span className="text-sm text-gray-500">({inProgressHunts.length})</span>
               </h2>
-              <div className="space-y-3">
-                {inProgressHunts.map((hunt) => (
-                  <ThreatHuntCard
-                    key={hunt.id}
-                    hunt={hunt}
-                    userId={userId}
-                    progress={userProgress[hunt.id]}
-                    onProgressUpdate={handleProgressUpdate}
-                    expanded={true}
-                  />
-                ))}
-              </div>
+              <FoldWindow>
+                <div className="space-y-3" data-tic-fold="">
+                  {inProgressHunts.map((hunt) => (
+                    <ThreatHuntCard
+                      key={hunt.id}
+                      hunt={hunt}
+                      userId={userId}
+                      progress={userProgress[hunt.id]}
+                      onProgressUpdate={handleProgressUpdate}
+                      expanded={true}
+                    />
+                  ))}
+                </div>
+              </FoldWindow>
             </div>
           )}
 
@@ -286,17 +289,19 @@ export default function ThreatHunts() {
                 <span>Available Hunts</span>
                 <span className="text-sm text-gray-500">({notStartedHunts.length})</span>
               </h2>
-              <div className="space-y-3">
-                {notStartedHunts.map((hunt) => (
-                  <ThreatHuntCard
-                    key={hunt.id}
-                    hunt={hunt}
-                    userId={userId}
-                    progress={userProgress[hunt.id]}
-                    onProgressUpdate={handleProgressUpdate}
-                  />
-                ))}
-              </div>
+              <FoldWindow>
+                <div className="space-y-3" data-tic-fold="">
+                  {notStartedHunts.map((hunt) => (
+                    <ThreatHuntCard
+                      key={hunt.id}
+                      hunt={hunt}
+                      userId={userId}
+                      progress={userProgress[hunt.id]}
+                      onProgressUpdate={handleProgressUpdate}
+                    />
+                  ))}
+                </div>
+              </FoldWindow>
             </div>
           )}
 
@@ -307,17 +312,19 @@ export default function ThreatHunts() {
                 <span className="text-green-400">Completed</span>
                 <span className="text-sm text-gray-500">({completedHunts.length})</span>
               </h2>
-              <div className="space-y-3">
-                {completedHunts.map((hunt) => (
-                  <ThreatHuntCard
-                    key={hunt.id}
-                    hunt={hunt}
-                    userId={userId}
-                    progress={userProgress[hunt.id]}
-                    onProgressUpdate={handleProgressUpdate}
-                  />
-                ))}
-              </div>
+              <FoldWindow>
+                <div className="space-y-3" data-tic-fold="">
+                  {completedHunts.map((hunt) => (
+                    <ThreatHuntCard
+                      key={hunt.id}
+                      hunt={hunt}
+                      userId={userId}
+                      progress={userProgress[hunt.id]}
+                      onProgressUpdate={handleProgressUpdate}
+                    />
+                  ))}
+                </div>
+              </FoldWindow>
             </div>
           )}
         </div>

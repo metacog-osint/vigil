@@ -4,6 +4,7 @@
 import { IOC_TYPES } from '../../lib/customIocs'
 import SeverityBadge from '../../components/SeverityBadge'
 import { SmartTime } from '../../components/TimeDisplay'
+import { FoldWindow } from '../../components/common'
 
 export default function IocTableView({
   iocs,
@@ -42,8 +43,8 @@ export default function IocTableView({
   }
 
   return (
-    <div className="cyber-card overflow-hidden">
-      <table className="w-full">
+    <FoldWindow className="cyber-card overflow-hidden">
+      <table className="w-full" data-tic-fold="">
         <thead className="bg-gray-900/50">
           <tr>
             <th className="px-4 py-3 text-left">
@@ -140,6 +141,6 @@ export default function IocTableView({
           ))}
         </tbody>
       </table>
-    </div>
+    </FoldWindow>
   )
 }

@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom'
 import { correlations } from '../lib/supabase'
 import { TargetingHeatmap } from '../components/charts/TargetingHeatmap'
 import { SkeletonTable, CoverageNote } from '../components'
+import { FoldWindow } from '../components/common'
 
 const ACTOR_TYPE_COLORS = {
   'Nation-State': 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -282,8 +283,8 @@ export default function GeographicAnalysis() {
       {!loading && countryProfiles.length > 0 && (
         <div className="cyber-card">
           <h3 className="text-lg font-medium text-white mb-4">Country Threat Rankings</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <FoldWindow className="overflow-x-auto">
+            <table className="w-full" data-tic-fold="">
               <thead>
                 <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
                   <th className="pb-2 pr-4">Country</th>
@@ -330,7 +331,7 @@ export default function GeographicAnalysis() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </FoldWindow>
         </div>
       )}
     </div>

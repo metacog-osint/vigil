@@ -19,6 +19,7 @@ import { reviewQueue, VERDICTS } from '../lib/supabase/reviewQueue'
 import { daysApart, kindCounts, orderForKind, sameCompanyCount } from '../lib/reviewQueueView'
 import { figure } from '../lib/format'
 import { useAuth } from '../hooks/useAuth'
+import { FoldWindow } from '../components/common'
 
 const STATUS_TABS = [
   { value: 'open', label: 'Open' },
@@ -441,8 +442,8 @@ export function ReadingEvidence({ kind, evidence }) {
           the same group’s claim on the same name, already held without markup. Nothing here has
           been changed; the verdict decides what happens to these rows.
         </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+        <FoldWindow className="overflow-x-auto">
+          <table className="w-full text-xs" data-tic-fold="">
             <thead className="text-gray-500 text-left">
               <tr>
                 <th className={cell}>As stored</th>
@@ -484,7 +485,7 @@ export function ReadingEvidence({ kind, evidence }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </FoldWindow>
       </div>
     )
   }
@@ -774,22 +775,24 @@ export default function ReviewQueue() {
             <BulkDefer findings={shown} onDone={load} />
           )}
 
-          <div className="space-y-4">
-            {shown.map((finding) => (
-              <FindingCard
-                key={finding.id}
-                finding={finding}
-                onRecorded={load}
-                siblings={
-                  finding.check_name === 'sec_disclosure_candidate'
-                    ? sameCompanyCount(finding, findings)
-                    : 0
-                }
-                countryEvidence={countryEvidence[finding.id]}
-                readingEvidence={readingEvidence[finding.id]}
-              />
-            ))}
-          </div>
+          <FoldWindow>
+            <div className="space-y-4" data-tic-fold="">
+              {shown.map((finding) => (
+                <FindingCard
+                  key={finding.id}
+                  finding={finding}
+                  onRecorded={load}
+                  siblings={
+                    finding.check_name === 'sec_disclosure_candidate'
+                      ? sameCompanyCount(finding, findings)
+                      : 0
+                  }
+                  countryEvidence={countryEvidence[finding.id]}
+                  readingEvidence={readingEvidence[finding.id]}
+                />
+              ))}
+            </div>
+          </FoldWindow>
         </>
       )}
     </div>

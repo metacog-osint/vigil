@@ -14,6 +14,7 @@ import {
 } from '../lib/scheduledReports'
 import { useAuth } from '../hooks/useAuth'
 import { formatDistanceToNow } from 'date-fns'
+import { FoldWindow } from '../components/common'
 
 const TIMEZONES = [
   { value: 'UTC', label: 'UTC' },
@@ -166,18 +167,20 @@ export default function Reports() {
           </button>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {reports.map((report) => (
-            <ReportCard
-              key={report.id}
-              report={report}
-              onToggle={() => handleToggle(report)}
-              onEdit={() => setEditingReport(report)}
-              onDelete={() => handleDelete(report.id)}
-              onViewHistory={() => setSelectedReport(report)}
-            />
-          ))}
-        </div>
+        <FoldWindow>
+          <div className="grid gap-4 md:grid-cols-2" data-tic-fold="">
+            {reports.map((report) => (
+              <ReportCard
+                key={report.id}
+                report={report}
+                onToggle={() => handleToggle(report)}
+                onEdit={() => setEditingReport(report)}
+                onDelete={() => handleDelete(report.id)}
+                onViewHistory={() => setSelectedReport(report)}
+              />
+            ))}
+          </div>
+        </FoldWindow>
       )}
 
       {/* Recent Report History */}

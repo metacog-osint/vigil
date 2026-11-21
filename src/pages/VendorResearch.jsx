@@ -31,6 +31,7 @@ import {
   STRENGTH_MEANINGS,
 } from '../lib/supabase'
 import { figure, calendarDay } from '../lib/format'
+import { FoldWindow } from '../components/common'
 
 const PAGE_SIZE = 25
 
@@ -567,21 +568,23 @@ export default function VendorResearch() {
         </p>
       )}
 
-      <div className="space-y-3">
-        {(result?.reports ?? []).map((report) => (
-          <Report
-            key={report.id}
-            report={report}
-            question={questions[report.url]}
-            rulings={rulings}
-            attributionRuling={attributionRulings[report.id]}
-            onRuled={onRuled}
-          />
-        ))}
-        {result && result.reports.length === 0 && (
-          <p className="cyber-card p-4 text-sm text-gray-400">No report matches these filters.</p>
-        )}
-      </div>
+      <FoldWindow>
+        <div className="space-y-3" data-tic-fold="">
+          {(result?.reports ?? []).map((report) => (
+            <Report
+              key={report.id}
+              report={report}
+              question={questions[report.url]}
+              rulings={rulings}
+              attributionRuling={attributionRulings[report.id]}
+              onRuled={onRuled}
+            />
+          ))}
+          {result && result.reports.length === 0 && (
+            <p className="cyber-card p-4 text-sm text-gray-400">No report matches these filters.</p>
+          )}
+        </div>
+      </FoldWindow>
 
       {result && total !== null && total > PAGE_SIZE && (
         <div className="flex gap-2">

@@ -19,6 +19,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { SkeletonCard } from '../components'
 import { useDemo } from '../contexts/DemoContext'
 import useDemoData from '../hooks/useDemoData'
+import { FoldWindow } from '../components/common'
 
 // Pattern type configurations
 const PATTERN_CONFIG = {
@@ -533,11 +534,13 @@ export default function Patterns() {
           </div>
 
           {/* Pattern Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sortedPatterns.map((pattern, index) => (
-              <PatternCard key={`${pattern.type}-${index}`} pattern={pattern} />
-            ))}
-          </div>
+          <FoldWindow>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-tic-fold="">
+              {sortedPatterns.map((pattern, index) => (
+                <PatternCard key={`${pattern.type}-${index}`} pattern={pattern} />
+              ))}
+            </div>
+          </FoldWindow>
         </>
       )}
     </div>
