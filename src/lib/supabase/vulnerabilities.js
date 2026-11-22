@@ -68,6 +68,18 @@ export const vulnerabilities = {
   },
 
   /**
+   * Reported exploitation of one CVE from CIRCL's sightings (194), one row per source with its
+   * class. Reports, not the KEV catalog: KEV status stays on the vulnerability row.
+   */
+  async getCirclSightings(cveId) {
+    return supabase
+      .from('circl_sightings')
+      .select('source_class,source_name,source_link,first_sighted_at,last_sighted_at')
+      .eq('cve_id', cveId)
+      .order('last_sighted_at', { ascending: false })
+  },
+
+  /**
    * Android's and Mozilla's own sentences about exploitation of one CVE (187; public read 191),
    * each verbatim with its kind. The vendors' words, not the KEV catalog. A statement a re-read of
    * its document no longer carried is retired (193) and skipped here; the row is kept.
