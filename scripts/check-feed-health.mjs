@@ -65,6 +65,21 @@
 
 const BROKEN_STATES = new Set(['stale', 'never'])
 
+/**
+ * WHEN THE SOURCE IS DOWN, SAY SO
+ *
+ * On 22 Nov 2026 ThreatFox sent cut-off replies for 18 hours and this check
+ * failed twice with "Broken: threatfox", which read as a Vigil fault. The feed
+ * was down and the failure was right, but there was nothing in Vigil to fix.
+ * A feed whose last error is the source's (an error the feed marks "source: ",
+ * or an HTTP 5xx or 429 from the source) is listed under its own heading. It
+ * still fails the job: a critical feed with no data is worth knowing about.
+ */
+export function isSourceError(f) {
+  const err = String(f.last_error ?? '')
+  return err.startsWith('source: ') || /\bHTTP (5\d\d|429)\b/.test(err)
+}
+
 /** At or below this cadence, a single error is not yet a failure. */
 export const ONE_ERROR_ALLOWED_AT_MINUTES = 60
 
@@ -256,12 +271,19 @@ async function main() {
     feeds.filter((f) => f.last_status === 'error' && allowsOneError(f)).map((f) => f.feed_id)
   )
   const { broken, blips } = classify(feeds, recent)
+  const theirs = broken.filter((f) => f.last_status === 'error' && isSourceError(f))
+  const ours = broken.filter((f) => !theirs.includes(f))
 
   const summary = [
     '## Critical feed health',
     '',
     broken.length
-      ? ['**Broken:**', '', ...broken.map(describe)].join('\n')
+      ? [
+          ...(ours.length ? ['**Broken in Vigil:**', '', ...ours.map(describe), ''] : []),
+          ...(theirs.length
+            ? ['**Source down (outside Vigil; the feed recovers when the source does):**', '', ...theirs.map(describe)]
+            : []),
+        ].join('\n')
       : `All ${feeds.length} critical feeds are running.`,
     '',
     ...(blips.length
@@ -288,7 +310,13 @@ async function main() {
   }
 
   if (broken.length) {
-    console.error(`::error::${broken.length} critical feed(s) not running. See the job summary.`)
+    const why = [
+      ours.length ? `${ours.length} broken in Vigil` : null,
+      theirs.length ? `${theirs.length} because the source is down (${theirs.map((f) => f.feed_id).join(', ')}), outside Vigil` : null,
+    ]
+      .filter(Boolean)
+      .join('; ')
+    console.error(`::error::${broken.length} critical feed(s) not running: ${why}. See the job summary.`)
     process.exit(1)
   }
 }
