@@ -14,6 +14,7 @@ import {
 } from '../lib/status'
 import { SmartTime } from '../components/TimeDisplay'
 import { FoldWindow } from '../components/common'
+import FeatureGate from '../components/common/FeatureGate'
 
 // The uptime target this page measures against.
 const SLA_TARGET = 99.9
@@ -34,7 +35,7 @@ const STATUS_TEXT_COLORS = {
   maintenance: 'text-blue-400',
 }
 
-export default function Status() {
+function StatusPage() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [recentIncidents, setRecentIncidents] = useState([])
@@ -629,4 +630,12 @@ function getIncidentDuration(start, end) {
   if (days > 0) return `${days}d ${hours % 24}h`
   if (hours > 0) return `${hours}h ${minutes % 60}m`
   return `${minutes}m`
+}
+
+export default function Status() {
+  return (
+    <FeatureGate table="status_components" title="Status page" what="The status page">
+      <StatusPage />
+    </FeatureGate>
+  )
 }
