@@ -143,7 +143,7 @@ export async function saveBatch(supabase, records) {
     const b = await saveBatch(supabase, records.slice(half))
     return { written: a.written + b.written, inserted: sumInserted(a.inserted, b.inserted), failed: a.failed + b.failed }
   }
-  console.error(`ThreatFox batch of ${records.length} failed:`, error.message)
+  console.error(`IOC batch of ${records.length} failed:`, error.message)
   return { written: 0, inserted: 0, failed: records.length }
 }
 

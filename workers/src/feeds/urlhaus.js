@@ -4,7 +4,7 @@
  */
 
 import { createInsertTally } from '../lib/inserts.js'
-import { stampListed } from '../lib/sightings.js'
+import { saveBatch } from './threatfox.js'
 
 const URLHAUS_API = 'https://urlhaus-api.abuse.ch/v1/urls/recent/'
 
@@ -60,15 +60,11 @@ export async function ingestURLhaus(supabase, env) {
         }
       }))
 
-      const { error, inserted } = await supabase
-        .from('iocs')
-        .upsert(stampListed(records), { onConflict: 'type,value', countInserted: true })
-
-      if (error) {
-        failed += batch.length
-      } else {
-        updated += batch.length - inserts.record(inserted)
-      }
+      // A batch that hits the database's statement timeout is split and saved in halves
+      // (23 Nov 2026 03:46 UTC: 100 URLs lost to one timeout while the run logged success).
+      const saved = await saveBatch(supabase, records)
+      failed += saved.failed
+      updated += saved.written - inserts.record(saved.inserted)
     }
 
   } catch (error) {
