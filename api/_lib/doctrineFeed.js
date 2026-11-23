@@ -26,12 +26,14 @@ export const SECTOR_MAP = {
 }
 
 export const CONTRACT = 'tic-feed/2'
+export const CONTRACT_REV = '2.1'
+export const KIT_VERSION = '0.6.9'
 export const SITE = 'https://vigil.theintelligence.company'
 export const METHOD = 'vigil-feed-1.0'
 export const EPSS_ALERT = 0.5
 export const EPSS_CURRENT_DAYS = 3 // migration 159: an older score is stale
 export const LANGUAGE_KEY =
-  'https://github.com/metacog-osint/vigil/blob/main/doctrine/kit/docs/language-key.md'
+  'https://github.com/metacog-osint/tic-doctrine/blob/main/docs/language-key.md'
 
 const SRC = {
   ransomlook: {
@@ -206,6 +208,28 @@ const iso2 = (cc) => {
 const feature = (geometry, properties) => ({ type: 'Feature', geometry, properties })
 
 /**
+ * Contract 2.1 for an item that exists from one dated moment: a claim, a KEV addition, an ADP assessment, a breach
+ * notice. Its id is already its subject. `new` at the source's own date; a date-only source says so by precision.
+ */
+const onceAt = (id, at, precision = null) => ({
+  subject_id: id,
+  event_start: at,
+  last_change: 'new',
+  last_change_at: at,
+  ...(precision ? { event_time_precision: precision } : {}),
+})
+
+/**
+ * The seven complete UTC days a surge counts, from the last day. Day precision: event_end is that day's start and
+ * covers the whole day. A surge's first flagged time is not stored, so a surge item states no last_change.
+ */
+const surgeWindow = (end) => ({
+  event_start: dayStart(new Date(Date.parse(dayStart(end)) - 6 * DAY_MS).toISOString()),
+  event_end: dayStart(end),
+  event_time_precision: 'day',
+})
+
+/**
  * The total from a PostgREST Content-Range header sent under Prefer: count=exact: "0-299/450"
  * is 450, and a match of no rows reports a total of 0. Null when the header carries no
  * total ("0-86/*", or no header), never 0.
@@ -362,6 +386,25 @@ export function healthBlock(rows) {
 }
 
 /**
+ * The health block as published under contract 2.1, whose states are a closed list without `stalled`. A stalled lane
+ * goes out as `stale` with `stalled: true`, so it is still not read and its detail still says why. A lane with no
+ * attempt on record has no checked_at of its own: it is the time this feed looked and found none.
+ */
+export function contractHealth(health, published) {
+  if (!health) return null
+  return Object.fromEntries(
+    Object.entries(health).map(([lane, e]) => [
+      lane,
+      {
+        ...e,
+        ...(e.state === 'stalled' ? { state: 'stale', stalled: true } : {}),
+        checked_at: e.checked_at || published,
+      },
+    ])
+  )
+}
+
+/**
  * The summary's caveat when RansomLook has stalled. The claim count is then what RansomLook relayed,
  * which may be short of what the leak sites posted: absence and zero are different answers.
  */
@@ -454,6 +497,16 @@ export function buildFeed(
       feature(null, {
         ...base,
         id: `vigil:${day}:actor:${a.id}`,
+        subject_id: `vigil:actor:${a.id}`,
+        ...surgeWindow(a.surge_window_end),
+        signal: {
+          name: 'victims_claimed_7d',
+          value: Number(a.surge_claims_7d),
+          unit: 'victims',
+          ...(a.surge_baseline_mean == null ? {} : { expected: Number(a.surge_baseline_mean) }),
+          tail: 'high',
+          baseline_n: 8,
+        },
         title:
           `${a.name} claimed ${a.surge_claims_7d} victims on ${a.surge_days_7d} days in the 7 days to ${plain(a.surge_window_end)}, ` +
           (a.surge_new_group
@@ -530,6 +583,7 @@ export function buildFeed(
       feature(geom, {
         ...base,
         id: `vigil:claim:${c.incident_id}`,
+        ...onceAt(`vigil:claim:${c.incident_id}`, dayStart(c.discovered_date), 'day'),
         title: `${actor} claims ${victim}${where ? ` (${where})` : ''}`,
         tier: 'routine',
         status_class: 'claimed',
@@ -561,6 +615,8 @@ export function buildFeed(
       feature(null, {
         ...base,
         id: `vigil:kev:${v.cve_id}`,
+        ...onceAt(`vigil:kev:${v.cve_id}`, dayStart(v.kev_date), 'day'),
+        ...(alert ? { signal: { name: 'epss', value: epss, unit: 'probability', tail: 'high' } } : {}),
         title: `${v.cve_id} (${subjectOf(v)}) added to CISA's KEV catalog on ${plain(v.kev_date)}${bits.some(Boolean) ? `; ${bits.filter(Boolean).join(', ')}` : ''}`,
         tier: alert ? 'anomaly' : 'routine',
         status_class: 'reported',
@@ -598,6 +654,7 @@ export function buildFeed(
       feature(null, {
         ...base,
         id: `vigil:adp:${a.cve_id}`,
+        ...onceAt(`vigil:adp:${a.cve_id}`, utc(a.assessed_at)),
         title: `CISA's ADP assessment of ${a.cve_id}${subject && subject !== a.cve_id ? ` (${subject})` : ''}: exploitation active (assessed ${plain(a.assessed_at)})${notKev ? "; not in CISA's KEV catalog" : ''}`,
         tier: 'routine',
         status_class: 'reported',
@@ -636,6 +693,11 @@ export function buildFeed(
       feature(null, {
         ...base,
         id: `vigil:disclosure:${d.id}`,
+        ...onceAt(
+          `vigil:disclosure:${d.id}`,
+          d.filed_date ? dayStart(d.filed_date) : utc(d.first_seen),
+          d.filed_date ? 'day' : null
+        ),
         title: `${d.company_name} reported a data breach to ${to}${people}`,
         tier: 'routine',
         status_class: 'reported',
@@ -672,6 +734,10 @@ export function buildFeed(
   const summary = feature(null, {
     ...base,
     id: `vigil:${day}:summary`,
+    subject_id: 'vigil:feed:summary',
+    event_start: dayStart(start.kev),
+    event_end: published,
+    last_change: 'none',
     title:
       `Vigil, ${plain(now)}: ` +
       [
@@ -738,13 +804,15 @@ export function buildFeed(
   return {
     type: 'FeatureCollection',
     contract: CONTRACT,
+    contract_rev: CONTRACT_REV,
+    kit: KIT_VERSION,
     program: 'vigil',
     generated_at: published,
     licence: `Vigil terms of use (${SITE}); claims from RansomLook (CC BY 4.0); CISA and SEC data US public domain; CISA Vulnrichment CC0-1.0`,
     attribution:
       'Vigil, The Intelligence Company. Leak-site claims: RansomLook (CC BY 4.0). KEV: CISA. ADP assessments: CISA Vulnrichment (CC0). EPSS: FIRST.',
     language_key: LANGUAGE_KEY,
-    ...(health ? { health } : {}),
+    ...(health ? { health: contractHealth(health, published) } : {}),
     features: [summary, ...feats],
   }
 }
