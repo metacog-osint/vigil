@@ -931,6 +931,15 @@ central claim and no human has ever exercised it end to end.
 - **The six empty feature groups** — status page, chat integrations,
   escalation/on-call, SSO, benchmarks, usage analytics. The test is: would you
   demo it?
+  Missing, not empty (live database, measured 20 Nov 2026): the status tables
+  (`status_components`, `status_incidents`, `status_incident_updates`,
+  `status_maintenance`, `status_uptime_records`, `get_system_status()`), the
+  webhook tables (`webhooks`, `webhook_deliveries`) and the chat tables
+  (`chat_integrations`, `chat_channel_subscriptions`, `chat_command_logs`,
+  `v_chat_integration_stats`). Migrations 022, 024, 027 and 050 hold them but are
+  not applied, and pre-30-Oct migrations carry no grants. Tom chose on 21 Nov
+  2026: no migration; `/status`, `/webhooks` and `/chat` show a plain "Not set up
+  yet" notice (`FeatureGate`, `src/components/common/FeatureGate.jsx`).
 - **Leaked-password protection** is off, in the Auth dashboard.
 - **12 of 21 registered sources have an unchecked licence**, including
   `misp-galaxy` and `mitre-attack`, which between them supply most of the actor
