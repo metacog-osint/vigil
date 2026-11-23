@@ -236,8 +236,8 @@ the shared tree: see reminder 6.
 
 ## Doctrine kit and the public feed (30 Oct 2026)
 
-- `doctrine/kit/` is a vendored copy of The Intelligence Company's shared kit (`[local path]`). Never
-  edit it here: change the kit and run `python [local path] <this repo>`. CI runs
+- `doctrine/kit/` is a vendored copy of The Intelligence Company's shared kit (`../tic-doctrine`). Never
+  edit it here: change the kit and run `python ../tic-doctrine/tools/sync.py <this repo>`. CI runs
   `tic.py kitcheck` and `registers doctrine`.
 - `doctrine/` holds Vigil's registers: requirements under SQ4, warning problems `VG-WP-1` (a group's surge) and
   `VG-WP-2` (exploitation of a newly listed vulnerability), indicators, assumptions, the sector map, source grades
