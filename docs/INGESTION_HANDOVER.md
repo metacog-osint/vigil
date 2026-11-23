@@ -128,7 +128,7 @@ otherwise, because applied first it would leave ransomlook unwatched), then merg
 waits on 167 and 167 waits on the deployed worker, so the deploy runs from the
 branch's own checkout, not from the shared tree on `main`, which does not have the
 change yet. For this change that was
-`[local path]`, rebased onto
+`.claude\worktrees\focused-noether-13fb98\workers`, rebased onto
 `main` after #100 so the same deploy also drops the VulnCheck job.
 
 ```sql
@@ -235,20 +235,20 @@ re-exports it.
 
 ### Deploying the worker (Tom runs it)
 
-There is no CI deploy, and the shared checkout `[local path]` is usually
+There is no CI deploy, and the shared checkout this repo is usually
 behind main, so `cd workers && npm run deploy` there can roll the live worker
 back. Every deploy since 16 Nov 2026 has gone this way instead:
 
 1. Export main's `workers/` at a named sha to a folder on C:, using the full
-   path, never the 8.3 short name (`[local user]`):
-   `git archive <sha> workers | tar -x -C "[local path]<sha>"`.
+   path, never the 8.3 short name:
+   `git archive <sha> workers | tar -x -C "$HOME/vigil-deploy/<sha>"`.
 2. Add a `node_modules` junction at the export's root pointing to
-   `[local path]`. `src/feeds/mitre-atlas.js` needs `js-yaml`
+   `node_modules`. `src/feeds/mitre-atlas.js` needs `js-yaml`
    from there.
 3. In PowerShell, from `<export>\workers`, clear the machine's
    `CLOUDFLARE_API_TOKEN` (`Remove-Item Env:CLOUDFLARE_API_TOKEN`); it cannot reach
    this worker, and wrangler should use the browser login. Run the shared
-   tree's `[local path] deploy` with
+   tree's `workers\node_modules\.bin\wrangler.cmd deploy` with
    `--config <export>\workers\wrangler.toml`.
 4. Run `--dry-run --outdir <export>\dist` first, and check the size (about
    210 KiB on 18 Nov 2026) and that the bundle holds the change. Run from an 8.3
