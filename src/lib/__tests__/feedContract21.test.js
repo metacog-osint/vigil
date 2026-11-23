@@ -22,7 +22,9 @@ const actor = {
 }
 const rows = () => ({
   actors: [actor],
-  claims: [{ incident_id: 'c1', actor_id: 'a1', victim_name: 'Victim', discovered_date: '2026-11-22' }],
+  claims: [
+    { incident_id: 'c1', actor_id: 'a1', victim_name: 'Victim', discovered_date: '2026-11-22' },
+  ],
   actorNames: { a1: 'Group' },
   kev: [
     {
