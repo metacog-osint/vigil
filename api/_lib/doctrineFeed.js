@@ -221,7 +221,8 @@ const onceAt = (id, at, precision = null) => ({
 
 /**
  * The seven complete UTC days a surge counts, from the last day. Day precision: event_end is that day's start and
- * covers the whole day. A surge's first flagged time is not stored, so a surge item states no last_change.
+ * covers the whole day. When the group's surge was first flagged is stored from migration 196 on (surge_flagged_at);
+ * a surge flagged before then, or with no stamp, states no last_change rather than a guess.
  */
 const surgeWindow = (end) => ({
   event_start: dayStart(new Date(Date.parse(dayStart(end)) - 6 * DAY_MS).toISOString()),
@@ -499,6 +500,9 @@ export function buildFeed(
         id: `vigil:${day}:actor:${a.id}`,
         subject_id: `vigil:actor:${a.id}`,
         ...surgeWindow(a.surge_window_end),
+        ...(a.surge_flagged_at
+          ? { last_change: 'new', last_change_at: utc(a.surge_flagged_at) }
+          : {}),
         signal: {
           name: 'victims_claimed_7d',
           value: Number(a.surge_claims_7d),

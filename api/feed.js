@@ -83,7 +83,7 @@ export default async function handler(request) {
           base,
           key,
           // VG-IND-1 (migration 179): unusual against the group's own 8 weeks, not 077's trend_status.
-          'threat_actors?select=id,surge_claims_7d,surge_days_7d,surge_baseline_mean,surge_p,surge_new_group,surge_window_end&surge=is.true&status=eq.active&order=surge_claims_7d.desc&limit=50',
+          'threat_actors?select=id,surge_claims_7d,surge_days_7d,surge_baseline_mean,surge_p,surge_new_group,surge_window_end,surge_flagged_at&surge=is.true&status=eq.active&order=surge_claims_7d.desc&limit=50',
           { count: true }
         ),
         rest(
