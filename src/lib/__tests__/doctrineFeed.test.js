@@ -11,6 +11,7 @@ import { join, resolve } from 'node:path'
 import {
   buildFeed,
   computedAsOf,
+  contractHealth,
   countFromRange,
   healthBlock,
   HEALTH_FEEDS,
@@ -681,6 +682,7 @@ describe('the health block (migration 163)', () => {
         'cisa-kev',
         'cisa-vulnrichment',
         'sec-edgar',
+        'threatcluster',
         'ca-ag',
         'wa-ag',
         'or-ag',
@@ -692,6 +694,7 @@ describe('the health block (migration 163)', () => {
       'cisa-kev',
       'cisa-vulnrichment',
       'sec-edgar',
+      'threatcluster',
       'state-breach-notices',
       'data-quality',
     ])
@@ -707,6 +710,42 @@ describe('the health block (migration 163)', () => {
       r.feed_id === 'ransomlook' ? { ...r, stalled: false } : r
     )
     expect(stallCaveat(healthBlock(working))).toBeNull()
+  })
+})
+
+describe('the row floor (migration 197)', () => {
+  const row = (over) => ({
+    feed_id: 'threatcluster',
+    state: 'fresh',
+    last_status: 'success',
+    last_success_at: '2026-11-23T03:16:22Z',
+    last_attempt_at: '2026-11-23T03:16:22Z',
+    min_rows_per_run: 500,
+    last_rows: 16,
+    below_floor: true,
+    ...over,
+  })
+
+  it('reads the 23 Nov ThreatCluster run as degraded and says why', () => {
+    const lane = healthBlock([row()]).threatcluster
+    expect(lane.state).toBe('degraded')
+    expect(lane.detail).toBe('Last run read 16 rows, under its floor of 500')
+  })
+
+  it('publishes degraded inside the closed list of contract states', () => {
+    const published = contractHealth(healthBlock([row()]), '2026-11-23T04:00:00Z').threatcluster
+    expect(published.state).toBe('stale')
+    expect(published.degraded).toBe(true)
+  })
+
+  it('leaves a run at or above its floor alone', () => {
+    const lane = healthBlock([row({ last_rows: 2950, below_floor: false })]).threatcluster
+    expect(lane.state).toBe('fresh')
+    expect(lane).not.toHaveProperty('degraded')
+  })
+
+  it('does not soften a feed that is already stale', () => {
+    expect(healthBlock([row({ state: 'stale' })]).threatcluster.state).toBe('stale')
   })
 })
 
