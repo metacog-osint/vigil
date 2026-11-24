@@ -1,5 +1,6 @@
-import { fmtTime } from '../lib/time'
 import TimeSettingsButton from './common/TimeSettingsButton'
+import LastCollected from './common/LastCollected'
+import { useDemo } from '../contexts/DemoContext'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase/client'
@@ -11,6 +12,7 @@ import QuickIOCInput from './common/QuickIOCInput'
 export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const navigate = useNavigate()
+  const { isDemoMode } = useDemo()
 
   const handleSignOut = async () => {
     try {
@@ -59,21 +61,23 @@ export default function Header({ onMenuClick, onSearchClick, user, isOnline }) {
           </svg>
         </button>
 
-        {/* Live indicator */}
-        <div className="flex items-center gap-2 text-sm">
-          <span
-            className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 live-indicator' : 'bg-yellow-500'}`}
-          ></span>
-          {/* On phones the dot alone shows the state; screen readers still hear the word */}
-          <span className="sr-only sm:not-sr-only text-gray-400">
-            {isOnline ? 'Live' : 'Offline'}
-          </span>
-        </div>
+        {/* Sample data is never stamped Live or given a collection time */}
+        {!isDemoMode && (
+          <>
+            <div className="flex items-center gap-2 text-sm">
+              <span
+                className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 live-indicator' : 'bg-yellow-500'}`}
+              ></span>
+              {/* On phones the dot alone shows the state; screen readers still hear the word */}
+              <span className="sr-only sm:not-sr-only text-gray-400">
+                {isOnline ? 'Live' : 'Offline'}
+              </span>
+            </div>
 
-        {/* Last updated. From md: below that it is squeezed onto three or four lines */}
-        <div className="hidden md:block text-xs text-gray-500">
-          Last sync: {fmtTime(new Date())}
-        </div>
+            {/* From md: below that it is squeezed onto three or four lines */}
+            <LastCollected className="hidden md:block text-xs text-gray-500" />
+          </>
+        )}
       </div>
 
       {/* Right side. Everything here has to fit beside the left side at 360 px

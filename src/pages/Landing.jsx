@@ -1,12 +1,12 @@
 /**
- * Public Landing Page - App-Style Demo Experience
+ * Public Landing Page
  *
- * The landing page IS the product. Visitors see the full interface
- * with demo data, can search and explore, and sign up when ready.
+ * Visitors see real figures from the database. Anything beyond this page asks
+ * them to sign in. Sample data opens only from the labelled demo button.
  */
 
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useDemo } from '../contexts/DemoContext'
 import { landing } from '../lib/supabase'
 import { formatDistanceToNow } from 'date-fns'
@@ -448,12 +448,14 @@ function DashboardContent({ onExplore }) {
 export default function Landing() {
   const { enterDemoMode } = useDemo()
 
+  const navigate = useNavigate()
+
   const handleExplore = () => {
-    enterDemoMode()
+    navigate('/auth?mode=login')
   }
 
-  const handleNavClick = () => {
-    enterDemoMode()
+  const handleNavClick = (label) => {
+    if (label !== 'Dashboard') navigate('/auth?mode=login')
   }
 
   return (
@@ -499,7 +501,7 @@ export default function Landing() {
                   onClick={enterDemoMode}
                   className="px-6 py-3 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
                 >
-                  Continue Exploring Demo
+                  Explore a demo with sample data
                 </button>
               </div>
             </div>

@@ -75,6 +75,9 @@ import { ToastProvider } from './contexts/ToastContext'
 import { FocusModeProvider } from './hooks/useFocusMode'
 import { DemoProvider, useDemo } from './contexts/DemoContext'
 import { DemoBanner } from './components/demo'
+import DemoWatermark from './components/demo/DemoWatermark'
+import LastCollected from './components/common/LastCollected'
+import TimeSettingsButton from './components/common/TimeSettingsButton'
 
 // Loading fallback for lazy routes
 function PageLoader() {
@@ -100,8 +103,22 @@ function AuthLoader() {
   )
 }
 
+const PUBLIC_TITLES = {
+  '/': 'Vigil: threat intelligence',
+  '/auth': 'Sign in | Vigil',
+  '/terms': 'Terms | Vigil',
+  '/privacy': 'Privacy | Vigil',
+  '/sources': 'Sources | Vigil',
+}
+
 // Public routes wrapper (no sidebar/header)
 function PublicLayout() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    document.title = PUBLIC_TITLES[pathname] || PUBLIC_TITLES['/']
+  }, [pathname])
+
   return (
     <ErrorBoundary name="PublicLayout" title="Application Error">
       <Suspense fallback={<AuthLoader />}>
@@ -117,6 +134,10 @@ function PublicLayout() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-gray-800 bg-gray-950 px-4 py-2 text-xs text-gray-400">
+        <LastCollected />
+        <TimeSettingsButton />
+      </div>
       {/* Data credits the sources' licences require, on every page */}
       <SiteFooter />
     </ErrorBoundary>
@@ -193,6 +214,8 @@ function ProtectedApp() {
             <DemoBanner
               className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}
             />
+
+            <DemoWatermark />
 
             {/* Skip to main content link for accessibility */}
             <a
