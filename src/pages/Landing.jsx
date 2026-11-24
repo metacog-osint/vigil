@@ -394,6 +394,72 @@ function TopBanner() {
 
 const EMPTY_SNAPSHOT = { stats: null, escalating: [], incidents: [], kev: [] }
 
+const METHOD_URL = 'https://github.com/metacog-osint/vigil/blob/main/doctrine/method.md'
+
+// Plain language (ideas#264): one caveat line, then the page's terms, tap to open.
+const TERMS = [
+  [
+    'Incidents',
+    'Victims that ransomware and extortion groups claim on their own leak sites. Each is a claim by a criminal, not a confirmed breach.',
+  ],
+  [
+    'Threat actors, APT',
+    'The groups Vigil tracks. An APT (advanced persistent threat) is a long-running group, often state-linked, that spies or sabotages rather than extorts.',
+  ],
+  [
+    'Escalating',
+    "A group claiming unusually many victims for itself: at least 5 on at least 3 days in the last 7, a count with under a 1 in 100 chance at the group's own 8 weeks before. Unusual, not a warning.",
+  ],
+  [
+    'KEV',
+    "CISA's Known Exploited Vulnerabilities catalog: flaws the US Cybersecurity and Infrastructure Security Agency has seen attackers use.",
+  ],
+  [
+    'CVE-2026-76466',
+    'A CVE id: the public catalogue number of one software flaw (year, then number).',
+  ],
+  [
+    'EPSS 3.7%',
+    "FIRST's Exploit Prediction Scoring System: its model's estimated chance that the flaw is exploited in the next 30 days. FIRST's estimate, not Vigil's.",
+  ],
+  [
+    'Indicators, IOC',
+    'Indicators of compromise: addresses, domains, URLs and file hashes that feeds such as ThreatFox, URLhaus and MalwareBazaar (abuse.ch) tie to malicious activity.',
+  ],
+]
+
+function PageTerms() {
+  return (
+    <div className="text-sm">
+      <p className="text-gray-400">
+        Claims and counts are as each source publishes them; a claim is not a confirmed attack.{' '}
+        <a
+          href={METHOD_URL}
+          className="text-cyan-400 underline"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          How Vigil reads them
+        </a>
+        .
+      </p>
+      <details className="mt-2 max-w-3xl">
+        <summary className="cursor-pointer py-1.5 text-gray-300 min-h-[24px]">
+          Terms on this page
+        </summary>
+        <dl className="mt-1">
+          {TERMS.map(([term, text]) => (
+            <div key={term} className="mt-2">
+              <dt className="font-semibold text-gray-200">{term}</dt>
+              <dd className="text-gray-400">{text}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
+    </div>
+  )
+}
+
 function DashboardContent({ onExplore }) {
   // The landing page reads the live database as an anonymous visitor. If the
   // request fails the sections stay empty rather than showing invented figures.
@@ -427,6 +493,7 @@ function DashboardContent({ onExplore }) {
 
       {/* Stats */}
       <StatsRow stats={snapshot.stats} loading={loading} />
+      <PageTerms />
 
       {/* Main Grid */}
       <div className="grid lg:grid-cols-2 gap-6">
