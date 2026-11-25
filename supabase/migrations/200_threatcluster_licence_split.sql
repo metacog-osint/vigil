@@ -12,10 +12,10 @@
 -- needs a licence from ThreatCluster. 3ae0330455 (21 November, 14:54 UTC) is the
 -- last commit made under GPL-3.0; it still holds the 365-day file.
 --
--- WHAT THE OWNER DECIDED (23 November 2026, ideas#235, decision 3)
+-- WHAT VIGIL DOES ABOUT IT
 --
--- Keep reading the capped file, with credit. Backfill country only from commits
--- made under GPL-3.0. Add a row-count floor (197, applied).
+-- It keeps reading the capped file, with credit. It backfills country only from
+-- commits made under GPL-3.0. A row-count floor reads the free file's size (197).
 --
 -- WHAT THIS DOES
 --
@@ -41,7 +41,7 @@
 -- Rows filled from the free file between 22 Nov 2026 12:27 UTC and the function's
 -- deploy still say 'threatcluster'. The count is small (the cap is 25 rows a day);
 -- the VERIFY query below lists them. Relabelling is an UPDATE of incident rows and is
--- left to the owner after reading that count.
+-- done by hand after reading that count.
 
 begin;
 
