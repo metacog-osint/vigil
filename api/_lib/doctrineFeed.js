@@ -316,6 +316,8 @@ export const HEALTH_LANES = {
   'cisa-kev': ['cisa-kev'],
   'cisa-vulnrichment': ['cisa-vulnrichment'],
   'sec-edgar': ['sec-edgar'],
+  // Victim country. It has no items of its own, so this lane is how a collapse reaches COP (197).
+  threatcluster: ['threatcluster'],
   'ca-ag': ['state-breach-notices'],
   'wa-ag': ['state-breach-notices'],
   'or-ag': ['state-breach-notices'],
@@ -323,7 +325,7 @@ export const HEALTH_LANES = {
 }
 export const HEALTH_FEEDS = [...new Set(Object.values(HEALTH_LANES).flat())]
 const READ_STATES = new Set(['fresh', 'late'])
-const STATE_RANK = { fresh: 0, late: 1, stalled: 2, stale: 3, never: 4 }
+const STATE_RANK = { fresh: 0, late: 1, degraded: 2, stalled: 2, stale: 3, never: 4 }
 
 /** "22:15 UTC on 11 Nov 2026". */
 const clock = (d) => `${utc(d).slice(11, 16)} UTC on ${plain(d)}`
@@ -331,7 +333,9 @@ const clock = (d) => `${utc(d).slice(11, 16)} UTC on ${plain(d)}`
 /** One Vigil feed's entry. A feed feed_health does not return reads `never`, not fine. */
 export function feedEntry(row) {
   if (!row) return { state: 'never', last_ok: null, checked_at: null, last_status: null }
-  const state = row.stalled === true ? 'stalled' : row.state || 'never'
+  // A feed already late or worse keeps that state; degraded only replaces a reading of fresh or late.
+  const base = row.stalled === true ? 'stalled' : row.state || 'never'
+  const state = row.below_floor === true && READ_STATES.has(base) ? 'degraded' : base
   const entry = {
     state,
     last_ok: row.last_success_at ? utc(row.last_success_at) : null,
@@ -350,6 +354,11 @@ export function feedEntry(row) {
     entry.detail = since
       ? `Runs, but has added no record since ${clock(since)}, more than its ${entry.stall_after_hours}-hour limit`
       : 'Runs, but has never added a record'
+  }
+  if (state === 'degraded') {
+    entry.last_rows = row.last_rows
+    entry.min_rows = row.min_rows_per_run
+    entry.detail = `Last run read ${row.last_rows} rows, under its floor of ${row.min_rows_per_run}`
   }
   return entry
 }
@@ -399,6 +408,7 @@ export function contractHealth(health, published) {
       {
         ...e,
         ...(e.state === 'stalled' ? { state: 'stale', stalled: true } : {}),
+        ...(e.state === 'degraded' ? { state: 'stale', degraded: true } : {}),
         checked_at: e.checked_at || published,
       },
     ])
@@ -620,7 +630,9 @@ export function buildFeed(
         ...base,
         id: `vigil:kev:${v.cve_id}`,
         ...onceAt(`vigil:kev:${v.cve_id}`, dayStart(v.kev_date), 'day'),
-        ...(alert ? { signal: { name: 'epss', value: epss, unit: 'probability', tail: 'high' } } : {}),
+        ...(alert
+          ? { signal: { name: 'epss', value: epss, unit: 'probability', tail: 'high' } }
+          : {}),
         title: `${v.cve_id} (${subjectOf(v)}) added to CISA's KEV catalog on ${plain(v.kev_date)}${bits.some(Boolean) ? `; ${bits.filter(Boolean).join(', ')}` : ''}`,
         tier: alert ? 'anomaly' : 'routine',
         status_class: 'reported',
