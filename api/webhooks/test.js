@@ -1,109 +1,109 @@
 /**
  * Webhook Test API
  *
- * Sends a test payload to the specified webhook URL
- * to verify configuration is correct.
+ * Sends a test payload to the signed-in user's webhook URL to check it is
+ * set up. ideas#155: https only, private and internal hosts refused, no
+ * redirects followed, and the reply body is never passed back, so the
+ * endpoint cannot be used to read pages the caller can't reach.
  */
-import { validateApiKey, jsonResponse, errorResponse } from '../_lib/auth.js'
+import { jsonResponse, errorResponse, checkRateLimit } from '../_lib/auth.js'
+import { verifyRequest } from '../_lib/supabase-auth.js'
+import { checkOutboundUrl } from '../_lib/outboundUrl.js'
 
 export const config = {
   runtime: 'edge',
 }
 
+const TEST_LIMIT_PER_MINUTE = 5
+const BLOCKED_HEADERS = new Set(['host', 'content-length', 'content-type', 'connection', 'transfer-encoding', 'cookie'])
+
+function cleanHeaders(custom) {
+  const out = {}
+  if (!custom || typeof custom !== 'object' || Array.isArray(custom)) return out
+  for (const [name, value] of Object.entries(custom).slice(0, 5)) {
+    if (typeof value !== 'string' || !/^[A-Za-z0-9-]{1,64}$/.test(name)) continue
+    if (BLOCKED_HEADERS.has(name.toLowerCase()) || name.toLowerCase().startsWith('x-vigil-')) continue
+    out[name] = value.slice(0, 1024)
+  }
+  return out
+}
+
 export default async function handler(request) {
-  // Only allow POST
   if (request.method !== 'POST') {
     return errorResponse('Method not allowed', 405)
   }
 
-  // Validate API key or session
-  const auth = await validateApiKey(request)
-  if (!auth) {
+  // The settings page sends the user's Supabase session token.
+  const { user, error: authError } = await verifyRequest(request)
+  if (authError || !user) {
     return errorResponse('Unauthorized', 401)
+  }
+
+  const rate = await checkRateLimit(`webhook-test:${user.id}`, TEST_LIMIT_PER_MINUTE)
+  if (!rate.allowed) {
+    return errorResponse('Too many webhook tests. Try again in a minute.', 429, { 'Retry-After': '60' })
   }
 
   try {
     const body = await request.json()
-    const { url, type = 'generic', headers: customHeaders = {} } = body
+    const { url, type = 'generic', headers: customHeaders = {} } = body || {}
 
-    if (!url) {
-      return errorResponse('Webhook URL is required', 400)
+    const checked = checkOutboundUrl(url)
+    if (!checked.ok) {
+      return errorResponse(checked.reason, 400)
     }
 
-    // Validate URL format
-    try {
-      new URL(url)
-    } catch {
-      return errorResponse('Invalid webhook URL', 400)
-    }
+    const payloadType = ['slack', 'discord', 'teams'].includes(type) ? type : 'generic'
+    const testPayload = buildTestPayload(payloadType)
 
-    // Build test payload based on webhook type
-    const testPayload = buildTestPayload(type)
-
-    // Build headers
     const headers = {
+      ...cleanHeaders(customHeaders),
       'Content-Type': 'application/json',
       'User-Agent': 'Vigil-Webhook/1.0',
       'X-Vigil-Event': 'test',
       'X-Vigil-Delivery': `test-${Date.now()}`,
-      ...customHeaders,
     }
 
-    // Send the test webhook
     const startTime = Date.now()
     let response
-    let responseBody
     let error = null
 
     try {
-      response = await fetch(url, {
+      response = await fetch(checked.url.href, {
         method: 'POST',
         headers,
         body: JSON.stringify(testPayload),
-        signal: AbortSignal.timeout(10000), // 10 second timeout
+        redirect: 'manual',
+        signal: AbortSignal.timeout(10000),
       })
-
-      // Try to read response body
+      // Drain without reading it into the reply.
       try {
-        responseBody = await response.text()
-        // Try to parse as JSON
-        try {
-          responseBody = JSON.parse(responseBody)
-        } catch {
-          // Keep as text
-        }
+        await response.body?.cancel()
       } catch {
-        responseBody = null
+        // ignore
       }
     } catch (fetchError) {
-      error = fetchError.message || 'Connection failed'
+      error = fetchError?.name === 'TimeoutError' ? 'Timed out after 10 seconds' : 'Connection failed'
     }
 
-    const duration = Date.now() - startTime
+    const redirected = !error && response && response.status >= 300 && response.status < 400
+    if (redirected) error = 'The webhook answered with a redirect, which Vigil does not follow'
 
-    // Build result
-    const result = {
-      success: !error && response?.ok,
-      url,
+    return jsonResponse({
+      success: !error && !!response?.ok,
+      url: checked.url.origin + checked.url.pathname,
       timestamp: new Date().toISOString(),
-      duration_ms: duration,
+      duration_ms: Date.now() - startTime,
       request: {
         method: 'POST',
         headers: Object.keys(headers),
-        payload_type: type,
+        payload_type: payloadType,
       },
-      response: error ? null : {
-        status: response?.status,
-        statusText: response?.statusText,
-        body: responseBody,
-      },
+      response: response && !error ? { status: response.status, statusText: response.statusText } : null,
       error,
-    }
-
-    return jsonResponse(result)
-
+    })
   } catch (err) {
-    console.error('Webhook test error:', err)
+    console.error('Webhook test error:', err?.message)
     return errorResponse('Internal server error', 500)
   }
 }

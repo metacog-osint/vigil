@@ -1,14 +1,19 @@
 /**
  * Send Email API Endpoint
- * Securely sends emails via Resend API without exposing API key to frontend
  *
  * POST /api/send-email
- * Body: { to, subject, html, text, template?, data? }
+ * Body: { template, data? }
  * Headers: Authorization: Bearer <supabase-access-token>
+ *
+ * ideas#155: mail goes only to the caller's own confirmed address, the
+ * subject and body come from the server templates below, and the shared
+ * rate limit (Redis when configured) applies. The client cannot set `to`,
+ * `subject` or `html`, so the endpoint cannot relay mail from Vigil's domain.
  */
 
 import { verifyRequest } from './_lib/supabase-auth.js'
 import { getCorsHeaders, handleCorsPreflightRequest } from './_lib/cors.js'
+import { checkRateLimit, checkDailyRateLimit } from './_lib/rateLimit.js'
 
 // Web-standard handler (Request in, Response out) requires the Edge runtime
 export const config = { runtime: 'edge' }
@@ -17,26 +22,27 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY
 const FROM_EMAIL = process.env.FROM_EMAIL || 'alerts@vigil.theintelligence.company'
 const FROM_NAME = 'Vigil Alerts'
 
-// Rate limit: 10 emails per minute per user
-const rateLimitMap = new Map()
-const RATE_LIMIT = 10
-const RATE_WINDOW_MS = 60 * 1000
+export const EMAIL_LIMIT_PER_MINUTE = 3
+export const EMAIL_LIMIT_PER_DAY = 20
 
-function checkRateLimit(userId) {
-  const now = Date.now()
-  const userKey = `email:${userId}`
-  const userRequests = rateLimitMap.get(userKey) || []
+export const TEMPLATES = {
+  test: () => ({
+    subject: 'Vigil: test email',
+    text:
+      'This is a test email from Vigil. Alert emails for your account will arrive at this address.\n\n' +
+      'You asked for it from your Vigil settings. If you did not, you can ignore this message.',
+    html:
+      '<p>This is a test email from Vigil. Alert emails for your account will arrive at this address.</p>' +
+      '<p>You asked for it from your Vigil settings. If you did not, you can ignore this message.</p>',
+  }),
+}
 
-  // Clean old requests
-  const validRequests = userRequests.filter((time) => now - time < RATE_WINDOW_MS)
-
-  if (validRequests.length >= RATE_LIMIT) {
-    return false
-  }
-
-  validRequests.push(now)
-  rateLimitMap.set(userKey, validRequests)
-  return true
+/** The one address mail may go to: the caller's own, once confirmed. */
+export function recipientFor(user) {
+  const email = typeof user?.email === 'string' ? user.email.trim() : ''
+  const confirmed = Boolean(user?.email_confirmed_at || user?.confirmed_at)
+  if (!email || !confirmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
+  return email
 }
 
 export default async function handler(request) {
@@ -66,9 +72,18 @@ export default async function handler(request) {
     })
   }
 
-  // Check rate limit
-  if (!checkRateLimit(user.id)) {
-    return new Response(JSON.stringify({ error: 'Rate limit exceeded. Max 10 emails per minute.' }), {
+  const to = recipientFor(user)
+  if (!to) {
+    return new Response(JSON.stringify({ error: 'Your account has no confirmed email address' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    })
+  }
+
+  const minute = await checkRateLimit(`email:${user.id}`, EMAIL_LIMIT_PER_MINUTE)
+  const day = minute.allowed ? await checkDailyRateLimit(`email:${user.id}`, EMAIL_LIMIT_PER_DAY) : { allowed: false }
+  if (!minute.allowed || !day.allowed) {
+    return new Response(JSON.stringify({ error: 'Too many emails. Try again later.' }), {
       status: 429,
       headers: {
         'Content-Type': 'application/json',
@@ -88,28 +103,15 @@ export default async function handler(request) {
   }
 
   try {
-    const body = await request.json()
-    const { to, subject, html, text } = body
-
-    // Validate required fields
-    if (!to || !subject || (!html && !text)) {
-      return new Response(JSON.stringify({ error: 'Missing required fields: to, subject, and html or text' }), {
+    const body = await request.json().catch(() => ({}))
+    const build = Object.prototype.hasOwnProperty.call(TEMPLATES, body?.template) ? TEMPLATES[body.template] : null
+    if (!build) {
+      return new Response(JSON.stringify({ error: `Unknown template. Known: ${Object.keys(TEMPLATES).join(', ')}` }), {
         status: 400,
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       })
     }
-
-    // Validate email format
-    const emails = Array.isArray(to) ? to : [to]
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    for (const email of emails) {
-      if (!emailRegex.test(email)) {
-        return new Response(JSON.stringify({ error: `Invalid email address: ${email}` }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        })
-      }
-    }
+    const { subject, html, text } = build(body?.data)
 
     // Send via Resend
     const response = await fetch('https://api.resend.com/emails', {
@@ -120,7 +122,7 @@ export default async function handler(request) {
       },
       body: JSON.stringify({
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
-        to: emails,
+        to: [to],
         subject,
         html,
         text,
