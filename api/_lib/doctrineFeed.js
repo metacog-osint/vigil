@@ -27,7 +27,7 @@ export const SECTOR_MAP = {
 
 export const CONTRACT = 'tic-feed/2'
 export const CONTRACT_REV = '2.1'
-export const KIT_VERSION = '0.6.9'
+export const KIT_VERSION = '0.6.12'
 export const SITE = 'https://vigil.theintelligence.company'
 export const METHOD = 'vigil-feed-1.0'
 export const EPSS_ALERT = 0.5
