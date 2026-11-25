@@ -96,7 +96,7 @@ export function TimeRangeSelector({ value, onChange, className = '' }) {
             <span className="text-gray-400 text-sm">days</span>
             <button
               onClick={handleCustomApply}
-              className="px-3 py-1 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600"
+              className="px-3 py-1 bg-cyan-700 text-white text-sm rounded hover:bg-cyan-800"
             >
               Apply
             </button>

@@ -149,7 +149,7 @@ export function TargetingHeatmap({ data, sectors, countries, onCellClick }) {
               <th className="w-32 p-2 text-left text-xs text-gray-500">Sector / Country</th>
               {countries.slice(0, 12).map((country) => (
                 <th key={country} className="p-1 text-center">
-                  <span className="text-[10px] text-gray-400 transform -rotate-45 inline-block origin-bottom-left">
+                  <span className="text-xs text-gray-400 transform -rotate-45 inline-block origin-bottom-left">
                     {country}
                   </span>
                 </th>
@@ -234,7 +234,7 @@ export function TargetingHeatmapMini({ data, topN = 5 }) {
         {/* Header */}
         <div />
         {countries.map((country) => (
-          <div key={country} className="text-[9px] text-gray-500 text-center truncate px-1">
+          <div key={country} className="text-xs text-gray-500 text-center truncate px-1">
             {country.slice(0, 3)}
           </div>
         ))}
@@ -242,7 +242,7 @@ export function TargetingHeatmapMini({ data, topN = 5 }) {
         {/* Rows */}
         {sectors.map((sector) => (
           <>
-            <div key={`label-${sector}`} className="text-[9px] text-gray-400 truncate pr-1">
+            <div key={`label-${sector}`} className="text-xs text-gray-400 truncate pr-1">
               {sector}
             </div>
             {countries.map((country) => {

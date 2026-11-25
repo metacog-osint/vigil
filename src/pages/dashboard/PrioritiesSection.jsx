@@ -43,7 +43,7 @@ function PersonalizationPrompt() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/settings')}
-              className="px-4 py-1.5 bg-cyan-500 text-white text-sm rounded hover:bg-cyan-600 transition-colors"
+              className="px-4 py-1.5 bg-cyan-700 text-white text-sm rounded hover:bg-cyan-800 transition-colors"
             >
               Set Up Now
             </button>

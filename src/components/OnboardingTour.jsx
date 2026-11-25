@@ -186,7 +186,7 @@ function TourTooltip({ step, onNext, onPrev, onSkip, currentIndex, totalSteps })
             )}
             <button
               onClick={onNext}
-              className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-sm rounded-lg transition-colors"
+              className="px-4 py-1.5 bg-cyan-700 hover:bg-cyan-800 text-white text-sm rounded-lg transition-colors"
             >
               {isLast ? 'Get Started' : 'Next'}
             </button>

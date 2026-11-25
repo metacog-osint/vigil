@@ -36,7 +36,7 @@ function MatrixCell({ techniqueA, techniqueB, count, actors, onClick }) {
       className={`w-8 h-8 ${getCellColor(count)} hover:ring-2 hover:ring-white/50 transition-all flex items-center justify-center`}
       title={`${techniqueA} + ${techniqueB}: ${count} actors`}
     >
-      <span className="text-[10px] text-white/80">{count}</span>
+      <span className="text-xs text-white/80">{count}</span>
     </button>
   )
 }
@@ -277,7 +277,7 @@ export function TechniqueCooccurrenceFullMatrix({ techniques, cooccurrenceData }
               className="w-8 h-20 flex items-end justify-center pb-1"
               title={tech.name}
             >
-              <span className="text-[10px] text-gray-400 transform -rotate-45 origin-bottom-left whitespace-nowrap">
+              <span className="text-xs text-gray-400 transform -rotate-45 origin-bottom-left whitespace-nowrap">
                 {tech.mitre_id}
               </span>
             </div>
@@ -288,7 +288,7 @@ export function TechniqueCooccurrenceFullMatrix({ techniques, cooccurrenceData }
         {displayTechniques.map((techA) => (
           <div key={techA.id} className="flex">
             <div className="w-20 h-8 flex items-center pr-2">
-              <span className="text-[10px] text-gray-400 truncate" title={techA.name}>
+              <span className="text-xs text-gray-400 truncate" title={techA.name}>
                 {techA.mitre_id}
               </span>
             </div>

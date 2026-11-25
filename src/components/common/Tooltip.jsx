@@ -64,7 +64,7 @@ export function Tooltip({
     >
       {content && <div className="leading-relaxed">{content}</div>}
       {source && (
-        <div className="mt-1.5 pt-1.5 border-t border-gray-700 text-gray-500 text-[10px]">
+        <div className="mt-1.5 pt-1.5 border-t border-gray-700 text-gray-500 text-xs">
           Source: {source}
         </div>
       )}

@@ -69,6 +69,7 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { usePageTracking } from './hooks/useAnalytics'
 import { useTermsAcceptance } from './hooks/useTermsAcceptance'
 import { useSessionManager } from './hooks/useSessionManager'
+import { useRouteTitle } from './hooks/useRouteTitle'
 
 // Contexts
 import { TenantProvider } from './contexts/TenantContext'
@@ -157,6 +158,9 @@ function ProtectedApp() {
   const { user } = useAuth()
   const isOnline = useOnlineStatus()
   const location = useLocation()
+
+  // Page title per signed-in route
+  useRouteTitle()
 
   // Terms acceptance check
   const {
