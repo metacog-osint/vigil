@@ -14,6 +14,19 @@ dated 24 September or earlier; re-measure any number there before trusting it.
 
 ---
 
+## 00. 25 November 2026, ThreatCluster licence split and backfill (ideas#235)
+
+- **PR open, nothing applied or deployed.** Migration `200_threatcluster_licence_split.sql` (two `source_licences`
+  rows: `threatcluster-gpl-20261121` sellable, `threatcluster-terms-20261122` not) and the `threatcluster-victims`
+  Edge Function change (daily window labels fills `threatcluster-terms-20261122`; new `gpl-365d` window reads the
+  365-day file pinned to upstream commit `3ae03304552ec01bfff7e77a5652e6459d193db2`, the last GPL-3.0 commit).
+  Order: apply 200, deploy the function, then one invocation `{"window":"gpl-365d"}` (the Tom-run step: it writes
+  country to incidents). The daily worker run is unchanged (`90d`).
+- Measured on the pinned file (21 Nov 2026): 10,409 rows, 8,977 with a two-letter country, 8,871 distinct victims,
+  13 with conflicting countries. `apply_victim_countries` fills only empty countries and leaves contested victims
+  alone, so the backfill cannot overwrite what is held.
+- Not done: relabelling fills made since 22 Nov 12:27 UTC under the old label (count with the VERIFY query in 200).
+
 ## 0. Latest: 20 November 2026, Upper Midwest watch page (ideas#51)
 
 **20 Nov, about 19:15-19:40 UTC (1:15-1:40 p.m. CST).** `/upper-midwest`, scope A (Tom: page only, no migration,
