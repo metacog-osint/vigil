@@ -86,7 +86,13 @@ jobs:
         run: |
           set -euo pipefail
           export PGPASSWORD=scratch
-          pg_restore --no-owner --no-privileges -h localhost -U postgres -d postgres dump/vigil-history.dump 2>restore.err || { tail -20 restore.err; true; }
+          # The dump carries Supabase's row-level-security policies, which name these roles.
+          for r in anon authenticated service_role; do
+            psql -h localhost -U postgres -d postgres -qc "create role $r nologin"
+          done
+          pg_restore --no-owner --no-privileges -h localhost -U postgres -d postgres dump/vigil-history.dump 2>restore.err || true
+          echo "restore errors: $(grep -c 'pg_restore: error' restore.err || true)"
+          grep -A2 'pg_restore: error' restore.err | head -24 || true
           after=$(psql -h localhost -U postgres -d postgres -Atc "select count(*) from public.entity_changelog")
           before=$(cat before.txt)
           echo "restored entity_changelog rows: $after (before the dump: $before)"
