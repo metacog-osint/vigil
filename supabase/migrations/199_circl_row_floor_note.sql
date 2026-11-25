@@ -1,6 +1,6 @@
 -- 199. Say why circl-sightings has no per-run row floor
 --
--- STATUS: DRAFT, NOT APPLIED. Tom applies it.
+-- STATUS: APPLIED 25 November 2026 (20261125182937), exactly as written.
 --
 -- WHY
 --
