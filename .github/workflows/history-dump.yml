@@ -66,8 +66,7 @@ jobs:
         run: |
           set -euo pipefail
           # A secret saved from PowerShell can start with a byte-order mark or end with a newline.
-          SRC=$(printf '%s' "$SRC" | sed 's/^ï»¿//' | tr -d '
- ')
+          SRC=$(printf '%s' "$SRC" | sed 's/^\xEF\xBB\xBF//' | tr -d '[:space:]')
           if [ -z "$SRC" ]; then echo "::error::VIGIL_DUMP_DB_URL is not set"; exit 1; fi
           mkdir dump
           before=$(psql "$SRC" -Atc "select count(*) from public.entity_changelog")
