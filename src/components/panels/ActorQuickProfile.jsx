@@ -309,7 +309,7 @@ export default function ActorQuickProfile({ actorId, actorName, onClose, onAddTo
         {onAddToWatchlist && (
           <button
             onClick={() => onAddToWatchlist(actor)}
-            className="text-xs px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded"
+            className="text-xs px-3 py-1 bg-cyan-700 hover:bg-cyan-800 text-white rounded"
           >
             Add to Watchlist
           </button>

@@ -382,7 +382,7 @@ function RuleModal({ rule, onClose, onSave }) {
             <button
               type="submit"
               disabled={saving || !ruleName.trim()}
-              className="px-4 py-2 bg-cyan-500 text-white rounded hover:bg-cyan-600 disabled:opacity-50"
+              className="px-4 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-800 disabled:opacity-50"
             >
               {saving ? 'Saving...' : rule ? 'Save Changes' : 'Create Rule'}
             </button>

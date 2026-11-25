@@ -111,7 +111,7 @@ export function ShareButton({
                 <button
                   onClick={handleShare}
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg disabled:opacity-50"
                 >
                   {loading ? (
                     <>

@@ -241,7 +241,7 @@ function NodeBox({ type, label, sublabel, isSelected, onClick }) {
       }`}
     >
       <div className="truncate">{label}</div>
-      {sublabel && <div className="text-[10px] text-gray-500 truncate mt-0.5">{sublabel}</div>}
+      {sublabel && <div className="text-xs text-gray-500 truncate mt-0.5">{sublabel}</div>}
     </button>
   )
 }

@@ -928,7 +928,7 @@ function AuditSettingsModal({ userId, teamId, onClose }) {
           <button
             onClick={handleSave}
             disabled={saving || loading}
-            className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors disabled:opacity-50"
+            className="px-6 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg transition-colors disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Settings'}
           </button>

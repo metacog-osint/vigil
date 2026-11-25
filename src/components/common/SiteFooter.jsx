@@ -55,7 +55,7 @@ export const DATA_CREDITS = [
   },
 ]
 
-const linkClass = 'text-gray-400 hover:text-cyan-400 underline-offset-2 hover:underline'
+const linkClass = 'text-gray-400 hover:text-cyan-400 underline underline-offset-2'
 
 /**
  * A project of The Intelligence Company: where the code is, under what
