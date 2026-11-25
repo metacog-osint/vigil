@@ -520,7 +520,7 @@ carry addresses. Delistings are dated, never deleted.
 
 | Source           | Endpoint                                      | Data Type                                     | Schedule         | Script                        | Auth         |
 | ---------------- | --------------------------------------------- | --------------------------------------------- | ---------------- | ----------------------------- | ------------ |
-| UMD Cyber Events | `https://cissm.umd.edu/cyber-events-database` | Nation-state attribution, motives, industries | Monthly (manual) | `ingest-umd-cyber-events.mjs` | Registration |
+| UMD Cyber Events | `https://gotech.umd.edu/node/13294` | Nation-state attribution, motives, industries | Monthly (manual) | `ingest-umd-cyber-events.mjs` | Direct download; file kept local |
 
 ### Enrichment Services
 
@@ -981,10 +981,15 @@ Research identified several high-value sources not in the original proposal:
 
 #### UMD Cyber Events Database (GDELT-Powered) ✅ COMPLETE
 
-- **URL**: `https://cissm.umd.edu/cyber-events-database`
+- **URL**: `https://gotech.umd.edu/node/13294` (moved from cissm.umd.edu; web app cybereventsdatabase.org)
 - **Data Type**: Structured cyber attack events with nation-state attribution
 - **Why Critical**: 25+ fields including threat actor type (nation-state/criminal/hacktivist), target industry, motive, severity. Covers 2014-present with monthly updates.
-- **Auth**: Registration required (free)
+- **Auth**: None for the xlsx on the GoTech page; the web app needs a login
+- **Terms**: no licence, terms of use or redistribution permission stated on the GoTech page, the web app's
+  home, about and methodology pages, or the March 2026 codebook (read 25 Nov 2026). Citation asked for:
+  Harry, C., & Gallagher, N. (2018). Classifying cyber events. *Journal of Information Warfare*, 17(3), 17-31.
+  So the downloaded file is not redistributed: `umd/` is git-ignored (the 2014-2025 file was committed from
+  18 Jan 2026 and removed 25 Nov 2026; it stays in git history)
 - **Script**: `scripts/ingest-umd-cyber-events.mjs`
 - **Migration**: `061_cyber_events.sql`
 - **Records**: 16,104 cyber events (2014-2025)

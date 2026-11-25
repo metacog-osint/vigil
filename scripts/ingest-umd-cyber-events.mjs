@@ -5,7 +5,12 @@
  * Parses the Excel file from UMD's Cyber Events Database and uploads to Supabase.
  * The database is updated monthly and requires manual download.
  *
- * Source: https://cissm.umd.edu/cyber-events-database
+ * Source: https://gotech.umd.edu/node/13294 (UMD GoTech, formerly CISSM)
+ * Cite: Harry, C., & Gallagher, N. (2018). Classifying cyber events.
+ *   Journal of Information Warfare, 17(3), 17-31.
+ *
+ * UMD states no licence or redistribution terms, so the downloaded file
+ * stays local: ./umd/ is git-ignored and the file is not committed.
  *
  * Usage:
  *   npm run ingest:umd-cyber-events
@@ -145,8 +150,8 @@ async function ingestUmdCyberEvents(filePath) {
   const xlsxPath = findUmdFile(filePath)
   if (!xlsxPath) {
     console.error('No UMD Excel file found')
-    console.error('Please download from: https://cissm.umd.edu/cyber-events-database')
-    console.error('Place the file in the ./umd directory')
+    console.error('Please download from: https://gotech.umd.edu/node/13294')
+    console.error('Place the file in the ./umd directory (git-ignored; never commit it)')
     process.exit(1)
   }
 

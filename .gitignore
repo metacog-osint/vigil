@@ -48,5 +48,9 @@ nul
 # Wrangler local state (workers/)
 .wrangler/
 
+# UMD Cyber Events Database download: no redistribution licence stated, so it stays local
+umd/
+private/
+
 # Claude Code local permissions (per machine, never shared)
 .claude/settings.local.json
