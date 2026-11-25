@@ -21,8 +21,10 @@ in the terms of The Intelligence Company's doctrine kit (`doctrine/kit/`).
 
 ## Baselines
 Unusual claims, and so the ESCALATING label, compare each group with its own previous 8 weeks (rolling); the
-DECLINING label with its own previous week. EPSS alerts use a fixed threshold of 0.5 on a
-current score.
+DECLINING label with its own previous week. An EPSS alert needs all three: the vulnerability is in CISA's KEV
+catalog with known ransomware use, its FIRST EPSS score is at least 0.5 (a fixed threshold), and that score is
+current, dated within 3 days. Vigil reads FIRST's daily release once a day, so its score is usually one release
+behind FIRST's newest.
 
 ## Anomaly versus warning
 Everything in the feed is a measurement (kind observation): a group whose claims are unusual for it or a KEV entry that meets the EPSS

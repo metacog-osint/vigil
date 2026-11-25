@@ -11,6 +11,8 @@ import { join, resolve } from 'node:path'
 import {
   buildFeed,
   computedAsOf,
+  EPSS_ALERT,
+  EPSS_CURRENT_DAYS,
   contractHealth,
   countFromRange,
   healthBlock,
@@ -477,6 +479,27 @@ describe('doctrineFeed', () => {
     expect(stale).toMatchObject({ tier: 'routine', indicator_id: 'VG-IND-5' })
     expect(stale.title).toContain('EPSS 0.90 (not current)')
     expect(f['vigil:kev:CVE-2026-0003'].properties.sources.map((s) => s.id)).toEqual(['cisa-kev'])
+  })
+
+  it('raises no EPSS alert on a current high score without known ransomware use', () => {
+    const r = rows()
+    r.kev.push({
+      cve_id: 'CVE-2026-0004',
+      kev_date: '2026-10-29',
+      epss_score: 0.95,
+      epss_date: '2026-10-30',
+      ransomware_use: false,
+    })
+    const p = byId(buildFeed(r, NOW))['vigil:kev:CVE-2026-0004'].properties
+    expect(p).toMatchObject({ tier: 'routine', indicator_id: 'VG-IND-5' })
+    expect(p.baseline_ref).toBeUndefined()
+  })
+
+  it('states the whole EPSS alert rule in method.md (ideas#338)', () => {
+    const method = readFileSync(join(ROOT, 'doctrine/method.md'), 'utf8').replace(/\s+/g, ' ')
+    expect(method).toContain('known ransomware use')
+    expect(method).toContain(`at least ${EPSS_ALERT}`)
+    expect(method).toContain(`within ${EPSS_CURRENT_DAYS} days`)
   })
 
   it('names the regulator and the scope of people affected', () => {
