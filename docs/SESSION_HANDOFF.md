@@ -463,8 +463,8 @@ check updated about 15:45 UTC 15 Nov. Measured live then._
   and public. Its worker had also written `kev_date`, which `/api/feed`
   publishes as CISA's. Migration 164 registers it in `source_licences`, backs up
   the 201 `vulncheck-kev` rows to `vulncheck_retired_rows` (internal only), strips
-  them and drops its `feed_expectations` row. Tom is asking VulnCheck for written
-  consent, and wants an independent "known exploited" signal built from primary
+  them and drops its `feed_expectations` row. No consent request was sent, and Tom
+  dropped that idea on 21 Nov 2026. He wants an independent "known exploited" signal built from primary
   sources: CISA Vulnrichment (CC0), MSRC, Project Zero's 0day list, CERT and
   vendor advisories, with PoC aggregators kept separate.
 - **Review queue** (15 Nov, PRs #99 and #101, production `662d33c` deployed

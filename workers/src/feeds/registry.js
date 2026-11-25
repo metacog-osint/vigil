@@ -45,6 +45,7 @@ import { ingestWaBreachCauses } from './wa-breach-causes.js'
 import { ingestHhsOcrBreaches } from './hhs-ocr-breaches.js'
 import { ingestCisaVulnrichment } from './cisa-vulnrichment.js'
 import { ingestVendorExploited } from './vendor-exploited.js'
+import { ingestCirclSightings } from './circl-sightings.js'
 import { ingestCertfrAlerts } from './certfr-alerts.js'
 import { ingestFincenAdvisories } from './fincen-advisories.js'
 import { buildPublicSummary } from './public-summary.js'
@@ -232,6 +233,16 @@ export const JOBS = [
     cost: 1,
     intervalMinutes: DAY,
     run: (db, env) => ingestVendorExploited(db, env),
+  },
+  // Reported exploitation from CIRCL's sightings (migration 194). One subrequest
+  // to the circl-sightings Edge Function, which keeps allow-listed sources only.
+  // Kept apart from KEV: circl_sightings, not vulnerabilities.
+  {
+    id: 'circl-sightings',
+    priority: 4,
+    cost: 1,
+    intervalMinutes: HOUR,
+    run: (db, env) => ingestCirclSightings(db, env),
   },
   // CERT-FR's alerts (migration 188), kept as CERT-FR's notices, never as an
   // exploitation claim. One subrequest to the certfr-alerts Edge Function,
