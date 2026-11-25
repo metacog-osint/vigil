@@ -21,8 +21,8 @@
       "independence_group": "threatcluster",
       "ease_of_faking": "medium",
       "cadence_s": 86400,
-      "descriptor": "Independent crawl supplying victim countries; 99% agreement with the country data already held (916 of 922 overlapping victims).",
-      "licence": "TLP:CLEAR"
+      "descriptor": "Independent crawl supplying victim countries; 99% agreement with the country data already held (916 of 922 overlapping victims). Since 22 Nov 2026 only a free 7-day file is published, under ThreatCluster's own terms.",
+      "licence": "GPL-3.0 to 21 Nov 2026, then ThreatCluster terms (non-commercial, with attribution)"
     },
     "cisa-kev": {
       "grade": "A1",

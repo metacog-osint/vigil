@@ -38,10 +38,41 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const BASE = 'https://raw.githubusercontent.com/Jam0k/Ransomware-Intel/main/data'
 
-/** 90 days for the daily run; 365 to backfill, which is a bigger download. */
+/**
+ * The upstream licence changed on 22 Nov 2026 (ideas#235). Until commit
+ * 3ae0330455 (21 Nov, 14:54 UTC, the last commit made under GPL-3.0) the data
+ * was GPL-3.0 and the README said TLP:CLEAR. From 22 Nov it is ThreatCluster's
+ * own terms: free in your own environment and in non-commercial community
+ * defence work, with attribution; commercial redistribution needs a licence.
+ *
+ * So the function knows two kinds of read, and labels each fill with its own
+ * source (victim_country_source), which migration 200 gives its own licence row:
+ *
+ *   daily ('90d')      the free file on main, now about 10 to 25 victims a day.
+ *                      Labelled threatcluster-terms-20261122: not sellable.
+ *   backfill           the 365-day file as committed in the last GPL-3.0 commit,
+ *   ('gpl-365d')       pinned by full sha so nothing later can reach it. Labelled
+ *                      threatcluster-gpl-20261121: sellable. Run once, by hand:
+ *                      {"window":"gpl-365d"}. There is deliberately no way to
+ *                      name another commit.
+ *
+ * '365d' read main's victims-365d.csv, which upstream deleted on 22 Nov; it is
+ * kept only so an old caller gets the upstream 404 rather than a silent change.
+ */
+const GPL_COMMIT = '3ae03304552ec01bfff7e77a5652e6459d193db2'
+const GPL_BASE = `https://raw.githubusercontent.com/Jam0k/Ransomware-Intel/${GPL_COMMIT}/data`
+
 const WINDOWS: Record<string, string> = {
   '90d': `${BASE}/victims.csv`,
   '365d': `${BASE}/victims-365d.csv`,
+  'gpl-365d': `${GPL_BASE}/victims-365d.csv`,
+}
+
+/** victim_country_source for each window; see migration 200. */
+const SOURCES: Record<string, string> = {
+  '90d': 'threatcluster-terms-20261122',
+  '365d': 'threatcluster-terms-20261122',
+  'gpl-365d': 'threatcluster-gpl-20261121',
 }
 
 const UA = 'Vigil-ThreatIntel/1.0 (+https://vigil.theintelligence.company)'
@@ -167,13 +198,14 @@ Deno.serve(async (req) => {
 
     const { data, error } = await supabase.rpc('apply_victim_countries', {
       p_rows: rows,
-      p_source: 'threatcluster',
+      p_source: SOURCES[window],
     })
     if (error) throw new Error(`apply_victim_countries failed: ${error.message}`)
 
     return json({
       success: true,
       source: 'threatcluster',
+      label: SOURCES[window],
       window,
       parsed: rows.length,
       ...(data ?? {}),
