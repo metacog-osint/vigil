@@ -1,14 +1,16 @@
 // @vitest-environment node
 /**
  * Migration 194: CIRCL sightings are readable but not writable by the public roles, only the
- * service role can run the writer, a re-read changes nothing, and the feed is watched.
+ * service role can run the writer, a re-read changes nothing, and the feed is watched (with 199's
+ * note on why it has no row floor).
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { freshDatabase } from './pg.js'
 
 const SCHEMA = `
   create table feed_expectations (
-    feed_id text primary key, expected_interval_minutes int, critical boolean, note text
+    feed_id text primary key, expected_interval_minutes int, critical boolean, note text,
+    min_rows_per_run int, row_floor_note text
   );
   create table source_licences (
     source_id text primary key, display_name text, licence text, licence_url text,
@@ -28,7 +30,10 @@ describe('migration 194', () => {
   let db
 
   beforeAll(async () => {
-    db = await freshDatabase({ schema: SCHEMA, migrations: ['194_circl_sightings.sql'] })
+    db = await freshDatabase({
+      schema: SCHEMA,
+      migrations: ['194_circl_sightings.sql', '199_circl_row_floor_note.sql'],
+    })
   }, 60_000)
 
   afterAll(async () => {
@@ -95,5 +100,13 @@ describe('migration 194', () => {
       `select critical from feed_expectations where feed_id = 'circl-sightings'`
     )
     expect(feed.rows[0].critical).toBe(false)
+  })
+
+  it('says why the feed has no per-run row floor (199), so 197 does not read it as unwatched', async () => {
+    const { rows } = await db.query(
+      `select min_rows_per_run, row_floor_note from feed_expectations where feed_id = 'circl-sightings'`
+    )
+    expect(rows[0].min_rows_per_run).toBeNull()
+    expect(rows[0].row_floor_note).toMatch(/0 sightings is an ordinary run/)
   })
 })

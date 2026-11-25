@@ -1,6 +1,6 @@
 -- 194. Reported exploitation from CIRCL Vulnerability-Lookup sightings, kept apart from KEV
 --
--- STATUS: NOT APPLIED. Written 21 November 2026 (ideas#135). Needs Tom's yes.
+-- STATUS: APPLIED 25 November 2026 (20261125171153), exactly as written. Written 21 November 2026 (ideas#135).
 --
 -- WHY
 --
