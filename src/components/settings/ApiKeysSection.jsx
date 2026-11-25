@@ -107,7 +107,7 @@ export default function ApiKeysSection({ userId }) {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors"
+          className="px-4 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg transition-colors"
         >
           Create API Key
         </button>
@@ -246,7 +246,7 @@ export default function ApiKeysSection({ userId }) {
                   </div>
                   <button
                     onClick={() => copyToClipboard(newKey, 'new')}
-                    className="mt-3 w-full px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors"
+                    className="mt-3 w-full px-4 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg transition-colors"
                   >
                     {copiedKey === 'new' ? 'Copied!' : 'Copy to Clipboard'}
                   </button>
@@ -329,7 +329,7 @@ export default function ApiKeysSection({ userId }) {
                   <button
                     onClick={handleCreate}
                     disabled={creating}
-                    className="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors disabled:opacity-50"
+                    className="flex-1 px-4 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg transition-colors disabled:opacity-50"
                   >
                     {creating ? 'Creating...' : 'Create Key'}
                   </button>

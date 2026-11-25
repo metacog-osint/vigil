@@ -347,7 +347,7 @@ export default function ThreatActors() {
                           })
                         }
                         disabled={!savedFiltersHook.saveFilterName.trim()}
-                        className="px-2 py-1 text-sm bg-cyan-600 hover:bg-cyan-500 text-white rounded disabled:opacity-50"
+                        className="px-2 py-1 text-sm bg-cyan-700 hover:bg-cyan-800 text-white rounded disabled:opacity-50"
                       >
                         Save
                       </button>
@@ -423,7 +423,7 @@ export default function ThreatActors() {
           <div className="flex bg-gray-800 rounded overflow-hidden">
             <button
               onClick={() => setViewMode('table')}
-              className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'table' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
+              className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'table' ? 'bg-cyan-700 text-white' : 'text-gray-400 hover:text-white'}`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -437,7 +437,7 @@ export default function ThreatActors() {
             </button>
             <button
               onClick={() => setViewMode('overview')}
-              className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'overview' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'}`}
+              className={`px-3 py-1.5 text-sm flex items-center gap-1 ${viewMode === 'overview' ? 'bg-cyan-700 text-white' : 'text-gray-400 hover:text-white'}`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

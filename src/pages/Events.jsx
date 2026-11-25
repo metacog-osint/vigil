@@ -191,7 +191,7 @@ export default function Events() {
             <button
               onClick={() => setViewMode('table')}
               className={`px-3 py-1.5 text-sm flex items-center gap-1 ${
-                viewMode === 'table' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'
+                viewMode === 'table' ? 'bg-cyan-700 text-white' : 'text-gray-400 hover:text-white'
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,7 +208,7 @@ export default function Events() {
               onClick={() => setViewMode('overview')}
               className={`px-3 py-1.5 text-sm flex items-center gap-1 ${
                 viewMode === 'overview'
-                  ? 'bg-cyan-600 text-white'
+                  ? 'bg-cyan-700 text-white'
                   : 'text-gray-400 hover:text-white'
               }`}
             >

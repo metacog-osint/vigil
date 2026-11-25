@@ -251,7 +251,7 @@ export default function NotificationBell({ userId = 'anonymous' }) {
 
         {/* Unread Badge */}
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+          <span className="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-xs font-bold text-white bg-red-500 rounded-full">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -311,7 +311,7 @@ export default function NotificationBell({ userId = 'anonymous' }) {
                           {notification.title}
                         </span>
                         {!notification.read && isRecent(notification.date) && (
-                          <span className="flex-shrink-0 text-[10px] px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded">
+                          <span className="flex-shrink-0 text-xs px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded">
                             NEW
                           </span>
                         )}
@@ -324,12 +324,12 @@ export default function NotificationBell({ userId = 'anonymous' }) {
                       <div className="flex items-center gap-2 mt-1">
                         {notification.severity && notification.severity !== 'info' && (
                           <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded border ${SEVERITY_COLORS[notification.severity]}`}
+                            className={`text-xs px-1.5 py-0.5 rounded border ${SEVERITY_COLORS[notification.severity]}`}
                           >
                             {notification.severity.toUpperCase()}
                           </span>
                         )}
-                        <span className="text-[10px] text-gray-600">
+                        <span className="text-xs text-gray-600">
                           {notification.date
                             ? formatDistanceToNow(new Date(notification.date), { addSuffix: true })
                             : ''}
