@@ -90,6 +90,10 @@ jobs:
           for r in anon authenticated service_role; do
             psql -h localhost -U postgres -d postgres -qc "create role $r nologin"
           done
+          # Column defaults call extensions.uuid_generate_v4(); Supabase keeps extensions in this schema.
+          psql -h localhost -U postgres -d postgres -qc 'create schema extensions' \
+            -c 'create extension "uuid-ossp" schema extensions' \
+            -c 'create extension pgcrypto schema extensions'
           pg_restore --no-owner --no-privileges -h localhost -U postgres -d postgres dump/vigil-history.dump 2>restore.err || true
           echo "restore errors: $(grep -c 'pg_restore: error' restore.err || true)"
           grep -A2 'pg_restore: error' restore.err | head -24 || true
