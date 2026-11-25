@@ -5,10 +5,10 @@
  */
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { APP_SECTIONS, isAppSection } from '../appSections'
 
-const app = readFileSync(fileURLToPath(new URL('../../App.jsx', import.meta.url)), 'utf8')
+const app = readFileSync(resolve(process.cwd(), 'src/App.jsx'), 'utf8')
 const start = app.indexOf('function ProtectedApp')
 const protectedSrc = app.slice(start, app.indexOf('function AppContent', start))
 // Public routes also exist in the signed-in layout, and the sign-in paths redirect there.
