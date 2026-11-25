@@ -18,8 +18,8 @@
 --     s3   content for "personal, internal and non-commercial purposes"
 --
 -- Vigil is free and public: the site, /api/v1 and /api/feed. So VulnCheck's
--- data cannot be on any of them. The owner decided on 15 November 2026 to
--- retire the source and to ask VulnCheck in writing; if they consent, this
+-- data cannot be on any of them. So the source is
+-- retired (15 November 2026); with VulnCheck's written consent this
 -- can be reversed from the backup table below.
 --
 -- WHAT IT HAD DONE TO THE KEV COLUMNS

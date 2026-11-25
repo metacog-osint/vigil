@@ -104,11 +104,11 @@
 -- ransomlook does. The others are not critical: they show in feed_health and
 -- in the workflow's table, and fail nothing.
 --
--- Every value is Tom's to change, with one UPDATE on feed_expectations.
+-- Every value can be changed with one UPDATE on feed_expectations.
 --
 -- GRANTS
 --
--- CREATE OR REPLACE keeps the view's grants; restated anyway (reminder 12).
+-- CREATE OR REPLACE keeps the view's grants; restated anyway.
 -- ingestion_is_healthy() is not changed.
 
 do $$

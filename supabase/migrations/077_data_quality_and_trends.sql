@@ -6,7 +6,7 @@
 --   * fix only mechanically safe cases (actor names differing only in case,
 --     spacing or punctuation)
 --   * queue judgment calls (alias matches) for human review, and remember the
---     verdicts in actor_relationship_decisions so each pair is decided once
+--     verdicts in actor_relationship_decisions so each pair is settled once
 -- and fixes apply_actor_trends(), which has failed on every call since January
 -- ("UPDATE requires a WHERE clause" from Supabase's safeupdate extension).
 

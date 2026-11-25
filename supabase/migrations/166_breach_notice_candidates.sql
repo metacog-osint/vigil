@@ -6,8 +6,8 @@
 -- question underneath them is a real one: when a California, Washington or
 -- Oregon notice names an organisation a ransomware group also claimed, at
 -- about the same time, is the notice the victim's own account of that attack?
--- 141 and 143 chose not to ask it. Tom decided on 15 Nov 2026 that it should
--- be asked, labelled for what it is, and only where the dates are close.
+-- 141 and 143 chose not to ask it. From 15 Nov 2026 it
+-- is asked, labelled for what it is, and only where the dates are close.
 --
 -- WHAT IS ASKED
 --

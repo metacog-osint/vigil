@@ -75,7 +75,7 @@ describe('selectDueJobs', () => {
     expect(selectDueJobs(jobs, { hourly: { minutes_since_success: 60 - DUE_SLACK_MINUTES - 1 } })).toEqual([])
   })
 
-  // ideas#362: epss ran at 01:46-03:47 UTC, before FIRST's 13:30 UTC release, so
+  // epss ran at 01:46-03:47 UTC, before FIRST's 13:30 UTC release, so
   // every run read the previous day's scores.
   describe('a job pinned to a UTC time (afterUtc)', () => {
     const daily = [job({ id: 'pinned', intervalMinutes: 1440, afterUtc: '15:00' })]

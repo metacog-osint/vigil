@@ -16,7 +16,7 @@
 -- question was answered. It does not say what the answer was. There was no
 -- way to put a country, a strength and the vendor's own words on the report,
 -- so `linguistic`, the weakest strength, added for exactly this corpus, had
--- never been set. SESSION_HANDOFF §2b item 1 names this as what remains.
+-- never been set. This closes that gap.
 --
 -- WHAT A RULING IS
 --

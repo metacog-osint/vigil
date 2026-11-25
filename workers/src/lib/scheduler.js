@@ -121,7 +121,7 @@ export function lastUtcAnchor(hhmm, now) {
  * A job with `afterUtc` ("HH:MM") runs once a day, at the first tick after that
  * UTC time: it is due while its last success is older than the latest such time.
  * For a source that publishes at a fixed hour, so the day's run reads that day's
- * release rather than the previous one (epss, ideas#362).
+ * release rather than the previous one (epss).
  */
 export function selectDueJobs(jobs, health, now = new Date()) {
   const due = []

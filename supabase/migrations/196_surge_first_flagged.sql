@@ -1,6 +1,6 @@
--- 196. Record when a group's surge was first flagged (ideas#189, feed contract 2.1 last_change)
+-- 196. Record when a group's surge was first flagged (feed contract 2.1 last_change)
 --
--- STATUS: written 23 Nov 2026 on Tom's yes to ideas#189 ("additive, new surges only").
+-- STATUS: written 23 Nov 2026. Additive; stamps new surges only.
 --
 -- WHY
 -- /api/feed states last_change for every item but the surge item, because apply_actor_surges() (179)

@@ -52,8 +52,8 @@
 --                        not. Closes 1 (ransomwhere, now on the Zenodo route).
 --
 -- Not done: closing by date gap, by name similarity, by amendment pairing, or
--- anything else that decides what a filing is about. docs/
--- REVIEW_QUEUE_AUTOMATION.md lists those as help for a reviewer, not closes.
+-- anything else that decides what a filing is about. Those
+-- are help for a reviewer, not closes.
 --
 -- RE-RAISING
 --

@@ -40,7 +40,7 @@
 --
 -- evidence_publishers is not a feed registry and nothing here writes to
 -- threat_actors, incidents or attributed_activity. The source_licences gate
--- (CLAUDE.md, reminder 8) is untouched; where a publisher is also an ingested
+-- is untouched; where a publisher is also an ingested
 -- feed, licence_source_id points at its row so the two cannot drift.
 
 begin;

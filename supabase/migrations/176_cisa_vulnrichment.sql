@@ -7,7 +7,7 @@
 -- WHY
 --
 -- VulnCheck was retired on 15 Nov 2026 (164): its terms forbid free
--- redistribution. Tom asked for an independent "known exploited" signal built
+-- redistribution. This is an independent "known exploited" signal built
 -- from primary sources, CISA Vulnrichment first, PoC aggregators kept separate.
 --
 -- WHAT VULNRICHMENT IS
@@ -38,8 +38,8 @@
 --
 -- WHO SEES IT
 --
--- Nobody outside the service role yet. Tom chose on 18 Nov 2026 to store it
--- and decide where it shows after seeing how many CVEs it adds beyond KEV.
+-- Nobody outside the service role yet. It is stored first (18 Nov 2026), to
+-- count how many CVEs it adds beyond KEV before it shows anywhere.
 -- Showing it later is a grant and a page, not a new load.
 --
 -- GRANTS

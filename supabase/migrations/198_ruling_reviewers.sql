@@ -1,7 +1,6 @@
--- 198. Only named reviewers may rule (ideas#155)
+-- 198. Only named reviewers may rule
 --
--- STATUS: written 24 Nov 2026 on Tom's "fix it" (evening digest). NOT APPLIED. A Supabase migration needs
--- Tom's yes at the apply step.
+-- STATUS: written 24 Nov 2026. NOT APPLIED.
 --
 -- WHY
 -- record_verdict (126), rule_vendor_actor_link (156) and rule_vendor_attribution (157) take decided_by from

@@ -39,7 +39,7 @@
 -- (3-4 Oct), then 17.0, 15.0, 14.0 and 13.0 h. At 18 hours the check fires on
 -- the three longest and on nothing else. (Two earlier gaps, 158.7 h from 13 Jan
 -- and 2,737.9 h from 29 May, are from before the worker ran continuously.)
--- The threshold is Tom's call; changing it is one UPDATE on feed_expectations,
+-- Changing the threshold is one UPDATE on feed_expectations,
 -- and nothing but this view reads the column.
 --
 -- WHAT COUNTS AS NEW
@@ -75,7 +75,7 @@
 -- GRANTS
 --
 -- CREATE OR REPLACE keeps a view's grants, and the new column takes the
--- table's. Restated anyway (CLAUDE.md reminder 12). The view's live grants on
+-- table's. Restated anyway. The view's live grants on
 -- 15 Nov were every privilege to anon and authenticated, left over from the
 -- old defaults; select is all anything uses, so the rest are revoked.
 -- ingestion_is_healthy() is not SECURITY DEFINER, so rule 2 does not apply;

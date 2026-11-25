@@ -2,8 +2,8 @@
 --
 -- WHY FINCEN AND NOT A SCAM FEED
 --
--- THREAT_COVERAGE_GAPS section 5 concluded there were "limited public data
--- sources" for fraud. That was wrong in the way section 1 was wrong about
+-- An earlier coverage review concluded there were "limited public data
+-- sources" for fraud. That was wrong in the way it was wrong about
 -- CERT-EU: it counted indicator feeds. The public record on fraud is large and
 -- authoritative and free, and it is held by prosecutors, Treasury and
 -- regulators rather than published as a blocklist.
@@ -24,7 +24,7 @@
 -- It does not extract the red-flag indicators. Those live in the PDFs, they
 -- are the valuable part, and turning a paragraph of prose into a structured
 -- indicator is a judgment. A regular expression doing it is how two false
--- attributions reached this database (CLAUDE.md, reminder 7). So
+-- attributions reached this database. So
 -- `indicators_read` is false on every row, and the review queue asks a person
 -- to read the ones that matter.
 --

@@ -2,8 +2,8 @@
 --
 -- STATUS: APPLIED about 05:41 UTC 16 November 2026.
 --
--- Finding victim_name_quality (55aad300, raised 20 Sep 2026). Tom's verdict on
--- 16 Nov 2026: confirmed. Each name below was read by a person from the post
+-- Finding victim_name_quality (55aad300, raised 20 Sep 2026). Verdict
+-- recorded 16 Nov 2026: confirmed. Each name below was read by a person from the post
 -- itself; nothing here parses markup to find a name.
 --
 -- THE ROWS (measured 05:00 UTC 16 Nov 2026)
@@ -44,7 +44,7 @@
 -- outside the finding: 57 ransomwatch rows of 13 Jan 2026 (54 stored as
 -- "Name<website>", 3 as "Name<Updated>" or "<Auction>"), and 2 ransomware.live
 -- rows of 14 Jan ("</a>" alone, and "www.clevo.com.tw<UPDATED>"). They are
--- queued as their own finding below (reminder 7), not fixed.
+-- queued as their own finding below, not fixed.
 --
 -- GRANTS
 --

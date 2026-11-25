@@ -1,5 +1,5 @@
 -- Migration: reclaim storage held by data nothing reads
--- Applied: September 20, 2026, with the owner's approval for each item
+-- Applied: September 20, 2026
 --
 -- The database had grown to 4,161 MB of the 8 GB the plan includes, and three of the
 -- four largest objects held nothing anyone could read. No observation was deleted:

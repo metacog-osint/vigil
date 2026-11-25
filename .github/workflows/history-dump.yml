@@ -1,4 +1,4 @@
-# Weekly off-platform copy of Vigil's history tables (ideas#159).
+# Weekly off-platform copy of Vigil's history tables.
 #
 # Supabase Pro keeps 7 days of backups. entity_changelog goes back to 17 Jan
 # 2026 and nothing else holds it. This dumps the history tables with pg_dump,
@@ -6,7 +6,7 @@
 # it in the private metacog-osint/tic-archive (tools/tic_archive.py, lane
 # "pgdump"). Nothing here writes to the live database.
 #
-# Secrets (Tom sets them; see docs/HISTORY_DUMP.md):
+# Secrets (see docs/HISTORY_DUMP.md):
 #   VIGIL_DUMP_DB_URL    read-only role, Supabase SESSION POOLER url (IPv4)
 #   TIC_ARCHIVE_TOKEN    fine-grained token, contents:write on tic-archive only
 

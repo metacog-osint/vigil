@@ -50,8 +50,8 @@
 --              longer claim, or the spelling is close (trigram similarity of
 --              0.6 or more, both at least 8 characters).
 --
--- `possible` is a question for a person, never an alert (CLAUDE.md reminder
--- 7). "Susquehana Valley FCU" is probably a typo; "First Data leakage" is
+-- `possible` is a question for a person, never an alert.
+-- "Susquehana Valley FCU" is probably a typo; "First Data leakage" is
 -- probably not First Data. Only someone reading the post can say.
 --
 -- Only claims with data_quality = 'ok' are read. Placeholders, redacted names

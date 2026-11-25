@@ -1,4 +1,4 @@
--- 195: no function or browser grant can delete Vigil's data without an archive (ideas#158, Tom 23 Nov 2026).
+-- 195: no function or browser grant can delete Vigil's data without an archive.
 --
 -- Removes no rows. Three retention functions go, anon loses DELETE and TRUNCATE everywhere, signed-in users lose
 -- TRUNCATE everywhere and keep DELETE only on the tables the app deletes from. service_role is unchanged.

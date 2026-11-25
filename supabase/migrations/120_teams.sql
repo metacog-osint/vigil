@@ -1,5 +1,5 @@
 -- Migration: teams
--- Decided: September 20, 2026
+-- Dated: September 20, 2026
 --
 -- Four tables have been referenced across a dozen migrations and by
 -- src/lib/supabase/teams.js since January, and none of them existed. Every

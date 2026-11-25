@@ -167,7 +167,7 @@ grant execute on function public.source_allows_commercial_use(text) to anon, aut
 /**
  * Actor origin, restricted to what may be sold.
  *
- * This is the switch the owner asked for. A paid tier reads this instead of
+ * This is the commercial switch. A paid tier reads this instead of
  * threat_actors.origin_country; cutting a source out is one UPDATE to
  * source_licences and nothing else.
  *

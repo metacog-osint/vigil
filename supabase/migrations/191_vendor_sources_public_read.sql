@@ -1,12 +1,12 @@
 -- 191. Vendors' and CERT-FR's own words readable by the site (the vulnerability panel)
 --
--- STATUS: applied 19 Nov 2026, about 15:45 UTC, on Tom's yes (ideas#1), after vigil#10 merged.
+-- STATUS: applied 19 Nov 2026, about 15:45 UTC, after vigil#10 merged.
 --
 -- WHY
 --
 -- 187 and 188 stored Android's and Mozilla's exploitation statements and
--- CERT-FR's alerts closed to the public roles until Tom chose where they show.
--- On 19 Nov 2026 he chose the vulnerability panel only ("Yes, panel only"):
+-- CERT-FR's alerts closed to the public roles.
+-- From 19 Nov 2026 they show on the vulnerability panel only:
 -- each source its own line in its own words, with its link and credit, never a
 -- KEV label; nothing on /api/feed until about a week of clean daily runs. The
 -- three Android CVEs that KEV does not list (CVE-2020-0500, CVE-2022-20415,

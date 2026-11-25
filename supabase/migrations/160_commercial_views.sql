@@ -26,8 +26,8 @@
 --                    README. Supplies every claim since 29 May 2026.
 --   ransomwatch      Unlicense. Archived 3 March 2026.
 --   malpedia         CC BY-NC-SA 3.0. NonCommercial. 1,101 actor rows, names
---                    only. Treated as ETDA is, by the owner's decision of
---                    26 October 2026: kept in the free product, cut from
+--                    only. Treated as ETDA is (from
+--                    26 October 2026): kept in the free product, cut from
 --                    anything sold.
 --   mitre-attack     royalty-free, including commercial use, provided MITRE's
 --                    copyright notice and the licence travel with any copy.

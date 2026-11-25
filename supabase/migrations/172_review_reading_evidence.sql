@@ -5,7 +5,7 @@
 -- Four kinds of open finding ask a person to read something, and until now the
 -- card named it without showing it. This view gathers, per finding, what Vigil
 -- already holds of that thing. It decides nothing: every verdict is still the
--- reviewer's (reminder 7), and an empty field means Vigil does not hold the
+-- reviewer's, and an empty field means Vigil does not hold the
 -- text, not that there is nothing to read.
 --
 --   kind                          what the view adds (open, measured 16 Nov 2026)
@@ -22,7 +22,7 @@
 --                                 window, the claim's question, the publisher and
 --                                 its tier, and the citation (17). The primary
 --                                 source link is source_url, which is null for all
---                                 17: they were carried forward from Tom's working
+--                                 17: they were carried forward from a working
 --                                 reference by endnote, so the page says no link is
 --                                 stored rather than inventing one
 --   advisory_indicators_unread    the advisory's title, date and document link,

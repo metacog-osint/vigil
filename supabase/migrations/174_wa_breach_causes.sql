@@ -21,8 +21,7 @@
 --
 -- This stores the two fields against Vigil's own Washington notice rows and
 -- shows them on the card as the Attorney General's record. It decides nothing:
--- a matching cause is evidence for the reviewer, and match_status is untouched
--- (reminder 7).
+-- a matching cause is evidence for the reviewer, and match_status is untouched.
 --
 -- MATCHING
 --
@@ -34,8 +33,8 @@
 --
 -- The dataset states no licence (license and licenseId are null in its
 -- metadata, checked 16 Nov 2026). It is a state agency's public record of
--- facts. Tom approved storing and showing the cause, credited to the Attorney
--- General, on 16 Nov 2026. Registered as not cleared for commercial use.
+-- facts. Vigil stores and shows the cause, credited to the Attorney
+-- General (from 16 Nov 2026). Registered as not cleared for commercial use.
 --
 -- GRANTS
 --
@@ -53,8 +52,8 @@ values
    'https://data.wa.gov/d/sb4j-ca4h',
    false, true, '2026-11-16',
    'Only databreachcause and cyberattacktype are taken, onto Vigil''s own wa-ag notice rows. '
-   'No licence is stated in the dataset metadata; Tom approved storing and showing the cause, '
-   'credited to the Washington Attorney General, on 16 Nov 2026.')
+   'No licence is stated in the dataset metadata. The cause is stored and shown, '
+   'credited to the Washington Attorney General.')
 on conflict (source_id) do nothing;
 
 alter table public.victim_disclosures

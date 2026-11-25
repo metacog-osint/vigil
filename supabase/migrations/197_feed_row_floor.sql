@@ -1,6 +1,6 @@
 -- 197. A run that reads far fewer rows than the feed normally has is not a clean success
 --
--- STATUS: DRAFT, NOT APPLIED. Tom applies it. Merge the api/ change only after
+-- STATUS: DRAFT, NOT APPLIED. Merge the api/ change only after
 -- this is applied: /api/feed selects the new columns, and until they exist its
 -- health read fails and the feed goes out with no health block.
 --
@@ -55,7 +55,7 @@
 -- (163). pulsedive is the known gap: its runs are often 0, so a per-run floor
 -- cannot see its 24 to 31 October slump, which needs a floor over a day.
 --
--- Every value is Tom's to change, with one UPDATE on feed_expectations.
+-- Every value can be changed with one UPDATE on feed_expectations.
 -- ingestion_is_healthy() is not changed, so no floor fails the workflow.
 
 alter table public.feed_expectations

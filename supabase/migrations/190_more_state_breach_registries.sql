@@ -5,7 +5,7 @@
 --
 -- WHY
 --
--- Tom asked for every state that publishes a list (the 19 Nov 2026 plan, item 3).
+-- Vigil reads every state that publishes a list.
 -- A survey on 19 Nov 2026 ([local path])
 -- found five more that publish a plain HTML table like California's, Washington's
 -- and Oregon's, each the whole list on one page:
@@ -40,8 +40,7 @@
 --    own account of a claim, for every new notice within 90 days of a claim.
 --    Loading 8,700 notices back to 2015 would ask that for years-old matches
 --    (the first three states gave 385 open cards). New notices filed in the last
---    90 days are still queued; older ones are stored and not queued. Tom
---    agreed on 19 Nov 2026 ("Ship item 3", with this as the stated default).
+--    90 days are still queued; older ones are stored and not queued. 
 -- 5. A notice listed with no reported date is counted and left out
 --    (filed_date is required), instead of failing the state's whole batch.
 

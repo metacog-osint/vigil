@@ -4,8 +4,8 @@
 -- (version 20261118232239). Written 18 November 2026.
 --
 -- 176 stored CISA's SSVC decision points from Vulnrichment (CC0 1.0) in
--- cisa_ssvc with no public grants: Tom chose to store first and decide where
--- they show. On 18 Nov 2026 he chose to show them ("keep PR #1, add lines"):
+-- cisa_ssvc with no public grants: stored first, shown nowhere. From
+-- 18 Nov 2026 they show:
 --
 --   /api/feed   "CISA's ADP assessment of <CVE>: exploitation active
 --               (assessed <date>)", marked "not in CISA's KEV catalog" where

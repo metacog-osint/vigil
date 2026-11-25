@@ -20,7 +20,7 @@
 --    the same UTC day refreshes that day's rows and adds none.
 -- 2. It becomes callable by service_role only (it was open by default).
 -- 3. The worker's registry gets an 'actor-trend-snapshot' job that calls it once a
---    day (workers/src/feeds/registry.js). Deploying the worker is Tom's step.
+--    day (workers/src/feeds/registry.js). It takes effect at the next worker deploy.
 -- 4. feed_expectations watches the job, not critical until it has run.
 --
 -- The days 31 May to the first run are not recoverable from this table. The

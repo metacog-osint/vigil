@@ -176,7 +176,7 @@ comment on function public.apply_ransom_payments(text, text, date, jsonb) is
 -- second unique index under a different name would not be caught by
 -- `if not exists` and would cost a write on every upsert for nothing.
 
--- The owner asked for this on 4 October: the only ransom-payment source dying
+-- Added 4 October: the only ransom-payment source dying
 -- quietly for two weeks is what prompted it. Now that it has a source that
 -- works, criticality means "tell me if this stops" rather than a standing alarm
 -- about something known-broken - see PR #63, which only reports critical feeds.

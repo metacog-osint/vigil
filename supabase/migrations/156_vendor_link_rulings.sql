@@ -10,8 +10,8 @@
 -- match in vendor_report_actors with `confirmed` null: proposed, never applied,
 -- "until a person says". Nothing let a person say. On 26 October 2026 there
 -- were 27 proposed links across 23 of 377 reports, and none had been ruled on.
--- SESSION_HANDOFF §2b names this as the largest gap: research Vigil holds and
--- cannot rule on through the product.
+-- This was the largest gap: research Vigil holds and cannot rule on through the
+-- product.
 --
 -- The links matter because they are how a vendor report becomes attributed
 -- activity without the vendor having named a country: event from the vendor,

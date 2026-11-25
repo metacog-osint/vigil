@@ -6,7 +6,7 @@
 -- victim_name still holds an angle bracket: 59 on 16 Nov 2026, from the January
 -- backfill (57 ransomwatch, 2 ransomware.live). Its question is whether to
 -- split "Name<website>" into the name and the site, drop labels like
--- "<Updated>", and what the "</a>" row was. That is a person's call (reminder 7).
+-- "<Updated>", and what the "</a>" row was. That is a person's call.
 --
 -- This adds a fifth kind to review_reading_evidence (172) so the card shows,
 -- for every such incident, a reading of it:

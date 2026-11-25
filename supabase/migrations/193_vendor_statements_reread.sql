@@ -1,10 +1,10 @@
 -- 193. Vendor statements on re-read: kind follows the wordings, a removed statement is retired,
 --      Google's note-only CVEs are flagged, and the public read is a column list
 --
--- STATUS: not applied. Tom's yes, 20 Nov 2026 (ideas#75, "defaults on all six"): migration 193
--- for C + D.1, and B's guard as "annotate plus a finding, no hold".
+-- STATUS: not applied. This migration covers C and D.1; B's guard annotates and
+-- opens a finding, and holds nothing.
 --
--- WHY (the Fable review of 191, ideas#75)
+-- WHY (from a review of 191)
 --
 -- C. record_vendor_statements (187) moved only last_seen_at and document_url on a statement it
 --    already held. So a wording first stored as 'unclassified' stayed hidden after a person added

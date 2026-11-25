@@ -2,7 +2,7 @@
 --
 -- STATUS: APPLIED about 05:41 UTC 16 November 2026.
 --
--- Finding audit_log_trust (64d94786). Tom's verdict on 16 Nov 2026: confirmed.
+-- Finding audit_log_trust (64d94786). Verdict recorded 16 Nov 2026: confirmed.
 --
 -- WHY
 --
