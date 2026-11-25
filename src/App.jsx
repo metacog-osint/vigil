@@ -76,6 +76,7 @@ import { ToastProvider } from './contexts/ToastContext'
 import { FocusModeProvider } from './hooks/useFocusMode'
 import { DemoProvider, useDemo } from './contexts/DemoContext'
 import { DemoBanner } from './components/demo'
+import { isAppSection } from './lib/appSections'
 
 // Loading fallback for lazy routes
 function PageLoader() {
@@ -99,6 +100,11 @@ function AuthLoader() {
       </div>
     </div>
   )
+}
+
+function PublicFallback() {
+  const { pathname } = useLocation()
+  return isAppSection(pathname) ? <Navigate to="/" replace /> : <NotFound />
 }
 
 function skipToMain(event) {
@@ -131,8 +137,8 @@ function PublicLayout() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/sources" element={<Sources />} />
-          {/* Any other address: say so (ideas#300), with links home and to sign in */}
-          <Route path="*" element={<NotFound />} />
+          {/* A signed-in section goes to landing; any other address says so (ideas#300) */}
+          <Route path="*" element={<PublicFallback />} />
         </Routes>
       </Suspense>
       {/* Data credits the sources' licences require, on every page */}
