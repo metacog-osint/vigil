@@ -1,7 +1,7 @@
 /**
  * APP_SECTIONS must name the first segment of every signed-in route in
  * App.jsx, or a logged-out visitor on that page gets Not found instead of
- * the landing page (ideas#300).
+ * the landing page.
  */
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'

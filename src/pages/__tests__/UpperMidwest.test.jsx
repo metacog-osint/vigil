@@ -1,5 +1,5 @@
 /**
- * The Upper Midwest watch page (ideas#51).
+ * The Upper Midwest watch page.
  *
  * Checks that every lane paints, that claims carry their warning and their
  * reason, that picking a state filters every lane, and that the page shows

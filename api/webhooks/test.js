@@ -2,7 +2,7 @@
  * Webhook Test API
  *
  * Sends a test payload to the signed-in user's webhook URL to check it is
- * set up. ideas#155: https only, private and internal hosts refused, no
+ * set up: https only, private and internal hosts refused, no
  * redirects followed, and the reply body is never passed back, so the
  * endpoint cannot be used to read pages the caller can't reach.
  */

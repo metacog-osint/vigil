@@ -26,7 +26,7 @@
   font-size: 12px;
 }
 
-/* Secondary text on the dark theme (ideas#162). Tailwind's gray-500 and gray-600
+/* Secondary text on the dark theme. Tailwind's gray-500 and gray-600
    read 3.3:1 to 4.1:1 on these backgrounds; WCAG AA wants 4.5:1. Set here so the
    ~1,000 places that use them stay as written. Backgrounds and borders that use
    the same names are untouched. */

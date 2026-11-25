@@ -396,7 +396,7 @@ const EMPTY_SNAPSHOT = { stats: null, escalating: [], incidents: [], kev: [] }
 
 const METHOD_URL = 'https://github.com/metacog-osint/vigil/blob/main/doctrine/method.md'
 
-// Plain language (ideas#264): one caveat line, then the page's terms, tap to open.
+// Plain language: one caveat line, then the page's terms, tap to open.
 const TERMS = [
   [
     'Incidents',

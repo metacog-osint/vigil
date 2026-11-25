@@ -4,7 +4,7 @@
  * 377 reports have been in the database since migration 139 and nothing
  * rendered them. 27 actor links were proposed against them by name matching,
  * and there was no way for a person to say whether any of them was right.
- * SESSION_HANDOFF §2b named this the largest gap left.
+ * This was the largest gap left.
  *
  * What this page is careful about:
  *

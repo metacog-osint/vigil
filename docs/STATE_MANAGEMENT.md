@@ -1,7 +1,7 @@
 # State Management Patterns
 
 > **Last Updated:** January 17, 2026
-> **Related:** CLAUDE.md, Architecture Improvements Plan
+> **Related:** [Architecture](./ARCHITECTURE.md)
 
 This document outlines the state management patterns used in Vigil and provides guidance for maintaining consistency.
 

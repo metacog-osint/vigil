@@ -59,7 +59,7 @@ const SRC = {
     descriptor: 'Official US government listing of vulnerabilities exploited in the wild.',
   },
   // CISA's ADP SSVC assessment (migrations 176, 177). CISA too, so the same independence group as
-  // KEV: the two never count as corroborating each other. Proposed A2 (Tom to confirm): the
+  // KEV: the two never count as corroborating each other. Graded A2: the
   // most reliable source there is, but "active" is CISA's assessment of reliable public
   // evidence, not the catalog's confirmed listing.
   adp: {
@@ -248,7 +248,7 @@ const num = (n) => n.toLocaleString('en-US')
 /**
  * One figure in the summary title, for rows the query caps. The figure is the database's
  * count, never the number of rows returned: a tally of a capped page once shipped "1,000
- * filings" against 8,896 (docs/SESSION_HANDOFF.md §2b). With no count, no figure.
+ * filings" against 8,896. With no count, no figure.
  *
  * @param {object} f
  * @param {number|null} f.total  the database's count

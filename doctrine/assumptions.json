@@ -40,7 +40,7 @@
       "text": "A feed that stops is noticed.",
       "test": {"type": "auto", "rule": "feed_expectations rows and the feed-health workflow; a feed without a row is not watched"},
       "status": "holds",
-      "note": "Holds only for registered feeds (CLAUDE.md: a feed without a feed_expectations row can stop silently).",
+      "note": "Holds only for registered feeds (a feed without a feed_expectations row can stop silently).",
       "reviewed": "2026-10-30",
       "linked": ["VG-IND-4"]
     }

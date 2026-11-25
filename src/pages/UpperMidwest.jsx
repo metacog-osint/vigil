@@ -2,7 +2,7 @@
  * Upper Midwest watch pack: Minnesota, Wisconsin, Iowa, North Dakota, South Dakota.
  *
  * What Vigil already holds about organizations in the five states, by lane,
- * each lane placing an organization by its own field (ideas#51, scope A).
+ * each lane placing an organization by its own field.
  * The lanes are never added together, and nothing totals people affected.
  * Leak-site claims are criminals' claims; the two ways they are placed here
  * are both unverified, and the page says so beside them.

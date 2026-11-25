@@ -1,6 +1,6 @@
 /**
  * The Upper Midwest watch pack: Minnesota, North Dakota, South Dakota, Iowa
- * and Wisconsin (ideas#51, scope A: page only, no migration, no worker change).
+ * and Wisconsin (a page only: no migration, no worker change).
  *
  * ## Three lanes, never summed
  *

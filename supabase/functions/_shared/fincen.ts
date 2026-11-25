@@ -2,7 +2,7 @@
  * Parsing FinCEN's register. Kept out of the Edge Function entry point so it
  * can be run outside Deno and checked against the live markup, which is the
  * only way to know a parser is right - a fetch returning HTTP 200 is not a
- * parser that read anything (THREAT_COVERAGE_GAPS section 1, the hard way).
+ * parser that read anything (learned the hard way).
  */
 export const HOST = 'https://www.fincen.gov'
 export const REGISTER = `${HOST}/resources/advisoriesbulletinsfact-sheets`

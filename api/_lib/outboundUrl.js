@@ -1,5 +1,5 @@
 /**
- * Outbound URL guard (ideas#155)
+ * Outbound URL guard
  *
  * The server only sends to public https endpoints a user names. This refuses
  * other schemes, credentials in the URL, odd ports, and hosts that are

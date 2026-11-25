@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * Migration 193 (ideas#75 B, C, D.1): on re-read a held statement's kind follows the wordings
+ * Migration 193: on re-read a held statement's kind follows the wordings
  * (logged), a statement the document no longer carries is retired and kept, Google's note-only
  * CVEs are flagged with a finding, and the public read is a column list.
  */

@@ -1,5 +1,5 @@
 /**
- * The Upper Midwest watch pack's query layer (ideas#51).
+ * The Upper Midwest watch pack's query layer.
  *
  * What matters: each lane places an organization by its own field, every
  * figure is a database count, nothing totals people affected, and leak-site

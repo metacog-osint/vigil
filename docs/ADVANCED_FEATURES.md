@@ -3,7 +3,7 @@
 > **Last Updated:** January 20, 2026
 > **Version:** 1.0
 
-This document covers advanced Vigil features that are implemented but not covered in the main `CLAUDE.md` documentation.
+This document covers advanced Vigil features that are implemented but not covered in the other documentation.
 
 ---
 

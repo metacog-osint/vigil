@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * ideas#155: /api/send-email mails only the caller's own confirmed address
+ * /api/send-email mails only the caller's own confirmed address
  * from server templates, and /api/webhooks/test sends only to public https
  * hosts and never hands back what the far end replied.
  */

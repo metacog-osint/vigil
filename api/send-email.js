@@ -5,7 +5,7 @@
  * Body: { template, data? }
  * Headers: Authorization: Bearer <supabase-access-token>
  *
- * ideas#155: mail goes only to the caller's own confirmed address, the
+ * Mail goes only to the caller's own confirmed address, the
  * subject and body come from the server templates below, and the shared
  * rate limit (Redis when configured) applies. The client cannot set `to`,
  * `subject` or `html`, so the endpoint cannot relay mail from Vigil's domain.

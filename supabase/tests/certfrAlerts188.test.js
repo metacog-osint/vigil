@@ -1,7 +1,7 @@
 // @vitest-environment node
 /**
  * Migration 188: CERT-FR's alerts are stored as CERT-FR's notices, closed to
- * the public roles until Tom decides where they show, written only by
+ * the public roles until they are given a place to show, written only by
  * service_role, and the job is watched.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'

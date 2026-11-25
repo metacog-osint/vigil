@@ -26,8 +26,7 @@
  * (Delaware has not updated since July 2025). Not added: Hawaii (stale since
  * April 2024), Maryland (yearly SharePoint lists, none for 2026), Iowa and
  * Wisconsin (cards and free text), Texas (Salesforce); Maine, New Hampshire and
- * Massachusetts answer scripted clients with 403. Survey notes, outside the
- * repo: vigil-data/state-ag-survey/SURVEY.md in Tom's profile.
+ * Massachusetts answer scripted clients with 403.
  *
  * Each row carries its registry's persons_affected_scope, so a Montana count
  * (Montanans) is never added to an Oregon one (everyone).

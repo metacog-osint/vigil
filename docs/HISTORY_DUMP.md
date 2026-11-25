@@ -1,4 +1,4 @@
-# History dump (ideas#159)
+# History dump
 
 `.github/workflows/history-dump.yml` runs Sundays 06:17 UTC (and on demand). It dumps the
 history tables, restores them into a scratch Postgres to prove they read back, and files the
@@ -10,7 +10,7 @@ the rest small. A compressed custom-format dump should be a few hundred MB, unde
 tic_archive input limit and GitHub's 2 GiB asset limit. The first run prints the real size;
 if it nears 1.5 GB, split per table.
 
-## Setup (Tom runs these; keys never pass through Claude)
+## Setup
 
 1. In the Supabase SQL editor, create the read-only role (pick the password yourself):
 
@@ -26,7 +26,7 @@ alter role tic_dump bypassrls;  -- may be refused on Supabase; see below
    Tables have row-level security. Without BYPASSRLS the role reads zero rows and no error. The
    workflow fails if it sees fewer than 2,000,000 changelog rows, so that case is caught, not
    filed. If `bypassrls` is refused, ask for an RLS policy `for select to tic_dump using (true)`
-   on each table instead (a migration: Tom's yes first).
+   on each table instead (a migration).
 
 2. Copy the **Session pooler** connection string (Project Settings > Database > Connection
    string; the direct host is IPv6-only and GitHub runners cannot reach it). The user part is

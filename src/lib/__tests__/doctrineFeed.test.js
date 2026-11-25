@@ -495,7 +495,7 @@ describe('doctrineFeed', () => {
     expect(p.baseline_ref).toBeUndefined()
   })
 
-  it('states the whole EPSS alert rule in method.md (ideas#338)', () => {
+  it('states the whole EPSS alert rule in method.md', () => {
     const method = readFileSync(join(ROOT, 'doctrine/method.md'), 'utf8').replace(/\s+/g, ' ')
     expect(method).toContain('known ransomware use')
     expect(method).toContain(`at least ${EPSS_ALERT}`)

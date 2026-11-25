@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * ThreatCluster's two licences (migration 200, ideas#235).
+ * ThreatCluster's two licences (migration 200).
  *
  * On 22 Nov 2026 the upstream data went from GPL-3.0 (TLP:CLEAR in its README)
  * to ThreatCluster's own terms, which allow free and non-commercial use but not

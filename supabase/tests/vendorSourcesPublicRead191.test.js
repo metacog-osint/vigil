@@ -72,7 +72,7 @@ describe('migration 191', () => {
     expect(await column('authenticated', 'title')).toBe(true)
   })
 
-  // ideas#75 D.2: read as the role, so the test fails if the policy is inverted or dropped.
+  // Read as the role, so the test fails if the policy is inverted or dropped.
   it('never shows an unclassified wording to anon or authenticated', async () => {
     await db.query(`
       insert into vendor_exploit_statements (source_id, document_id, cve_id, statement, kind)

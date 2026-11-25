@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { titleForPath } from '../lib/routeTitles'
 
 /**
- * Sets `document.title` from the current route (ideas#162).
+ * Sets `document.title` from the current route.
  * A path with no entry keeps whatever title is there, so the Not found page's
  * own title stands.
  */

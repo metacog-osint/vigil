@@ -207,7 +207,7 @@ describe('reopen', () => {
 
   it('restores the finding and the notices exactly', async () => {
     const n = await q(
-      `select reopen_auto_closed('not_an_sec_filing', 'Tom wants these read after all') n`
+      `select reopen_auto_closed('not_an_sec_filing', 'these need a read after all') n`
     )
     expect(n[0].n).toBe(2)
     expect(await status(SUBJECT('Acme Dental', '2026-07-10'))).toBe('open')

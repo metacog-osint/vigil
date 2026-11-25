@@ -6,34 +6,6 @@ All notable changes to Vigil are documented in this file.
 
 ## [1.3.2] - January 18, 2026
 
-### Documentation Consolidation
-
-Cleaned up project documentation structure, reducing 34 markdown files to 12 active docs.
-
-**Archived to `docs/archive/`:**
-- `ALERTING_SYSTEM.md` - Superseded by BUILD_PLAN_V2
-- `AUDIT_REPORT.md` - Historical baseline
-- `COST_ANALYSIS.md` - Reference material
-- `DATA_QUALITY_REPORT.md` - Time-stamped snapshot
-- `FEATURE_FIX_PLAN.md` - All 6 issues resolved
-- `PERFORMANCE_OPTIMIZATION_PLAN.md` - Merged into BUILD_PLAN_V2
-- `SAAS_ROADMAP.md` - Superseded by BUILD_PLAN_V2
-- `TESTING_EXPANSION_PLAN.md` - Merged into BUILD_PLAN_V2
-- `docs/SPRINT2_SETUP.md` - Historical
-- `docs/SECURITY_AUDIT.md` - Findings addressed
-
-**Moved to `docs/`:**
-- `DEPENDENCY_AUDIT.md` - Security reference
-- `FEATURES.md` - Feature documentation
-- `THREAT_COVERAGE_GAPS.md` - Strategic planning
-- `DATABASE.md` - Schema reference
-
-**Root directory now contains only:**
-- `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md` - Standard project files
-- `CLAUDE.md` - AI assistant context
-- `ROADMAP.md`, `BUILD_PLAN_V2.md` - Planning documents
-- `DATA_SOURCES.md` - Data feed documentation
-
 ### Feature Fixes
 
 Six modules with data/logic issues identified and resolved:
@@ -92,7 +64,6 @@ Six modules with data/logic issues identified and resolved:
 - Added `https://cdn.jsdelivr.net` to CSP connect-src
 
 **Documentation:**
-- Added "Critical Patterns & Common Pitfalls" section to CLAUDE.md
 - Documented single Supabase client pattern
 - Documented optional table handling pattern
 - Documented Vite chunk configuration gotchas
@@ -227,7 +198,7 @@ Each page now has extracted modules in dedicated subdirectories with:
 
 ## [1.0.0] - January 2026
 
-### Build Plan Complete
+### Core Sprints Complete
 All 6 core sprints successfully implemented. Vigil is now a subscription-ready CTI platform.
 
 ### Added - Sprint 6: Polish & Scale
@@ -393,4 +364,4 @@ All 6 core sprints successfully implemented. Vigil is now a subscription-ready C
 ---
 
 *For detailed feature documentation, see FEATURES.md*
-*For planned features, see ROADMAP.md*
+

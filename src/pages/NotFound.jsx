@@ -1,5 +1,5 @@
 /**
- * Not found (ideas#300)
+ * Not found
  *
  * Shown for an address that matches no route, in place of the silent jump
  * to the home page, so a broken or old link reads as broken. Vigil routes in

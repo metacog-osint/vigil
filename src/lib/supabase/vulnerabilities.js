@@ -118,7 +118,7 @@ export const vulnerabilities = {
     if (error) return { data: null, error }
     const ids = [...new Set((rows ?? []).map((r) => r.cve_id))]
     if (ids.length === 0) return { data: [], error: null }
-    // In batches: one .in() of several hundred ids overruns the request URL (ideas#75 D.3).
+    // In batches: one .in() of several hundred ids overruns the request URL.
     const listed = new Set()
     for (let i = 0; i < ids.length; i += KEV_BATCH) {
       const { data: kev, error: kevError } = await supabase

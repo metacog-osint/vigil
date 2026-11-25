@@ -28,7 +28,7 @@ const json = (status, body, extra = {}) =>
 /**
  * With `count`, PostgREST also counts every row the filters match, in the same statement as
  * the capped page, and reports it in Content-Range. The summary states that count, never the
- * number of rows returned (docs/SESSION_HANDOFF.md §2b). Measured as anon on 31 Oct 2026: under
+ * number of rows returned. Measured as anon on 31 Oct 2026: under
  * 3 ms for each of the four counts, and 370 ms for the three windows over 60 days, against the
  * 3 s anon statement timeout.
  * A page cut short by its limit comes back 206 Partial Content, which res.ok accepts.

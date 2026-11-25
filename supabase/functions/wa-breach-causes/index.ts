@@ -11,9 +11,9 @@
  * It decides nothing about any claim. The cause is shown on the review card as
  * the Attorney General's record; the verdict stays a person's.
  *
- * The dataset states no licence. Tom approved storing and showing these two
- * fields, credited to the Attorney General, on 16 Nov 2026 (source_licences
- * row wa-ag-open-data).
+ * The dataset states no licence. These two fields are stored and shown, credited
+ * to the Attorney General, from 16 Nov 2026 (source_licences row
+ * wa-ag-open-data).
  */
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'

@@ -1,5 +1,5 @@
 /**
- * GET /api/feed?format=stix — what Vigil may redistribute, as a STIX 2.1 bundle (ideas#52).
+ * GET /api/feed?format=stix — what Vigil may redistribute, as a STIX 2.1 bundle.
  *
  * Served by api/feed.js rather than a new file, because api/ already holds 12 functions.
  * buildStixBundle is a pure function of database rows, so it is tested without a network.

@@ -1,5 +1,5 @@
 /**
- * The not-found page (ideas#300).
+ * The not-found page.
  *
  * An address that matches no route says so, sets its own title, and links
  * home and to the hub; a visitor who has not signed in also gets sign-in.

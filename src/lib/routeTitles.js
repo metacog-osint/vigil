@@ -1,5 +1,5 @@
 /**
- * Page titles for the signed-in routes (ideas#162).
+ * Page titles for the signed-in routes.
  *
  * Each page needs its own `document.title` so a screen reader, a browser tab
  * and the history list can tell them apart. Keys are the path with any

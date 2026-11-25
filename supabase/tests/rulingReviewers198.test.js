@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * Migration 198 (ideas#155): only accounts in ruling_reviewers may rule. The
+ * Migration 198: only accounts in ruling_reviewers may rule. The
  * three ruling functions keep their bodies under *_unchecked names, closed to
  * every browser role, and the old names check the allowlist first.
  */

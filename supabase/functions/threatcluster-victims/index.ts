@@ -39,7 +39,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const BASE = 'https://raw.githubusercontent.com/Jam0k/Ransomware-Intel/main/data'
 
 /**
- * The upstream licence changed on 22 Nov 2026 (ideas#235). Until commit
+ * The upstream licence changed on 22 Nov 2026. Until commit
  * 3ae0330455 (21 Nov, 14:54 UTC, the last commit made under GPL-3.0) the data
  * was GPL-3.0 and the README said TLP:CLEAR. From 22 Nov it is ThreatCluster's
  * own terms: free in your own environment and in non-commercial community

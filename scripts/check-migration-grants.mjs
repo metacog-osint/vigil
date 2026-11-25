@@ -10,7 +10,7 @@
  * 1. From 30 October 2026 that stops for tables and sequences (Supabase
  *    changelog 45329). In Postgres, default privileges "on tables" also cover
  *    views and materialized views. A new object with no GRANT returns
- *    "permission denied" to supabase-js, and CLAUDE.md records what that
+ *    "permission denied" to supabase-js, and this is what that
  *    looks like here: a try/catch swallows it, and the page renders an empty
  *    state that reads exactly like "there is nothing here". A worker or Edge
  *    Function writing straight to the table as service_role fails the same

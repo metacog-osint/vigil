@@ -35,7 +35,7 @@ it against the source before relying on it.
 | Ransomwatch                             | **Unlicense**                                                                        | Sellable. Archived 3 March 2026; its rows stay.                                                                                                                                                                                                                      |
 | MITRE ATT&CK                            | **ATT&CK Terms of Use**, royalty-free including commercial use                       | MITRE's copyright notice and the licence must travel with any copy of ATT&CK content.                                                                                                                                                                                |
 | MISP Galaxy                             | **CC0 1.0 or 2-clause BSD** (dual)                                                   | Sellable. Supplies most actor origins. Data spells it both `misp-galaxy` and `misp_galaxy`; since 160 both match.                                                                                                                                                    |
-| **Malpedia**                            | **CC BY-NC-SA 3.0 — NonCommercial**                                                  | **Treated as ETDA is** (owner's decision, 26 Oct 2026): free product only. Supplies 1,101 actor names and nothing else.                                                                                                                                               |
+| **Malpedia**                            | **CC BY-NC-SA 3.0 — NonCommercial**                                                  | **Treated as ETDA is** (from 26 Oct 2026): free product only. Supplies 1,101 actor names and nothing else.                                                                                                                                               |
 | ThreatCluster Ransomware-Intel          | **GPL-3.0 to 21 Nov 2026; ThreatCluster terms from 22 Nov 2026** | Free in your own environment and in non-commercial community defence work, with attribution; commercial redistribution needs ThreatCluster's licence. Treated as ETDA is from 22 Nov (free product only). Countries filled before then stay sellable (`threatcluster`); the 21 Nov GPL-3.0 backfill is `threatcluster-gpl-20261121` (sellable); fills from the free file are `threatcluster-terms-20261122` (not sellable). Migration 200. |
 | SEC EDGAR                               | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
 | OFAC SDN                                | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
@@ -72,7 +72,7 @@ that run from `scripts/` rather than the worker.
 and stopped updating, so the ingest script was deleted on 4 Oct 2026. Incidents
 it loaded before then keep `source = 'ransomwatch'`.
 
-**Correction, 25 Nov 2026 (ideas#235).** This file described ThreatCluster as TLP:CLEAR with no restriction. That was its README until 22 Nov 2026 (the LICENSE was GPL-3.0). That day upstream dropped the 90- and 365-day files, kept a free 7-day file (10 to 25 victims a day) and moved to its own terms (non-commercial with attribution). Vigil keeps reading the free file with credit, and backfills victim country only from the 365-day file as committed in the last GPL-3.0 commit (`3ae0330455`, 21 Nov 2026), through the `gpl-365d` window of the `threatcluster-victims` Edge Function.
+**Correction, 25 Nov 2026.** This file described ThreatCluster as TLP:CLEAR with no restriction. That was its README until 22 Nov 2026 (the LICENSE was GPL-3.0). That day upstream dropped the 90- and 365-day files, kept a free 7-day file (10 to 25 victims a day) and moved to its own terms (non-commercial with attribution). Vigil keeps reading the free file with credit, and backfills victim country only from the 365-day file as committed in the last GPL-3.0 commit (`3ae0330455`, 21 Nov 2026), through the `gpl-365d` window of the `threatcluster-victims` Edge Function.
 
 **Why ThreatCluster was added.** Ransomware.live was the only source that ever
 supplied `victim_country` — 11,256 of 11,317 — and it stopped on 29 May 2026.
@@ -115,18 +115,18 @@ contradicting itself rather than reporting a disagreement.
 | CIRCL sightings (reported exploited) | `vulnerability.circl.lu/api/sighting/?type=exploited`, date windows from a cursor | CVE, source class, source name, link where allowed, first and last sighting. Allow-listed sources only: Shadowserver honeypots, OffSeq Mirage, ENISA, named vendors and press, Telegram and GitHub by platform with no link or text. Left out: Previdian, CIRCL's combined list, SiberKapan, the CISA catalogue copy, CrowdSec. Never KEV. No named licence, so `commercial_use = false` until CIRCL confirms | Hourly (worker `circl-sightings`, Edge Function of the same name) | None: the first runs walk the history, 10 pages a run | None |
 | CERT-FR alerts | `cert.cyber.gouv.fr/alerte/json/` (list) and `/alerte/<reference>/json/` | CERT-FR's "act now" notices: title, CVEs, vendors, risks, summary, dates, the alert's JSON | Daily (worker `certfr-alerts`, Edge Function of the same name) | `scripts/backfill-vendor-exploited.mjs --certfr` (one-time) | None |
 
-**CISA Vulnrichment (176, 18 Nov 2026)** is kept apart from KEV, in `cisa_ssvc`, not in `vulnerabilities`. `active` is CISA's judgment that a CVE is exploited, which it makes for CVEs that are not in KEV too; `poc` is its judgment that a proof of concept is public, not a report of exploitation. Tom chose to store it first and decide where it shows; on 18 Nov 2026 he chose to show it (177): anon reads `cisa_ssvc`, `/api/feed` carries "CISA's ADP assessment of <CVE>: exploitation active (assessed <date>)" for CVEs assessed active in the last 7 days, marked "not in CISA's KEV catalog" where Vigil's copy of KEV does not list them, and the vulnerability panel shows the same line with Automatable and Technical Impact. Credited as "CISA Vulnrichment (CC0)". Never a KEV label. The independent known-exploited signal that replaces VulnCheck (retired 15 Nov, 164) starts here; PoC aggregators, MSRC and Project Zero stay separate and come only after their terms are read.
+**CISA Vulnrichment (176, 18 Nov 2026)** is kept apart from KEV, in `cisa_ssvc`, not in `vulnerabilities`. `active` is CISA's judgment that a CVE is exploited, which it makes for CVEs that are not in KEV too; `poc` is its judgment that a proof of concept is public, not a report of exploitation. It was stored first and has shown since 18 Nov 2026 (177): anon reads `cisa_ssvc`, `/api/feed` carries "CISA's ADP assessment of <CVE>: exploitation active (assessed <date>)" for CVEs assessed active in the last 7 days, marked "not in CISA's KEV catalog" where Vigil's copy of KEV does not list them, and the vulnerability panel shows the same line with Automatable and Technical Impact. Credited as "CISA Vulnrichment (CC0)". Never a KEV label. The independent known-exploited signal that replaces VulnCheck (retired 15 Nov, 164) starts here; PoC aggregators, MSRC and Project Zero stay separate and come only after their terms are read.
 
 **KEV is CISA's catalogue as it stands (180, 19 Nov 2026).** The cisa-kev job hands its full list to `reconcile_kev_catalog` after each complete run, which clears the KEV columns on any row CISA does not list (archived in `kev_unlisted_rows`). Before 180, 8 rows were KEV in Vigil and in no CISA list: 5 VulnCheck leftovers, 2 of unrecorded origin and CVE-2026-69836, which CISA removed.
 
-**Android and Mozilla, the vendors' own words (187, 19 Nov 2026)** are kept apart from KEV, in `vendor_exploit_statements`, one row per vendor, document, CVE and sentence, the sentence verbatim. Android, every bulletin family (Android, Pixel, Pixel Watch, Wear OS, Automotive, Chromecast, XR), has used one wording since 2020: "There are indications that <CVEs> may be under limited, targeted exploitation." 406 bulletins on 19 Nov 2026 held 51 such notes naming 44 CVEs; 41 are in KEV, and CVE-2020-0500, CVE-2022-20415 and CVE-2023-21096 are not. Mozilla's 1,636 advisories hold 29 sentences about the wild in nine wordings, and only twelve of them (9 CVEs, all in KEV) say this flaw was attacked. The rest say a related flaw or another product was exploited, that exploit code is public with no attacks known, or that it was not abused. Each is stored with its `kind` (`exploited`, `exploited_elsewhere`, `public_exploit_only`, `not_exploited`), from a table of wordings a person has read (`_shared/vendorExploited.ts`); a new wording is stored as `unclassified`, never shown, and opens a `vendor_statement_unclassified` finding. source.android.com picks a page's language by where the request comes from, so the function asks for `?hl=en` and refuses a page not served in English; the first backfill from Supabase's edge got German, Polish and Farsi pages and found 17 notes of 51. **Shown on the vulnerability panel only** (191; Tom, 19 Nov 2026: "panel only"): each statement its own line, verbatim, with its document link and credit, "not in CISA's KEV catalog" where Vigil's KEV copy lacks the CVE; and the Vulnerabilities page lists the CVEs a vendor says were exploited that KEV does not carry (the three Android CVEs, which Vigil holds no row for). Not on `/api/feed` until about a week of clean daily runs, then as separate fields per source. `unclassified` rows stay closed. Credit: "Google, Android security bulletin (CC BY 4.0)" and "Mozilla Foundation Security Advisory (MPL-2.0)". Never a KEV label.
+**Android and Mozilla, the vendors' own words (187, 19 Nov 2026)** are kept apart from KEV, in `vendor_exploit_statements`, one row per vendor, document, CVE and sentence, the sentence verbatim. Android, every bulletin family (Android, Pixel, Pixel Watch, Wear OS, Automotive, Chromecast, XR), has used one wording since 2020: "There are indications that <CVEs> may be under limited, targeted exploitation." 406 bulletins on 19 Nov 2026 held 51 such notes naming 44 CVEs; 41 are in KEV, and CVE-2020-0500, CVE-2022-20415 and CVE-2023-21096 are not. Mozilla's 1,636 advisories hold 29 sentences about the wild in nine wordings, and only twelve of them (9 CVEs, all in KEV) say this flaw was attacked. The rest say a related flaw or another product was exploited, that exploit code is public with no attacks known, or that it was not abused. Each is stored with its `kind` (`exploited`, `exploited_elsewhere`, `public_exploit_only`, `not_exploited`), from a table of wordings a person has read (`_shared/vendorExploited.ts`); a new wording is stored as `unclassified`, never shown, and opens a `vendor_statement_unclassified` finding. source.android.com picks a page's language by where the request comes from, so the function asks for `?hl=en` and refuses a page not served in English; the first backfill from Supabase's edge got German, Polish and Farsi pages and found 17 notes of 51. **Shown on the vulnerability panel only** (191, 19 Nov 2026): each statement its own line, verbatim, with its document link and credit, "not in CISA's KEV catalog" where Vigil's KEV copy lacks the CVE; and the Vulnerabilities page lists the CVEs a vendor says were exploited that KEV does not carry (the three Android CVEs, which Vigil holds no row for). Not on `/api/feed` until about a week of clean daily runs, then as separate fields per source. `unclassified` rows stay closed. Credit: "Google, Android security bulletin (CC BY 4.0)" and "Mozilla Foundation Security Advisory (MPL-2.0)". Never a KEV label.
 
-**Re-reads and Google's note-only CVEs (193, 20 Nov 2026; ideas#75).** On a re-read, a held statement's `kind` follows the wordings table (the change is logged as a `vendor_statement_kind_changed` finding), and a statement the re-read document no longer carries gets `retired_at`: the row is kept, the panel skips it, and it is cleared if the statement comes back. Only documents read in that run count, so a bulletin that failed to load retires nothing. Some of Google's notes name CVEs the same bulletin does not otherwise list: 2022-04-01 names CVE-2022-38181 and CVE-2023-21096 (a 2023 CVE on an April 2022 page), 2023-05-01 names CVE-2021-22600 and CVE-2022-0847, and CVE-2020-0500 rests on 2022-09-01's note alone. The parser sets `note_flags` (`not_in_tables`, `later_than_bulletin`) and the row opens a `vendor_statement_note_only` finding; nothing is held (Tom, 20 Nov 2026: annotate plus a finding), and the panel adds "named in Google's note only, not in this bulletin's tables". Run over all 32 bulletins that hold a note on 20 Nov 2026, the check flags those five and no other. The public read is a column list since 193.
+**Re-reads and Google's note-only CVEs (193, 20 Nov 2026).** On a re-read, a held statement's `kind` follows the wordings table (the change is logged as a `vendor_statement_kind_changed` finding), and a statement the re-read document no longer carries gets `retired_at`: the row is kept, the panel skips it, and it is cleared if the statement comes back. Only documents read in that run count, so a bulletin that failed to load retires nothing. Some of Google's notes name CVEs the same bulletin does not otherwise list: 2022-04-01 names CVE-2022-38181 and CVE-2023-21096 (a 2023 CVE on an April 2022 page), 2023-05-01 names CVE-2021-22600 and CVE-2022-0847, and CVE-2020-0500 rests on 2022-09-01's note alone. The parser sets `note_flags` (`not_in_tables`, `later_than_bulletin`) and the row opens a `vendor_statement_note_only` finding; nothing is held (annotated, with a finding), and the panel adds "named in Google's note only, not in this bulletin's tables". Run over all 32 bulletins that hold a note on 20 Nov 2026, the check flags those five and no other. The public read is a column list since 193.
 
 **CERT-FR's alerts (188, 19 Nov 2026)** are kept as CERT-FR's notices, in `certfr_alerts`, one row per alert as CERT-FR published it: its title, summary and risks in French, its CVEs, the vendors it names, first publication, latest revision, the date CERT-FR closed it and the alert's JSON. 401 alerts from 2000 to 2026; 269 name a CVE, 502 CVEs in all, 218 of them in KEV, and Vigil holds no row at all for 284. An alert is CERT-FR's call to act, about exploitation, an incident or a campaign, so no exploitation label is derived from it. The API moved to `cert.cyber.gouv.fr` in 2026 (`www.cert.ssi.gouv.fr` redirects). Shown on the vulnerability panel since 191 as CERT-FR's notice to act, in its French title, never as an exploitation claim; `raw` stays closed. Credit: "CERT-FR, alerte <reference> (Licence Ouverte 2.0), last updated <date>".
 
 **Known exploited: sources checked, 19 Nov 2026.** The test is free public redistribution. Raw findings are kept outside the repo, in `~/vigil-data\licence-check`.
-- No: MSRC's "Exploited" flag and Exploitability Index (Microsoft's site Terms of Use: personal, non-commercial, no redistribution; CSAF is TLP:WHITE, which is not a licence). Project Zero's 0day "In the Wild" sheet (no licence; the Apache-2.0 repo does not hold the table). Tom wrote to both on 18 Nov 2026 asking for permission. Also no: Apple, Cisco, Fortinet, Ivanti, Oracle, CERT/CC, Singapore CSA, INCIBE, ACN. No licence stated: Chrome Releases, Samsung, Adobe, BSI WID, NCSC-NL, JPCERT. Non-commercial only: Canada CCCS. Unclear: ENISA EUVD (16 EU-KEV-only of 1,803).
+- No: MSRC's "Exploited" flag and Exploitability Index (Microsoft's site Terms of Use: personal, non-commercial, no redistribution; CSAF is TLP:WHITE, which is not a licence). Project Zero's 0day "In the Wild" sheet (no licence; the Apache-2.0 repo does not hold the table). Permission was requested from both on 18 Nov 2026. Also no: Apple, Cisco, Fortinet, Ivanti, Oracle, CERT/CC, Singapore CSA, INCIBE, ACN. No licence stated: Chrome Releases, Samsung, Adobe, BSI WID, NCSC-NL, JPCERT. Non-commercial only: Canada CCCS. Unclear: ENISA EUVD (16 EU-KEV-only of 1,803).
 - Yes: Android Security Bulletins (CC BY 4.0), Mozilla `foundation-security-advisories` (MPL-2.0), CERT-FR (Licence ouverte 2.0; its alerts are "act now" notices, not all exploitation), UK NCSC (OGL v3, no structured feed), Red Hat (CC BY 4.0, but its exploit_status only points at KEV). PoC layer, kept apart: nomi-sec PoC-in-GitHub (CC0; repositories named for a CVE, fakes included), Nuclei templates (MIT), Metasploit (BSD-3-Clause), Exploit-DB (GPL-2.0+).
 - Measured against KEV 2026.11.18: MSRC's 23 exploited CVEs from Nov 2025 to Nov 2026 are all in KEV; Project Zero has 4 of 413 not in KEV; CERT-FR's 2024-2026 alerts name 74 CVEs, 17 not in KEV.
 
@@ -212,7 +212,7 @@ filing date is within three days. It is the AG's category, credited to the AG
 and shown on the review card; it still matches nothing to a claim. Measured
 16 Nov 2026: 1,698 notices, 597 marked Ransomware; 97 of the 104 open
 Washington review cards have a row, 61 of them Ransomware. The dataset states
-no licence; Tom approved storing and showing these two fields on 16 Nov 2026,
+no licence; these two fields have been stored and shown since 16 Nov 2026,
 and `source_licences` registers it (`wa-ag-open-data`) as not cleared for
 commercial use. California and Oregon publish no cause anywhere found.
 
@@ -536,193 +536,6 @@ carry addresses. Delistings are dated, never deleted.
 
 ---
 
-## Proposed New Data Sources
-
-### Priority 1: Quick Wins (Free, Simple Integration)
-
-These sources use simple JSON/text formats similar to existing integrations.
-
-| Source          | Endpoint                                                                                  | Data Type                     | Value Add                         |
-| --------------- | ----------------------------------------------------------------------------------------- | ----------------------------- | --------------------------------- |
-| crt.sh          | `https://crt.sh/?output=json&q=%`                                                         | Certificate transparency logs | Early phishing domain detection   |
-| Tor Exit Nodes  | `https://check.torproject.org/torbulkexitlist`                                            | Tor exit node IPs             | Anonymization network tracking    |
-| Firehol Level 1 | `https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/firehol_level1.netset` | Aggregated IP blocklist       | Consolidated reputation data      |
-| OpenPhish       | `https://openphish.com/feed.txt`                                                          | Phishing URLs                 | Supplement PhishTank coverage     |
-| C2-Tracker      | `https://github.com/montysecurity/C2-Tracker`                                             | Cobalt Strike, Metasploit C2s | Framework infrastructure tracking |
-| Maltrail        | `https://raw.githubusercontent.com/stamparm/maltrail/master/trails/static/malware/`       | Malware indicators            | Additional IOC coverage           |
-
-### Priority 2: High-Value Additions (Free/Freemium)
-
-| Source            | Endpoint                                     | Data Type                | Value Add                       | Auth    | Status                          |
-| ----------------- | -------------------------------------------- | ------------------------ | ------------------------------- | ------- | ------------------------------- |
-| Exploit-DB        | `https://www.exploit-db.com/`                | PoC exploits             | Exploit availability for CVEs   | None    | ✅ Implemented                  |
-| Blocklist.de      | `https://www.blocklist.de/lists/`            | Brute-force attacker IPs | Attack source identification    | None    | ✅ Implemented                  |
-| Emerging Threats  | `https://rules.emergingthreats.net/`         | IP lists, Suricata rules | Network-level threat indicators | None    | ✅ Implemented                  |
-| TweetFeed.live    | `https://tweetfeed.live/`                    | Security Twitter IOCs    | Real-time community intel       | None    | ⚠️ Deprioritized (API concerns) |
-| CIRCL Passive DNS | `https://www.circl.lu/services/passive-dns/` | Historical DNS data      | Domain resolution history       | API Key | ✅ Implemented                  |
-| Censys            | `https://search.censys.io/api`               | Certificate/service data | Infrastructure reconnaissance   | API Key | ✅ Implemented                  |
-| Pulsedive         | `https://pulsedive.com/api`                  | Community threat intel   | Risk scoring, aggregated feeds  | API Key | ✅ Implemented                  |
-
-### Priority 3: Enhanced Coverage (API Key Required)
-
-| Source            | Endpoint                          | Data Type            | Value Add                   | Auth    | Status         |
-| ----------------- | --------------------------------- | -------------------- | --------------------------- | ------- | -------------- |
-| ANY.RUN           | `https://any.run/api/`            | Sandbox reports      | Public malware analysis     | API Key | ✅ Implemented |
-| Triage (Hatching) | `https://tria.ge/api/`            | Fast malware triage  | Quick sample analysis       | API Key | ✅ Implemented |
-| VulnCheck KEV     | `https://vulncheck.com/api/`      | Extended KEV data    | Exploit metadata enrichment | API Key | ✅ Implemented |
-| SecurityTrails    | `https://securitytrails.com/api/` | Historical DNS/WHOIS | Domain intelligence         | API Key | Planned        |
-| InQuest Labs      | `https://labs.inquest.net/api`    | Malicious documents  | Document-based threats      | API Key | ✅ Implemented |
-
-### Priority 4: Nice to Have (Future Consideration)
-
-| Source          | Endpoint                                | Data Type                    | Value Add                 | Auth      |
-| --------------- | --------------------------------------- | ---------------------------- | ------------------------- | --------- |
-| Shodan Full API | `https://api.shodan.io/`                | Historical scans, monitors   | Deep infrastructure intel | Paid      |
-| BinaryEdge      | `https://api.binaryedge.io/`            | Internet-wide scanning       | Shodan alternative        | Paid      |
-| Joe Sandbox     | `https://jbxcloud.joesecurity.org/api/` | Detailed behavioral analysis | Premium sandbox           | Paid      |
-| OpenCTI         | GraphQL API                             | STIX threat intel            | Structured threat data    | Self-host |
-| MISP Instances  | Various                                 | Community-shared threats     | Sector-specific intel     | Varies    |
-
----
-
-## Rollout Plan
-
-### Phase 1: Quick Wins (Week 1-2)
-
-**Objective:** Add 6 simple text/JSON feeds with minimal development effort.
-
-| Task | Source          | Effort  | Script Name             |
-| ---- | --------------- | ------- | ----------------------- |
-| 1.1  | Tor Exit Nodes  | 2 hours | `ingest-tor-exits.mjs`  |
-| 1.2  | Firehol Level 1 | 2 hours | `ingest-firehol.mjs`    |
-| 1.3  | OpenPhish       | 2 hours | `ingest-openphish.mjs`  |
-| 1.4  | Maltrail        | 3 hours | `ingest-maltrail.mjs`   |
-| 1.5  | C2-Tracker      | 4 hours | `ingest-c2-tracker.mjs` |
-| 1.6  | crt.sh          | 4 hours | `ingest-crtsh.mjs`      |
-
-**Deliverables:**
-
-- 6 new ingestion scripts
-- Updated GitHub Actions workflow
-- Database schema updates (if needed)
-- Documentation updates
-
-**Schedule:**
-
-- Daily ingestion for all Phase 1 sources
-- Add to `data-ingestion-new-sources.yml` workflow
-
----
-
-### Phase 2: High-Value Additions (Week 3-4)
-
-**Objective:** Integrate exploit and attack intelligence sources.
-
-| Task | Source           | Effort  | Script Name                   | Dependencies          |
-| ---- | ---------------- | ------- | ----------------------------- | --------------------- |
-| 2.1  | Exploit-DB       | 6 hours | `ingest-exploitdb.mjs`        | CVE correlation logic |
-| 2.2  | Blocklist.de     | 3 hours | `ingest-blocklist-de.mjs`     | None                  |
-| 2.3  | Emerging Threats | 4 hours | `ingest-emerging-threats.mjs` | None                  |
-| 2.4  | TweetFeed.live   | 4 hours | `ingest-tweetfeed.mjs`        | IOC parsing logic     |
-
-**Database Changes:**
-
-- Add `exploit_availability` field to `vulnerabilities` table
-- Add `source_feed` tracking for IOC deduplication
-
-**Deliverables:**
-
-- 4 new ingestion scripts
-- Exploit-to-CVE correlation
-- Enhanced IOC source tracking
-
----
-
-### Phase 3: DNS & Certificate Intelligence (Week 5-6)
-
-**Objective:** Add domain and certificate monitoring capabilities.
-
-| Task | Source               | Effort  | Script Name                | Dependencies        |
-| ---- | -------------------- | ------- | -------------------------- | ------------------- |
-| 3.1  | CIRCL Passive DNS    | 6 hours | `enrich-circl-pdns.mjs`    | API key acquisition |
-| 3.2  | Censys Certificates  | 8 hours | `ingest-censys.mjs`        | API key acquisition |
-| 3.3  | Certificate Alerting | 6 hours | `monitor-certificates.mjs` | Org profile domains |
-
-**Database Changes:**
-
-- New `dns_records` table for passive DNS history
-- New `certificates` table for cert transparency data
-- Add `monitored_domains` to org profile
-
-**Deliverables:**
-
-- Domain monitoring capability
-- Certificate transparency alerts
-- Phishing domain early warning
-
----
-
-### Phase 4: Enhanced Sandbox Integration (Week 7-8)
-
-**Objective:** Expand malware analysis capabilities.
-
-| Task | Source              | Effort  | Script Name             | Dependencies   |
-| ---- | ------------------- | ------- | ----------------------- | -------------- |
-| 4.1  | ANY.RUN Public      | 6 hours | `ingest-anyrun.mjs`     | API key        |
-| 4.2  | Triage              | 6 hours | `ingest-triage.mjs`     | API key        |
-| 4.3  | Sandbox Correlation | 8 hours | `correlate-sandbox.mjs` | Tasks 4.1, 4.2 |
-
-**Database Changes:**
-
-- New `sandbox_reports` table
-- Link sandbox reports to IOCs and malware families
-
-**Deliverables:**
-
-- Multiple sandbox source integration
-- Behavioral indicator extraction
-- Malware family correlation
-
----
-
-### Phase 5: Vulnerability Enrichment (Week 9-10)
-
-**Objective:** Enhance vulnerability intelligence with exploit context.
-
-| Task | Source                       | Effort  | Script Name                      | Dependencies     |
-| ---- | ---------------------------- | ------- | -------------------------------- | ---------------- |
-| 5.1  | VulnCheck KEV                | 6 hours | `enrich-vulncheck.mjs`           | API key          |
-| 5.2  | Exploit Maturity Scoring     | 8 hours | `calculate-exploit-maturity.mjs` | Phase 2 complete |
-| 5.3  | Vulnerability Prioritization | 6 hours | `prioritize-vulnerabilities.mjs` | Tasks 5.1, 5.2   |
-
-**Database Changes:**
-
-- Add `exploit_maturity` enum to vulnerabilities
-- Add `prioritization_score` calculation
-
-**Deliverables:**
-
-- Exploit maturity tracking
-- Risk-based vulnerability prioritization
-- Enhanced KEV context
-
----
-
-### Phase 6: Future Considerations (Backlog)
-
-These items are tracked for future implementation based on user feedback and resource availability.
-
-| Source          | Value                     | Complexity | Blocker                  |
-| --------------- | ------------------------- | ---------- | ------------------------ |
-| Shodan Full API | Deep infrastructure intel | Medium     | Cost (paid tier)         |
-| BinaryEdge      | Alternative scanning data | Medium     | Cost (paid tier)         |
-| Joe Sandbox     | Premium analysis          | Low        | Cost (paid tier)         |
-| OpenCTI         | STIX platform             | High       | Self-hosting requirement |
-| SecurityTrails  | Domain intelligence       | Medium     | Cost (paid tier)         |
-| MISP Feeds      | Sector-specific intel     | High       | Instance management      |
-
----
-
 ## Integration Architecture
 
 ### Ingestion Flow (GitHub Actions)
@@ -878,114 +691,10 @@ INQUEST_API_KEY=             # Optional, free tier works without key
 
 ---
 
-## Source Quality Assessment (January 2026 Research)
-
-Independent research was conducted to evaluate proposed sources and identify gaps.
-
-### Priority 1 Sources - Evaluation
-
-| Source              | Verdict       | Assessment                                                                                                                     |
-| ------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| **crt.sh**          | ✅ Excellent  | Industry-standard CT log search. Zero errors in reliability studies vs other monitors. Critical for phishing domain detection. |
-| **Tor Exit Nodes**  | ✅ Good       | Simple IP list from official Tor Project, useful for anonymization tracking.                                                   |
-| **Firehol Level 1** | ✅ Good       | Well-maintained aggregated blocklist, curated from multiple sources.                                                           |
-| **OpenPhish**       | ⚠️ Acceptable | Supplements PhishTank but updates less frequently than premium feeds.                                                          |
-| **C2-Tracker**      | ✅ Excellent  | Tracks 2.7k+ confirmed Cobalt Strike servers, actively maintained daily via Shodan.                                            |
-| **Maltrail**        | ✅ Good       | Solid supplemental IOC coverage from stamparm's research.                                                                      |
-
-### Priority 2 Sources - Evaluation
-
-| Source                | Verdict      | Assessment                                                                        |
-| --------------------- | ------------ | --------------------------------------------------------------------------------- |
-| **Exploit-DB**        | ✅ Critical  | Must-have for CVE-to-exploit correlation. Industry standard.                      |
-| **Blocklist.de**      | ✅ Good      | Complements existing IP feeds with brute-force attacker data.                     |
-| **Emerging Threats**  | ✅ Good      | Suricata rules add detection context beyond IOCs.                                 |
-| **TweetFeed.live**    | ⚠️ Fragile   | Relies on X/Twitter API - may break with policy changes. Consider lower priority. |
-| **CIRCL Passive DNS** | ✅ Excellent | High-quality historical DNS data from Luxembourg CERT.                            |
-| **Censys**            | ✅ Excellent | Better certificate/service data than crt.sh for some use cases.                   |
-
-### Priority 3-4 Sources - Evaluation
-
-| Source                | Verdict     | Assessment                                                                                                          |
-| --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| **VulnCheck KEV**     | ❌ Retired  | Retired 15 Nov 2026 (migration 164). The free Community tier's Service Terms (rev. 20 Apr 2026) s7 say its data may not be made available for free, and s12 requires prominent attribution; Vigil is free and public. Other VulnCheck mentions in this file are historical. |
-| **ANY.RUN**           | ✅ Good     | Public sandbox reports provide behavioral analysis context.                                                         |
-| **Triage (Hatching)** | ✅ Good     | Fast automated triage complements ANY.RUN.                                                                          |
-| **SecurityTrails**    | ⚠️ Costly   | Value vs cost questionable when CIRCL provides similar DNS history.                                                 |
-| **InQuest Labs**      | ✅ Good     | Unique focus on document-based threats (Office, PDF).                                                               |
-
-### Sources NOT Recommended
-
-| Source                     | Reason                                                                        |
-| -------------------------- | ----------------------------------------------------------------------------- |
-| **TweetFeed.live**         | X/Twitter API reliability concerns after policy changes. Deprioritize.        |
-| **Paid Shodan/BinaryEdge** | Cost vs. value questionable when free InternetDB exists for basic enrichment. |
-
----
-
-## Identified Gaps - Missing Sources
-
-Research identified several high-value sources not in the original proposal:
-
-### Critical Priority (Add to Phase 1)
-
-#### EPSS - Exploit Prediction Scoring System
-
-- **URL**: `https://api.first.org/data/v1/epss`
-- **Data Type**: Probability scores for CVE exploitation within 30 days
-- **Why Critical**: CVSS alone is inadequate - only 2.3% of CVSS 7+ CVEs are actually exploited. EPSS uses ML to predict real-world exploitation likelihood.
-- **Auth**: None (completely free from FIRST.org)
-- **Effort**: 3 hours
-- **Script**: `ingest-epss.mjs`
-- **Integration**: Add `epss_score` and `epss_percentile` columns to vulnerabilities table
-
-#### GitHub Advisory Database (GHSA)
-
-- **URL**: `https://api.github.com/advisories`
-- **Data Type**: 305,000+ security advisories for open-source packages
-- **Why Critical**: Essential for supply chain security. Covers npm, PyPI, Maven, Go, Rust ecosystems.
-- **Auth**: None (public API without authentication)
-- **Effort**: 4 hours
-- **Script**: `ingest-ghsa.mjs`
-- **Integration**: New `advisories` table, cross-reference with NVD CVEs
-
-### High Priority (Add to Phase 2)
-
-#### Pulsedive
-
-- **URL**: `https://pulsedive.com/api/`
-- **Data Type**: Community threat intelligence with risk scoring
-- **Why Valuable**: Aggregates OSINT feeds with automated risk assessment
-- **Auth**: Free tier available
-- **Effort**: 4 hours
-- **Script**: `ingest-pulsedive.mjs`
-
-#### Nuclei Templates (Detection Signatures)
-
-- **URL**: `https://github.com/projectdiscovery/nuclei-templates`
-- **Data Type**: Vulnerability detection templates mapped to CVEs
-- **Why Valuable**: Shows which CVEs have automated detection/exploitation possible
-- **Auth**: None
-- **Effort**: 5 hours
-- **Script**: `ingest-nuclei-templates.mjs`
-
-### Medium Priority (Phase 3+)
-
-#### Dark Web / Telegram Monitoring
-
-- **Resources**: DeepDarkCTI (github.com/fastfire/deepdarkCTI), Telegram-OSINT
-- **Data Type**: Leak announcements, threat actor chatter, credential dumps
-- **Why Valuable**: 50,000+ cybercrime channels on Telegram. Early warning for breaches.
-- **Challenge**: Not a simple feed - requires careful implementation
-- **Approach**: Start with curated leak monitoring channels, expand carefully
-- **Effort**: 12+ hours
-- **Script**: `monitor-darkweb.mjs`
-
-#### UMD Cyber Events Database (GDELT-Powered) ✅ COMPLETE
+## UMD Cyber Events Database
 
 - **URL**: `https://gotech.umd.edu/node/13294` (moved from cissm.umd.edu; web app cybereventsdatabase.org)
 - **Data Type**: Structured cyber attack events with nation-state attribution
-- **Why Critical**: 25+ fields including threat actor type (nation-state/criminal/hacktivist), target industry, motive, severity. Covers 2014-present with monthly updates.
 - **Auth**: None for the xlsx on the GoTech page; the web app needs a login
 - **Terms**: no licence, terms of use or redistribution permission stated on the GoTech page, the web app's
   home, about and methodology pages, or the March 2026 codebook (read 25 Nov 2026). Citation asked for:
@@ -997,107 +706,6 @@ Research identified several high-value sources not in the original proposal:
 - **Records**: 16,104 cyber events (2014-2025)
 - **Update Frequency**: Monthly (manual download required)
 - **Note**: Uses GDELT as upstream data source since January 2025
-
-#### GDELT Project (Real-Time News) - PLANNED
-
-- **URL**: `https://api.gdeltproject.org/api/v2/doc/doc`
-- **Data Type**: Global news monitoring for cyber-related coverage
-- **Why Valuable**: Real-time monitoring of 100+ languages, 15-minute updates. Early warning for emerging threats, geopolitical correlation.
-- **Complementary to UMD**: UMD provides curated monthly data; GDELT provides real-time news alerts
-- **Auth**: None (free)
-- **Effort**: 12-16 hours
-- **Script**: `monitor-gdelt-cyber.mjs`
-- **Integration**: News alerts, trend correlation with existing incidents
-
-#### IntelOwl Integration
-
-- **URL**: `https://github.com/intelowlproject/IntelOwl`
-- **Data Type**: Aggregated enrichment from 100+ analyzers
-- **Why Valuable**: Single API to query VirusTotal, AbuseIPDB, Shodan, etc.
-- **Auth**: Self-hosted or use public demo
-- **Approach**: Use as enrichment backend rather than primary data source
-- **Effort**: 8 hours (setup + integration)
-
-#### ID Ransomware Indicators
-
-- **Why Valuable**: Ransomware family identification enhances incident classification
-- **Challenge**: No public API - would need partnership or careful scraping
-- **Status**: Research needed
-
----
-
-## Updated Rollout Plan
-
-### Revised Phase 1: Quick Wins + Critical Gaps
-
-| Task | Source          | Effort  | Script Name             | Priority     |
-| ---- | --------------- | ------- | ----------------------- | ------------ |
-| 1.1  | **EPSS**        | 3 hours | `ingest-epss.mjs`       | **CRITICAL** |
-| 1.2  | **GitHub GHSA** | 4 hours | `ingest-ghsa.mjs`       | **CRITICAL** |
-| 1.3  | Tor Exit Nodes  | 2 hours | `ingest-tor-exits.mjs`  | High         |
-| 1.4  | Firehol Level 1 | 2 hours | `ingest-firehol.mjs`    | High         |
-| 1.5  | C2-Tracker      | 4 hours | `ingest-c2-tracker.mjs` | High         |
-| 1.6  | crt.sh          | 4 hours | `ingest-crtsh.mjs`      | High         |
-| 1.7  | OpenPhish       | 2 hours | `ingest-openphish.mjs`  | Medium       |
-| 1.8  | Maltrail        | 3 hours | `ingest-maltrail.mjs`   | Medium       |
-
-**New Database Changes for Phase 1:**
-
-- Add `epss_score` FLOAT and `epss_percentile` FLOAT to `vulnerabilities` table
-- Create `advisories` table for GitHub GHSA data
-- Add `advisory_ids` array to link CVEs to GHSA advisories
-
-### Revised Phase 2: High-Value Additions
-
-| Task | Source               | Effort  | Script Name                   | Priority |
-| ---- | -------------------- | ------- | ----------------------------- | -------- |
-| 2.1  | Exploit-DB           | 6 hours | `ingest-exploitdb.mjs`        | Critical |
-| 2.2  | **Pulsedive**        | 4 hours | `ingest-pulsedive.mjs`        | **NEW**  |
-| 2.3  | Blocklist.de         | 3 hours | `ingest-blocklist-de.mjs`     | High     |
-| 2.4  | Emerging Threats     | 4 hours | `ingest-emerging-threats.mjs` | High     |
-| 2.5  | **Nuclei Templates** | 5 hours | `ingest-nuclei-templates.mjs` | **NEW**  |
-
-**Removed from Phase 2:** TweetFeed.live (API reliability concerns)
-
-### Revised Phase 5: Vulnerability Prioritization
-
-| Task | Source                       | Effort  | Script Name                      | Notes                                     |
-| ---- | ---------------------------- | ------- | -------------------------------- | ----------------------------------------- |
-| 5.1  | VulnCheck KEV                | 6 hours | `enrich-vulncheck.mjs`           | Supplements CISA KEV                      |
-| 5.2  | **EPSS-based Scoring**       | 4 hours | `calculate-epss-priority.mjs`    | **Replace** manual maturity scoring       |
-| 5.3  | Vulnerability Prioritization | 6 hours | `prioritize-vulnerabilities.mjs` | Combine EPSS + KEV + exploit availability |
-
-**Key Change:** Use EPSS as primary prioritization signal instead of manual exploit maturity scoring.
-
----
-
-## New Environment Variables Required
-
-| Phase   | Source      | Variable                                                 | Status        |
-| ------- | ----------- | -------------------------------------------------------- | ------------- |
-| Phase 1 | EPSS        | None required                                            | ✅ Active     |
-| Phase 1 | GitHub GHSA | None required (or `GITHUB_TOKEN` for higher rate limits) | ✅ Active     |
-| Phase 2 | Pulsedive   | `PULSEDIVE_API_KEY`                                      | ✅ Configured |
-| Phase 3 | CIRCL       | `CIRCL_API_KEY`                                          | Pending       |
-| Phase 3 | Censys      | `CENSYS_API_KEY`                                         | ✅ Configured |
-| Phase 4 | ANY.RUN     | `ANYRUN_API_KEY`                                         | Pending       |
-| Phase 4 | Triage      | `TRIAGE_API_KEY`                                         | Pending       |
-| Phase 5 | VulnCheck   | `VULNCHECK_API_KEY`                                      | ✅ Configured |
-
----
-
-## Research Sources
-
-This assessment was based on research from:
-
-- [FIRST.org EPSS](https://www.first.org/epss/) - Exploit Prediction Scoring System
-- [VulnCheck KEV Analysis](https://www.vulncheck.com/blog/comparing-kevs-jupyter) - KEV comparison research
-- [GitHub Advisory Database](https://github.com/advisories) - GHSA documentation
-- [C2-Tracker Repository](https://github.com/montysecurity/C2-Tracker) - C2 infrastructure tracking
-- [IntelOwl Project](https://github.com/intelowlproject/IntelOwl) - OSINT aggregation
-- [DeepDarkCTI](https://github.com/fastfire/deepdarkCTI) - Dark web intelligence
-- [Awesome Threat Intelligence](https://github.com/hslatman/awesome-threat-intelligence) - Curated TI resources
-- [Anomali Open Source Feeds](https://www.anomali.com/blog/open-source-threat-intelligence-feeds) - Feed recommendations
 
 ---
 

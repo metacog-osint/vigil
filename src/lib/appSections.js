@@ -1,5 +1,5 @@
 /**
- * The first path segment of every signed-in route in App.jsx (ideas#300).
+ * The first path segment of every signed-in route in App.jsx.
  *
  * A visitor who has not signed in and opens one of these (a shared link,
  * or a reload that drops demo mode) goes to the landing page, as before.

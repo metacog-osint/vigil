@@ -120,7 +120,7 @@ function skipToMain(event) {
 function PublicLayout() {
   return (
     <ErrorBoundary name="PublicLayout" title="Application Error">
-      {/* Skip link (ideas#300). Public pages each render their own <main>,
+      {/* Skip link. Public pages each render their own <main>,
           so this focuses the first one rather than a fixed id. */}
       <a
         href="#main-content"
@@ -138,7 +138,7 @@ function PublicLayout() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/sources" element={<Sources />} />
-          {/* A signed-in section goes to landing; any other address says so (ideas#300) */}
+          {/* A signed-in section goes to landing; any other address says so */}
           <Route path="*" element={<PublicFallback />} />
         </Routes>
       </Suspense>
