@@ -261,6 +261,11 @@ export const JOBS = [
     // 10, spent refreshing the same 40 CVEs a day.
     cost: 1,
     intervalMinutes: DAY,
+    // FIRST's daily file appeared at 13:30 UTC on each of the 31 days to 25 Nov
+    // 2026. Run after it, with room for the API to catch up, so the day's run
+    // reads that day's scores. It ran at 01:46-03:47 UTC before, always one
+    // release behind (ideas#362).
+    afterUtc: '15:00',
     run: (db, env) => ingestEPSS(db, env),
   },
   {
