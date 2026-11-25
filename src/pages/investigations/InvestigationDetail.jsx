@@ -152,7 +152,7 @@ export default function InvestigationDetail({
             <div className="flex gap-2">
               <button
                 onClick={handleSaveEdit}
-                className="px-3 py-1 bg-cyan-600 text-white rounded text-sm"
+                className="px-3 py-1 bg-cyan-700 text-white rounded text-sm"
               >
                 Save
               </button>
@@ -264,7 +264,7 @@ export default function InvestigationDetail({
           <button
             onClick={handleAddEntry}
             disabled={!newEntryContent.trim()}
-            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg transition-colors disabled:opacity-50"
           >
             Add
           </button>

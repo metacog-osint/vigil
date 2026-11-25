@@ -11,8 +11,9 @@ import {
 import { generateOAuthState } from '../lib/oauthSecurity'
 import { useAuth } from '../hooks/useAuth'
 import { FoldWindow } from '../components/common'
+import FeatureGate from '../components/common/FeatureGate'
 
-export default function ChatIntegrations() {
+function ChatIntegrationsPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [integrations, setIntegrations] = useState([])
@@ -479,5 +480,13 @@ export default function ChatIntegrations() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function ChatIntegrations() {
+  return (
+    <FeatureGate table="chat_integrations" title="Chat integrations" what="Chat integration">
+      <ChatIntegrationsPage />
+    </FeatureGate>
   )
 }

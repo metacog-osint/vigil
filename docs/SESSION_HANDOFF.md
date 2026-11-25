@@ -95,7 +95,7 @@ no worker change). Query layer `src/lib/supabase/upperMidwest.js` (exported from
 - **190:** licences; `apply_breach_notices` stores each row's `persons_affected_scope` (86 WA/OR counts since
   144 had none) and skips, with a count, notices with no reported date; three Oregon names with entities fixed
   with their accession; the review queue asks only about notices filed in the last 90 days.
-- Survey of the other states: `[local path]`.
+- Survey of the other states: `~/vigil-data\state-ag-survey\SURVEY.md`.
 - **Applied** 05:00 UTC; backfill 05:07: VT 564, MT 6,638, SC 912, ID 262, DE 295 (56 skipped, no reported
   date). **Trap:** the first deploy read dates loosely for every state, so California's multi-date breach cells
   gained a date and 67 known notices a second accession. They were archived in a `breach_notice_duplicates_removed`
@@ -212,7 +212,7 @@ no worker change). Query layer `src/lib/supabase/upperMidwest.js` (exported from
   SSVC judgments go to `cisa_ssvc` (no public grants; Tom chose to store first
   and decide where it shows). 176 applied 21:05 UTC; `cisa-vulnrichment` Edge
   Function v1 deployed 21:08 UTC; backfill (`scripts/backfill-cisa-vulnrichment.mjs`,
-  from a depth-1 clone in `[local path]`, commit
+  from a depth-1 clone in `~/vigil-data\vulnrichment`, commit
   `32a25ee`, 16:17 UTC) loaded 49,731 rows about 21:50 UTC and set the cursor.
   - Full corpus, 223,513 records: Exploitation none 173,224, **poc 47,950**,
     **active 1,781**; 558 have no CISA-ADP container.
@@ -931,6 +931,15 @@ central claim and no human has ever exercised it end to end.
 - **The six empty feature groups** — status page, chat integrations,
   escalation/on-call, SSO, benchmarks, usage analytics. The test is: would you
   demo it?
+  Missing, not empty (live database, measured 20 Nov 2026): the status tables
+  (`status_components`, `status_incidents`, `status_incident_updates`,
+  `status_maintenance`, `status_uptime_records`, `get_system_status()`), the
+  webhook tables (`webhooks`, `webhook_deliveries`) and the chat tables
+  (`chat_integrations`, `chat_channel_subscriptions`, `chat_command_logs`,
+  `v_chat_integration_stats`). Migrations 022, 024, 027 and 050 hold them but are
+  not applied, and pre-30-Oct migrations carry no grants. Tom chose on 21 Nov
+  2026: no migration; `/status`, `/webhooks` and `/chat` show a plain "Not set up
+  yet" notice (`FeatureGate`, `src/components/common/FeatureGate.jsx`).
 - **Leaked-password protection** is off, in the Auth dashboard.
 - **12 of 21 registered sources have an unchecked licence**, including
   `misp-galaxy` and `mitre-attack`, which between them supply most of the actor

@@ -10,6 +10,7 @@ const Auth = lazy(() => import('./pages/Auth'))
 const Terms = lazy(() => import('./pages/Terms'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const Sources = lazy(() => import('./pages/Sources'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 // Lazy loaded pages - code split for smaller initial bundle
 const Activity = lazy(() => import('./pages/Activity'))
@@ -68,6 +69,7 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { usePageTracking } from './hooks/useAnalytics'
 import { useTermsAcceptance } from './hooks/useTermsAcceptance'
 import { useSessionManager } from './hooks/useSessionManager'
+import { useRouteTitle } from './hooks/useRouteTitle'
 
 // Contexts
 import { TenantProvider } from './contexts/TenantContext'
@@ -75,6 +77,7 @@ import { ToastProvider } from './contexts/ToastContext'
 import { FocusModeProvider } from './hooks/useFocusMode'
 import { DemoProvider, useDemo } from './contexts/DemoContext'
 import { DemoBanner } from './components/demo'
+import { isAppSection } from './lib/appSections'
 
 // Loading fallback for lazy routes
 function PageLoader() {
@@ -100,10 +103,32 @@ function AuthLoader() {
   )
 }
 
+function PublicFallback() {
+  const { pathname } = useLocation()
+  return isAppSection(pathname) ? <Navigate to="/" replace /> : <NotFound />
+}
+
+function skipToMain(event) {
+  const main = document.querySelector('main')
+  if (!main) return
+  event.preventDefault()
+  if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1')
+  main.focus()
+}
+
 // Public routes wrapper (no sidebar/header)
 function PublicLayout() {
   return (
     <ErrorBoundary name="PublicLayout" title="Application Error">
+      {/* Skip link (ideas#300). Public pages each render their own <main>,
+          so this focuses the first one rather than a fixed id. */}
+      <a
+        href="#main-content"
+        onClick={skipToMain}
+        className="vigil-skip-link sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-cyber-accent focus:text-white focus:rounded-lg focus:outline-none"
+      >
+        Skip to main content
+      </a>
       <Suspense fallback={<AuthLoader />}>
         <Routes>
           <Route path="/" element={<Landing />} />
@@ -113,8 +138,8 @@ function PublicLayout() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/sources" element={<Sources />} />
-          {/* Redirect any other route to landing */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* A signed-in section goes to landing; any other address says so (ideas#300) */}
+          <Route path="*" element={<PublicFallback />} />
         </Routes>
       </Suspense>
       {/* Data credits the sources' licences require, on every page */}
@@ -133,6 +158,9 @@ function ProtectedApp() {
   const { user } = useAuth()
   const isOnline = useOnlineStatus()
   const location = useLocation()
+
+  // Page title per signed-in route
+  useRouteTitle()
 
   // Terms acceptance check
   const {
@@ -300,7 +328,7 @@ function ProtectedApp() {
                             header intact, content blank. A visitor cannot tell
                             that apart from a page that failed to load.
                           */}
-                        <Route path="*" element={<Navigate to="/" replace />} />
+                        <Route path="*" element={<NotFound signedIn />} />
                       </Routes>
                     </Suspense>
                   </ErrorBoundary>

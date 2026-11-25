@@ -209,7 +209,7 @@ export default function PersonalizationWizard({ onComplete, onSkip }) {
           <button
             onClick={handleNext}
             disabled={saving || (step === 1 && !selectedSector)}
-            className="px-6 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 disabled:opacity-50 transition-colors"
+            className="px-6 py-2 bg-cyan-700 text-white rounded-lg hover:bg-cyan-800 disabled:opacity-50 transition-colors"
           >
             {saving ? 'Saving...' : step === totalSteps ? 'Finish Setup' : 'Continue'}
           </button>

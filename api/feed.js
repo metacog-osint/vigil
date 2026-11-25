@@ -83,7 +83,7 @@ export default async function handler(request) {
           base,
           key,
           // VG-IND-1 (migration 179): unusual against the group's own 8 weeks, not 077's trend_status.
-          'threat_actors?select=id,surge_claims_7d,surge_days_7d,surge_baseline_mean,surge_p,surge_new_group,surge_window_end&surge=is.true&status=eq.active&order=surge_claims_7d.desc&limit=50',
+          'threat_actors?select=id,surge_claims_7d,surge_days_7d,surge_baseline_mean,surge_p,surge_new_group,surge_window_end,surge_flagged_at&surge=is.true&status=eq.active&order=surge_claims_7d.desc&limit=50',
           { count: true }
         ),
         rest(
@@ -123,7 +123,7 @@ export default async function handler(request) {
         rest(
           base,
           key,
-          `feed_health?select=feed_id,state,last_status,last_success_at,last_attempt_at,stall_after_minutes,last_new_at,stalled,new_counted_since&feed_id=in.(${HEALTH_FEEDS.join(',')})`
+          `feed_health?select=feed_id,state,last_status,last_success_at,last_attempt_at,stall_after_minutes,last_new_at,stalled,new_counted_since,min_rows_per_run,last_rows,below_floor&feed_id=in.(${HEALTH_FEEDS.join(',')})`
         ).catch((err) => {
           console.error('feed: health read failed', err)
           return null

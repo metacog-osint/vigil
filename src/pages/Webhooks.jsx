@@ -10,6 +10,7 @@ import {
 } from '../lib/webhooks'
 import { SmartTime } from '../components/TimeDisplay'
 import { FoldWindow } from '../components/common'
+import FeatureGate from '../components/common/FeatureGate'
 
 const STATUS_COLORS = {
   success: 'bg-green-500',
@@ -18,7 +19,7 @@ const STATUS_COLORS = {
   retrying: 'bg-orange-500',
 }
 
-export default function Webhooks() {
+function WebhooksPage() {
   const { user } = useAuth()
   const [hookList, setHookList] = useState([])
   const [loading, setLoading] = useState(true)
@@ -622,5 +623,13 @@ function CreateWebhookModal({ onClose, onCreate }) {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function Webhooks() {
+  return (
+    <FeatureGate table="webhooks" title="Webhooks" what="Webhook delivery">
+      <WebhooksPage />
+    </FeatureGate>
   )
 }

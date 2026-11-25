@@ -90,7 +90,7 @@ export default function Investigations() {
         </button>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="p-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors"
+          className="p-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -117,7 +117,7 @@ export default function Investigations() {
             <h1 className="text-xl font-bold text-white">Investigations</h1>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="p-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors"
+              className="p-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

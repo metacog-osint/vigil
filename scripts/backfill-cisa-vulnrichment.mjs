@@ -19,7 +19,7 @@ import { readSsvc, worthStoring } from '../supabase/functions/_shared/vulnrichme
 
 const args = process.argv.slice(2)
 const clone = args.find((a) => !a.startsWith('--'))
-const envPath = args.includes('--env') ? args[args.indexOf('--env') + 1] : '[local path]'
+const envPath = args.includes('--env') ? args[args.indexOf('--env') + 1] : '.env'
 const dryRun = args.includes('--dry-run')
 if (!clone) {
   console.error(
