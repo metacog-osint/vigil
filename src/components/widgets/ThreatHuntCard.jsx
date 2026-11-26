@@ -90,7 +90,7 @@ export default function ThreatHuntCard({
         <div className="flex items-center gap-3">
           {/* Confidence badge */}
           <span
-            className={`text-[10px] px-2 py-1 rounded border ${CONFIDENCE_COLORS[hunt.confidence]}`}
+            className={`text-xs px-2 py-1 rounded border ${CONFIDENCE_COLORS[hunt.confidence]}`}
           >
             {hunt.confidence?.toUpperCase()}
           </span>
@@ -230,7 +230,7 @@ export default function ThreatHuntCard({
                               onClick={() => {
                                 navigator.clipboard.writeText(check.command)
                               }}
-                              className="mt-1 text-[10px] text-gray-500 hover:text-gray-400"
+                              className="mt-1 text-xs text-gray-500 hover:text-gray-400"
                             >
                               Copy command
                             </button>
@@ -377,7 +377,7 @@ export default function ThreatHuntCard({
               {(hunt.tags || []).map((tag, index) => (
                 <span
                   key={index}
-                  className="text-[10px] px-2 py-0.5 bg-gray-700/50 text-gray-400 rounded"
+                  className="text-xs px-2 py-0.5 bg-gray-700/50 text-gray-400 rounded"
                 >
                   {tag}
                 </span>
@@ -417,7 +417,7 @@ export function ThreatHuntSummary({ hunt, onClick }) {
     >
       <div className="flex items-center justify-between mb-1">
         <span
-          className={`text-[10px] px-2 py-0.5 rounded border ${CONFIDENCE_COLORS[hunt.confidence]}`}
+          className={`text-xs px-2 py-0.5 rounded border ${CONFIDENCE_COLORS[hunt.confidence]}`}
         >
           {hunt.confidence?.toUpperCase()}
         </span>

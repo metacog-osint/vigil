@@ -3,7 +3,8 @@
  *
  * ransomware.live was the only source that ever supplied victim_country and it
  * stopped on 29 May 2026; ransomlook carries none. This fills the gap from
- * ThreatCluster's Ransomware-Intel, a daily CSV marked TLP:CLEAR.
+ * ThreatCluster's Ransomware-Intel, a daily CSV (TLP:CLEAR and GPL-3.0 until 21 Nov 2026; since 22 Nov 2026 a
+ * free 7-day file under ThreatCluster's own terms, see migration 200).
  *
  * The work happens in the threatcluster-victims Edge Function, for the same
  * reason ofac-sdn does: Workers Free allows 10 ms of CPU per invocation, and

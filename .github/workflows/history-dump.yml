@@ -1,0 +1,112 @@
+# Weekly off-platform copy of Vigil's history tables (ideas#159).
+#
+# Supabase Pro keeps 7 days of backups. entity_changelog goes back to 17 Jan
+# 2026 and nothing else holds it. This dumps the history tables with pg_dump,
+# restores the dump into a throwaway Postgres to prove it reads back, and files
+# it in the private metacog-osint/tic-archive (tools/tic_archive.py, lane
+# "pgdump"). Nothing here writes to the live database.
+#
+# Secrets (Tom sets them; see docs/HISTORY_DUMP.md):
+#   VIGIL_DUMP_DB_URL    read-only role, Supabase SESSION POOLER url (IPv4)
+#   TIC_ARCHIVE_TOKEN    fine-grained token, contents:write on tic-archive only
+
+name: History dump
+
+on:
+  schedule:
+    - cron: '17 6 * * 0' # Sundays, 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: history-dump
+  cancel-in-progress: false
+
+env:
+  TABLES: >-
+    entity_changelog ioc_sightings iocs incidents victim_disclosures
+    cyber_events sync_log vulnerabilities advisories threat_actors
+  # A dump with fewer rows than this means the role could not see the table
+  # (row-level security hides rows without raising an error). Fail, never file.
+  MIN_CHANGELOG_ROWS: '2000000'
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      scratch:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: scratch
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Postgres 17 client (the runner ships an older pg_dump)
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -q
+          sudo apt-get install -y -q postgresql-client-17
+
+      - name: Dump
+        env:
+          SRC: ${{ secrets.VIGIL_DUMP_DB_URL }}
+        run: |
+          set -euo pipefail
+          # A secret saved from PowerShell can start with a byte-order mark or end with a newline.
+          SRC=$(printf '%s' "$SRC" | sed 's/^\xEF\xBB\xBF//' | tr -d '[:space:]')
+          if [ -z "$SRC" ]; then echo "::error::VIGIL_DUMP_DB_URL is not set"; exit 1; fi
+          mkdir dump
+          before=$(psql "$SRC" -Atc "select count(*) from public.entity_changelog")
+          echo "entity_changelog rows seen by the dump role: $before"
+          if [ "$before" -lt "$MIN_CHANGELOG_ROWS" ]; then
+            echo "::error::dump role sees only $before changelog rows (expected at least $MIN_CHANGELOG_ROWS): check grants and row-level security"
+            exit 1
+          fi
+          echo "$before" > before.txt
+          args=()
+          for t in $TABLES; do args+=(-t "public.$t"); done
+          pg_dump "$SRC" --format=custom --compress=6 --no-owner --no-privileges "${args[@]}" -f dump/vigil-history.dump
+          ls -l dump | awk '{print $5, $9}'
+          pg_restore --list dump/vigil-history.dump | grep -c 'TABLE DATA'
+
+      - name: Restore test (scratch Postgres)
+        run: |
+          set -euo pipefail
+          export PGPASSWORD=scratch
+          # The dump carries Supabase's row-level-security policies, which name these roles.
+          for r in anon authenticated service_role; do
+            psql -h localhost -U postgres -d postgres -qc "create role $r nologin"
+          done
+          # Column defaults call extensions.uuid_generate_v4(); Supabase keeps extensions in this schema.
+          psql -h localhost -U postgres -d postgres -qc 'create schema extensions' \
+            -c 'create extension "uuid-ossp" schema extensions' \
+            -c 'create extension pgcrypto schema extensions'
+          pg_restore --no-owner --no-privileges -h localhost -U postgres -d postgres dump/vigil-history.dump 2>restore.err || true
+          echo "restore errors: $(grep -c 'pg_restore: error' restore.err || true)"
+          grep -A2 'pg_restore: error' restore.err | head -24 || true
+          after=$(psql -h localhost -U postgres -d postgres -Atc "select count(*) from public.entity_changelog")
+          before=$(cat before.txt)
+          echo "restored entity_changelog rows: $after (before the dump: $before)"
+          if [ "$after" -lt "$before" ]; then echo "::error::restore read back fewer rows than the source had"; exit 1; fi
+          for t in $TABLES; do
+            n=$(psql -h localhost -U postgres -d postgres -Atc "select count(*) from public.$t")
+            echo "restored $t: $n rows"
+          done
+
+      - name: File in tic-archive
+        env:
+          GH_TOKEN: ${{ secrets.TIC_ARCHIVE_TOKEN }}
+        run: python tools/tic_archive.py put --program vigil --lane pgdump --src dump

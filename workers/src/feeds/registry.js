@@ -45,6 +45,7 @@ import { ingestWaBreachCauses } from './wa-breach-causes.js'
 import { ingestHhsOcrBreaches } from './hhs-ocr-breaches.js'
 import { ingestCisaVulnrichment } from './cisa-vulnrichment.js'
 import { ingestVendorExploited } from './vendor-exploited.js'
+import { ingestCirclSightings } from './circl-sightings.js'
 import { ingestCertfrAlerts } from './certfr-alerts.js'
 import { ingestFincenAdvisories } from './fincen-advisories.js'
 import { buildPublicSummary } from './public-summary.js'
@@ -233,6 +234,16 @@ export const JOBS = [
     intervalMinutes: DAY,
     run: (db, env) => ingestVendorExploited(db, env),
   },
+  // Reported exploitation from CIRCL's sightings (migration 194). One subrequest
+  // to the circl-sightings Edge Function, which keeps allow-listed sources only.
+  // Kept apart from KEV: circl_sightings, not vulnerabilities.
+  {
+    id: 'circl-sightings',
+    priority: 4,
+    cost: 1,
+    intervalMinutes: HOUR,
+    run: (db, env) => ingestCirclSightings(db, env),
+  },
   // CERT-FR's alerts (migration 188), kept as CERT-FR's notices, never as an
   // exploitation claim. One subrequest to the certfr-alerts Edge Function,
   // which reads CERT-FR's list and the alerts it opened or revised.
@@ -250,6 +261,11 @@ export const JOBS = [
     // 10, spent refreshing the same 40 CVEs a day.
     cost: 1,
     intervalMinutes: DAY,
+    // FIRST's daily file appeared at 13:30 UTC on each of the 31 days to 25 Nov
+    // 2026. Run after it, with room for the API to catch up, so the day's run
+    // reads that day's scores. It ran at 01:46-03:47 UTC before, always one
+    // release behind (ideas#362).
+    afterUtc: '15:00',
     run: (db, env) => ingestEPSS(db, env),
   },
   {

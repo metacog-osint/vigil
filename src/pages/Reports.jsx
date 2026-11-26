@@ -119,7 +119,7 @@ export default function Reports() {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg transition-colors flex items-center gap-2"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -660,7 +660,7 @@ function ReportModal({ report, onClose, onSave }) {
                 <button
                   type="submit"
                   disabled={saving || !name.trim() || sections.length === 0}
-                  className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors disabled:opacity-50"
+                  className="px-6 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg transition-colors disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : report ? 'Save Changes' : 'Create Report'}
                 </button>

@@ -741,7 +741,7 @@ export function SearchModal({ isOpen, onClose }) {
                 </svg>
                 Natural Language Search
                 {nlParsedQuery.aiParsed && (
-                  <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded text-[10px]">
+                  <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded text-xs">
                     AI
                   </span>
                 )}

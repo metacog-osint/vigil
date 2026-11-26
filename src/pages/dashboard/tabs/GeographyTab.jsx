@@ -38,7 +38,7 @@ export default function GeographyTab() {
               onClick={() => setMapViewMode('victims')}
               className={`px-3 py-1.5 text-sm rounded transition-colors ${
                 mapViewMode === 'victims'
-                  ? 'bg-cyan-600 text-white'
+                  ? 'bg-cyan-700 text-white'
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >

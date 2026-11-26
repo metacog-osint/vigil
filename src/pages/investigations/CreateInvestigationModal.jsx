@@ -152,7 +152,7 @@ export default function CreateInvestigationModal({ templates, onClose, onCreate 
             <button
               type="submit"
               disabled={creating || !title.trim()}
-              className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg disabled:opacity-50"
+              className="px-6 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg disabled:opacity-50"
             >
               {creating ? 'Creating...' : 'Create Investigation'}
             </button>

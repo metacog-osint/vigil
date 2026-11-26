@@ -35,7 +35,7 @@ export const DATA_CREDITS = [
       {
         name: 'ThreatCluster',
         url: 'https://github.com/Jam0k/Ransomware-Intel',
-        licence: 'TLP:CLEAR',
+        licence: 'GPL-3.0 to 21 Nov 2026, then ThreatCluster terms',
       },
     ],
   },
@@ -55,7 +55,7 @@ export const DATA_CREDITS = [
   },
 ]
 
-const linkClass = 'text-gray-400 hover:text-cyan-400 underline-offset-2 hover:underline'
+const linkClass = 'text-gray-400 hover:text-cyan-400 underline underline-offset-2'
 
 /**
  * A project of The Intelligence Company: where the code is, under what

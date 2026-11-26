@@ -165,7 +165,7 @@ export default function DataSourcesPanel() {
           <button
             onClick={() => handleRefresh('actor_types_seed')}
             disabled={refreshing === 'actor_types_seed'}
-            className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-sm rounded transition disabled:opacity-50"
+            className="px-3 py-1.5 bg-cyan-700 hover:bg-cyan-800 text-white text-sm rounded transition disabled:opacity-50"
           >
             {refreshing === 'actor_types_seed' ? 'Updating...' : 'Update Curated Actors'}
           </button>

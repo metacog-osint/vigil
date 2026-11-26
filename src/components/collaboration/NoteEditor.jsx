@@ -138,7 +138,7 @@ export function NoteEditor({ entityType, entityId, entityName, className = '' })
             <button
               onClick={handleCreate}
               disabled={!newNote.trim() || saving || newNote.length > 500}
-              className="px-3 py-1 bg-cyan-500 hover:bg-cyan-600 text-white text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 bg-cyan-700 hover:bg-cyan-800 text-white text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Saving...' : 'Add Note'}
             </button>
@@ -233,7 +233,7 @@ export function NoteEditor({ entityType, entityId, entityName, className = '' })
                     <button
                       onClick={() => handleUpdate(note.id)}
                       disabled={saving}
-                      className="px-2 py-0.5 bg-cyan-500 text-white text-xs rounded"
+                      className="px-2 py-0.5 bg-cyan-700 text-white text-xs rounded"
                     >
                       Save
                     </button>

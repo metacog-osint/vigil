@@ -224,3 +224,7 @@ The live register is the Sources page (`/sources`) on the site, read from the
 ---
 
 _The Intelligence Company · [github.com/metacog-osint/vigil](https://github.com/metacog-osint/vigil)_
+
+## AI assistance
+
+This repository is built with AI coding assistance (Anthropic's Claude Code). The Intelligence Company is responsible for everything published here.

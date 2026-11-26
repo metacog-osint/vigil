@@ -11,6 +11,9 @@ import { join, resolve } from 'node:path'
 import {
   buildFeed,
   computedAsOf,
+  EPSS_ALERT,
+  EPSS_CURRENT_DAYS,
+  contractHealth,
   countFromRange,
   healthBlock,
   HEALTH_FEEDS,
@@ -478,6 +481,27 @@ describe('doctrineFeed', () => {
     expect(f['vigil:kev:CVE-2026-0003'].properties.sources.map((s) => s.id)).toEqual(['cisa-kev'])
   })
 
+  it('raises no EPSS alert on a current high score without known ransomware use', () => {
+    const r = rows()
+    r.kev.push({
+      cve_id: 'CVE-2026-0004',
+      kev_date: '2026-10-29',
+      epss_score: 0.95,
+      epss_date: '2026-10-30',
+      ransomware_use: false,
+    })
+    const p = byId(buildFeed(r, NOW))['vigil:kev:CVE-2026-0004'].properties
+    expect(p).toMatchObject({ tier: 'routine', indicator_id: 'VG-IND-5' })
+    expect(p.baseline_ref).toBeUndefined()
+  })
+
+  it('states the whole EPSS alert rule in method.md (ideas#338)', () => {
+    const method = readFileSync(join(ROOT, 'doctrine/method.md'), 'utf8').replace(/\s+/g, ' ')
+    expect(method).toContain('known ransomware use')
+    expect(method).toContain(`at least ${EPSS_ALERT}`)
+    expect(method).toContain(`within ${EPSS_CURRENT_DAYS} days`)
+  })
+
   it('names the regulator and the scope of people affected', () => {
     const f = byId(buildFeed(rows(), NOW))
     expect(f['vigil:disclosure:d1'].properties.title).toBe(
@@ -681,6 +705,7 @@ describe('the health block (migration 163)', () => {
         'cisa-kev',
         'cisa-vulnrichment',
         'sec-edgar',
+        'threatcluster',
         'ca-ag',
         'wa-ag',
         'or-ag',
@@ -692,6 +717,7 @@ describe('the health block (migration 163)', () => {
       'cisa-kev',
       'cisa-vulnrichment',
       'sec-edgar',
+      'threatcluster',
       'state-breach-notices',
       'data-quality',
     ])
@@ -707,6 +733,42 @@ describe('the health block (migration 163)', () => {
       r.feed_id === 'ransomlook' ? { ...r, stalled: false } : r
     )
     expect(stallCaveat(healthBlock(working))).toBeNull()
+  })
+})
+
+describe('the row floor (migration 197)', () => {
+  const row = (over) => ({
+    feed_id: 'threatcluster',
+    state: 'fresh',
+    last_status: 'success',
+    last_success_at: '2026-11-23T03:16:22Z',
+    last_attempt_at: '2026-11-23T03:16:22Z',
+    min_rows_per_run: 500,
+    last_rows: 16,
+    below_floor: true,
+    ...over,
+  })
+
+  it('reads the 23 Nov ThreatCluster run as degraded and says why', () => {
+    const lane = healthBlock([row()]).threatcluster
+    expect(lane.state).toBe('degraded')
+    expect(lane.detail).toBe('Last run read 16 rows, under its floor of 500')
+  })
+
+  it('publishes degraded inside the closed list of contract states', () => {
+    const published = contractHealth(healthBlock([row()]), '2026-11-23T04:00:00Z').threatcluster
+    expect(published.state).toBe('stale')
+    expect(published.degraded).toBe(true)
+  })
+
+  it('leaves a run at or above its floor alone', () => {
+    const lane = healthBlock([row({ last_rows: 2950, below_floor: false })]).threatcluster
+    expect(lane.state).toBe('fresh')
+    expect(lane).not.toHaveProperty('degraded')
+  })
+
+  it('does not soften a feed that is already stale', () => {
+    expect(healthBlock([row({ state: 'stale' })]).threatcluster.state).toBe('stale')
   })
 })
 

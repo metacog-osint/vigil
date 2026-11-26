@@ -26,6 +26,19 @@
   font-size: 12px;
 }
 
+/* Secondary text on the dark theme (ideas#162). Tailwind's gray-500 and gray-600
+   read 3.3:1 to 4.1:1 on these backgrounds; WCAG AA wants 4.5:1. Set here so the
+   ~1,000 places that use them stay as written. Backgrounds and borders that use
+   the same names are untouched. */
+.text-gray-500 {
+  --tw-text-opacity: 1;
+  color: rgb(156 163 175 / var(--tw-text-opacity));
+}
+.text-gray-600 {
+  --tw-text-opacity: 1;
+  color: rgb(141 149 163 / var(--tw-text-opacity));
+}
+
 /* Custom cyber theme styles */
 @layer base {
   body {

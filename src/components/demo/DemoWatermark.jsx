@@ -15,7 +15,7 @@ export default function DemoWatermark() {
     <div
       aria-hidden="true"
       data-testid="demo-watermark"
-      className="pointer-events-none fixed inset-0 z-30"
+      className="pointer-events-none fixed inset-0 z-[60]"
       style={{ backgroundImage: `url("data:image/svg+xml,${TILE}")`, opacity: 0.07 }}
     />
   )

@@ -36,7 +36,7 @@ it against the source before relying on it.
 | MITRE ATT&CK                            | **ATT&CK Terms of Use**, royalty-free including commercial use                       | MITRE's copyright notice and the licence must travel with any copy of ATT&CK content.                                                                                                                                                                                |
 | MISP Galaxy                             | **CC0 1.0 or 2-clause BSD** (dual)                                                   | Sellable. Supplies most actor origins. Data spells it both `misp-galaxy` and `misp_galaxy`; since 160 both match.                                                                                                                                                    |
 | **Malpedia**                            | **CC BY-NC-SA 3.0 — NonCommercial**                                                  | **Treated as ETDA is** (owner's decision, 26 Oct 2026): free product only. Supplies 1,101 actor names and nothing else.                                                                                                                                               |
-| ThreatCluster Ransomware-Intel          | **TLP:CLEAR** — "free to use, redistribute, and integrate. Attribution appreciated." | No restriction on use or redistribution. Attributed anyway.                                                                                                                                                                                                          |
+| ThreatCluster Ransomware-Intel          | **GPL-3.0 to 21 Nov 2026; ThreatCluster terms from 22 Nov 2026** | Free in your own environment and in non-commercial community defence work, with attribution; commercial redistribution needs ThreatCluster's licence. Treated as ETDA is from 22 Nov (free product only). Countries filled before then stay sellable (`threatcluster`); the 21 Nov GPL-3.0 backfill is `threatcluster-gpl-20261121` (sellable); fills from the free file are `threatcluster-terms-20261122` (not sellable). Migration 200. |
 | SEC EDGAR                               | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
 | OFAC SDN                                | **US public domain**                                                                 | A work of the US government. No restriction.                                                                                                                                                                                                                         |
 | **ETDA / ThaiCERT Threat Group Cards**  | **CC BY-NC-SA 4.0 — NonCommercial**                                                  | **Free to use now; must be removed from anything sold.** Supplies 186 actor origin countries, all carrying `origin_source = 'etda'`, and `actor_origins_commercial` already excludes them. The licence is re-read from the API response on every run.                |
@@ -66,11 +66,13 @@ that run from `scripts/` rather than the worker.
 | RansomLook                     | `https://www.ransomlook.io/api`                                                  | Ransomware incidents, victim claims                   | Every 30min     | `ingest-ransomlook.mjs`                                                      | None |
 | Ransomware.live                | `https://api.ransomware.live/v2`                                                 | Victim claims, historical data (2020+)                | Every 6h        | `ingest-ransomware-live.mjs`                                                 | None |
 | Ransomware.live groups         | `https://api.ransomware.live/v2/groups`                                          | Group ATT&CK techniques, tooling, leak-site addresses | Daily 03:00 UTC | `workers/src/feeds/ransomware-live.js`                                       | None |
-| ThreatCluster Ransomware-Intel | `https://raw.githubusercontent.com/Jam0k/Ransomware-Intel/main/data/victims.csv` | **Victim country**, sector, listed/delisted status    | Daily           | `workers/src/feeds/threatcluster.js` → `threatcluster-victims` Edge Function | None |
+| ThreatCluster Ransomware-Intel | `https://raw.githubusercontent.com/Jam0k/Ransomware-Intel/main/data/victims.csv` | **Victim country**, sector, listed/delisted status (7-day file since 22 Nov 2026) | Daily           | `workers/src/feeds/threatcluster.js` → `threatcluster-victims` Edge Function | None |
 
 **Why Ransomwatch was removed.** Its upstream repo was archived on 3 Mar 2026
 and stopped updating, so the ingest script was deleted on 4 Oct 2026. Incidents
 it loaded before then keep `source = 'ransomwatch'`.
+
+**Correction, 25 Nov 2026 (ideas#235).** This file described ThreatCluster as TLP:CLEAR with no restriction. That was its README until 22 Nov 2026 (the LICENSE was GPL-3.0). That day upstream dropped the 90- and 365-day files, kept a free 7-day file (10 to 25 victims a day) and moved to its own terms (non-commercial with attribution). Vigil keeps reading the free file with credit, and backfills victim country only from the 365-day file as committed in the last GPL-3.0 commit (`3ae0330455`, 21 Nov 2026), through the `gpl-365d` window of the `threatcluster-victims` Edge Function.
 
 **Why ThreatCluster was added.** Ransomware.live was the only source that ever
 supplied `victim_country` — 11,256 of 11,317 — and it stopped on 29 May 2026.
@@ -110,6 +112,7 @@ contradicting itself rather than reporting a disagreement.
 | CISA Alerts | `https://www.cisa.gov/uscert/ncas/alerts.xml`                                         | Security advisories (RSS) | Every 6h | `ingest-cisa-alerts.mjs` | None |
 | CISA Vulnrichment | `github.com/cisagov/vulnrichment` (develop), commits since a cursor | CISA's SSVC judgments: Exploitation none/poc/active, Automatable, Technical Impact | Hourly (worker `cisa-vulnrichment`, Edge Function of the same name) | `scripts/backfill-cisa-vulnrichment.mjs` (one-time) | GitHub token, public read only |
 | Android and Mozilla exploitation statements | `source.android.com/docs/security/bulletin/*` (7 families); `codeload.github.com/mozilla/foundation-security-advisories` tarball | The vendor's own sentence that a CVE was or may be exploited, verbatim, with its kind | Daily (worker `vendor-exploited`, Edge Function of the same name) | `scripts/backfill-vendor-exploited.mjs` (Android, one-time) | None |
+| CIRCL sightings (reported exploited) | `vulnerability.circl.lu/api/sighting/?type=exploited`, date windows from a cursor | CVE, source class, source name, link where allowed, first and last sighting. Allow-listed sources only: Shadowserver honeypots, OffSeq Mirage, ENISA, named vendors and press, Telegram and GitHub by platform with no link or text. Left out: Previdian, CIRCL's combined list, SiberKapan, the CISA catalogue copy, CrowdSec. Never KEV. No named licence, so `commercial_use = false` until CIRCL confirms | Hourly (worker `circl-sightings`, Edge Function of the same name) | None: the first runs walk the history, 10 pages a run | None |
 | CERT-FR alerts | `cert.cyber.gouv.fr/alerte/json/` (list) and `/alerte/<reference>/json/` | CERT-FR's "act now" notices: title, CVEs, vendors, risks, summary, dates, the alert's JSON | Daily (worker `certfr-alerts`, Edge Function of the same name) | `scripts/backfill-vendor-exploited.mjs --certfr` (one-time) | None |
 
 **CISA Vulnrichment (176, 18 Nov 2026)** is kept apart from KEV, in `cisa_ssvc`, not in `vulnerabilities`. `active` is CISA's judgment that a CVE is exploited, which it makes for CVEs that are not in KEV too; `poc` is its judgment that a proof of concept is public, not a report of exploitation. Tom chose to store it first and decide where it shows; on 18 Nov 2026 he chose to show it (177): anon reads `cisa_ssvc`, `/api/feed` carries "CISA's ADP assessment of <CVE>: exploitation active (assessed <date>)" for CVEs assessed active in the last 7 days, marked "not in CISA's KEV catalog" where Vigil's copy of KEV does not list them, and the vulnerability panel shows the same line with Automatable and Technical Impact. Credited as "CISA Vulnrichment (CC0)". Never a KEV label. The independent known-exploited signal that replaces VulnCheck (retired 15 Nov, 164) starts here; PoC aggregators, MSRC and Project Zero stay separate and come only after their terms are read.
@@ -519,7 +522,7 @@ carry addresses. Delistings are dated, never deleted.
 
 | Source           | Endpoint                                      | Data Type                                     | Schedule         | Script                        | Auth         |
 | ---------------- | --------------------------------------------- | --------------------------------------------- | ---------------- | ----------------------------- | ------------ |
-| UMD Cyber Events | `https://cissm.umd.edu/cyber-events-database` | Nation-state attribution, motives, industries | Monthly (manual) | `ingest-umd-cyber-events.mjs` | Registration |
+| UMD Cyber Events | `https://gotech.umd.edu/node/13294` | Nation-state attribution, motives, industries | Monthly (manual) | `ingest-umd-cyber-events.mjs` | Direct download; file kept local |
 
 ### Enrichment Services
 
@@ -905,7 +908,7 @@ Independent research was conducted to evaluate proposed sources and identify gap
 
 | Source                | Verdict     | Assessment                                                                                                          |
 | --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| **VulnCheck KEV**     | ❌ Retired  | Retired 15 Nov 2026 (migration 164). The free Community tier's Service Terms (rev. 20 Apr 2026) s7 say its data may not be made available for free, and s12 requires prominent attribution; Vigil is free and public. Written consent requested. Other VulnCheck mentions in this file are historical. |
+| **VulnCheck KEV**     | ❌ Retired  | Retired 15 Nov 2026 (migration 164). The free Community tier's Service Terms (rev. 20 Apr 2026) s7 say its data may not be made available for free, and s12 requires prominent attribution; Vigil is free and public. Other VulnCheck mentions in this file are historical. |
 | **ANY.RUN**           | ✅ Good     | Public sandbox reports provide behavioral analysis context.                                                         |
 | **Triage (Hatching)** | ✅ Good     | Fast automated triage complements ANY.RUN.                                                                          |
 | **SecurityTrails**    | ⚠️ Costly   | Value vs cost questionable when CIRCL provides similar DNS history.                                                 |
@@ -980,10 +983,15 @@ Research identified several high-value sources not in the original proposal:
 
 #### UMD Cyber Events Database (GDELT-Powered) ✅ COMPLETE
 
-- **URL**: `https://cissm.umd.edu/cyber-events-database`
+- **URL**: `https://gotech.umd.edu/node/13294` (moved from cissm.umd.edu; web app cybereventsdatabase.org)
 - **Data Type**: Structured cyber attack events with nation-state attribution
 - **Why Critical**: 25+ fields including threat actor type (nation-state/criminal/hacktivist), target industry, motive, severity. Covers 2014-present with monthly updates.
-- **Auth**: Registration required (free)
+- **Auth**: None for the xlsx on the GoTech page; the web app needs a login
+- **Terms**: no licence, terms of use or redistribution permission stated on the GoTech page, the web app's
+  home, about and methodology pages, or the March 2026 codebook (read 25 Nov 2026). Citation asked for:
+  Harry, C., & Gallagher, N. (2018). Classifying cyber events. *Journal of Information Warfare*, 17(3), 17-31.
+  So the downloaded file is not redistributed: `umd/` is git-ignored (the 2014-2025 file was committed from
+  18 Jan 2026 and removed 25 Nov 2026; it stays in git history)
 - **Script**: `scripts/ingest-umd-cyber-events.mjs`
 - **Migration**: `061_cyber_events.sql`
 - **Records**: 16,104 cyber events (2014-2025)

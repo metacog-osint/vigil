@@ -1,6 +1,14 @@
 import { describe, it, expect, vi } from 'vitest'
 
-import { selectDueJobs, runJob, runDueJobs, createTimeBudget, DUE_SLACK_MINUTES } from '../scheduler.js'
+import {
+  selectDueJobs,
+  runJob,
+  runDueJobs,
+  createTimeBudget,
+  lastUtcAnchor,
+  DUE_SLACK_MINUTES,
+} from '../scheduler.js'
+import { JOBS } from '../../feeds/registry.js'
 import { createSubrequestBudget, SubrequestBudgetError } from '../supabase.js'
 
 /**
@@ -65,6 +73,53 @@ describe('selectDueJobs', () => {
 
     expect(selectDueJobs(jobs, { hourly: { minutes_since_success: 30 } })).toEqual([])
     expect(selectDueJobs(jobs, { hourly: { minutes_since_success: 60 - DUE_SLACK_MINUTES - 1 } })).toEqual([])
+  })
+
+  // ideas#362: epss ran at 01:46-03:47 UTC, before FIRST's 13:30 UTC release, so
+  // every run read the previous day's scores.
+  describe('a job pinned to a UTC time (afterUtc)', () => {
+    const daily = [job({ id: 'pinned', intervalMinutes: 1440, afterUtc: '15:00' })]
+    // Minutes between a last success and `now`, as feed_health reports them.
+    const since = (last, now) => ({ pinned: { minutes_since_success: (now - last) / 60000 } })
+    const yesterdayRun = new Date('2026-11-25T15:16:00Z')
+
+    it('waits for the first tick after its time, not for its interval', () => {
+      const before = new Date('2026-11-26T14:45:30Z')
+      const after = new Date('2026-11-26T15:15:30Z')
+      expect(selectDueJobs(daily, since(yesterdayRun, before), before)).toEqual([])
+      expect(selectDueJobs(daily, since(yesterdayRun, after), after).map(j => j.id)).toEqual(['pinned'])
+    })
+
+    it('runs once a day: not again at the next tick', () => {
+      const ran = new Date('2026-11-26T15:16:00Z')
+      const next = new Date('2026-11-26T15:45:30Z')
+      const lateNight = new Date('2026-11-27T02:15:30Z')
+      expect(selectDueJobs(daily, since(ran, next), next)).toEqual([])
+      expect(selectDueJobs(daily, since(ran, lateNight), lateNight)).toEqual([])
+    })
+
+    it('catches up later the same day when the first tick could not take it', () => {
+      const evening = new Date('2026-11-26T22:15:30Z')
+      expect(selectDueJobs(daily, since(yesterdayRun, evening), evening).map(j => j.id)).toEqual(['pinned'])
+    })
+
+    it('is due when it has never run', () => {
+      expect(selectDueJobs(daily, {}, new Date('2026-11-26T03:15:00Z')).map(j => j.id)).toEqual(['pinned'])
+    })
+
+    it('anchors to the previous day before the time is reached', () => {
+      expect(lastUtcAnchor('15:00', new Date('2026-11-26T14:59:59Z')).toISOString()).toBe('2026-11-25T15:00:00.000Z')
+      expect(lastUtcAnchor('15:00', new Date('2026-11-26T15:00:00Z')).toISOString()).toBe('2026-11-26T15:00:00.000Z')
+      expect(lastUtcAnchor('15:00', new Date('2026-12-01T03:00:00Z')).toISOString()).toBe('2026-11-30T15:00:00.000Z')
+    })
+
+    it('is set on epss, and every afterUtc in the registry is a daily job with a valid HH:MM', () => {
+      expect(JOBS.find(j => j.id === 'epss').afterUtc).toBe('15:00')
+      for (const j of JOBS.filter(j => j.afterUtc)) {
+        expect(j.afterUtc).toMatch(/^([01]\d|2[0-3]):[0-5]\d$/)
+        expect(j.intervalMinutes).toBe(1440)
+      }
+    })
   })
 
   it('treats a job with no successful run on record as due', () => {

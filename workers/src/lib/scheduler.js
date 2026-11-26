@@ -104,11 +104,26 @@ export async function readFeedHealth(db) {
 export const DUE_SLACK_MINUTES = 15
 
 /**
+ * The latest moment at or before `now` when the UTC clock read `hhmm` ("15:00").
+ */
+export function lastUtcAnchor(hhmm, now) {
+  const [h, m] = hhmm.split(':').map(Number)
+  const anchor = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), h, m))
+  if (anchor > now) anchor.setUTCDate(anchor.getUTCDate() - 1)
+  return anchor
+}
+
+/**
  * Due jobs, most starved first. A job that has never run successfully sorts ahead
  * of everything else at its priority, so a newly added or long-broken feed gets a
  * slot instead of waiting behind healthy ones.
+ *
+ * A job with `afterUtc` ("HH:MM") runs once a day, at the first tick after that
+ * UTC time: it is due while its last success is older than the latest such time.
+ * For a source that publishes at a fixed hour, so the day's run reads that day's
+ * release rather than the previous one (epss, ideas#362).
  */
-export function selectDueJobs(jobs, health) {
+export function selectDueJobs(jobs, health, now = new Date()) {
   const due = []
 
   for (const job of jobs) {
@@ -119,6 +134,13 @@ export function selectDueJobs(jobs, health) {
     const overdueRatio = minutesSince == null
       ? Number.POSITIVE_INFINITY
       : minutesSince / job.intervalMinutes
+
+    if (job.afterUtc) {
+      const anchor = lastUtcAnchor(job.afterUtc, now).getTime()
+      const lastSuccess = minutesSince == null ? null : now.getTime() - minutesSince * 60000
+      if (lastSuccess == null || lastSuccess < anchor) due.push({ job, overdueRatio })
+      continue
+    }
 
     if (minutesSince == null || minutesSince >= job.intervalMinutes - DUE_SLACK_MINUTES) {
       due.push({ job, overdueRatio })

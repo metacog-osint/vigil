@@ -84,6 +84,14 @@ describe('feed contract 2.1', () => {
     expect('last_change_at' in p).toBe(false)
   })
 
+  it('states when a surge was first flagged once it is stored (migration 196)', () => {
+    const r = rows()
+    r.actors[0].surge_flagged_at = '2026-11-23T14:05:09.123+00:00'
+    const p = byId(buildFeed(r, NOW), ':actor:')
+    expect(p.last_change).toBe('new')
+    expect(p.last_change_at).toBe('2026-11-23T14:05:09Z')
+  })
+
   it('dates each one-time item by its source', () => {
     const fc = buildFeed(rows(), NOW)
     expect(byId(fc, 'claim:c1')).toMatchObject({

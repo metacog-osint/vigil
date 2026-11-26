@@ -6,8 +6,10 @@ in the terms of The Intelligence Company's doctrine kit (`doctrine/kit/`).
 ## What it measures
 - **Leak-site claims:** victims that extortion groups say they hit, crawled from leak sites (RansomLook since
   29 May 2026). Each is a claim by a criminal, published as `claimed`, never as fact.
-- **Group trends:** victims claimed in the last 7 days against the 7 before (`apply_actor_trends`, migration 077):
-  the site's trend label, escalating at least 3 victims and more than 1.25x the prior week. Not an anomaly.
+- **Group trends:** the site's trend label. Since migration 189, ESCALATING means the group's claims are unusual
+  under the rule below (VG-IND-1); DECLINING is migration 077's rule (at least 3 victims the week before and under
+  0.75 times that this week), INACTIVE no claim in 30 days, STABLE everything else, including a rise that is not
+  unusual for the group.
 - **Unusual claims (VG-IND-1):** a group's claims in the last 7 complete UTC days against its own 8 weeks before
   (`apply_actor_surges`, migration 179): at least 5 victims on at least 3 different days, and a count that a negative
   binomial fitted to the group's weekly counts puts below 1 in 100. One batch dump is not a surge, and a group that
@@ -18,9 +20,11 @@ in the terms of The Intelligence Company's doctrine kit (`doctrine/kit/`).
   victim's own account.
 
 ## Baselines
-Unusual claims compare each group with its own previous 8 weeks (rolling); the site's trend label with its own
-previous week. EPSS alerts use a fixed threshold of 0.5 on a
-current score.
+Unusual claims, and so the ESCALATING label, compare each group with its own previous 8 weeks (rolling); the
+DECLINING label with its own previous week. An EPSS alert needs all three: the vulnerability is in CISA's KEV
+catalog with known ransomware use, its FIRST EPSS score is at least 0.5 (a fixed threshold), and that score is
+current, dated within 3 days. Vigil reads FIRST's daily release once a day, so its score is usually one release
+behind FIRST's newest.
 
 ## Anomaly versus warning
 Everything in the feed is a measurement (kind observation): a group whose claims are unusual for it or a KEV entry that meets the EPSS
