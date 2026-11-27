@@ -23,7 +23,7 @@ test.describe('Demo mode exit', () => {
     await page.getByRole('button', { name: 'Exit Demo' }).click()
 
     await expect(page).toHaveURL((url) => url.pathname === '/')
-    await expect(page.getByRole('button', { name: /exploring demo/i })).toBeVisible({
+    await expect(page.getByRole('button', { name: /explore a demo with sample data/i })).toBeVisible({
       timeout: 15000,
     })
     await expect(page.getByRole('heading', { name: 'Not found' })).toHaveCount(0)
