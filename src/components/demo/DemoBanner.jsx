@@ -16,7 +16,7 @@ export default function DemoBanner({ className = '' }) {
 
   const handleExitDemo = () => {
     clearDemoMode()
-    navigate('/landing')
+    navigate('/')
   }
 
   return (
