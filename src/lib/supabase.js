@@ -78,6 +78,8 @@ export { techniques } from './supabase/techniques'
 
 export { watchlists } from './supabase/watchlists'
 
+export { snapshots } from './supabase/snapshots'
+
 // One implementation of the saved-search queries, not two. The copy that
 // used to live here was missing the five alert methods; nothing calls them
 // yet, which is precisely why it would have been found the hard way.
