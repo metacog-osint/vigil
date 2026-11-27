@@ -241,10 +241,20 @@ describe('a stalled feed (migration 163)', () => {
 })
 
 describe('isSourceError (22 Nov 2026)', () => {
-  it('reads a feed-marked source error and upstream 5xx or 429 as the source', () => {
+  it('reads a feed-marked source error and a source reply of HTTP 5xx as the source', () => {
     expect(isSourceError({ last_error: 'source: ThreatFox sent a cut-off or unreadable reply (x) (3 tries)' })).toBe(true)
     expect(isSourceError({ last_error: 'HTTP 524: A timeout occurred' })).toBe(true)
-    expect(isSourceError({ last_error: 'HTTP 429: Too Many Requests' })).toBe(true)
+    expect(isSourceError({ last_error: 'HTTP 503' })).toBe(true)
+  })
+
+  it("reads Vigil's own Edge Functions and database reads as Vigil", () => {
+    expect(isSourceError({ last_error: 'ofac-sdn function HTTP 525: <html>' })).toBe(false)
+    expect(isSourceError({ last_error: 'epss-scores function HTTP 500: {"error":"boom"}' })).toBe(false)
+    expect(isSourceError({ last_error: '/rest/v1/feed_health: HTTP 500' })).toBe(false)
+  })
+
+  it('reads a 429 as Vigil calling too often, not the source down', () => {
+    expect(isSourceError({ last_error: 'HTTP 429: Too Many Requests' })).toBe(false)
   })
 
   it('reads anything else as Vigil', () => {

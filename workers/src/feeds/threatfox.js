@@ -29,6 +29,7 @@ export async function ingestThreatFox(supabase, env) {
     duplicates = fetched.length - iocs.length
     console.log(`Fetched ${fetched.length} IOCs from ThreatFox (${duplicates} duplicates dropped)`)
 
+    const splits = createSplitBudget()
     const batchSize = 250 // see cisa-kev.js on batch size and subrequests
     for (let i = 0; i < iocs.length; i += batchSize) {
       const batch = iocs.slice(i, i + batchSize)
@@ -51,7 +52,7 @@ export async function ingestThreatFox(supabase, env) {
         },
       }))
 
-      const saved = await saveBatch(supabase, records)
+      const saved = await saveBatch(supabase, records, splits)
       failed += saved.failed
       updated += saved.written - inserts.record(saved.inserted)
     }
@@ -122,25 +123,56 @@ const STATEMENT_TIMEOUT = '57014'
 const SMALLEST_BATCH = 25
 
 /**
+ * How many times one run may split a batch that timed out.
+ *
+ * Each split costs two more statements, and a statement that times out costs
+ * the full 8 s. Unbounded, a run where every statement times out split each
+ * 250-row batch down to 25 rows: 31 statements (248 s) a batch, and 24.8
+ * minutes for a 1,296-indicator ThreatFox run, past the cron's 15. With four
+ * splits a run, that worst case is the batches themselves plus 8 statements:
+ * 6 + 8 = 14 statements (112 s) for ThreatFox, inside the scheduler's 5-minute
+ * reserve for the job that is running when its clock runs low. One slow
+ * statement, the case the split is for, needs one split.
+ */
+export const SPLITS_PER_RUN = 4
+
+/** One per feed run, shared by every saveBatch call of that run. */
+export function createSplitBudget(splits = SPLITS_PER_RUN) {
+  let left = splits
+  return {
+    get left() { return left },
+    take() {
+      if (left <= 0) return false
+      left -= 1
+      return true
+    },
+  }
+}
+
+/**
  * Upsert one batch. A batch that runs into the 8 s statement timeout is split
- * in two and each half tried, down to SMALLEST_BATCH rows.
+ * in two and each half tried, down to SMALLEST_BATCH rows, while the run's
+ * split budget lasts.
  *
  * Every ThreatFox run that reported failed records from 21 to 23 Nov 2026
  * (500, 323, 500, 500 and 196 rows) lined up with "canceling statement due to
  * statement timeout" in the Postgres log: a 250-row upsert, with three row
  * triggers on iocs, now and then takes longer than the 8 s that PostgREST's
  * role allows. The run still read as a success, because some batches saved.
+ *
+ * `error.code` is PostgREST's, which the worker's client parses from the
+ * error body (lib/supabase.js, restError).
  */
-export async function saveBatch(supabase, records) {
+export async function saveBatch(supabase, records, splits = createSplitBudget()) {
   const { error, inserted } = await supabase
     .from('iocs')
     .upsert(stampListed(records), { onConflict: 'type,value', countInserted: true })
 
   if (!error) return { written: records.length, inserted, failed: 0 }
-  if (error.code === STATEMENT_TIMEOUT && records.length > SMALLEST_BATCH) {
+  if (error.code === STATEMENT_TIMEOUT && records.length > SMALLEST_BATCH && splits.take()) {
     const half = Math.ceil(records.length / 2)
-    const a = await saveBatch(supabase, records.slice(0, half))
-    const b = await saveBatch(supabase, records.slice(half))
+    const a = await saveBatch(supabase, records.slice(0, half), splits)
+    const b = await saveBatch(supabase, records.slice(half), splits)
     return { written: a.written + b.written, inserted: sumInserted(a.inserted, b.inserted), failed: a.failed + b.failed }
   }
   console.error(`IOC batch of ${records.length} failed:`, error.message)

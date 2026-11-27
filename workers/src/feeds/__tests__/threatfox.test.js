@@ -4,7 +4,8 @@
  * 250 indicators an hour from 18:15 UTC on 18 Nov 2026.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { ingestThreatFox, latestPerKey, saveBatch } from '../threatfox.js'
+import { ingestThreatFox, latestPerKey, saveBatch, createSplitBudget, SPLITS_PER_RUN } from '../threatfox.js'
+import { createSupabaseClient } from '../../lib/supabase.js'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -137,5 +138,95 @@ describe('saveBatch', () => {
     const out = await saveBatch({ from: () => ({ upsert }) }, rows(250))
     expect(upsert).toHaveBeenCalledTimes(1)
     expect(out.failed).toBe(250)
+  })
+})
+
+/**
+ * Through the worker's own client (lib/supabase.js), which returns a failed
+ * call's body as text. PostgREST answers a statement timeout with HTTP 500 and
+ * a JSON body; the split has to see its code there, not in a stub's shape.
+ */
+describe('a statement timeout through the real client', () => {
+  const ENV_DB = { SUPABASE_URL: 'https://db.example', SUPABASE_KEY: 'k' }
+  const TIMEOUT_BODY =
+    '{"code":"57014","details":null,"hint":null,"message":"canceling statement due to statement timeout"}'
+  const rows = (n) => Array.from({ length: n }, (_, i) => ({ type: 'domain', value: `d${i}.example` }))
+  const now = () => new Date().toISOString()
+
+  /** Answers every upsert: a timeout when `timesOut(rowCount)`, else the rows' created_at. */
+  function stubDb(timesOut, sizes) {
+    return vi.fn((url, init) => {
+      const body = JSON.parse(init.body)
+      sizes.push(body.length)
+      if (timesOut(body.length)) {
+        return Promise.resolve(new Response(TIMEOUT_BODY, { status: 500 }))
+      }
+      return Promise.resolve(new Response(JSON.stringify(body.map(() => ({ created_at: now() }))), { status: 201 }))
+    })
+  }
+
+  it('splits the batch, as the code in the error body says', async () => {
+    const sizes = []
+    vi.stubGlobal('fetch', stubDb((n) => n > 125, sizes))
+    const out = await saveBatch(createSupabaseClient(ENV_DB), rows(250))
+    expect(sizes).toEqual([250, 125, 125])
+    expect(out).toMatchObject({ written: 250, failed: 0 })
+  })
+
+  it('ingestThreatFox saves the halves of a batch that timed out', async () => {
+    const sizes = []
+    const db = stubDb((n) => n > 125, sizes)
+    const iocs = Array.from({ length: 250 }, (_, i) => ioc(i, `t${i}.example`, null))
+    vi.stubGlobal('fetch', vi.fn((url, init) =>
+      String(url).startsWith('https://threatfox')
+        ? Promise.resolve(reply({ query_status: 'ok', data: iocs }))
+        : db(url, init)
+    ))
+    const result = await ingestThreatFox(createSupabaseClient(ENV_DB), ENV)
+    expect(sizes).toEqual([250, 125, 125])
+    expect(result).toMatchObject({ success: true, failed: 0 })
+  })
+
+  it('stays inside the time a running job has when every statement times out', async () => {
+    const sizes = []
+    const db = stubDb(() => true, sizes)
+    const iocs = Array.from({ length: 1296 }, (_, i) => ioc(i, `w${i}.example`, null))
+    vi.stubGlobal('fetch', vi.fn((url, init) =>
+      String(url).startsWith('https://threatfox')
+        ? Promise.resolve(reply({ query_status: 'ok', data: iocs }))
+        : db(url, init)
+    ))
+    const result = await ingestThreatFox(createSupabaseClient(ENV_DB), ENV)
+
+    // Six batches, plus two statements for each of the run's splits.
+    expect(sizes).toHaveLength(6 + 2 * SPLITS_PER_RUN)
+    // Each costs the full 8 s statement timeout. The scheduler holds 5 minutes
+    // back for the job already running when its clock runs low.
+    expect(sizes.length * 8_000).toBeLessThanOrEqual(5 * 60 * 1000)
+    expect(result).toMatchObject({ success: true, failed: 1296 })
+  })
+
+  it('a non-JSON error body is not read as a timeout', async () => {
+    const sizes = []
+    vi.stubGlobal('fetch', vi.fn((url, init) => {
+      sizes.push(JSON.parse(init.body).length)
+      return Promise.resolve(new Response('<html>502 Bad Gateway</html>', { status: 502 }))
+    }))
+    const out = await saveBatch(createSupabaseClient(ENV_DB), rows(250))
+    expect(sizes).toEqual([250])
+    expect(out.failed).toBe(250)
+  })
+})
+
+describe('createSplitBudget', () => {
+  it('stops splitting once the run has used its splits', async () => {
+    const rows = (n) => Array.from({ length: n }, (_, i) => ({ type: 'domain', value: `s${i}.example` }))
+    const upsert = vi.fn(() => Promise.resolve({ error: { code: '57014', message: 'timeout' } }))
+    const splits = createSplitBudget(1)
+    const db = { from: () => ({ upsert }) }
+    await saveBatch(db, rows(250), splits)
+    await saveBatch(db, rows(250), splits)
+    expect(upsert.mock.calls.map((c) => c[0].length)).toEqual([250, 125, 125, 250])
+    expect(splits.left).toBe(0)
   })
 })

@@ -71,13 +71,20 @@ const BROKEN_STATES = new Set(['stale', 'never'])
  * On 22 Nov 2026 ThreatFox sent cut-off replies for 18 hours and this check
  * failed twice with "Broken: threatfox", which read as a Vigil fault. The feed
  * was down and the failure was right, but there was nothing in Vigil to fix.
- * A feed whose last error is the source's (an error the feed marks "source: ",
- * or an HTTP 5xx or 429 from the source) is listed under its own heading. It
+ * A feed whose last error is the source's is listed under its own heading. It
  * still fails the job: a critical feed with no data is worth knowing about.
+ *
+ * The source's errors are the ones a feed marks "source: ", and an error that
+ * begins "HTTP 5xx", which is how a feed reports its source's own reply
+ * (`throw new Error(\`HTTP ${status}: ...\`)`). Anything else is Vigil's:
+ *   - "<name> function HTTP 5xx: ..." is one of Vigil's Edge Functions failing;
+ *   - "/rest/v1/...: HTTP 500" is a read from Vigil's own database;
+ *   - "HTTP 429" is the source refusing Vigil's request rate. The source is
+ *     up, and the fix (call less often, or back off) is in Vigil.
  */
 export function isSourceError(f) {
   const err = String(f.last_error ?? '')
-  return err.startsWith('source: ') || /\bHTTP (5\d\d|429)\b/.test(err)
+  return err.startsWith('source: ') || /^HTTP 5\d\d\b/.test(err)
 }
 
 /** At or below this cadence, a single error is not yet a failure. */

@@ -4,7 +4,7 @@
  */
 
 import { createInsertTally } from '../lib/inserts.js'
-import { saveBatch } from './threatfox.js'
+import { createSplitBudget, saveBatch } from './threatfox.js'
 
 const URLHAUS_API = 'https://urlhaus-api.abuse.ch/v1/urls/recent/'
 
@@ -38,6 +38,7 @@ export async function ingestURLhaus(supabase, env) {
 
     console.log(`Fetched ${urls.length} URLs from URLhaus`)
 
+    const splits = createSplitBudget()
     const batchSize = 100
     for (let i = 0; i < urls.length; i += batchSize) {
       const batch = urls.slice(i, i + batchSize)
@@ -62,7 +63,7 @@ export async function ingestURLhaus(supabase, env) {
 
       // A batch that hits the database's statement timeout is split and saved in halves
       // (23 Nov 2026 03:46 UTC: 100 URLs lost to one timeout while the run logged success).
-      const saved = await saveBatch(supabase, records)
+      const saved = await saveBatch(supabase, records, splits)
       failed += saved.failed
       updated += saved.written - inserts.record(saved.inserted)
     }
