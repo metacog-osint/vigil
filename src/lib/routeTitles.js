@@ -17,6 +17,7 @@ export const ROUTE_TITLES = {
   '/advisories': 'Advisories',
   '/research': 'Vendor research',
   '/sources': 'Sources',
+  '/coverage': 'What Vigil does not cover',
   '/iocs': 'IOC search',
   '/advanced-search': 'Advanced search',
   '/techniques': 'ATT&CK matrix',

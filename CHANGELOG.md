@@ -4,6 +4,159 @@ All notable changes to Vigil are documented in this file.
 
 ---
 
+## [2.6.0] - 27 November 2026
+
+Numbers in brackets are this repository's pull requests; three-digit numbers after "migration" are files in
+`supabase/migrations/`.
+
+### Added
+
+- A "What Vigil does not cover" page at `/coverage`, linked from the footer of every page: for each area, what Vigil
+  reads and what that leaves out. The cadence beside each source is read from the feed registry the site was built
+  with.
+- The site version and the feed registry it was built with, in the footer and on `/status`. `/status` lists the
+  registry's jobs with how often each is due, and says that the ingestion worker is deployed separately and may run an
+  earlier registry.
+- Feed: breach notices a registry posts late are listed (#61); CISA's ICS advisories (#58); breach notices are counted
+  by filing date, and each state notice is labelled with its own state (#56).
+- CIRCL sightings, a separate reported-exploited signal from an allow-list of CIRCL's sources (#26).
+- A public STIX 2.1 feed at `/api/feed?format=stix` (#20).
+- Feed contract 2.1: stable subjects, event times, last change and signal (#30). A surge item states when the surge
+  was first flagged (migration 196, #33).
+- Upper Midwest page: Minnesota, Wisconsin, Iowa, North Dakota and South Dakota (#16).
+- HHS Office for Civil Rights breach portal, as a source the victim files (migration 192, #12).
+- Five more state breach registries: Vermont, Montana, South Carolina, Idaho and Delaware. Every count states its
+  scope, and old notices are not queued for review (migration 190, #9).
+- Android's and Mozilla's own statements that a flaw was or may be exploited, and CERT-FR's alerts, kept apart from
+  KEV (migrations 187 and 188, #7) and shown on the vulnerability panel (migration 191, #10). Statements are re-read,
+  and a CVE named only in Google's note is marked (migration 193, #15); panel wording and tests (#14).
+- CISA Vulnrichment's SSVC assessments, stored apart from KEV (migration 176, #1), on `/api/feed` and the
+  vulnerability panel (migration 177, #2).
+- A weekly history dump of the database to an archive, with a restore test that checks every table (#29, #44, #45,
+  #62).
+- A not-found page and a skip link on public pages (#40); pinch-zoom allowed and a line for browsers without
+  JavaScript (#38).
+
+### Changed
+
+- A group's surge is judged against its own previous eight weeks (warning problem VG-WP-1, migration 179, #4), and the
+  site's "Escalating" label follows the same rule (migration 189, #8).
+- KEV is CISA's catalog as it stands: a row CISA no longer lists loses its KEV columns, and the old values are archived
+  (migration 180, #5).
+- EPSS runs after FIRST's daily release (#49), and the method states the whole EPSS alert rule (#47).
+- A feed run far under its usual size no longer reads as healthy (#35).
+- ThreatCluster's two licences are recorded apart, with the victim-country backfill from its last GPL-3.0 file (#51).
+- The public dashboard's caveat line and terms are in plain language (#36). Contrast, label size, link underlines and
+  page titles are improved (#43).
+- Long tables and lists open in windows about ten rows tall that scroll, with "Show all" (#17, #18, #19, #24).
+- `/status`, `/webhooks` and `/chat` say plainly when a feature is not set up (#28).
+- "Exit Demo" returns to the landing page (#60).
+- The house bar and shared site files are synced from The Intelligence Company's site (#13, #37, #39, #50); doctrine
+  kit 0.6.12 (#46).
+- Licences: the code is AGPL-3.0 and the shared site scripts are MIT (#6, #23). The UMD Cyber Events Database file is
+  no longer kept in the repository (#48). The README has a note on AI assistance (#54).
+
+### Fixed
+
+- `/trends` no longer scrolls sideways on phones (#21), and the year heatmap's month labels stay on the chart (#22).
+- The history dump strips a byte-order mark from its database address and gives its scratch database Supabase's roles
+  and extensions (#44, #45).
+- Tests run the in-process database in UTC, as Supabase does (#59).
+- A public read runs as the caller (migration 178), and the end-to-end tests run in Playwright's image (#3).
+
+### Security
+
+- Deletes are allowed only to the service role (migration 195, #32).
+- Only named reviewers may rule on review-queue items (migration 198, #42).
+- The send-email function sends only to the caller's own confirmed address, and the webhook test refuses private and
+  internal addresses (#41).
+- A CI check keeps local file paths out of the repository (#31).
+
+---
+
+## Earlier changes, by month
+
+Versions between 1.3.2 and 2.6.0 were not tagged, so these changes are listed by month, newest first.
+
+### November 2026 (1 to 17 November)
+
+- The worker builds the public summary every hour (migration 175), and feed items carry the time they were ingested.
+- ThreatFox writes one row per indicator per batch.
+- The worker counts every subrequest and has limits set for Workers Paid. The scheduler no longer lets a feed slip a
+  tick, and each job declares its measured cost.
+- Washington's own record of each breach's cause is on the review card (migration 174).
+- Review queue: rulings are carried out for KEV keys, victim names and the audit log (migrations 169 to 171); help for
+  reading each marked-up victim name and each reading finding (172, 173); a rule closes what it can settle, and the SEC
+  scan is fixed (165); state-notice questions, a kind filter and evidence (166).
+- Stall detection beyond RansomLook, counting only new records (migration 167). Feed health says when a feed runs and
+  adds nothing (migration 163).
+- VulnCheck's KEV is retired: its terms forbid free redistribution (migration 164).
+- React Router 7 and Resend 6; dependency audit fixes.
+- Feed: who claimed whom, and attributed origins cited to their source.
+- Leftover pricing pages and an old project name are removed.
+- The worker runs from one cron trigger, twice an hour, instead of four.
+- Pages fit the screen on phones and at 1024 px; Advisories fits once advisories load; the house bar is pinned, with
+  the sidebar and overlays below it.
+- `/api/feed`'s summary states `data_as_of` and counts overlaps.
+- House bar and shared time-module updates.
+
+### October 2026
+
+- A public feed in contract v2 at `/api/feed`, with the doctrine kit and warning registers. `/api/summary` gives one
+  public sentence about the latest complete day. The feed's summary states database counts and names each window by
+  its start date. Doctrine kit 0.3.3.
+- Times show in the viewer's own time zone, with a Time button in the header; page dates follow the Time setting, and
+  calendar days no longer show the day before.
+- The code is licensed AGPL-3.0, and every page credits its data's sources.
+- An alert when a KEV entry with known ransomware use reaches an EPSS score of 0.5, on current EPSS.
+- A leak-site claim is matched to a watched vendor, with a regression suite of real cases.
+- ThreatCluster's fills are logged, and the victim-country gap is measured.
+- Vendor research: a page where a proposed actor link can be ruled on, and a reading of a report's attribution can be
+  recorded and applied.
+- Feed health lets an hourly feed fail once before the check fails.
+- Ransom payments by family, with the age of the data first and no single total, from the Ransomwhere archive on
+  Zenodo (CC BY 4.0). An unchanged archive counts as a successful check and says how old its data is.
+- Four security-definer functions are closed to the API, and grants are checked.
+- IP location reads only the indicators that arrived since its last run; its timeout is fixed.
+- The sanctions data is shown, with what it does not mean.
+- A failure in ingestion now raises an alert.
+- The Ransomwatch script is removed: its source was archived in March 2026.
+- Censys looks up hosts (an ip:port is not one) and no longer starves lower-priority feeds.
+- The OFAC actor match can use an index.
+
+### September 2026
+
+- The ingestion rewrite: a feed registry and scheduler on the worker, and the schema recorded in migrations.
+- A review queue for data-quality findings.
+- Government attribution on the map, from CISA and from NCSC-UK.
+- Where a threat actor is from, cited to its source.
+- Vendor research stored as questions rather than answers.
+- Group profiles, OFAC sanctions, identity resolution, and a landing page that says what Vigil holds.
+- Every indicator located, actor origin kept apart from targeting, and the map fixed; indicator search shows where the
+  infrastructure is.
+- Three state breach registries: California, Washington and Oregon.
+- A page for regulator filings, and FinCEN's register with a page that renders it (archive from 2007).
+- A tier for every source, and a page for figures that disagree.
+- 5,302 incidents that are not ransomware are marked as such; four unused functions are removed.
+- One query layer; country filters; the Operations page shows sync data.
+- Alerts reach a person, and the queue nobody read is retired.
+- The subscription tier system is removed, and the remaining Firebase code with it, including three CSP origins.
+- OFAC is fetched from where Treasury can be reached.
+- Fixes: dashboard zeros after a reload (an authentication deadlock), API functions that crashed on every request, and
+  AI summaries moved to Groq's replacement model; security and data-integrity hardening.
+
+### January 2026 (19 and 20 January)
+
+- Authentication moved from Firebase to Supabase, with branded email templates.
+- Sign-in gate, admin tools and correlation improvements.
+- An interactive demo on the landing page.
+- A password strength indicator and support for browser password managers.
+- Terms of Service and a Privacy Policy, accepted before registration, with re-acceptance and session timeouts.
+- Pre-commit hooks and Prettier formatting.
+- Schema and code mismatches fixed across 22 files; optional tables handled when they are missing.
+
+---
+
 ## [1.3.2] - January 18, 2026
 
 ### Documentation Consolidation

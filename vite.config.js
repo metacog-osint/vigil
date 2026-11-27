@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { loadBuildInfo } from './scripts/lib/buildInfo.mjs'
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }) => {
   const plugins = [react()]
 
   // Note: To use bundle analyzer, run: npm run build:analyze
@@ -66,6 +67,8 @@ export default defineConfig(({ mode }) => {
     // Define production replacements
     define: {
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '0.0.0'),
+      // Version, commit and feed registry, shown in the footer and on /status
+      __VIGIL_BUILD__: JSON.stringify(await loadBuildInfo()),
     },
   }
 })
