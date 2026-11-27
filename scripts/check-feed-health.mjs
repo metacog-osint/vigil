@@ -65,6 +65,28 @@
 
 const BROKEN_STATES = new Set(['stale', 'never'])
 
+/**
+ * WHEN THE SOURCE IS DOWN, SAY SO
+ *
+ * On 22 Nov 2026 ThreatFox sent cut-off replies for 18 hours and this check
+ * failed twice with "Broken: threatfox", which read as a Vigil fault. The feed
+ * was down and the failure was right, but there was nothing in Vigil to fix.
+ * A feed whose last error is the source's is listed under its own heading. It
+ * still fails the job: a critical feed with no data is worth knowing about.
+ *
+ * The source's errors are the ones a feed marks "source: ", and an error that
+ * begins "HTTP 5xx", which is how a feed reports its source's own reply
+ * (`throw new Error(\`HTTP ${status}: ...\`)`). Anything else is Vigil's:
+ *   - "<name> function HTTP 5xx: ..." is one of Vigil's Edge Functions failing;
+ *   - "/rest/v1/...: HTTP 500" is a read from Vigil's own database;
+ *   - "HTTP 429" is the source refusing Vigil's request rate. The source is
+ *     up, and the fix (call less often, or back off) is in Vigil.
+ */
+export function isSourceError(f) {
+  const err = String(f.last_error ?? '')
+  return err.startsWith('source: ') || /^HTTP 5\d\d\b/.test(err)
+}
+
 /** At or below this cadence, a single error is not yet a failure. */
 export const ONE_ERROR_ALLOWED_AT_MINUTES = 60
 
@@ -256,12 +278,19 @@ async function main() {
     feeds.filter((f) => f.last_status === 'error' && allowsOneError(f)).map((f) => f.feed_id)
   )
   const { broken, blips } = classify(feeds, recent)
+  const theirs = broken.filter((f) => f.last_status === 'error' && isSourceError(f))
+  const ours = broken.filter((f) => !theirs.includes(f))
 
   const summary = [
     '## Critical feed health',
     '',
     broken.length
-      ? ['**Broken:**', '', ...broken.map(describe)].join('\n')
+      ? [
+          ...(ours.length ? ['**Broken in Vigil:**', '', ...ours.map(describe), ''] : []),
+          ...(theirs.length
+            ? ['**Source down (outside Vigil; the feed recovers when the source does):**', '', ...theirs.map(describe)]
+            : []),
+        ].join('\n')
       : `All ${feeds.length} critical feeds are running.`,
     '',
     ...(blips.length
@@ -288,7 +317,13 @@ async function main() {
   }
 
   if (broken.length) {
-    console.error(`::error::${broken.length} critical feed(s) not running. See the job summary.`)
+    const why = [
+      ours.length ? `${ours.length} broken in Vigil` : null,
+      theirs.length ? `${theirs.length} because the source is down (${theirs.map((f) => f.feed_id).join(', ')}), outside Vigil` : null,
+    ]
+      .filter(Boolean)
+      .join('; ')
+    console.error(`::error::${broken.length} critical feed(s) not running: ${why}. See the job summary.`)
     process.exit(1)
   }
 }
