@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest'
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
-import { readFileSync, statSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
@@ -75,8 +75,7 @@ describe('no personal names', () => {
       const full = path.join(ROOT, name)
       let data
       try {
-        if (!statSync(full).isFile()) continue
-        data = readFileSync(full)
+        data = readFileSync(full) // a directory (a submodule) or a deleted file throws
       } catch {
         continue
       }
