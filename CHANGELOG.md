@@ -4,6 +4,22 @@ All notable changes to Vigil are documented in this file.
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- Watch packs: a file format that bundles alert rules, watchlists and a sector filter, with three stock packs in
+  `catalog/packs/` (Healthcare, Space and satellite operators, Upper Midwest critical infrastructure) and an "Import a
+  watch pack" dialog in the alert rule settings. The dialog shows what a pack will create before anything is written;
+  a rule type, condition or entity Vigil cannot use is left out and listed, and the rest imports. The stock packs are
+  validated in CI against the rule types and condition keys the alert engine evaluates.
+
+### Fixed
+
+- The Watchlists page lists, creates and deletes the signed-in user's own watchlists.
+
+---
+
 ## [2.6.0] - 27 November 2026
 
 Numbers in brackets are this repository's pull requests; three-digit numbers after "migration" are files in

@@ -5,6 +5,7 @@ import { clsx } from 'clsx'
 import { watchlists as watchlistsApi } from '../lib/supabase'
 import { EmptyState, SkeletonCard, ErrorMessage, TimeAgo } from '../components'
 import { FoldWindow } from '../components/common'
+import { useAuth } from '../hooks/useAuth'
 
 const ENTITY_TYPES = [
   { value: 'actor', label: 'Threat Actors', icon: '👤', color: 'bg-red-500' },
@@ -184,6 +185,10 @@ function WatchlistCard({ watchlist, onDelete }) {
 }
 
 export default function Watchlists() {
+  // Row-level security limits watchlists to their owner, so every call
+  // names the signed-in user (the alert rules settings do the same).
+  const { user } = useAuth()
+  const userId = user?.id || 'anonymous'
   const [watchlists, setWatchlists] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -191,13 +196,13 @@ export default function Watchlists() {
 
   useEffect(() => {
     loadWatchlists()
-  }, [])
+  }, [userId])
 
   const loadWatchlists = async () => {
     setIsLoading(true)
     setError(null)
     try {
-      const { data, error } = await watchlistsApi.getAll()
+      const { data, error } = await watchlistsApi.getAll(userId)
       if (error) throw error
       setWatchlists(data || [])
     } catch (err) {
@@ -208,7 +213,7 @@ export default function Watchlists() {
   }
 
   const handleCreate = async (watchlist) => {
-    const { data, error } = await watchlistsApi.create(watchlist)
+    const { data, error } = await watchlistsApi.create({ ...watchlist, user_id: userId })
     if (error) {
       setError(error.message)
       return
@@ -218,7 +223,7 @@ export default function Watchlists() {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this watchlist?')) return
-    const { error } = await watchlistsApi.delete(id)
+    const { error } = await watchlistsApi.delete(id, userId)
     if (error) {
       setError(error.message)
       return
