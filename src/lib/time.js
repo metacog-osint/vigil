@@ -1,6 +1,6 @@
 // Time display through The Intelligence Company's shared module (public/tic-time.js, v1.2): the viewer's
 // own zone by default, always named; the Time button in the header picks Zulu, another zone, or a 12/24-hour
-// clock (Tom, 27 Oct 2026). Data stays UTC.
+// clock (27 Oct 2026). Data stays UTC.
 //
 // A bare calendar day ("2026-10-22", a DATE column or a chart's day key) is not a moment, so it is shown as
 // that day in every zone. Parsed as a timestamp it would be midnight UTC: the day before anywhere west of UTC.

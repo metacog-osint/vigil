@@ -75,7 +75,7 @@ const SRC = {
     descriptor: 'Official US government listing of vulnerabilities exploited in the wild.',
   },
   // CISA's ADP SSVC assessment (migrations 176, 177). CISA too, so the same independence group as
-  // KEV: the two never count as corroborating each other. Proposed A2 (Tom to confirm): the
+  // KEV: the two never count as corroborating each other. Proposed A2 (to be confirmed): the
   // most reliable source there is, but "active" is CISA's assessment of reliable public
   // evidence, not the catalog's confirmed listing.
   adp: {

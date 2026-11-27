@@ -78,7 +78,7 @@ describe('POST /api/audit', () => {
 
   it('writes the entry under the verified user, whatever the body says', async () => {
     vi.mocked(verifyRequest).mockResolvedValue({
-      user: { id: 'u-verified', email: 'tom@example.com' },
+      user: { id: 'u-verified', email: 'analyst@example.com' },
       error: null,
     })
     vi.mocked(logAuditEvent).mockResolvedValue({ success: true, id: 'a1' })
@@ -89,7 +89,7 @@ describe('POST /api/audit', () => {
 
     const call = vi.mocked(logAuditEvent).mock.calls[0][0]
     expect(call.userId).toBe('u-verified')
-    expect(call.userEmail).toBe('tom@example.com')
+    expect(call.userEmail).toBe('analyst@example.com')
     expect(call.request).toBeInstanceOf(Request)
     expect(call).not.toHaveProperty('teamId')
   })

@@ -9,7 +9,7 @@
  * Until migration 171 the browser inserted into audit_log itself, under an RLS
  * policy that let a signed-in user write any entry carrying their own user_id.
  * The subject of an entry could therefore write their own record: self-report,
- * not evidence (finding audit_log_trust, confirmed by Tom 16 Nov 2026).
+ * not evidence (finding audit_log_trust, confirmed 16 Nov 2026).
  *
  * Now the browser posts here. Who acted, from where and with what client is
  * taken from the verified token and the request, never from the body:
