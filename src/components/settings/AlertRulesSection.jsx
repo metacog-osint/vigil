@@ -43,7 +43,7 @@ export const RULE_TYPES = [
 ]
 
 /**
- * Attention levels (migration 201). Quiet is the default. Some matches are
+ * Attention levels (migration 205). Quiet is the default. Some matches are
  * always extra, whatever the rule says; rows loaded long after the event are
  * always quiet.
  */

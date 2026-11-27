@@ -1,13 +1,13 @@
 // @vitest-environment node
 /**
- * Migration 201: alert rules and notifications carry an attention level.
+ * Migration 205: alert rules and notifications carry an attention level.
  * Quiet by default; five kinds of match are always extra; a backfilled row is
  * always quiet, even on a rule set to extra.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { freshDatabase } from './pg.js'
 
-// The columns 201 reads, as production has them after 159.
+// The columns 205 reads, as production has them after 159.
 const SCHEMA = `
   create table user_alert_rules (
     id uuid primary key default gen_random_uuid(), user_id varchar not null,
@@ -72,7 +72,7 @@ const SCHEMA = `
 
 const USER = 'u1'
 
-describe('migration 201', () => {
+describe('migration 205', () => {
   let db
   const one = async (sql, params) => (await db.query(sql, params)).rows[0]
   const rule = (type, conditions, attention = 'quiet') =>
@@ -93,7 +93,7 @@ describe('migration 201', () => {
     ).rows
 
   beforeAll(async () => {
-    db = await freshDatabase({ schema: SCHEMA, migrations: ['201_alert_attention.sql'] })
+    db = await freshDatabase({ schema: SCHEMA, migrations: ['205_alert_attention.sql'] })
   })
   afterAll(async () => db?.close())
   beforeEach(async () => {
@@ -175,6 +175,26 @@ describe('migration 201', () => {
     const all = await notes()
     expect(all).toHaveLength(2)
     expect(all.filter((n) => n.attention === 'extra')).toHaveLength(1)
+  })
+
+  it('marks only one claim of a single batch as the first since a takedown', async () => {
+    const a = await actor('LockBit')
+    await db.query(
+      `insert into actor_takedowns (actor_id, event_date) values ($1, current_date - 60)`,
+      [a]
+    )
+    await db.query(
+      `insert into incidents (actor_id, victim_name, discovered_date)
+       values ($1, 'Batch one', current_date), ($1, 'Batch two', current_date)`,
+      [a]
+    )
+    await rule('actor_activity', { actor_names: ['lockbit'] })
+    const result = await run()
+    const all = await notes()
+    expect(all).toHaveLength(2)
+    expect(all.filter((n) => n.attention === 'extra')).toHaveLength(1)
+    expect(all.filter((n) => /first claim since a takedown/.test(n.title))).toHaveLength(1)
+    expect(result.extra_created).toBe(1)
   })
 
   it('marks a KEV addition for a named vendor extra, on vendor_cve, even for an old CVE row', async () => {

@@ -1,4 +1,4 @@
--- 201. Two attention levels on alerts: extra and quiet
+-- 205. Two attention levels on alerts: extra and quiet
 --
 -- STATUS: NOT YET APPLIED.
 --
@@ -65,7 +65,7 @@ alter table public.user_alert_rules add constraint user_alert_rules_attention_ch
 
 comment on column public.user_alert_rules.attention is
   'extra: everything the rule matches is marked extra. quiet (default): only '
-  'the triggers migration 201 lists are extra. Backfilled rows are always quiet.';
+  'the triggers migration 205 lists are extra. Backfilled rows are always quiet.';
 
 alter table public.notifications
   add column if not exists attention text not null default 'quiet';
@@ -74,7 +74,7 @@ alter table public.notifications add constraint notifications_attention_check
   check (attention in ('extra', 'quiet'));
 
 comment on column public.notifications.attention is
-  'extra or quiet, set by evaluate_alert_rules() (migration 201).';
+  'extra or quiet, set by evaluate_alert_rules() (migration 205).';
 
 create index if not exists idx_notifications_user_attention
   on public.notifications (user_id, attention, created_at desc);
@@ -97,7 +97,7 @@ alter table public.notifications add constraint notifications_notification_type_
 -- 3. The engine
 -- ---------------------------------------------------------------------------
 -- As 159 left it. Each match now carries 'ntype' (its notification type),
--- 'extra' (one of the triggers above) and 'backfill'. Changes are marked 201.
+-- 'extra' (one of the triggers above) and 'backfill'. Changes are marked 205.
 create or replace function public.evaluate_alert_rules(
   p_since interval default '01:15:00'::interval,
   p_max_matches integer default 5
@@ -152,12 +152,12 @@ BEGIN
         LEFT JOIN threat_actors a ON a.id = i.actor_id
         CROSS JOIN LATERAL (
           SELECT
-            -- 201: a claim stored more than a week after it was posted.
+            -- 205: a claim stored more than a week after it was posted.
             coalesce(i.claim_date, i.discovered_date) < (i.created_at - interval '7 days')::date AS backfill,
             t.event_date AS takedown_date,
             t.event_date IS NOT NULL AS resumed
           FROM (SELECT 1) one
-          -- 201: the latest takedown on or before this claim, with no other
+          -- 205: the latest takedown on or before this claim, with no other
           -- claim by the group stored since it and before this one.
           LEFT JOIN LATERAL (
             SELECT t.event_date
@@ -168,7 +168,10 @@ BEGIN
               AND NOT EXISTS (
                 SELECT 1 FROM incidents j
                 WHERE j.actor_id = i.actor_id AND j.id <> i.id
-                  AND j.created_at < i.created_at
+                  -- One insert gives every claim in a batch the same
+                  -- created_at, so the id breaks the tie.
+                  AND (j.created_at < i.created_at
+                       OR (j.created_at = i.created_at AND j.id < i.id))
                   AND coalesce(j.claim_date, j.discovered_date, j.created_at::date) >= t.event_date)
             ORDER BY t.event_date DESC
             LIMIT 1
@@ -190,7 +193,7 @@ BEGIN
         LIMIT greatest(1, p_max_matches)
       ) s;
 
-      -- 201: an 8-K Item 1.05 filing queued as a possible match for a claim
+      -- 205: an 8-K Item 1.05 filing queued as a possible match for a claim
       -- this rule covers. The finding names the claimed victim and group;
       -- the claim is found as apply_victim_disclosures() found it.
       SELECT coalesce(jsonb_agg(m), '[]'::jsonb) INTO more FROM (
@@ -243,7 +246,7 @@ BEGIN
           'title', v.cve_id || CASE WHEN v.kev_date IS NOT NULL THEN ' added to KEV' ELSE '' END,
           'message', left(coalesce(v.description, 'No description published'), 240),
           'link', '/vulnerabilities?cve=' || v.cve_id,
-          -- 201: a KEV addition for a vendor the rule names.
+          -- 205: a KEV addition for a vendor the rule names.
           'extra', q.kev_new AND q.has_vendors,
           'backfill', q.backfill) AS m
         FROM vulnerabilities v
@@ -251,7 +254,7 @@ BEGIN
           SELECT
             v.kev_date IS NOT NULL AND v.kev_date >= (cutoff - interval '2 days')::date AS kev_new,
             coalesce(jsonb_array_length(r.conditions->'vendors'), 0) > 0 AS has_vendors,
-            -- 201: an old CVE stored now, matched because its row is new.
+            -- 205: an old CVE stored now, matched because its row is new.
             coalesce(
               NOT (v.kev_date IS NOT NULL AND v.kev_date >= (cutoff - interval '2 days')::date)
                 AND substring(v.cve_id from '^CVE-(\d{4})-')::int
@@ -261,7 +264,7 @@ BEGIN
         WHERE (
             v.created_at >= cutoff
             OR (r.rule_type = 'kev_added' AND q.kev_new)
-            -- 201: a vendor_cve rule naming vendors also hears of their KEV
+            -- 205: a vendor_cve rule naming vendors also hears of their KEV
             -- additions, which an old created_at used to hide.
             OR (r.rule_type = 'vendor_cve' AND q.has_vendors AND q.kev_new)
           )
@@ -319,7 +322,7 @@ BEGIN
         LIMIT greatest(1, p_max_matches)
       ) s;
 
-    -- 201: a contested claim gaining its first value with a Tier 1 origin.
+    -- 205: a contested claim gaining its first value with a Tier 1 origin.
     ELSIF r.rule_type = 'contested_claim' THEN
       SELECT coalesce(jsonb_agg(m), '[]'::jsonb) INTO matches FROM (
         SELECT DISTINCT ON (c.id) jsonb_build_object(
@@ -365,7 +368,7 @@ BEGIN
                                    related_id, related_type, attention)
         SELECT r.user_id, m->>'ntype',
                m->>'title', m->>'message', m->>'severity', m->>'link', m->>'id', m->>'type',
-               -- 201: a trigger is extra; a rule set to extra marks the rest
+               -- 205: a trigger is extra; a rule set to extra marks the rest
                -- extra too; a backfill is quiet either way.
                CASE
                  WHEN coalesce((m->>'backfill')::boolean, false) THEN 'quiet'
