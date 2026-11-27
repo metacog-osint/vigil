@@ -12,7 +12,7 @@ const app = readFileSync(resolve(process.cwd(), 'src/App.jsx'), 'utf8')
 const start = app.indexOf('function ProtectedApp')
 const protectedSrc = app.slice(start, app.indexOf('function AppContent', start))
 // Public routes also exist in the signed-in layout, and the sign-in paths redirect there.
-const NOT_SECTIONS = new Set(['', 'auth', 'login', 'register', 'sources'])
+const NOT_SECTIONS = new Set(['', 'auth', 'login', 'register', 'sources', 'coverage'])
 
 describe('APP_SECTIONS', () => {
   it('lists every signed-in route section', () => {

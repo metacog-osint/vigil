@@ -46,6 +46,49 @@ describe('SiteFooter: the credits the data licences require', () => {
   })
 })
 
+describe('SiteFooter: versions and coverage', () => {
+  const info = {
+    version: '9.8.7',
+    commit: null,
+    registry: { fingerprint: 'abcd1234', jobCount: 43, scheduledCount: 43, jobs: [] },
+  }
+
+  it('shows the site version and the feed registry it was built with', () => {
+    render(
+      <MemoryRouter>
+        <SiteFooter buildInfo={info} />
+      </MemoryRouter>
+    )
+    expect(screen.getByTestId('site-versions')).toHaveTextContent(
+      'Vigil 9.8.7, feed registry abcd1234 (43 jobs).'
+    )
+  })
+
+  it('leaves the versions out when the build carries none', () => {
+    render(
+      <MemoryRouter>
+        <SiteFooter buildInfo={{ version: null, commit: null, registry: null }} />
+      </MemoryRouter>
+    )
+    expect(screen.queryByTestId('site-versions')).toBeNull()
+  })
+
+  it('carries the real build by default', () => {
+    renderFooter()
+    expect(screen.getByTestId('site-versions')).toHaveTextContent(
+      /^Vigil \d+\.\d+\.\d+, feed registry [0-9a-f]{8} \(\d+ jobs\)\.$/
+    )
+  })
+
+  it('links to what Vigil does not cover', () => {
+    renderFooter()
+    expect(screen.getByRole('link', { name: 'What Vigil does not cover' })).toHaveAttribute(
+      'href',
+      '/coverage'
+    )
+  })
+})
+
 describe('commercialUseStatus: an unread licence is never shown as plainly allowed', () => {
   it.each([
     [{ commercial_use: true, checked_on: '2026-10-26' }, 'Allowed'],
