@@ -191,12 +191,8 @@ export default function useDashboardData() {
       { name: 'Email Servers', count: 28, severity: 'high' },
     ])
 
-    // Last sync (demo)
-    setLastSync({
-      source: 'demo',
-      completed_at: new Date().toISOString(),
-      status: 'success',
-    })
+    // Sample data was never collected, so the demo shows no sync time
+    setLastSync(null)
 
     setLoading(false)
     setWidgetsLoading(false)

@@ -78,6 +78,9 @@ import { ToastProvider } from './contexts/ToastContext'
 import { FocusModeProvider } from './hooks/useFocusMode'
 import { DemoProvider, useDemo } from './contexts/DemoContext'
 import { DemoBanner } from './components/demo'
+import DemoWatermark from './components/demo/DemoWatermark'
+import LastCollected from './components/common/LastCollected'
+import TimeSettingsButton from './components/common/TimeSettingsButton'
 import { isAppSection } from './lib/appSections'
 
 // Loading fallback for lazy routes
@@ -104,6 +107,14 @@ function AuthLoader() {
   )
 }
 
+const PUBLIC_TITLES = {
+  '/': 'Vigil: threat intelligence',
+  '/auth': 'Sign in | Vigil',
+  '/terms': 'Terms | Vigil',
+  '/privacy': 'Privacy | Vigil',
+  '/sources': 'Sources | Vigil',
+}
+
 function PublicFallback() {
   const { pathname } = useLocation()
   return isAppSection(pathname) ? <Navigate to="/" replace /> : <NotFound />
@@ -119,6 +130,15 @@ function skipToMain(event) {
 
 // Public routes wrapper (no sidebar/header)
 function PublicLayout() {
+  const { pathname, search } = useLocation()
+
+  // Other addresses are left alone: the Not found page sets its own title.
+  useEffect(() => {
+    const registering = pathname === '/auth' && search.includes('mode=register')
+    const title = registering ? 'Create account | Vigil' : PUBLIC_TITLES[pathname]
+    if (title) document.title = title
+  }, [pathname, search])
+
   return (
     <ErrorBoundary name="PublicLayout" title="Application Error">
       {/* Skip link (ideas#300). Public pages each render their own <main>,
@@ -144,6 +164,10 @@ function PublicLayout() {
           <Route path="*" element={<PublicFallback />} />
         </Routes>
       </Suspense>
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-gray-800 bg-gray-950 px-4 py-2 text-xs text-gray-400">
+        <LastCollected />
+        <TimeSettingsButton />
+      </div>
       {/* Data credits the sources' licences require, on every page */}
       <SiteFooter />
     </ErrorBoundary>
@@ -223,6 +247,8 @@ function ProtectedApp() {
             <DemoBanner
               className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}
             />
+
+            <DemoWatermark />
 
             {/* Skip to main content link for accessibility */}
             <a

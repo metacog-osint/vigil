@@ -18,6 +18,23 @@ export const syncLog = {
   },
 
   /**
+   * When any feed last finished successfully (a UTC timestamp), or null.
+   * The worker's own run, summary and quality rows are not collection.
+   */
+  async getLastCollected() {
+    const { data, error } = await supabase
+      .from('sync_log')
+      .select('completed_at')
+      .eq('status', 'success')
+      .not('source', 'in', '(worker-run,public-summary,data-quality)')
+      .not('completed_at', 'is', null)
+      .order('completed_at', { ascending: false })
+      .limit(1)
+    if (error) return null
+    return data?.[0]?.completed_at || null
+  },
+
+  /**
    * Get sync logs by source
    */
   async getBySource(source) {
