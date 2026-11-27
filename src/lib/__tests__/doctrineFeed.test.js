@@ -19,6 +19,7 @@ import {
   HEALTH_FEEDS,
   HEALTH_LANES,
   SECTOR_MAP,
+  STATE_AG,
   stallCaveat,
   subjectOf,
   windowStarts,
@@ -225,7 +226,7 @@ describe('doctrineFeed', () => {
         '3 leak-site claims since 28 Oct (1 placed on the map); ' +
         '3 KEV additions since 23 Oct (1 meets the EPSS alert); ' +
         "2 CVEs CISA's ADP assessed as exploitation active since 23 Oct (1 not in KEV); " +
-        '2 breach notices first seen since 23 Oct'
+        '2 breach notices filed since 23 Oct'
     )
     expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 2)
   })
@@ -260,7 +261,7 @@ describe('doctrineFeed', () => {
     expect(title).toContain('3 groups with unusual claims (1 named in this feed)')
     expect(title).toContain('4,500 leak-site claims since 28 Oct (the latest 3 in this feed)')
     expect(title).toContain('120 KEV additions since 23 Oct (the latest 3 in this feed)')
-    expect(title).toContain('2 breach notices first seen since 23 Oct')
+    expect(title).toContain('2 breach notices filed since 23 Oct')
     // A tally of a capped page is not a count, so no sub-figure is drawn from one.
     expect(title).not.toContain('placed on the map')
     expect(title).not.toContain('EPSS alert')
@@ -282,7 +283,7 @@ describe('doctrineFeed', () => {
     expect(title).toContain('count unavailable for groups with unusual claims')
     expect(title).toContain('count unavailable for leak-site claims since 28 Oct')
     expect(title).toContain('count unavailable for KEV additions since 23 Oct')
-    expect(title).toContain('count unavailable for breach notices first seen since 23 Oct')
+    expect(title).toContain('count unavailable for breach notices filed since 23 Oct')
     expect(title).not.toMatch(counted)
     expect(title).not.toContain('placed on the map')
     expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 2)
@@ -512,6 +513,78 @@ describe('doctrineFeed', () => {
     )
   })
 
+  it("labels a state notice with its own state, never another state's", () => {
+    const input = rows()
+    input.disclosures = Object.keys(STATE_AG).map((source, i) => ({
+      id: `s${i}`,
+      company_name: `Co ${i}`,
+      source,
+      filed_date: '2026-10-28',
+      first_seen: '2026-10-29T10:00:00Z',
+      filing_url: `https://example.org/${source}`,
+    }))
+    input.disclosures.push({
+      id: 'sx',
+      company_name: 'Co X',
+      source: 'zz-ag',
+      filed_date: '2026-10-28',
+      first_seen: '2026-10-29T10:00:00Z',
+    })
+    const fc = buildFeed(input, NOW)
+    const f = byId(fc)
+    Object.entries(STATE_AG).forEach(([source, [, name]], i) => {
+      const p = f[`vigil:disclosure:s${i}`].properties
+      expect(p.title).toBe(`Co ${i} reported a data breach to the ${name} attorney general`)
+      expect(p.sources).toHaveLength(1)
+      expect(p.sources[0]).toMatchObject({
+        id: source,
+        publisher: `${name} Attorney General`,
+        url: `https://example.org/${source}`,
+      })
+    })
+    // Vermont was labelled "State attorneys general (CA, WA, OR)" until 26 Nov 2026.
+    const vt = f[`vigil:disclosure:s${Object.keys(STATE_AG).indexOf('vt-ag')}`].properties
+    expect(vt.sources[0].publisher).toBe('Vermont Attorney General')
+    // A registry this list does not know is never credited to the others.
+    const unknown = f['vigil:disclosure:sx'].properties
+    expect(unknown.sources[0].publisher).toBe('State attorney general')
+    expect(unknown.title).toBe('Co X reported a data breach to the state attorney general')
+    // Only the summary, which rests on every registry, lists them together.
+    const listed = fc.features[0].properties.sources.find((s) => s.id === 'state-ag-notices')
+    expect(listed.publisher).toBe('State attorneys general (CA, WA, OR, VT, MT, SC, ID, DE)')
+  })
+
+  it('counts breach notices by filing date and names a backfill apart', () => {
+    const title = (counts) =>
+      summaryTitle(buildFeed({ ...rows(), counts: { ...rows().counts, ...counts } }, NOW))
+    expect(title({ disclosuresFiledEarlier: 8693 })).toMatch(
+      /; 2 breach notices filed since 23 Oct; 8,693 older breach notices first seen since 23 Oct, filed before it$/
+    )
+    expect(title({ disclosuresFiledEarlier: 1 })).toMatch(
+      /; 1 older breach notice first seen since 23 Oct, filed before it$/
+    )
+    // Zero, failed or absent: the clause is left out, never stated as zero.
+    for (const n of [0, null, undefined, Number.NaN]) {
+      const t = title({ disclosuresFiledEarlier: n })
+      expect(t).toMatch(/; 2 breach notices filed since 23 Oct$/)
+      expect(t).not.toContain('older breach')
+    }
+  })
+
+  it('queries breach notices by filing date, and counts the earlier-filed apart', () => {
+    const src = readFileSync(resolve(ROOT, 'api/feed.js'), 'utf8')
+    const list = src.match(/`victim_disclosures\?select=id,company_name[^`]*`/)[0]
+    expect(list).toContain('&filed_date=gte.${since.disclosures}&')
+    expect(list).not.toContain('first_seen=gte.')
+    expect(list).toContain('order=filed_date.desc')
+    expect(list).toContain('source=neq.hhs-ocr')
+    const earlier = src.match(/`victim_disclosures\?select=id&[^`]*`/)[0]
+    expect(earlier).toContain('first_seen=gte.${since.disclosures}T00:00:00Z')
+    expect(earlier).toContain('filed_date=lt.${since.disclosures}')
+    expect(earlier).toContain('source=neq.hhs-ocr')
+    expect(src).toContain('disclosuresFiledEarlier: earlierPage.count')
+  })
+
   it("gives CISA's ADP assessment its own line, never labelled KEV, and marks what KEV lacks", () => {
     const fc = buildFeed(rows(), NOW)
     const f = byId(fc)
@@ -670,7 +743,7 @@ describe('the health block (migration 163)', () => {
 
   it('reads a late daily feed as read, as the kit does, and names the job behind each state', () => {
     const h = health()
-    for (const lane of ['ca-ag', 'wa-ag', 'or-ag']) {
+    for (const lane of Object.keys(STATE_AG)) {
       expect(h[lane]).toMatchObject({ state: 'late', feeds: ['state-breach-notices'] })
       expect(laneRead(h[lane])).toBe(true)
     }
@@ -709,6 +782,11 @@ describe('the health block (migration 163)', () => {
         'ca-ag',
         'wa-ag',
         'or-ag',
+        'vt-ag',
+        'mt-ag',
+        'sc-ag',
+        'id-ag',
+        'de-ag',
         'vigil',
       ])
     )

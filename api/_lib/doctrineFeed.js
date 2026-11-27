@@ -35,6 +35,22 @@ export const EPSS_CURRENT_DAYS = 3 // migration 159: an older score is stale
 export const LANGUAGE_KEY =
   'https://github.com/metacog-osint/tic-doctrine/blob/main/docs/language-key.md'
 
+/**
+ * The state attorney-general registries the `state-breach-notices` job reads, by
+ * victim_disclosures.source: the state's postal code and name. An item names its own state;
+ * only the summary, which rests on all of them, lists them together.
+ */
+export const STATE_AG = {
+  'ca-ag': ['CA', 'California'],
+  'wa-ag': ['WA', 'Washington'],
+  'or-ag': ['OR', 'Oregon'],
+  'vt-ag': ['VT', 'Vermont'],
+  'mt-ag': ['MT', 'Montana'],
+  'sc-ag': ['SC', 'South Carolina'],
+  'id-ag': ['ID', 'Idaho'],
+  'de-ag': ['DE', 'Delaware'],
+}
+
 const SRC = {
   ransomlook: {
     id: 'ransomlook',
@@ -88,7 +104,9 @@ const SRC = {
   },
   stateAg: {
     id: 'state-ag-notices',
-    publisher: 'State attorneys general (CA, WA, OR)',
+    publisher: `State attorneys general (${Object.values(STATE_AG)
+      .map(([code]) => code)
+      .join(', ')})`,
     licence: 'US state government public record',
     grade: 'A2',
     independence_group: 'victim-filings',
@@ -144,7 +162,16 @@ const SRC = {
 // actor_origins_commercial.origin_source -> the source record cited for it. An origin from any other source
 // (or none) is left out of the feed rather than credited to the wrong publisher.
 const ORIGIN_SRC = { 'misp-galaxy': SRC.misp, 'mitre-attack': SRC.mitre }
-const REGULATOR = { 'ca-ag': 'California', 'wa-ag': 'Washington', 'or-ag': 'Oregon' }
+const REGULATOR = Object.fromEntries(Object.entries(STATE_AG).map(([id, [, name]]) => [id, name]))
+/** A state notice's own source record: its state's attorney general, never the list of all of them. */
+const stateAgSource = (d) => ({
+  ...SRC.stateAg,
+  id: d.source,
+  publisher: REGULATOR[d.source]
+    ? `${REGULATOR[d.source]} Attorney General`
+    : 'State attorney general',
+  url: d.filing_url || undefined,
+})
 // VG-IND-1 since migration 179: the last 7 complete UTC days against the group's own 8 weeks before
 // (negative binomial, p < 0.01, at least 5 claims on at least 3 days). Until 179 it was 077's
 // "more than 1.25x the week before", which flagged 17 groups a day (backtest in 179's header).
@@ -268,6 +295,18 @@ function figure({ total, rows, noun: [one, many], scope, detail, part }) {
   return head
 }
 
+/**
+ * Breach notices are counted by the date the notice was filed, not the date Vigil first saw it: a
+ * registry read for the first time brings years of old notices in one day (about 8,700 from five
+ * registries on 19 Nov 2026, filed 2015-2026). Those first seen in the window but filed before it are named apart, so a
+ * backfill is never read as new. Nothing is said when the count is zero or failed.
+ */
+function filedEarlier(total, sinceDay) {
+  const n = known(total)
+  if (!n) return null
+  return `${num(n)} older breach ${n === 1 ? 'notice' : 'notices'} first seen since ${sinceDay}, filed before it`
+}
+
 /** KEV descriptions read "<product> contains a <flaw>": the words before "contains" name the product. */
 export function subjectOf(v) {
   if (v.vendor && v.product) return `${v.vendor} ${v.product}`
@@ -288,9 +327,10 @@ export function subjectOf(v) {
  * @param {Array} rows.adp         cisa_ssvc rows (176, 177) rated active with assessed_at in the
  *   window, each with in_kev (true or false, from Vigil's copy of the KEV catalog) and the
  *   vulnerability's vendor, product and description where Vigil holds it
- * @param {Array} rows.disclosures victim_disclosures first seen in the window
+ * @param {Array} rows.disclosures victim_disclosures filed in the window (by filed_date)
  * @param {object} [rows.counts]   the database's exact counts behind each list
- *   ({ actors, claims, kev, adp, disclosures }); a missing or failed count is null
+ *   ({ actors, claims, kev, adp, disclosures }), plus disclosuresFiledEarlier: notices first seen
+ *   in the window but filed before it; a missing or failed count is null
  * @param {Date} [now]
  */
 /**
@@ -318,9 +358,7 @@ export const HEALTH_LANES = {
   'sec-edgar': ['sec-edgar'],
   // Victim country. It has no items of its own, so this lane is how a collapse reaches COP (197).
   threatcluster: ['threatcluster'],
-  'ca-ag': ['state-breach-notices'],
-  'wa-ag': ['state-breach-notices'],
-  'or-ag': ['state-breach-notices'],
+  ...Object.fromEntries(Object.keys(STATE_AG).map((id) => [id, ['state-breach-notices']])),
   vigil: ['ransomlook', 'data-quality'],
 }
 export const HEALTH_FEEDS = [...new Set(Object.values(HEALTH_LANES).flat())]
@@ -725,9 +763,7 @@ export function buildFeed(
         precision_class: 'none',
         sources: withSources(
           published,
-          sec
-            ? { ...SRC.sec, url: d.filing_url || SRC.sec.url }
-            : { ...SRC.stateAg, url: d.filing_url || undefined, id: d.source }
+          sec ? { ...SRC.sec, url: d.filing_url || SRC.sec.url } : stateAgSource(d)
         ),
         measures: {
           persons_affected: d.persons_affected ?? null,
@@ -794,10 +830,13 @@ export function buildFeed(
           total: counts.disclosures,
           rows: disclosures,
           noun: ['breach notice', 'breach notices'],
-          scope: `first seen since ${since(start.disclosures)}`,
+          scope: `filed since ${since(start.disclosures)}`,
           part: latest,
         }),
-      ].join('; ') +
+        filedEarlier(counts.disclosuresFiledEarlier, since(start.disclosures)),
+      ]
+        .filter(Boolean)
+        .join('; ') +
       (stallCaveat(health) ? `. ${stallCaveat(health)}` : ''),
     tier: 'routine',
     status_class: 'reported',
