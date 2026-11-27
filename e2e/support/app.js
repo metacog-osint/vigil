@@ -30,7 +30,7 @@ export async function openApp(page, path = '/') {
 
   await page.goto('/')
 
-  const demoButton = page.getByRole('button', { name: /exploring demo/i })
+  const demoButton = page.getByRole('button', { name: /explore a demo with sample data/i })
   await demoButton.click()
 
   // The dashboard is the demo landing spot.
