@@ -211,6 +211,13 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 /** How many days before today (UTC) each window starts. api/feed.js queries from these dates. */
 export const WINDOW_DAYS = { claims: 2, kev: 7, adp: 7, ics: 7, disclosures: 7 }
 
+/**
+ * A breach notice a registry posts late, first seen in the window but filed up to this many days before it, is still
+ * listed, with its filing date in the title. Washington and Oregon often post notices 8 to 54 days after filing
+ * (measured 27 Oct to 26 Nov 2026). Older ones are only counted: a registry's first read brings in years of notices.
+ */
+export const LATE_NOTICE_DAYS = 60
+
 /** The first UTC date (YYYY-MM-DD) each window includes. */
 export function windowStarts(now = new Date()) {
   const back = (days) => new Date(now.getTime() - days * DAY_MS).toISOString().slice(0, 10)
@@ -220,6 +227,8 @@ export function windowStarts(now = new Date()) {
     adp: back(WINDOW_DAYS.adp),
     ics: back(WINDOW_DAYS.ics),
     disclosures: back(WINDOW_DAYS.disclosures),
+    // The earliest filing date of a late-posted notice the feed lists.
+    disclosuresLate: back(WINDOW_DAYS.disclosures + LATE_NOTICE_DAYS),
   }
 }
 
@@ -313,11 +322,20 @@ function figure({ total, rows, noun: [one, many], scope, detail, part }) {
  * registry read for the first time brings years of old notices in one day (about 8,700 from five
  * registries on 19 Nov 2026, filed 2015-2026). Those first seen in the window but filed before it are named apart, so a
  * backfill is never read as new. Nothing is said when the count is zero or failed.
+ *
+ * Of those, the ones filed since lateDay (LATE_NOTICE_DAYS before the window) are listed as items: a registry that
+ * posts a notice late. The clause says how many of them the feed lists, from the database's count (late) and the
+ * rows the feed holds (listed).
  */
-function filedEarlier(total, sinceDay) {
+function filedEarlier(total, sinceDay, late, listed, lateDay) {
   const n = known(total)
   if (!n) return null
-  return `${num(n)} older breach ${n === 1 ? 'notice' : 'notices'} first seen since ${sinceDay}, filed before it`
+  const head = `${num(n)} older breach ${n === 1 ? 'notice' : 'notices'} first seen since ${sinceDay}, filed before it`
+  const l = known(late)
+  if (!l || !listed) return head
+  if (l === n && listed === l) return `${head} (all listed in this feed)`
+  if (listed === l) return `${head} (${num(l)} filed since ${lateDay} listed in this feed)`
+  return `${head} (${num(l)} filed since ${lateDay}; the latest ${num(listed)} in this feed)`
 }
 
 /** KEV descriptions read "<product> contains a <flaw>": the words before "contains" name the product. */
@@ -342,9 +360,12 @@ export function subjectOf(v) {
  *   vulnerability's vendor, product and description where Vigil holds it
  * @param {Array} rows.ics         ics_advisories rows published in the window
  * @param {Array} rows.disclosures victim_disclosures filed in the window (by filed_date)
+ * @param {Array} [rows.lateDisclosures] victim_disclosures first seen in the window, filed before it and
+ *   since windowStarts().disclosuresLate: notices a registry posted late
  * @param {object} [rows.counts]   the database's exact counts behind each list
  *   ({ actors, claims, kev, adp, ics, disclosures }), plus disclosuresFiledEarlier: notices first seen
- *   in the window but filed before it; a missing or failed count is null
+ *   in the window but filed before it, and disclosuresLate: those of them behind lateDisclosures; a
+ *   missing or failed count is null
  * @param {Date} [now]
  */
 /**
@@ -511,6 +532,7 @@ export function buildFeed(
     adp = [],
     ics = [],
     disclosures = [],
+    lateDisclosures = [],
     counts = {},
     health = null,
   },
@@ -775,7 +797,11 @@ export function buildFeed(
     )
   }
 
-  for (const d of disclosures) {
+  // A late-posted notice (first seen in the window, filed before it) says both dates in its title, so it is never
+  // read as filed this week. The two lists cannot overlap: one is filed in the window, the other before it.
+  const lateIds = new Set(lateDisclosures.map((d) => d.id))
+  for (const d of [...disclosures, ...lateDisclosures]) {
+    const late = lateIds.has(d.id) && d.filed_date
     const sec = d.source === 'sec-edgar'
     const to = sec
       ? 'the SEC (Form 8-K Item 1.05)'
@@ -793,7 +819,11 @@ export function buildFeed(
           d.filed_date ? dayStart(d.filed_date) : utc(d.first_seen),
           d.filed_date ? 'day' : null
         ),
-        title: `${d.company_name} reported a data breach to ${to}${people}`,
+        title:
+          `${d.company_name} reported a data breach to ${to}${people}` +
+          (late
+            ? ` (filed ${plain(d.filed_date)}; first seen by Vigil ${plain(d.first_seen)})`
+            : ''),
         tier: 'routine',
         status_class: 'reported',
         us_person_data: 'organizations',
@@ -881,7 +911,13 @@ export function buildFeed(
           scope: `filed since ${since(start.disclosures)}`,
           part: latest,
         }),
-        filedEarlier(counts.disclosuresFiledEarlier, since(start.disclosures)),
+        filedEarlier(
+          counts.disclosuresFiledEarlier,
+          since(start.disclosures),
+          counts.disclosuresLate,
+          lateDisclosures.length,
+          since(start.disclosuresLate)
+        ),
       ]
         .filter(Boolean)
         .join('; ') +
