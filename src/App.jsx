@@ -10,6 +10,7 @@ const Auth = lazy(() => import('./pages/Auth'))
 const Terms = lazy(() => import('./pages/Terms'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const Sources = lazy(() => import('./pages/Sources'))
+const Coverage = lazy(() => import('./pages/Coverage'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 // Lazy loaded pages - code split for smaller initial bundle
@@ -138,6 +139,7 @@ function PublicLayout() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/sources" element={<Sources />} />
+          <Route path="/coverage" element={<Coverage />} />
           {/* A signed-in section goes to landing; any other address says so (ideas#300) */}
           <Route path="*" element={<PublicFallback />} />
         </Routes>
@@ -278,6 +280,7 @@ function ProtectedApp() {
                         <Route path="/advisories" element={<Advisories />} />
                         <Route path="/research" element={<VendorResearch />} />
                         <Route path="/sources" element={<Sources />} />
+                        <Route path="/coverage" element={<Coverage />} />
                         <Route path="/iocs" element={<IOCs />} />
                         <Route
                           path="/bulk-search"

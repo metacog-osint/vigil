@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { alertRules } from '../../lib/supabase'
 import { useAuth } from '../../hooks/useAuth'
+import WatchPackImport from './WatchPackImport'
 
 /**
  * Only types evaluate_alert_rules() actually evaluates. Offering one it does
@@ -44,6 +45,7 @@ export default function AlertRulesSection() {
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingRule, setEditingRule] = useState(null)
+  const [showPackImport, setShowPackImport] = useState(false)
 
   useEffect(() => {
     loadRules()
@@ -143,12 +145,28 @@ export default function AlertRulesSection() {
       )}
 
       {/* Create Button */}
-      <button
-        onClick={() => setShowCreateModal(true)}
-        className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
-      >
-        + Create alert rule
-      </button>
+      <div className="flex flex-wrap gap-4">
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+        >
+          + Create alert rule
+        </button>
+        <button
+          onClick={() => setShowPackImport(true)}
+          className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+        >
+          Import a watch pack
+        </button>
+      </div>
+
+      {showPackImport && (
+        <WatchPackImport
+          userId={userId}
+          onClose={() => setShowPackImport(false)}
+          onImported={() => loadRules()}
+        />
+      )}
 
       {/* Create Modal */}
       {showCreateModal && (

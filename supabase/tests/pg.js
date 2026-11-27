@@ -25,8 +25,12 @@ import { fileURLToPath } from 'node:url'
 
 const MIGRATIONS = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'migrations')
 
-// What a Supabase database has before any migration of ours runs.
+// What a Supabase database has before any migration of ours runs. Supabase
+// runs in UTC; PGlite otherwise takes the test machine's zone, so a
+// timestamptz cast to a date could land a day early or late.
 const SUPABASE_BASE = `
+  set time zone 'UTC';
+
   create role anon nologin;
   create role authenticated nologin;
   create role service_role nologin;

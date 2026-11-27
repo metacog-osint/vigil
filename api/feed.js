@@ -77,62 +77,109 @@ export default async function handler(request) {
   // The summary names each window by these same dates.
   const since = windowStarts(now)
   try {
-    const [escalatingPage, claimsPage, kevPage, adpPage, disclosuresPage, healthRows] =
-      await Promise.all([
-        rest(
-          base,
-          key,
-          // VG-IND-1 (migration 179): unusual against the group's own 8 weeks, not 077's trend_status.
-          'threat_actors?select=id,surge_claims_7d,surge_days_7d,surge_baseline_mean,surge_p,surge_new_group,surge_window_end,surge_flagged_at&surge=is.true&status=eq.active&order=surge_claims_7d.desc&limit=50',
-          { count: true }
-        ),
-        rest(
-          base,
-          key,
-          `incidents_commercial?select=incident_id,actor_id,victim_name,discovered_date,victim_country,victim_country_withheld,victim_sector&discovered_date=gte.${since.claims}&order=discovered_date.desc&limit=300`,
-          { count: true }
-        ),
-        rest(
-          base,
-          key,
-          `vulnerabilities?select=cve_id,kev_date,epss_score,epss_date,cvss_score,ransomware_use,ransomware_campaign_use,vendor,product,description&kev_date=gte.${since.kev}&order=kev_date.desc&limit=100`,
-          { count: true }
-        ),
-        // CISA's ADP ratings of exploitation active (cisa_ssvc, 176; public read 177), by when CISA
-        // assessed them. A re-assessment that keeps "active" lists the CVE again. Its failure never
-        // fails the feed: the items are left out and the summary says the count is unavailable.
-        rest(
-          base,
-          key,
-          `cisa_ssvc?select=cve_id,assessed_at,automatable,technical_impact&exploitation=eq.active&assessed_at=gte.${since.adp}T00:00:00Z&order=assessed_at.desc&limit=100`,
-          { count: true }
-        ).catch((err) => {
-          console.error('feed: CISA ADP read failed', err)
-          return { rows: [], count: null }
-        }),
-        rest(
-          base,
-          key,
-          // HHS OCR (192) stays out until about a week of clean daily runs, as 191's sources did, and
-          // so its backfill of 8,092 reports first seen on one day is never served as new.
-          `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since.disclosures}T00:00:00Z&source=neq.hhs-ocr&order=first_seen.desc&limit=200`,
-          { count: true }
-        ),
-        // The health block (migration 163). Its failure never fails the feed: without it the feed is
-        // what it was before 163, and COP counts every lane as read. 29 ms warm, measured 15 Nov 2026.
-        rest(
-          base,
-          key,
-          `feed_health?select=feed_id,state,last_status,last_success_at,last_attempt_at,stall_after_minutes,last_new_at,stalled,new_counted_since,min_rows_per_run,last_rows,below_floor&feed_id=in.(${HEALTH_FEEDS.join(',')})`
-        ).catch((err) => {
-          console.error('feed: health read failed', err)
-          return null
-        }),
-      ])
+    const [
+      escalatingPage,
+      claimsPage,
+      kevPage,
+      adpPage,
+      icsPage,
+      disclosuresPage,
+      earlierPage,
+      latePage,
+      healthRows,
+    ] = await Promise.all([
+      rest(
+        base,
+        key,
+        // VG-IND-1 (migration 179): unusual against the group's own 8 weeks, not 077's trend_status.
+        'threat_actors?select=id,surge_claims_7d,surge_days_7d,surge_baseline_mean,surge_p,surge_new_group,surge_window_end,surge_flagged_at&surge=is.true&status=eq.active&order=surge_claims_7d.desc&limit=50',
+        { count: true }
+      ),
+      rest(
+        base,
+        key,
+        `incidents_commercial?select=incident_id,actor_id,victim_name,discovered_date,victim_country,victim_country_withheld,victim_sector&discovered_date=gte.${since.claims}&order=discovered_date.desc&limit=300`,
+        { count: true }
+      ),
+      rest(
+        base,
+        key,
+        `vulnerabilities?select=cve_id,kev_date,epss_score,epss_date,cvss_score,ransomware_use,ransomware_campaign_use,vendor,product,description&kev_date=gte.${since.kev}&order=kev_date.desc&limit=100`,
+        { count: true }
+      ),
+      // CISA's ADP ratings of exploitation active (cisa_ssvc, 176; public read 177), by when CISA
+      // assessed them. A re-assessment that keeps "active" lists the CVE again. Its failure never
+      // fails the feed: the items are left out and the summary says the count is unavailable.
+      rest(
+        base,
+        key,
+        `cisa_ssvc?select=cve_id,assessed_at,automatable,technical_impact&exploitation=eq.active&assessed_at=gte.${since.adp}T00:00:00Z&order=assessed_at.desc&limit=100`,
+        { count: true }
+      ).catch((err) => {
+        console.error('feed: CISA ADP read failed', err)
+        return { rows: [], count: null }
+      }),
+      // CISA's ICS advisories, by publication date. Their failure never fails the feed.
+      rest(
+        base,
+        key,
+        `ics_advisories?select=advisory_id,title,published_date,source_url,cvss_score,cve_ids&published_date=gte.${since.ics}&order=published_date.desc,advisory_id.desc&limit=100`,
+        { count: true }
+      ).catch((err) => {
+        console.error('feed: CISA ICS read failed', err)
+        return { rows: [], count: null }
+      }),
+      rest(
+        base,
+        key,
+        // HHS OCR (192) stays out until about a week of clean daily runs, as 191's sources did, and
+        // so its backfill of 8,092 reports first seen on one day is never served as new.
+        // By filing date, not first_seen: a registry's first read brings years of old notices in
+        // one day, and the 19 Nov 2026 backfill made 37 new notices read as 8,730.
+        `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&filed_date=gte.${since.disclosures}&source=neq.hhs-ocr&order=filed_date.desc,first_seen.desc&limit=200`,
+        { count: true }
+      ),
+      // Notices first seen in the window but filed before it: a backfill, or a registry posting
+      // late. Counted only, so the summary can say they are not new. Its failure only drops that
+      // clause.
+      rest(
+        base,
+        key,
+        `victim_disclosures?select=id&first_seen=gte.${since.disclosures}T00:00:00Z&filed_date=lt.${since.disclosures}&source=neq.hhs-ocr&limit=1`,
+        { count: true }
+      ).catch((err) => {
+        console.error('feed: earlier-filed disclosure count failed', err)
+        return { rows: [], count: null }
+      }),
+      // Of those, the ones filed up to LATE_NOTICE_DAYS before the window are listed: a registry that
+      // posts a notice weeks after filing (Washington and Oregon often do). Without this a notice filed
+      // more than seven days before Vigil first saw it never became an item. Its failure only drops
+      // those items.
+      rest(
+        base,
+        key,
+        `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since.disclosures}T00:00:00Z&and=(filed_date.gte.${since.disclosuresLate},filed_date.lt.${since.disclosures})&source=neq.hhs-ocr&order=first_seen.desc,filed_date.desc&limit=100`,
+        { count: true }
+      ).catch((err) => {
+        console.error('feed: late-posted disclosure read failed', err)
+        return { rows: [], count: null }
+      }),
+      // The health block (migration 163). Its failure never fails the feed: without it the feed is
+      // what it was before 163, and COP counts every lane as read. 29 ms warm, measured 15 Nov 2026.
+      rest(
+        base,
+        key,
+        `feed_health?select=feed_id,state,last_status,last_success_at,last_attempt_at,stall_after_minutes,last_new_at,stalled,new_counted_since,min_rows_per_run,last_rows,below_floor&feed_id=in.(${HEALTH_FEEDS.join(',')})`
+      ).catch((err) => {
+        console.error('feed: health read failed', err)
+        return null
+      }),
+    ])
     const escalating = escalatingPage.rows
     const claims = claimsPage.rows
     const kev = kevPage.rows
     const disclosures = disclosuresPage.rows
+    const ics = icsPage.rows
     // Escalating groups are counted before the filter below, so a group the feed cannot name
     // still counts: the summary then says how many of them the feed names.
     const counts = {
@@ -140,8 +187,12 @@ export default async function handler(request) {
       claims: claimsPage.count,
       kev: kevPage.count,
       adp: adpPage.count,
+      ics: icsPage.count,
       disclosures: disclosuresPage.count,
+      disclosuresFiledEarlier: earlierPage.count,
+      disclosuresLate: latePage.count,
     }
+    const lateDisclosures = latePage.rows
     const ids = [
       ...new Set(
         [...escalating.map((a) => a.id), ...claims.map((c) => c.actor_id)].filter(Boolean)
@@ -208,7 +259,7 @@ export default async function handler(request) {
       }))
     const health = healthBlock(healthRows)
     const feed = buildFeed(
-      { actors, claims, actorNames, kev, adp, disclosures, counts, health },
+      { actors, claims, actorNames, kev, adp, ics, disclosures, lateDisclosures, counts, health },
       now
     )
     return new Response(JSON.stringify(feed), {

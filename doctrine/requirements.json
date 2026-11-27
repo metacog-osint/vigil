@@ -39,7 +39,7 @@
       "parent": "VG-SQ-4",
       "question": "Which claimed attacks has the victim confirmed, and how many people were affected?",
       "series": [
-        "victim disclosures: SEC 8-K Item 1.05 and state attorney-general breach notices (CA, WA, OR)",
+        "victim disclosures: SEC 8-K Item 1.05 and state attorney-general breach notices (CA, WA, OR, VT, MT, SC, ID, DE)",
         "claim-to-disclosure matches (match_status)"
       ],
       "warning_problems": ["VG-WP-1"]

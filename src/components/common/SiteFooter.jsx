@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BUILD_INFO, registryVersionLabel, siteVersionLabel } from '../../lib/buildInfo'
 
 export const REPO_URL = 'https://github.com/metacog-osint/vigil'
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`
@@ -62,7 +63,8 @@ const linkClass = 'text-gray-400 hover:text-cyan-400 underline underline-offset-
  * licence, and whose data this is. The code is AGPL-3.0; the data is not ours
  * to license, and each source keeps its own terms.
  */
-export default function SiteFooter() {
+export default function SiteFooter({ buildInfo = BUILD_INFO }) {
+  const versions = [siteVersionLabel(buildInfo), registryVersionLabel(buildInfo)].filter(Boolean)
   return (
     <footer className="border-t border-gray-800 px-4 lg:px-6 py-4 text-xs text-gray-500 space-y-2">
       <p>
@@ -104,6 +106,13 @@ export default function SiteFooter() {
         cover the data. Every source and its licence:{' '}
         <Link to="/sources" className={linkClass}>
           Sources
+        </Link>
+        .
+      </p>
+      <p>
+        {versions.length > 0 && <span data-testid="site-versions">{versions.join(', ')}. </span>}
+        <Link to="/coverage" className={linkClass}>
+          What Vigil does not cover
         </Link>
         .
       </p>

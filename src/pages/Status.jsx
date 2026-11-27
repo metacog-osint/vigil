@@ -15,6 +15,7 @@ import {
 import { SmartTime } from '../components/TimeDisplay'
 import { FoldWindow } from '../components/common'
 import FeatureGate from '../components/common/FeatureGate'
+import { BUILD_INFO, describeInterval } from '../lib/buildInfo'
 
 // The uptime target this page measures against.
 const SLA_TARGET = 99.9
@@ -632,10 +633,75 @@ function getIncidentDuration(start, end) {
   return `${minutes}m`
 }
 
+/**
+ * Which build of the site this is, and the feed registry it was built beside.
+ * Shown whether or not the status tables exist, because it comes from the
+ * build rather than the database.
+ */
+export function BuildVersions({ info = BUILD_INFO }) {
+  const reg = info?.registry
+  return (
+    <section
+      className="max-w-4xl mx-auto cyber-card p-6 space-y-3 text-sm text-gray-300"
+      aria-labelledby="build-versions-heading"
+    >
+      <h2 id="build-versions-heading" className="text-lg font-semibold text-white">
+        Versions
+      </h2>
+      <dl className="grid grid-cols-[auto,1fr] gap-x-4 gap-y-1">
+        <dt className="text-gray-500">Site</dt>
+        <dd>
+          {info?.version ? `Vigil ${info.version}` : 'Not recorded in this build'}
+          {info?.commit && <span className="text-gray-500"> (commit {info.commit})</span>}
+        </dd>
+        <dt className="text-gray-500">Feed registry</dt>
+        <dd>
+          {reg
+            ? `${reg.fingerprint}: ${reg.jobCount} jobs, ${reg.scheduledCount} scheduled`
+            : 'Not available in this build'}
+        </dd>
+      </dl>
+      <p className="text-gray-400">
+        The feed registry is the list of jobs the ingestion worker can run and how often each is
+        due. The worker is deployed separately from this site, so the worker running now may hold an
+        earlier registry than the one this page was built with. When a feed last ran is on the
+        Operations page.
+      </p>
+      {reg && reg.jobs.length > 0 && (
+        <FoldWindow>
+          <table className="w-full text-sm" data-tic-fold="">
+            <thead>
+              <tr className="text-left text-gray-500 border-b border-gray-800">
+                <th className="py-2 pr-4 font-medium">Job</th>
+                <th className="py-2 pr-4 font-medium">Due</th>
+                <th className="py-2 font-medium">Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reg.jobs.map((job) => (
+                <tr key={job.id} className="border-b border-gray-800/60">
+                  <td className="py-1.5 pr-4 font-mono text-gray-300">{job.id}</td>
+                  <td className="py-1.5 pr-4">
+                    {job.paused ? 'paused' : describeInterval(job.intervalMinutes)}
+                  </td>
+                  <td className="py-1.5">{job.priority}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </FoldWindow>
+      )}
+    </section>
+  )
+}
+
 export default function Status() {
   return (
-    <FeatureGate table="status_components" title="Status page" what="The status page">
-      <StatusPage />
-    </FeatureGate>
+    <div className="space-y-8">
+      <FeatureGate table="status_components" title="Status page" what="The status page">
+        <StatusPage />
+      </FeatureGate>
+      <BuildVersions />
+    </div>
   )
 }

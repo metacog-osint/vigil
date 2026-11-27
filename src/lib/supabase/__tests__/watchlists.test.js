@@ -43,10 +43,51 @@ describe('watchlists module', () => {
       expect(mockQuery.order).toHaveBeenCalledWith('created_at', { ascending: false })
     })
 
-    it('uses anonymous user by default', async () => {
-      await watchlists.getAll()
+    it('refuses without a user id and sends no query', async () => {
+      const result = await watchlists.getAll()
 
-      expect(mockQuery.eq).toHaveBeenCalledWith('user_id', 'anonymous')
+      expect(result).toEqual({ data: [], error: { message: 'User ID required' } })
+      expect(supabase.from).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('containing', () => {
+    it("returns the ids of this user's lists that hold the entity, once each", async () => {
+      const mockEq2 = vi.fn().mockResolvedValue({
+        data: [{ watchlist_id: 'wl-1' }, { watchlist_id: 'wl-2' }, { watchlist_id: 'wl-1' }],
+        error: null,
+      })
+      const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
+      mockQuery.select.mockReturnValue({ eq: mockEq1 })
+
+      const result = await watchlists.containing('entity-456', 'user-123')
+
+      expect(supabase.from).toHaveBeenCalledWith('watchlist_items')
+      expect(mockQuery.select).toHaveBeenCalledWith(
+        'watchlist_id, watchlist:watchlists!inner(user_id)'
+      )
+      expect(mockEq1).toHaveBeenCalledWith('entity_id', 'entity-456')
+      expect(mockEq2).toHaveBeenCalledWith('watchlist.user_id', 'user-123')
+      expect(result).toEqual({ data: ['wl-1', 'wl-2'], error: null })
+    })
+
+    it('passes a query error on with no ids', async () => {
+      const failure = { message: 'permission denied' }
+      const mockEq2 = vi.fn().mockResolvedValue({ data: null, error: failure })
+      const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
+      mockQuery.select.mockReturnValue({ eq: mockEq1 })
+
+      expect(await watchlists.containing('entity-456', 'user-123')).toEqual({
+        data: [],
+        error: failure,
+      })
+    })
+
+    it('refuses without a user id and sends no query', async () => {
+      const result = await watchlists.containing('entity-456')
+
+      expect(result.error.message).toBe('User ID required')
+      expect(supabase.from).not.toHaveBeenCalled()
     })
   })
 
@@ -300,19 +341,14 @@ describe('watchlists module', () => {
       const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
       mockQuery.select.mockReturnValue({ eq: mockEq1 })
 
-      const result = await watchlists.isWatched('entity-456')
+      const result = await watchlists.isWatched('entity-456', 'user-123')
 
       expect(result).toBeFalsy()
     })
 
-    it('uses anonymous user by default', async () => {
-      const mockEq2 = vi.fn().mockResolvedValue({ data: [], error: null })
-      const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 })
-      mockQuery.select.mockReturnValue({ eq: mockEq1 })
-
-      await watchlists.isWatched('entity-456')
-
-      expect(mockEq2).toHaveBeenCalledWith('watchlist.user_id', 'anonymous')
+    it('is false without a user id and sends no query', async () => {
+      expect(await watchlists.isWatched('entity-456')).toBe(false)
+      expect(supabase.from).not.toHaveBeenCalled()
     })
   })
 })

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "pack_version": "1.0.0",
+  "id": "upper-midwest-critical-infrastructure",
+  "name": "Upper Midwest critical infrastructure",
+  "description": "Leak-site claims against energy, government and manufacturing victims, KEV entries for industrial-control vendors, and a watchlist of groups CISA has named for attacks on US critical infrastructure. These groups rarely post leak-site claims, so they are watched rather than alerted on. Alert rules have no place filter, so these rules fire for victims anywhere; the Upper Midwest page shows what Vigil holds about organizations in Minnesota, Wisconsin, Iowa, North Dakota and South Dakota.",
+  "sectors": ["energy", "government", "manufacturing"],
+  "rules": [
+    {
+      "rule_type": "sector_incident",
+      "rule_name": "Critical infrastructure: new leak-site claims"
+    },
+    {
+      "rule_type": "kev_added",
+      "rule_name": "Industrial control vendors: added to KEV",
+      "conditions": {
+        "vendors": ["Unitronics", "Rockwell Automation", "Siemens", "Schneider Electric"]
+      }
+    }
+  ],
+  "watch": [
+    {
+      "watchlist": "Critical infrastructure: groups in CISA advisories",
+      "entity_type": "actor",
+      "entities": [
+        {
+          "name": "Cyber Av3ngers",
+          "note": "CISA advisory AA23-335A (December 2023): IRGC-affiliated actors exploited Unitronics PLCs, including at US water and wastewater facilities."
+        },
+        {
+          "name": "Volt Typhoon",
+          "note": "CISA advisory AA24-038A (February 2024): PRC state-sponsored actors pre-positioned in US critical infrastructure networks."
+        }
+      ]
+    }
+  ]
+}

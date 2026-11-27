@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "pack_version": "1.0.0",
+  "id": "healthcare",
+  "name": "Healthcare",
+  "description": "Leak-site claims against healthcare victims, new claims by groups CISA has named in #StopRansomware advisories about the health sector, and the KEV entries with known ransomware use that reach an EPSS score of 0.5. A claim is a claim, never a confirmed breach. Sector is guessed from the victim's name, so a hospital whose name does not say so is missed.",
+  "sectors": ["healthcare"],
+  "rules": [
+    {
+      "rule_type": "sector_incident",
+      "rule_name": "Healthcare: new leak-site claims"
+    },
+    {
+      "rule_type": "actor_activity",
+      "rule_name": "Healthcare: claims by groups in CISA health-sector advisories",
+      "conditions": {
+        "actor_names": ["Daixin", "Daixin Team", "Rhysida", "Black Basta", "Interlock"]
+      }
+    },
+    {
+      "rule_type": "kev_epss_p1",
+      "rule_name": "Healthcare: KEV with ransomware use and EPSS 0.5 or more"
+    }
+  ],
+  "watch": [
+    {
+      "watchlist": "Healthcare: groups in CISA advisories",
+      "entity_type": "actor",
+      "entities": [
+        {
+          "name": "Daixin",
+          "note": "CISA, FBI and HHS advisory AA22-294A (October 2022): Daixin Team targets the healthcare and public health sector."
+        },
+        {
+          "name": "Rhysida",
+          "note": "CISA advisory AA23-319A (November 2023) names healthcare among Rhysida's targets."
+        },
+        {
+          "name": "BlackBasta",
+          "note": "CISA, FBI, HHS and MS-ISAC advisory AA24-131A (May 2024) on Black Basta, issued with HHS for the health sector."
+        },
+        {
+          "name": "Interlock",
+          "note": "CISA, FBI, HHS and MS-ISAC advisory AA25-203A (July 2025) on Interlock."
+        }
+      ]
+    }
+  ]
+}
