@@ -39,7 +39,7 @@
 -- (3-4 Oct), then 17.0, 15.0, 14.0 and 13.0 h. At 18 hours the check fires on
 -- the three longest and on nothing else. (Two earlier gaps, 158.7 h from 13 Jan
 -- and 2,737.9 h from 29 May, are from before the worker ran continuously.)
--- The threshold is Tom's call; changing it is one UPDATE on feed_expectations,
+-- The threshold is the owner's call; changing it is one UPDATE on feed_expectations,
 -- and nothing but this view reads the column.
 --
 -- WHAT COUNTS AS NEW

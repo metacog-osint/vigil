@@ -31,7 +31,7 @@
 --
 -- WHO SEES IT
 --
--- Nobody outside the service role yet: Tom chooses where it shows (as 176 and
+-- Nobody outside the service role yet: the owner chooses where it shows (as 176 and
 -- 187). Never a KEV label.
 
 begin;

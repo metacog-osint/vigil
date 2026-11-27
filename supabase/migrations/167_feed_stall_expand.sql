@@ -104,7 +104,7 @@
 -- ransomlook does. The others are not critical: they show in feed_health and
 -- in the workflow's table, and fail nothing.
 --
--- Every value is Tom's to change, with one UPDATE on feed_expectations.
+-- Every value is the owner's to change, with one UPDATE on feed_expectations.
 --
 -- GRANTS
 --

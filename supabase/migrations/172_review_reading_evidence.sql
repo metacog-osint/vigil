@@ -22,7 +22,7 @@
 --                                 window, the claim's question, the publisher and
 --                                 its tier, and the citation (17). The primary
 --                                 source link is source_url, which is null for all
---                                 17: they were carried forward from Tom's working
+--                                 17: they were carried forward from the owner's working
 --                                 reference by endnote, so the page says no link is
 --                                 stored rather than inventing one
 --   advisory_indicators_unread    the advisory's title, date and document link,

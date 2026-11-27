@@ -1,7 +1,7 @@
 /**
  * Per-invocation limits, shared by the worker and the schedule capacity test.
  *
- * The account moved to Workers Paid on 17 Nov 2026 ($5 a month, Tom). The
+ * The account moved to Workers Paid on 17 Nov 2026 ($5 a month). The
  * platform now allows 10,000 subrequests an invocation, up from Workers Free's
  * 50. Free's cap is what cut the 03:15 UTC tick that day short with nothing
  * recorded (lib/subrequests.js).
