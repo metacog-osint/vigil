@@ -46,6 +46,18 @@ const NAV_ITEMS = [
   { icon: '📈', label: 'Trends' },
 ]
 
+// The cards count leak-site claims. An espionage type on such a row can come from a
+// name shared with a state-linked group's record, so it is not shown as the group's type.
+const STATE_TYPES = new Set(['apt', 'nation-state'])
+
+function claimantType(value) {
+  if (value && STATE_TYPES.has(value.toLowerCase())) return 'Type unconfirmed'
+  return titleCase(value) || 'Unknown type'
+}
+
+// Some leak sites post a numbered label in place of the victim's name
+const WITHHELD_NAME = /^Company #\d+$/
+
 function TrendBadge({ trend }) {
   const styles = {
     ESCALATING: 'bg-red-900/50 text-red-400 border-red-700/50',
@@ -229,9 +241,10 @@ function EscalatingActors({ actors, loading, onExplore }) {
                 <TrendBadge trend={actor.trend_status} />
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-400">
-                <span>{titleCase(actor.actor_type) || 'Unknown type'}</span>
+                <span>{claimantType(actor.actor_type)}</span>
                 <span>
-                  {actor.incidents_7d} {actor.incidents_7d === 1 ? 'victim' : 'victims'} this week
+                  {actor.incidents_7d} {actor.incidents_7d === 1 ? 'victim claim' : 'victim claims'}{' '}
+                  this week
                 </span>
               </div>
             </div>
@@ -244,11 +257,16 @@ function EscalatingActors({ actors, loading, onExplore }) {
 
 function RecentIncidents({ incidents, loading, onExplore }) {
   return (
-    <CardShell title="Recent Incidents" onExplore={onExplore}>
+    <CardShell title="Recent Leak-Site Claims" onExplore={onExplore}>
+      <p className="px-4 py-2 border-b border-gray-700 text-xs text-gray-400">
+        Victims that groups name on their own leak sites. Claims are unverified.
+        {incidents.slice(0, 4).some((i) => WITHHELD_NAME.test(i.victim)) &&
+          ' A name such as “Company #12” is the label the leak site itself posted, with no victim named.'}
+      </p>
       {loading ? (
         <RowSkeleton />
       ) : incidents.length === 0 ? (
-        <EmptyRow>No incidents recorded yet.</EmptyRow>
+        <EmptyRow>No claims recorded yet.</EmptyRow>
       ) : (
         <div className="divide-y divide-gray-700">
           {incidents.slice(0, 4).map((incident) => (

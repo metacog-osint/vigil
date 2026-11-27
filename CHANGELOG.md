@@ -17,6 +17,9 @@ All notable changes to Vigil are documented in this file.
 ### Fixed
 
 - The Watchlists page lists, creates and deletes the signed-in user's own watchlists.
+- The public landing page calls its incident list leak-site claims and says they are unverified, counts "victim
+  claims", explains numbered "Company #" labels, and shows "Type unconfirmed" where a claimant's record carries a
+  state-actor type.
 
 ---
 
