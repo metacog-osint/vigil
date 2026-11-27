@@ -1,7 +1,7 @@
 // @vitest-environment node
 /**
  * Migration 176: CISA's SSVC judgments are stored apart from KEV, closed to the public roles
- * until Tom decides where they show, written only by service_role, and the job is watched.
+ * until it is decided where they show, written only by service_role, and the job is watched.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { freshDatabase } from './pg.js'

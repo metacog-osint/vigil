@@ -42,7 +42,7 @@ redistribution supplied. Ransomware.live's terms forbid re-serving its raw data 
 the feed; counts Vigil computes itself (group trends) are published.
 
 ## US persons
-Vigil is not bound by EO 12333 (Tom, 30 Oct 2026). Items that name organizations (victims, vendors, filers) say so in
+Vigil is not bound by EO 12333 (30 Oct 2026). Items that name organizations (victims, vendors, filers) say so in
 `us_person_data`, so a reader bound by those rules can filter for themselves.
 
 ## Gaps and no data
