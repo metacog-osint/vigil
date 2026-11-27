@@ -208,7 +208,7 @@ export default function ThreatActors() {
         return
       }
       const { data: lists } = await watchlists.getAll(userId)
-      const actorList = lists?.find((w) => w.entity_type === 'threat_actor')
+      const actorList = lists?.find((w) => w.entity_type === 'actor')
 
       if (!actorList) {
         alert('No watchlist found for threat actors. Create one first.')

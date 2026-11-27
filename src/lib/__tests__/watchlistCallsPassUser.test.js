@@ -93,6 +93,21 @@ describe('watchlists calls name the user', () => {
     expect(short).toEqual([])
   })
 
+  it('watch controls use only the entity types the watchlists table allows', () => {
+    // watchlists.entity_type CHECK in migration 004
+    const allowed = ['actor', 'vulnerability', 'ioc', 'incident']
+    const used = sourceFiles(SRC).flatMap((file) => {
+      const text = fs.readFileSync(file, 'utf8')
+      const found = [
+        ...text.matchAll(/<WatchButton[^>]*\bentityType="([^"]+)"/g),
+        ...text.matchAll(/\bw\.entity_type === '([^']+)'/g),
+      ]
+      return found.map((m) => ({ where: path.relative(SRC, file), type: m[1] }))
+    })
+    expect(used.length).toBeGreaterThanOrEqual(3)
+    expect(used.filter((u) => !allowed.includes(u.type))).toEqual([])
+  })
+
   it('the parser counts arguments', () => {
     expect(argumentsAt("f(a, { b: 1, c: [2, 3] }, 'x,y')", 1)).toEqual([
       'a',
