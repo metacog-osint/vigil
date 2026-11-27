@@ -5,6 +5,22 @@
 
 import { supabase } from './client'
 
+const COLUMN_OF = {
+  ruleName: 'rule_name',
+  ruleType: 'rule_type',
+  notifyEmail: 'notify_email',
+  notifyInApp: 'notify_in_app',
+}
+
+/** camelCase form fields to user_alert_rules columns; others pass through. */
+export function toColumns(updates = {}) {
+  const out = {}
+  for (const [key, value] of Object.entries(updates)) {
+    if (value !== undefined) out[COLUMN_OF[key] || key] = value
+  }
+  return out
+}
+
 export const alertRules = {
   // Get all rules for a user
   async getForUser(userId = 'anonymous', enabledOnly = true) {
@@ -33,6 +49,7 @@ export const alertRules = {
       ruleName,
       ruleType,
       conditions = {},
+      attention = 'quiet',
       notifyEmail = true,
       notifyInApp = true,
     } = rule
@@ -44,6 +61,7 @@ export const alertRules = {
         rule_name: ruleName,
         rule_type: ruleType,
         conditions,
+        attention,
         notify_email: notifyEmail,
         notify_in_app: notifyInApp,
         enabled: true,
@@ -52,9 +70,15 @@ export const alertRules = {
       .single()
   },
 
-  // Update a rule
+  // Update a rule. The settings form sends the same camelCase fields as
+  // create(); columns are snake_case, so map the known ones.
   async update(ruleId, updates) {
-    return supabase.from('user_alert_rules').update(updates).eq('id', ruleId).select().single()
+    return supabase
+      .from('user_alert_rules')
+      .update(toColumns(updates))
+      .eq('id', ruleId)
+      .select()
+      .single()
   },
 
   // Delete a rule

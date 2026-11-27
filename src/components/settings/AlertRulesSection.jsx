@@ -33,6 +33,36 @@ export const RULE_TYPES = [
       'Alert when a KEV entry with known ransomware use reaches an EPSS score of 0.5 or more. ' +
       'EPSS often rises days after a CVE reaches KEV, so this fires when it crosses, not when it is listed.',
   },
+  {
+    value: 'contested_claim',
+    label: 'Contested claim: Tier 1 origin',
+    description:
+      'Alert when a contested claim gains its first value whose origin is a Tier 1 source, ' +
+      'such as the victim itself or a regulator.',
+  },
+]
+
+/**
+ * Attention levels (migration 205). Quiet is the default. Some matches are
+ * always extra, whatever the rule says; rows loaded long after the event are
+ * always quiet.
+ */
+export const ATTENTION_LEVELS = [
+  {
+    value: 'quiet',
+    label: 'Quiet',
+    description:
+      'Only the changes Vigil always marks are extra: a KEV addition for a vendor you name, ' +
+      'a KEV ransomware entry reaching EPSS 0.5, the first claim a group posts after a takedown, ' +
+      'an SEC 8-K filing that may match a claim you watch, and a contested claim gaining a ' +
+      'Tier 1 origin.',
+  },
+  {
+    value: 'extra',
+    label: 'Extra',
+    description:
+      'Everything this rule matches is marked extra, except rows loaded long after the event.',
+  },
 ]
 
 const SEVERITY_OPTIONS = ['critical', 'high', 'medium', 'low']
@@ -210,6 +240,7 @@ function RuleCard({ rule, onToggle, onEdit, onDelete }) {
           <div className="flex items-center gap-3 mt-2 text-xs text-gray-600">
             {rule.notify_email && <span>📧 Email</span>}
             {rule.notify_in_app && <span>🔔 In-app</span>}
+            {rule.attention === 'extra' && <span className="text-amber-400">Extra attention</span>}
             {rule.trigger_count > 0 && <span>Triggered {rule.trigger_count} times</span>}
           </div>
         </div>
@@ -291,6 +322,9 @@ function ConditionsDisplay({ conditions, ruleType }) {
   if (conditions.ransomware_only) {
     parts.push('Ransomware use only')
   }
+  if (conditions.claim_keys?.length > 0) {
+    parts.push(`Claims: ${conditions.claim_keys.join(', ')}`)
+  }
 
   return <span>{parts.join(' • ') || 'All matching events'}</span>
 }
@@ -301,6 +335,7 @@ function RuleModal({ rule, onClose, onSave }) {
   const [notifyEmail, setNotifyEmail] = useState(rule?.notify_email ?? true)
   const [notifyInApp, setNotifyInApp] = useState(rule?.notify_in_app ?? true)
   const [conditions, setConditions] = useState(rule?.conditions || {})
+  const [attention, setAttention] = useState(rule?.attention || 'quiet')
   const [saving, setSaving] = useState(false)
 
   const handleSubmit = async (e) => {
@@ -312,6 +347,7 @@ function RuleModal({ rule, onClose, onSave }) {
       ruleName: ruleName.trim(),
       ruleType,
       conditions,
+      attention,
       notifyEmail,
       notifyInApp,
     })
@@ -363,6 +399,25 @@ function RuleModal({ rule, onClose, onSave }) {
 
           {/* Conditions based on type */}
           <ConditionsEditor ruleType={ruleType} conditions={conditions} onChange={setConditions} />
+
+          {/* Attention */}
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Attention</label>
+            <select
+              value={attention}
+              onChange={(e) => setAttention(e.target.value)}
+              className="w-full cyber-input"
+            >
+              {ATTENTION_LEVELS.map((level) => (
+                <option key={level.value} value={level.value}>
+                  {level.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              {ATTENTION_LEVELS.find((l) => l.value === attention)?.description}
+            </p>
+          </div>
 
           {/* Notification Options */}
           <div className="space-y-2">
@@ -600,6 +655,35 @@ function ConditionsEditor({ ruleType, conditions, onChange }) {
             Fires once per CVE, when it is first seen meeting both conditions on an EPSS score from
             the last three days. CVEs that already met them when this rule type was added do not
             fire.
+          </p>
+        </div>
+      )
+
+    case 'contested_claim':
+      return (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">
+              Claim keys (comma-separated, optional)
+            </label>
+            <input
+              type="text"
+              value={conditions.claim_keys?.join(', ') || ''}
+              onChange={(e) =>
+                updateCondition(
+                  'claim_keys',
+                  e.target.value
+                    .split(',')
+                    .map((v) => v.trim())
+                    .filter(Boolean)
+                )
+              }
+              className="w-full cyber-input"
+              placeholder="Leave empty for every contested claim"
+            />
+          </div>
+          <p className="text-xs text-gray-500">
+            Fires once per claim, when its first Tier 1 origin is recorded. Always extra.
           </p>
         </div>
       )

@@ -11,6 +11,9 @@ const NOTIFICATION_ICONS = {
   watchlist_update: '👁️',
   vendor_alert: '🔔',
   sector_incident: '🎯',
+  // Migration 201
+  sec_disclosure: '📄',
+  contested_claim: '⚖️',
   system: 'ℹ️',
   digest_ready: '📊',
   // Legacy types from fallback
@@ -107,6 +110,7 @@ export default function NotificationBell({ userId = 'anonymous' }) {
             link: n.link,
             read: !!n.read_at,
             icon: NOTIFICATION_ICONS[n.notification_type] || 'ℹ️',
+            attention: n.attention || 'quiet',
           }))
         )
         setUsesFallback(false)
@@ -310,6 +314,11 @@ export default function NotificationBell({ userId = 'anonymous' }) {
                         <span className="text-sm font-medium text-white truncate">
                           {notification.title}
                         </span>
+                        {notification.attention === 'extra' && (
+                          <span className="flex-shrink-0 text-xs px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded">
+                            EXTRA
+                          </span>
+                        )}
                         {!notification.read && isRecent(notification.date) && (
                           <span className="flex-shrink-0 text-xs px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded">
                             NEW
