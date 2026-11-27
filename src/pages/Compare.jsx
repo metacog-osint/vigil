@@ -11,6 +11,7 @@ import {
   TrendChart,
   SectorComparison,
   RegionComparison,
+  SnapshotCompare,
 } from '../components/compare'
 import { compare, orgProfile } from '../lib/supabase/index'
 
@@ -22,7 +23,48 @@ const DEFAULT_RANGE = {
   label: 'This Week vs Last Week',
 }
 
+const TABS = [
+  ['periods', 'Two periods'],
+  ['snapshots', 'Snapshots'],
+]
+
 export default function Compare() {
+  const [tab, setTab] = useState('periods')
+  const tabs = (
+    <div role="tablist" className="flex gap-2 border-b border-gray-800">
+      {TABS.map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          role="tab"
+          aria-selected={tab === id}
+          onClick={() => setTab(id)}
+          className={`px-3 py-2 text-sm border-b-2 ${
+            tab === id ? 'border-cyan-400 text-white' : 'border-transparent text-gray-400'
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+
+  if (tab === 'snapshots') {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Compare</h1>
+          <p className="text-gray-400 text-sm mt-1">What changed between two frozen snapshots</p>
+        </div>
+        {tabs}
+        <SnapshotCompare />
+      </div>
+    )
+  }
+  return <PeriodCompare tabs={tabs} />
+}
+
+function PeriodCompare({ tabs }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState(() => {
@@ -122,6 +164,8 @@ export default function Compare() {
           <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
         </div>
       </div>
+
+      {tabs}
 
       {/* Key metrics comparison */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

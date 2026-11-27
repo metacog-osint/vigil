@@ -350,3 +350,31 @@ export default {
   parseNaturalQuery,
   queryToFilters,
 }
+
+/**
+ * Narrate a snapshot diff (actor names in place of ids). The text is unchecked:
+ * run it through checkNarration before showing it.
+ */
+export async function generateSnapshotDiffSummary(diff) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (!session) return null
+
+  try {
+    const response = await fetch('/api/generate-summary', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ type: 'snapshot_diff', data: { diff } }),
+    })
+    if (!response.ok) return null
+    const result = await response.json()
+    return result.summary || null
+  } catch (error) {
+    logger.error('Snapshot summary generation failed:', error)
+    return null
+  }
+}

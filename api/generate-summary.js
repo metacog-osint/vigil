@@ -3,7 +3,7 @@
  * Securely generates summaries via Groq API without exposing API key to frontend
  *
  * POST /api/generate-summary
- * Body: { type: 'bluf' | 'actor', data: {...} }
+ * Body: { type: 'bluf' | 'actor' | 'entity' | 'snapshot_diff', data: {...} }
  * Headers: Authorization: Bearer <supabase-access-token>
  */
 
@@ -108,6 +108,38 @@ Recent victims:
 ${incidentDetails.join('\n') || 'No recent activity'}
 
 Write a factual 2-sentence summary about this group. No advice.`
+}
+
+/**
+ * Narration of a diff between two snapshots. The model is given the diff and
+ * nothing else; the client checks each sentence against it.
+ */
+const MAX_DIFF_CHARS = 12000
+const MAX_ROWS = 25
+
+export function buildSnapshotDiffPrompt(diff) {
+  const cap = (list) => (Array.isArray(list) ? list.slice(0, MAX_ROWS) : list)
+  const json = JSON.stringify({
+    ...diff,
+    by_actor: cap(diff.by_actor),
+    by_sector: cap(diff.by_sector),
+    actors: { added: cap(diff.actors?.added), removed: cap(diff.actors?.removed) },
+    kev: { added: cap(diff.kev?.added), removed: cap(diff.kev?.removed) },
+  })
+  if (json.length > MAX_DIFF_CHARS) return null
+
+  return `Summarize the difference between two snapshots in at most 4 short sentences.
+
+Rules:
+- Use only the JSON below. Copy numbers, actor names, sector names and CVE ids exactly.
+- Do not calculate new figures: no percentages, sums, ratios or list lengths. Write numbers as digits.
+- Lists may be cut to ${MAX_ROWS} entries, so never say how many entries a list has.
+- null means not computed. Never call it zero.
+- "claims" are victim claims on leak sites, not confirmed attacks.
+- open_findings counts the whole database, not this scope.
+- No advice, no causes, no markdown.
+
+${json}`
 }
 
 /**
@@ -291,6 +323,18 @@ export default async function handler(request) {
         prompt = buildActorPrompt(data.actor, data.incidents || [])
         maxTokens = 200
         break
+      case 'snapshot_diff': {
+        prompt = data.diff ? buildSnapshotDiffPrompt(data.diff) : null
+        if (!prompt) {
+          return new Response(JSON.stringify({ error: 'Missing or oversized diff' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          })
+        }
+        maxTokens = 300
+        temperature = 0.1
+        break
+      }
       case 'entity': {
         const promptFn = ENTITY_PROMPTS[data.entityType]
         if (!promptFn || !data.entity) {
@@ -306,7 +350,7 @@ export default async function handler(request) {
         break
       }
       default:
-        return new Response(JSON.stringify({ error: 'Invalid summary type. Use "bluf", "actor" or "entity"' }), {
+        return new Response(JSON.stringify({ error: 'Invalid summary type. Use "bluf", "actor", "entity" or "snapshot_diff"' }), {
           status: 400,
           headers: { 'Content-Type': 'application/json', ...corsHeaders },
         })

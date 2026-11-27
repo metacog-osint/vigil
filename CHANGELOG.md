@@ -8,6 +8,9 @@ All notable changes to Vigil are documented in this file.
 
 ### Added
 
+- Compare has a Snapshots view: take a frozen snapshot of a sector, actor or actor watchlist, compare two of them
+  (added, removed, changed; a figure that was not computed is never shown as zero), and ask for an AI-written summary
+  in which a sentence with a number or name that is not in the diff is struck through.
 - Watch packs: a file format that bundles alert rules, watchlists and a sector filter, with three stock packs in
   `catalog/packs/` (Healthcare, Space and satellite operators, Upper Midwest critical infrastructure) and an "Import a
   watch pack" dialog in the alert rule settings. The dialog shows what a pack will create before anything is written;
