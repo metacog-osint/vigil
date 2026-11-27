@@ -59,11 +59,12 @@ const CONDITION_CHECKS = {
   min_cvss: { check: (v) => typeof v === 'number' && v >= 0 && v <= 10, expect: 'a number 0-10' },
   kev_only: { check: (v) => typeof v === 'boolean', expect: 'true or false' },
   ransomware_only: { check: (v) => typeof v === 'boolean', expect: 'true or false' },
+  claim_keys: { check: stringList, expect: 'a non-empty list of claim keys' },
 }
 
 /**
  * The condition keys evaluate_alert_rules() reads for each rule type
- * (migration 159). Rule types the engine does not evaluate are not here.
+ * (migrations 159 and 201). Rule types the engine does not evaluate are not here.
  */
 export const RULE_CONDITIONS = {
   vendor_cve: ['vendors', 'kev_only', 'min_severity', 'min_cvss', 'ransomware_only'],
@@ -71,6 +72,7 @@ export const RULE_CONDITIONS = {
   actor_activity: ['actor_names'],
   sector_incident: ['sectors'],
   kev_epss_p1: ['vendors'],
+  contested_claim: ['claim_keys'],
 }
 
 /** Conditions a rule cannot work without. */
