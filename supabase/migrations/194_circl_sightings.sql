@@ -1,11 +1,11 @@
 -- 194. Reported exploitation from CIRCL Vulnerability-Lookup sightings, kept apart from KEV
 --
--- STATUS: APPLIED 25 November 2026 (20261125171153), exactly as written. Written 21 November 2026 (ideas#135).
+-- STATUS: APPLIED 25 November 2026 (20261125171153), exactly as written. Written 21 November 2026.
 --
 -- WHY
 --
--- VulnCheck KEV was retired on 15 Nov 2026 (164). Tom asked on 21 Nov 2026 for
--- CIRCL's sightings as a separate "reported exploited" signal.
+-- VulnCheck KEV was retired on 15 Nov 2026 (164). CIRCL's sightings are a
+-- separate "reported exploited" signal.
 --
 -- WHAT IS TAKEN
 --
