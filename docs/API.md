@@ -12,8 +12,9 @@
 Intelligence Company's feed contract v2 (`tic-feed/2`, described in `doctrine/kit/docs/feed-contract-v2.md`):
 groups whose claims are unusual for them (VG-IND-1, migration 179); leak-site claims dated from two days before the current UTC date (three calendar dates, today's
 included); CISA KEV additions dated from seven days before; CISA industrial control system advisories published
-from seven days before (not reports of exploitation); and victim breach disclosures Vigil first saw from
-midnight UTC seven days before, plus a summary item. It needs no key, is cached for 15 minutes, and reads claims
+from seven days before (not reports of exploitation); and victim breach disclosures filed from seven days before,
+plus those Vigil first saw in that window that were filed up to 60 days before it (a registry posting a notice
+late; the item's title gives both dates), plus a summary item. It needs no key, is cached for 15 minutes, and reads claims
 and group names only from the `*_commercial` views, so nothing a restricted source supplied is re-served.
 Built by `api/_lib/doctrineFeed.js`; `src/lib/__tests__/doctrineFeed.test.js` runs the kit's linter over it.
 The summary names each window by its first date ("since 29 Oct"), and its figures are the database's counts

@@ -85,6 +85,7 @@ export default async function handler(request) {
       icsPage,
       disclosuresPage,
       earlierPage,
+      latePage,
       healthRows,
     ] = await Promise.all([
       rest(
@@ -150,6 +151,19 @@ export default async function handler(request) {
         console.error('feed: earlier-filed disclosure count failed', err)
         return { rows: [], count: null }
       }),
+      // Of those, the ones filed up to LATE_NOTICE_DAYS before the window are listed: a registry that
+      // posts a notice weeks after filing (Washington and Oregon often do). Without this a notice filed
+      // more than seven days before Vigil first saw it never became an item. Its failure only drops
+      // those items.
+      rest(
+        base,
+        key,
+        `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since.disclosures}T00:00:00Z&and=(filed_date.gte.${since.disclosuresLate},filed_date.lt.${since.disclosures})&source=neq.hhs-ocr&order=first_seen.desc,filed_date.desc&limit=100`,
+        { count: true }
+      ).catch((err) => {
+        console.error('feed: late-posted disclosure read failed', err)
+        return { rows: [], count: null }
+      }),
       // The health block (migration 163). Its failure never fails the feed: without it the feed is
       // what it was before 163, and COP counts every lane as read. 29 ms warm, measured 15 Nov 2026.
       rest(
@@ -176,7 +190,9 @@ export default async function handler(request) {
       ics: icsPage.count,
       disclosures: disclosuresPage.count,
       disclosuresFiledEarlier: earlierPage.count,
+      disclosuresLate: latePage.count,
     }
+    const lateDisclosures = latePage.rows
     const ids = [
       ...new Set(
         [...escalating.map((a) => a.id), ...claims.map((c) => c.actor_id)].filter(Boolean)
@@ -243,7 +259,7 @@ export default async function handler(request) {
       }))
     const health = healthBlock(healthRows)
     const feed = buildFeed(
-      { actors, claims, actorNames, kev, adp, ics, disclosures, counts, health },
+      { actors, claims, actorNames, kev, adp, ics, disclosures, lateDisclosures, counts, health },
       now
     )
     return new Response(JSON.stringify(feed), {

@@ -18,6 +18,7 @@ import {
   healthBlock,
   HEALTH_FEEDS,
   HEALTH_LANES,
+  LATE_NOTICE_DAYS,
   SECTOR_MAP,
   STATE_AG,
   stallCaveat,
@@ -249,6 +250,7 @@ describe('doctrineFeed', () => {
       adp: '2026-10-23',
       ics: '2026-10-23',
       disclosures: '2026-10-23',
+      disclosuresLate: '2026-08-24',
     })
     const newYear = new Date('2027-01-01T05:00:00Z')
     expect(windowStarts(newYear).claims).toBe('2026-12-30')
@@ -515,6 +517,23 @@ describe('doctrineFeed', () => {
     expect(method).toContain('known ransomware use')
     expect(method).toContain(`at least ${EPSS_ALERT}`)
     expect(method).toContain(`within ${EPSS_CURRENT_DAYS} days`)
+    // The epss job runs after FIRST's 13:30 UTC release (afterUtc, workers/src/feeds/registry.js).
+    expect(method).not.toContain('one release behind')
+    expect(method).toContain('after 15:00 UTC')
+  })
+
+  it('states the breach-notice window by filing date in method.md and API.md', () => {
+    const flat = (p) => readFileSync(join(ROOT, p), 'utf8').replace(/\s+/g, ' ')
+    const method = flat('doctrine/method.md')
+    const api = flat('docs/API.md')
+    // The wording before notices were counted by filing date.
+    expect(method).not.toContain('disclosures first seen from seven days before')
+    expect(api).not.toContain('disclosures Vigil first saw from midnight UTC seven days before')
+    expect(method).toContain('disclosures filed from seven days before')
+    expect(api).toContain('disclosures filed from seven days before')
+    for (const text of [method, api]) {
+      expect(text).toContain(`filed up to ${LATE_NOTICE_DAYS} days before it`)
+    }
   })
 
   it('names the regulator and the scope of people affected', () => {
@@ -585,6 +604,46 @@ describe('doctrineFeed', () => {
     }
   })
 
+  it('lists late-posted notices with both dates and says how many of the older ones it lists', () => {
+    const late = (n) =>
+      Array.from({ length: n }, (_, i) => ({
+        id: `late${i}`,
+        company_name: `Late ${i}`,
+        source: 'wa-ag',
+        filed_date: '2026-10-18',
+        first_seen: '2026-10-30T03:16:00Z',
+        persons_affected: i === 0 ? 2500 : null,
+        persons_affected_scope: i === 0 ? 'state_residents' : null,
+      }))
+    const build = (lateDisclosures, counts) =>
+      buildFeed({ ...rows(), lateDisclosures, counts: { ...rows().counts, ...counts } }, NOW)
+    const fc = build(late(2), { disclosuresFiledEarlier: 9, disclosuresLate: 2 })
+    expect(byId(fc)['vigil:disclosure:late0'].properties.title).toBe(
+      'Late 0 reported a data breach to the Washington attorney general; 2,500 people affected in that state (filed 18 Oct 2026; first seen by Vigil 30 Oct 2026)'
+    )
+    expect(summaryTitle(fc)).toMatch(
+      /; 9 older breach notices first seen since 23 Oct, filed before it \(2 filed since 24 Aug listed in this feed\)$/
+    )
+    expect(
+      summaryTitle(build(late(2), { disclosuresFiledEarlier: 2, disclosuresLate: 2 }))
+    ).toMatch(/filed before it \(all listed in this feed\)$/)
+    // A capped page: the database's count, and how many the feed holds.
+    expect(
+      summaryTitle(build(late(2), { disclosuresFiledEarlier: 9, disclosuresLate: 5 }))
+    ).toMatch(/filed before it \(5 filed since 24 Aug; the latest 2 in this feed\)$/)
+    // No late rows, or the read failed: the clause is as it was.
+    for (const [rowsIn, n] of [
+      [[], 0],
+      [[], null],
+    ]) {
+      expect(
+        summaryTitle(build(rowsIn, { disclosuresFiledEarlier: 9, disclosuresLate: n }))
+      ).toMatch(/; 9 older breach notices first seen since 23 Oct, filed before it$/)
+    }
+    // A notice filed in the window names no extra dates.
+    expect(byId(fc)['vigil:disclosure:d1'].properties.title).not.toContain('first seen')
+  })
+
   it('queries breach notices by filing date, and counts the earlier-filed apart', () => {
     const src = readFileSync(resolve(ROOT, 'api/feed.js'), 'utf8')
     const list = src.match(/`victim_disclosures\?select=id,company_name[^`]*`/)[0]
@@ -597,6 +656,14 @@ describe('doctrineFeed', () => {
     expect(earlier).toContain('filed_date=lt.${since.disclosures}')
     expect(earlier).toContain('source=neq.hhs-ocr')
     expect(src).toContain('disclosuresFiledEarlier: earlierPage.count')
+    // Late-posted notices: first seen in the window, filed before it and since the late cut-off.
+    const late = [...src.matchAll(/`victim_disclosures\?select=id,company_name[^`]*`/g)][1][0]
+    expect(late).toContain('first_seen=gte.${since.disclosures}T00:00:00Z')
+    expect(late).toContain(
+      'and=(filed_date.gte.${since.disclosuresLate},filed_date.lt.${since.disclosures})'
+    )
+    expect(late).toContain('source=neq.hhs-ocr')
+    expect(src).toContain('disclosuresLate: latePage.count')
   })
 
   it("gives CISA's ADP assessment its own line, never labelled KEV, and marks what KEV lacks", () => {
@@ -676,8 +743,23 @@ describe('doctrineFeed', () => {
     const py = ['python3', 'python'].find((cmd) => spawnSync(cmd, ['--version']).status === 0)
     if (!py) return // no Python on this machine; CI has it
     // Without a health block, and with one carrying the stall and the summary's caveat.
+    // The first carries a late-posted breach notice too.
+    const late = {
+      id: 'late1',
+      company_name: 'Late Posting LLC',
+      source: 'wa-ag',
+      filed_date: '2026-10-18',
+      first_seen: '2026-10-30T03:16:00Z',
+    }
     for (const fc of [
-      buildFeed(rows(), NOW),
+      buildFeed(
+        {
+          ...rows(),
+          lateDisclosures: [late],
+          counts: { ...rows().counts, disclosuresFiledEarlier: 3, disclosuresLate: 1 },
+        },
+        NOW
+      ),
       buildFeed({ ...rows(), health: healthBlock(healthRows()) }, NOW),
     ]) {
       const file = join(mkdtempSync(join(tmpdir(), 'vigil-feed-')), 'feed.geojson')
