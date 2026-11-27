@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { JOBS_BY_ID } from '../../../workers/src/feeds/registry.js'
-import Coverage, { COVERAGE } from '../Coverage'
+import { JOBS_BY_ID, SCHEDULED_JOBS } from '../../../workers/src/feeds/registry.js'
+import Coverage, { COVERAGE, NO_OUTSIDE_SOURCE } from '../Coverage'
 import { describeInterval } from '../../lib/buildInfo'
 
 const renderPage = () =>
@@ -17,6 +17,23 @@ describe('Coverage: what Vigil does not cover', () => {
     const named = COVERAGE.flatMap((area) => area.reads.map((source) => source.job))
     expect(named.length).toBeGreaterThan(20)
     for (const job of named) expect(JOBS_BY_ID, job).toHaveProperty([job])
+  })
+
+  it('names every scheduled job that reads a source', () => {
+    const named = new Set(COVERAGE.flatMap((area) => area.reads.map((source) => source.job)))
+    const exempt = new Set(NO_OUTSIDE_SOURCE)
+    const missing = SCHEDULED_JOBS.map((job) => job.id).filter(
+      (id) => !named.has(id) && !exempt.has(id)
+    )
+    expect(missing, 'scheduled jobs named nowhere on the page').toEqual([])
+  })
+
+  it('exempts only jobs that are in the registry and not also listed as sources', () => {
+    const named = new Set(COVERAGE.flatMap((area) => area.reads.map((source) => source.job)))
+    for (const job of NO_OUTSIDE_SOURCE) {
+      expect(JOBS_BY_ID, job).toHaveProperty([job])
+      expect(named.has(job), job).toBe(false)
+    }
   })
 
   it('states that a claim is a claim, in those words', () => {
