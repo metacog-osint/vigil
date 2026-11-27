@@ -117,6 +117,16 @@ const rows = () => ({
       description: null,
     },
   ],
+  ics: [
+    {
+      advisory_id: 'ICSA-26-301-01',
+      title: 'Acme Controller',
+      published_date: '2026-10-28',
+      source_url: 'https://www.cisa.gov/news-events/ics-advisories/icsa-26-301-01',
+      cvss_score: 8.1,
+      cve_ids: ['CVE-2026-0100', 'CVE-2026-0101'],
+    },
+  ],
   disclosures: [
     {
       id: 'd1',
@@ -139,7 +149,7 @@ const rows = () => ({
     },
   ],
   // The database's counts behind each list; here the rows are all of them.
-  counts: { actors: 1, claims: 3, kev: 3, adp: 2, disclosures: 2 },
+  counts: { actors: 1, claims: 3, kev: 3, adp: 2, ics: 1, disclosures: 2 },
 })
 
 const byId = (fc) => Object.fromEntries(fc.features.map((f) => [f.properties.id, f]))
@@ -226,9 +236,10 @@ describe('doctrineFeed', () => {
         '3 leak-site claims since 28 Oct (1 placed on the map); ' +
         '3 KEV additions since 23 Oct (1 meets the EPSS alert); ' +
         "2 CVEs CISA's ADP assessed as exploitation active since 23 Oct (1 not in KEV); " +
+        '1 CISA ICS advisory published since 23 Oct; ' +
         '2 breach notices filed since 23 Oct'
     )
-    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 2)
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 1 + 2)
   })
 
   it('dates each window from the same start the queries use, with the year when it differs', () => {
@@ -236,6 +247,7 @@ describe('doctrineFeed', () => {
       claims: '2026-10-28',
       kev: '2026-10-23',
       adp: '2026-10-23',
+      ics: '2026-10-23',
       disclosures: '2026-10-23',
     })
     const newYear = new Date('2027-01-01T05:00:00Z')
@@ -267,11 +279,12 @@ describe('doctrineFeed', () => {
     expect(title).not.toContain('EPSS alert')
     expect(title).not.toMatch(/\b3 leak-site claims/)
     // The items themselves are unchanged.
-    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 2)
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 1 + 2)
   })
 
   it('states no figure for a count that failed, and never reads it as zero', () => {
-    const counted = /\d+ (groups? with unusual claims|leak-site claim|KEV addition|breach notice)/
+    const counted =
+      /\d+ (groups? with unusual claims|leak-site claim|KEV addition|CISA ICS advisor|breach notice)/
     const fc = buildFeed(
       {
         ...rows(),
@@ -284,9 +297,10 @@ describe('doctrineFeed', () => {
     expect(title).toContain('count unavailable for leak-site claims since 28 Oct')
     expect(title).toContain('count unavailable for KEV additions since 23 Oct')
     expect(title).toContain('count unavailable for breach notices filed since 23 Oct')
+    expect(title).toContain('count unavailable for CISA ICS advisories published since 23 Oct')
     expect(title).not.toMatch(counted)
     expect(title).not.toContain('placed on the map')
-    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 2)
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 1 + 2)
 
     // No counts at all is the same as failed counts, not a fallback to the rows.
     const bare = rows()
@@ -777,6 +791,7 @@ describe('the health block (migration 163)', () => {
         'ransomlook',
         'cisa-kev',
         'cisa-vulnrichment',
+        'cisa-ics',
         'sec-edgar',
         'threatcluster',
         'ca-ag',
@@ -794,6 +809,7 @@ describe('the health block (migration 163)', () => {
       'ransomlook',
       'cisa-kev',
       'cisa-vulnrichment',
+      'cisa-ics',
       'sec-edgar',
       'threatcluster',
       'state-breach-notices',
@@ -888,5 +904,24 @@ describe('data_as_of of what Vigil computes itself, never the request time', () 
     expect(computedAsOf(null, [], 'REQUEST')).toBe('REQUEST')
     const fc = buildFeed(rows(), NOW)
     for (const f of computed(fc)) expect(f.properties.data_as_of).not.toBe('2026-10-30T18:00:00Z')
+  })
+})
+
+describe('CISA ICS advisories', () => {
+  it('lists each as a notice with no indicator, and the summary states the count', () => {
+    const fc = buildFeed(rows(), NOW)
+    const p = byId(fc)['vigil:ics:ICSA-26-301-01'].properties
+    expect(p).toMatchObject({
+      tier: 'routine',
+      status_class: 'reported',
+      requirement_ids: ['VG-PIR-2'],
+      measures: { cvss: 8.1, cves: 2 },
+    })
+    expect(p).not.toHaveProperty('indicator_id')
+    expect(p.sources.map((s) => s.id)).toEqual(['cisa-ics'])
+    expect(p.title).toContain('Acme Controller (published 28 Oct 2026)')
+    expect(byId(fc)['vigil:2026-10-30:summary'].properties.title).toContain(
+      '1 CISA ICS advisory published since 23 Oct'
+    )
   })
 })

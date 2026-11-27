@@ -33,6 +33,14 @@
       "licence": "US public domain",
       "probe": {"url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json", "expect": "json", "time_path": "dateReleased"}
     },
+    "cisa-ics": {
+      "grade": "A1",
+      "independence_group": "cisa",
+      "ease_of_faking": "low",
+      "cadence_s": 86400,
+      "descriptor": "CISA's advisories on vulnerabilities in industrial control system products. An advisory is not a report of exploitation.",
+      "licence": "US public domain"
+    },
     "cisa-vulnrichment": {
       "grade": "A2",
       "independence_group": "cisa",
