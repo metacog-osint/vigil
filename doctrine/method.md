@@ -16,8 +16,8 @@ in the terms of The Intelligence Company's doctrine kit (`doctrine/kit/`).
   always posts in bursts is judged against its own bursts. A group with no claims in the 8 weeks has no baseline,
   and the feed says so.
 - **Known-exploited vulnerabilities:** CISA's KEV catalog, with FIRST's EPSS score and whether ransomware use is known.
-- **Victim disclosures:** state attorney-general breach notices (CA, WA, OR) and SEC 8-K Item 1.05 filings, the
-  victim's own account.
+- **Victim disclosures:** state attorney-general breach notices (CA, WA, OR, VT, MT, SC, ID, DE) and SEC 8-K Item
+  1.05 filings, the victim's own account. Counted by the date the notice was filed, not the date Vigil first read it.
 
 ## Baselines
 Unusual claims, and so the ESCALATING label, compare each group with its own previous 8 weeks (rolling); the

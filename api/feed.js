@@ -77,7 +77,7 @@ export default async function handler(request) {
   // The summary names each window by these same dates.
   const since = windowStarts(now)
   try {
-    const [escalatingPage, claimsPage, kevPage, adpPage, disclosuresPage, healthRows] =
+    const [escalatingPage, claimsPage, kevPage, adpPage, disclosuresPage, earlierPage, healthRows] =
       await Promise.all([
         rest(
           base,
@@ -115,9 +115,23 @@ export default async function handler(request) {
           key,
           // HHS OCR (192) stays out until about a week of clean daily runs, as 191's sources did, and
           // so its backfill of 8,092 reports first seen on one day is never served as new.
-          `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&first_seen=gte.${since.disclosures}T00:00:00Z&source=neq.hhs-ocr&order=first_seen.desc&limit=200`,
+          // By filing date, not first_seen: a registry's first read brings years of old notices in
+          // one day, and the 19 Nov 2026 backfill made 37 new notices read as 8,730.
+          `victim_disclosures?select=id,company_name,source,form,filed_date,first_seen,persons_affected,persons_affected_scope,filing_url,match_status&filed_date=gte.${since.disclosures}&source=neq.hhs-ocr&order=filed_date.desc,first_seen.desc&limit=200`,
           { count: true }
         ),
+        // Notices first seen in the window but filed before it: a backfill, or a registry posting
+        // late. Counted only, so the summary can say they are not new. Its failure only drops that
+        // clause.
+        rest(
+          base,
+          key,
+          `victim_disclosures?select=id&first_seen=gte.${since.disclosures}T00:00:00Z&filed_date=lt.${since.disclosures}&source=neq.hhs-ocr&limit=1`,
+          { count: true }
+        ).catch((err) => {
+          console.error('feed: earlier-filed disclosure count failed', err)
+          return { rows: [], count: null }
+        }),
         // The health block (migration 163). Its failure never fails the feed: without it the feed is
         // what it was before 163, and COP counts every lane as read. 29 ms warm, measured 15 Nov 2026.
         rest(
@@ -141,6 +155,7 @@ export default async function handler(request) {
       kev: kevPage.count,
       adp: adpPage.count,
       disclosures: disclosuresPage.count,
+      disclosuresFiledEarlier: earlierPage.count,
     }
     const ids = [
       ...new Set(
