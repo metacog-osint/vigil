@@ -1,8 +1,13 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import { loadBuildInfo } from './scripts/lib/buildInfo.mjs'
 
-export default defineConfig({
+export default defineConfig(async () => ({
   plugins: [react()],
+  // The same build facts the site gets (vite.config.js)
+  define: {
+    __VIGIL_BUILD__: JSON.stringify(await loadBuildInfo()),
+  },
   test: {
     globals: true,
     environment: 'jsdom',
@@ -40,4 +45,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))

@@ -18,6 +18,7 @@ import {
   allowsOneError,
   stallNote,
   sinceNew,
+  isSourceError,
 } from '../check-feed-health.mjs'
 
 const feed = (overrides) => ({
@@ -236,5 +237,29 @@ describe('a stalled feed (migration 163)', () => {
       .split('\n')
       .find((line) => line.startsWith('| ransomlook'))
     expect(row).toBe('| ransomlook | fresh | success | 0 | 32 (stalled) | — |')
+  })
+})
+
+describe('isSourceError (22 Nov 2026)', () => {
+  it('reads a feed-marked source error and a source reply of HTTP 5xx as the source', () => {
+    expect(isSourceError({ last_error: 'source: ThreatFox sent a cut-off or unreadable reply (x) (3 tries)' })).toBe(true)
+    expect(isSourceError({ last_error: 'HTTP 524: A timeout occurred' })).toBe(true)
+    expect(isSourceError({ last_error: 'HTTP 503' })).toBe(true)
+  })
+
+  it("reads Vigil's own Edge Functions and database reads as Vigil", () => {
+    expect(isSourceError({ last_error: 'ofac-sdn function HTTP 525: <html>' })).toBe(false)
+    expect(isSourceError({ last_error: 'epss-scores function HTTP 500: {"error":"boom"}' })).toBe(false)
+    expect(isSourceError({ last_error: '/rest/v1/feed_health: HTTP 500' })).toBe(false)
+  })
+
+  it('reads a 429 as Vigil calling too often, not the source down', () => {
+    expect(isSourceError({ last_error: 'HTTP 429: Too Many Requests' })).toBe(false)
+  })
+
+  it('reads anything else as Vigil', () => {
+    expect(isSourceError({ last_error: 'fetched 1296 records and wrote none of them' })).toBe(false)
+    expect(isSourceError({ last_error: 'HTTP 401: Unauthorized' })).toBe(false)
+    expect(isSourceError({ last_error: null })).toBe(false)
   })
 })

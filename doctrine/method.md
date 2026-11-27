@@ -16,15 +16,15 @@ in the terms of The Intelligence Company's doctrine kit (`doctrine/kit/`).
   always posts in bursts is judged against its own bursts. A group with no claims in the 8 weeks has no baseline,
   and the feed says so.
 - **Known-exploited vulnerabilities:** CISA's KEV catalog, with FIRST's EPSS score and whether ransomware use is known.
-- **Victim disclosures:** state attorney-general breach notices (CA, WA, OR) and SEC 8-K Item 1.05 filings, the
-  victim's own account.
+- **Victim disclosures:** state attorney-general breach notices (CA, WA, OR, VT, MT, SC, ID, DE) and SEC 8-K Item
+  1.05 filings, the victim's own account. Counted by the date the notice was filed, not the date Vigil first read it.
 
 ## Baselines
 Unusual claims, and so the ESCALATING label, compare each group with its own previous 8 weeks (rolling); the
 DECLINING label with its own previous week. An EPSS alert needs all three: the vulnerability is in CISA's KEV
 catalog with known ransomware use, its FIRST EPSS score is at least 0.5 (a fixed threshold), and that score is
-current, dated within 3 days. Vigil reads FIRST's daily release once a day, so its score is usually one release
-behind FIRST's newest.
+current, dated within 3 days. Vigil reads FIRST's daily release once a day, after 15:00 UTC (FIRST publishes at
+about 13:30 UTC), so its score is FIRST's newest release except for about two hours after each release.
 
 ## Anomaly versus warning
 Everything in the feed is a measurement (kind observation): a group whose claims are unusual for it or a KEV entry that meets the EPSS
@@ -52,7 +52,10 @@ it is listed without a map point rather than guessed. A feed that misses its exp
 
 ## Feed
 `GET /api/feed` returns the current picture in feed contract v2 (`tic-feed/2`, GeoJSON): groups whose claims are unusual for them, leak-site
-claims dated from two days before the current UTC date, KEV additions dated from seven days before and victim
-disclosures first seen from seven days before (`api/_lib/doctrineFeed.js`, `windowStarts`). The summary names each
+claims dated from two days before the current UTC date, KEV additions dated from seven days before, CISA ICS
+advisories published from seven days before and victim
+disclosures filed from seven days before (`api/_lib/doctrineFeed.js`, `windowStarts`). A notice Vigil first saw
+in that window but filed up to 60 days before it, which a registry posted late, is listed too, with both dates in
+its title; older ones are only counted. The summary names each
 window by its first date and states database counts, never a tally of the capped rows. The tests check every item
 with the kit's tradecraft linter.

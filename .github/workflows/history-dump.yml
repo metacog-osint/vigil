@@ -1,4 +1,4 @@
-# Weekly off-platform copy of Vigil's history tables (ideas#159).
+# Weekly off-platform copy of Vigil's history tables.
 #
 # Supabase Pro keeps 7 days of backups. entity_changelog goes back to 17 Jan
 # 2026 and nothing else holds it. This dumps the history tables with pg_dump,
@@ -6,7 +6,7 @@
 # it in the private metacog-osint/tic-archive (tools/tic_archive.py, lane
 # "pgdump"). Nothing here writes to the live database.
 #
-# Secrets (Tom sets them; see docs/HISTORY_DUMP.md):
+# Secrets (see docs/HISTORY_DUMP.md):
 #   VIGIL_DUMP_DB_URL    read-only role, Supabase SESSION POOLER url (IPv4)
 #   TIC_ARCHIVE_TOKEN    fine-grained token, contents:write on tic-archive only
 
@@ -31,6 +31,12 @@ env:
   # A dump with fewer rows than this means the role could not see the table
   # (row-level security hides rows without raising an error). Fail, never file.
   MIN_CHANGELOG_ROWS: '2000000'
+  # The only restore errors allowed: an object the dumped tables depend on that
+  # the dump does not carry (it holds tables, not functions or extensions), such
+  # as the indexes on public.company_key(), org_key(), victim_key(), actor_key()
+  # and org_domain_label(). Those cost an index or a policy in the scratch copy,
+  # never a row; table data is checked by the row counts. Any other error fails.
+  RESTORE_ERRORS_ALLOWED: 'ERROR: +.* does not exist'
 
 jobs:
   dump:
@@ -69,13 +75,20 @@ jobs:
           SRC=$(printf '%s' "$SRC" | sed 's/^\xEF\xBB\xBF//' | tr -d '[:space:]')
           if [ -z "$SRC" ]; then echo "::error::VIGIL_DUMP_DB_URL is not set"; exit 1; fi
           mkdir dump
-          before=$(psql "$SRC" -Atc "select count(*) from public.entity_changelog")
-          echo "entity_changelog rows seen by the dump role: $before"
+          # Every table's rows as the dump role sees them, before the dump. pg_dump's
+          # snapshot is taken after this, so each table restores at least this many,
+          # unless rows were deleted in between.
+          : > before.txt
+          for t in $TABLES; do
+            n=$(psql "$SRC" -Atc "select count(*) from public.$t")
+            echo "$t $n" >> before.txt
+            echo "source $t: $n rows"
+          done
+          before=$(awk '$1 == "entity_changelog" {print $2}' before.txt)
           if [ "$before" -lt "$MIN_CHANGELOG_ROWS" ]; then
             echo "::error::dump role sees only $before changelog rows (expected at least $MIN_CHANGELOG_ROWS): check grants and row-level security"
             exit 1
           fi
-          echo "$before" > before.txt
           args=()
           for t in $TABLES; do args+=(-t "public.$t"); done
           pg_dump "$SRC" --format=custom --compress=6 --no-owner --no-privileges "${args[@]}" -f dump/vigil-history.dump
@@ -94,17 +107,38 @@ jobs:
           psql -h localhost -U postgres -d postgres -qc 'create schema extensions' \
             -c 'create extension "uuid-ossp" schema extensions' \
             -c 'create extension pgcrypto schema extensions'
+          # pg_restore exits non-zero on any error; the checks below decide which ones matter.
           pg_restore --no-owner --no-privileges -h localhost -U postgres -d postgres dump/vigil-history.dump 2>restore.err || true
           echo "restore errors: $(grep -c 'pg_restore: error' restore.err || true)"
-          grep -A2 'pg_restore: error' restore.err | head -24 || true
-          after=$(psql -h localhost -U postgres -d postgres -Atc "select count(*) from public.entity_changelog")
-          before=$(cat before.txt)
-          echo "restored entity_changelog rows: $after (before the dump: $before)"
-          if [ "$after" -lt "$before" ]; then echo "::error::restore read back fewer rows than the source had"; exit 1; fi
-          for t in $TABLES; do
-            n=$(psql -h localhost -U postgres -d postgres -Atc "select count(*) from public.$t")
-            echo "restored $t: $n rows"
-          done
+          # Each distinct error message once, with how often it occurred.
+          { grep -o 'ERROR: .*' restore.err || true; } | sort | uniq -c | sort -rn
+          fail=0
+          if grep -q 'COPY failed' restore.err; then
+            echo "::error::a table's data failed to load:"
+            grep 'COPY failed' restore.err
+            fail=1
+          fi
+          unexpected=$({ grep 'pg_restore: error' restore.err || true; } | { grep -Ev "$RESTORE_ERRORS_ALLOWED" || true; })
+          if [ -n "$unexpected" ]; then
+            echo "::error::restore errors that are not a missing dependency:"
+            printf '%s\n' "$unexpected"
+            fail=1
+          fi
+          # Every table, against its count at the source. A COPY loads a table whole
+          # or not at all, so a failed table reads 0. entity_changelog is exact, as it
+          # is append-only; the others may lose a few rows to a delete between the count
+          # and the dump, so they fail below 99.9% of the source.
+          while read -r t before; do
+            n=$(psql -h localhost -U postgres -d postgres -Atc "select count(*) from public.$t" </dev/null || echo 0)
+            floor=$(( before - before / 1000 ))
+            if [ "$t" = entity_changelog ]; then floor=$before; fi
+            echo "restored $t: $n rows (source before the dump: $before)"
+            if [ "$n" -lt "$floor" ]; then
+              echo "::error::$t restored $n rows, fewer than the $floor its source count allows"
+              fail=1
+            fi
+          done < before.txt
+          exit "$fail"
 
       - name: File in tic-archive
         env:

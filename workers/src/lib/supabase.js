@@ -93,6 +93,24 @@ export function countInsertedRows(rows, sentAtMs) {
   return stamps.filter((s) => Date.parse(s) === newestMs).length
 }
 
+/**
+ * The error a failed PostgREST call returns: the response text as `message`,
+ * the HTTP status, and PostgREST's own `code` when the body is its JSON error,
+ * e.g. {"code":"57014","details":null,"hint":null,"message":"canceling
+ * statement due to statement timeout"}. A caller that acts on a Postgres error
+ * (the IOC feeds split a batch on a statement timeout) reads `code`.
+ */
+export function restError(text, status) {
+  const error = { message: text, status }
+  try {
+    const body = JSON.parse(text)
+    if (body && typeof body.code === 'string') error.code = body.code
+  } catch {
+    // Not JSON (a gateway page, an empty body): message and status only.
+  }
+  return error
+}
+
 export function createSupabaseClient(env) {
   const supabaseUrl = env.SUPABASE_URL
   const supabaseKey = env.SUPABASE_KEY
@@ -193,7 +211,7 @@ export function createSupabaseClient(env) {
           if (!response.ok) {
             const errorText = await response.text()
             console.error(`UPSERT ${table} failed (${response.status}):`, errorText)
-            return { data: null, error: { message: errorText, status: response.status } }
+            return { data: null, error: restError(errorText, response.status) }
           }
 
           if (!countInserted) return { data: null, error: null }

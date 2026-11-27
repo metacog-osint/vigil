@@ -35,6 +35,22 @@ export const EPSS_CURRENT_DAYS = 3 // migration 159: an older score is stale
 export const LANGUAGE_KEY =
   'https://github.com/metacog-osint/tic-doctrine/blob/main/docs/language-key.md'
 
+/**
+ * The state attorney-general registries the `state-breach-notices` job reads, by
+ * victim_disclosures.source: the state's postal code and name. An item names its own state;
+ * only the summary, which rests on all of them, lists them together.
+ */
+export const STATE_AG = {
+  'ca-ag': ['CA', 'California'],
+  'wa-ag': ['WA', 'Washington'],
+  'or-ag': ['OR', 'Oregon'],
+  'vt-ag': ['VT', 'Vermont'],
+  'mt-ag': ['MT', 'Montana'],
+  'sc-ag': ['SC', 'South Carolina'],
+  'id-ag': ['ID', 'Idaho'],
+  'de-ag': ['DE', 'Delaware'],
+}
+
 const SRC = {
   ransomlook: {
     id: 'ransomlook',
@@ -74,6 +90,18 @@ const SRC = {
     descriptor:
       "CISA's SSVC assessment of a CVE (Exploitation, Automatable, Technical Impact) in its ADP container. Not the KEV catalog.",
   },
+  ics: {
+    id: 'cisa-ics',
+    publisher: 'CISA',
+    title: 'Industrial control systems advisories',
+    url: 'https://www.cisa.gov/news-events/cybersecurity-advisories',
+    licence: 'US public domain',
+    grade: 'A1',
+    independence_group: 'cisa',
+    source_type: 'official_notice',
+    descriptor:
+      "CISA's advisories on vulnerabilities in industrial control system products. An advisory is not a report of exploitation.",
+  },
   epss: {
     id: 'first-epss',
     publisher: 'FIRST',
@@ -88,7 +116,9 @@ const SRC = {
   },
   stateAg: {
     id: 'state-ag-notices',
-    publisher: 'State attorneys general (CA, WA, OR)',
+    publisher: `State attorneys general (${Object.values(STATE_AG)
+      .map(([code]) => code)
+      .join(', ')})`,
     licence: 'US state government public record',
     grade: 'A2',
     independence_group: 'victim-filings',
@@ -144,7 +174,16 @@ const SRC = {
 // actor_origins_commercial.origin_source -> the source record cited for it. An origin from any other source
 // (or none) is left out of the feed rather than credited to the wrong publisher.
 const ORIGIN_SRC = { 'misp-galaxy': SRC.misp, 'mitre-attack': SRC.mitre }
-const REGULATOR = { 'ca-ag': 'California', 'wa-ag': 'Washington', 'or-ag': 'Oregon' }
+const REGULATOR = Object.fromEntries(Object.entries(STATE_AG).map(([id, [, name]]) => [id, name]))
+/** A state notice's own source record: its state's attorney general, never the list of all of them. */
+const stateAgSource = (d) => ({
+  ...SRC.stateAg,
+  id: d.source,
+  publisher: REGULATOR[d.source]
+    ? `${REGULATOR[d.source]} Attorney General`
+    : 'State attorney general',
+  url: d.filing_url || undefined,
+})
 // VG-IND-1 since migration 179: the last 7 complete UTC days against the group's own 8 weeks before
 // (negative binomial, p < 0.01, at least 5 claims on at least 3 days). Until 179 it was 077's
 // "more than 1.25x the week before", which flagged 17 groups a day (backtest in 179's header).
@@ -170,7 +209,14 @@ const DAY_MS = 86400000
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 /** How many days before today (UTC) each window starts. api/feed.js queries from these dates. */
-export const WINDOW_DAYS = { claims: 2, kev: 7, adp: 7, disclosures: 7 }
+export const WINDOW_DAYS = { claims: 2, kev: 7, adp: 7, ics: 7, disclosures: 7 }
+
+/**
+ * A breach notice a registry posts late, first seen in the window but filed up to this many days before it, is still
+ * listed, with its filing date in the title. Washington and Oregon often post notices 8 to 54 days after filing
+ * (measured 27 Oct to 26 Nov 2026). Older ones are only counted: a registry's first read brings in years of notices.
+ */
+export const LATE_NOTICE_DAYS = 60
 
 /** The first UTC date (YYYY-MM-DD) each window includes. */
 export function windowStarts(now = new Date()) {
@@ -179,7 +225,10 @@ export function windowStarts(now = new Date()) {
     claims: back(WINDOW_DAYS.claims),
     kev: back(WINDOW_DAYS.kev),
     adp: back(WINDOW_DAYS.adp),
+    ics: back(WINDOW_DAYS.ics),
     disclosures: back(WINDOW_DAYS.disclosures),
+    // The earliest filing date of a late-posted notice the feed lists.
+    disclosuresLate: back(WINDOW_DAYS.disclosures + LATE_NOTICE_DAYS),
   }
 }
 
@@ -268,6 +317,27 @@ function figure({ total, rows, noun: [one, many], scope, detail, part }) {
   return head
 }
 
+/**
+ * Breach notices are counted by the date the notice was filed, not the date Vigil first saw it: a
+ * registry read for the first time brings years of old notices in one day (about 8,700 from five
+ * registries on 19 Nov 2026, filed 2015-2026). Those first seen in the window but filed before it are named apart, so a
+ * backfill is never read as new. Nothing is said when the count is zero or failed.
+ *
+ * Of those, the ones filed since lateDay (LATE_NOTICE_DAYS before the window) are listed as items: a registry that
+ * posts a notice late. The clause says how many of them the feed lists, from the database's count (late) and the
+ * rows the feed holds (listed).
+ */
+function filedEarlier(total, sinceDay, late, listed, lateDay) {
+  const n = known(total)
+  if (!n) return null
+  const head = `${num(n)} older breach ${n === 1 ? 'notice' : 'notices'} first seen since ${sinceDay}, filed before it`
+  const l = known(late)
+  if (!l || !listed) return head
+  if (l === n && listed === l) return `${head} (all listed in this feed)`
+  if (listed === l) return `${head} (${num(l)} filed since ${lateDay} listed in this feed)`
+  return `${head} (${num(l)} filed since ${lateDay}; the latest ${num(listed)} in this feed)`
+}
+
 /** KEV descriptions read "<product> contains a <flaw>": the words before "contains" name the product. */
 export function subjectOf(v) {
   if (v.vendor && v.product) return `${v.vendor} ${v.product}`
@@ -288,9 +358,14 @@ export function subjectOf(v) {
  * @param {Array} rows.adp         cisa_ssvc rows (176, 177) rated active with assessed_at in the
  *   window, each with in_kev (true or false, from Vigil's copy of the KEV catalog) and the
  *   vulnerability's vendor, product and description where Vigil holds it
- * @param {Array} rows.disclosures victim_disclosures first seen in the window
+ * @param {Array} rows.ics         ics_advisories rows published in the window
+ * @param {Array} rows.disclosures victim_disclosures filed in the window (by filed_date)
+ * @param {Array} [rows.lateDisclosures] victim_disclosures first seen in the window, filed before it and
+ *   since windowStarts().disclosuresLate: notices a registry posted late
  * @param {object} [rows.counts]   the database's exact counts behind each list
- *   ({ actors, claims, kev, adp, disclosures }); a missing or failed count is null
+ *   ({ actors, claims, kev, adp, ics, disclosures }), plus disclosuresFiledEarlier: notices first seen
+ *   in the window but filed before it, and disclosuresLate: those of them behind lateDisclosures; a
+ *   missing or failed count is null
  * @param {Date} [now]
  */
 /**
@@ -315,12 +390,11 @@ export const HEALTH_LANES = {
   ransomlook: ['ransomlook'],
   'cisa-kev': ['cisa-kev'],
   'cisa-vulnrichment': ['cisa-vulnrichment'],
+  'cisa-ics': ['cisa-ics'],
   'sec-edgar': ['sec-edgar'],
   // Victim country. It has no items of its own, so this lane is how a collapse reaches COP (197).
   threatcluster: ['threatcluster'],
-  'ca-ag': ['state-breach-notices'],
-  'wa-ag': ['state-breach-notices'],
-  'or-ag': ['state-breach-notices'],
+  ...Object.fromEntries(Object.keys(STATE_AG).map((id) => [id, ['state-breach-notices']])),
   vigil: ['ransomlook', 'data-quality'],
 }
 export const HEALTH_FEEDS = [...new Set(Object.values(HEALTH_LANES).flat())]
@@ -456,7 +530,9 @@ export function buildFeed(
     actorNames = {},
     kev = [],
     adp = [],
+    ics = [],
     disclosures = [],
+    lateDisclosures = [],
     counts = {},
     health = null,
   },
@@ -696,7 +772,36 @@ export function buildFeed(
     )
   }
 
-  for (const d of disclosures) {
+  // CISA's ICS advisories: a notice about a product, never a claim of exploitation. Like the ADP
+  // rows they carry the warning problem and requirement and no indicator.
+  for (const a of ics) {
+    const cves = Array.isArray(a.cve_ids) ? a.cve_ids : []
+    feats.push(
+      feature(null, {
+        ...base,
+        id: `vigil:ics:${a.advisory_id}`,
+        ...onceAt(`vigil:ics:${a.advisory_id}`, dayStart(a.published_date), 'day'),
+        title: `CISA ICS advisory ${a.advisory_id}: ${a.title} (published ${plain(a.published_date)})`,
+        tier: 'routine',
+        status_class: 'reported',
+        us_person_data: 'organizations',
+        data_as_of: dayStart(a.published_date),
+        countries: [],
+        warning_problem_id: 'VG-WP-2',
+        requirement_ids: ['VG-PIR-2'],
+        precision_class: 'none',
+        sources: withSources(published, { ...SRC.ics, url: a.source_url || SRC.ics.url }),
+        measures: { cvss: a.cvss_score ?? null, cves: cves.length },
+        visual: { type: 'page', url: `${SITE}/vulnerabilities` },
+      })
+    )
+  }
+
+  // A late-posted notice (first seen in the window, filed before it) says both dates in its title, so it is never
+  // read as filed this week. The two lists cannot overlap: one is filed in the window, the other before it.
+  const lateIds = new Set(lateDisclosures.map((d) => d.id))
+  for (const d of [...disclosures, ...lateDisclosures]) {
+    const late = lateIds.has(d.id) && d.filed_date
     const sec = d.source === 'sec-edgar'
     const to = sec
       ? 'the SEC (Form 8-K Item 1.05)'
@@ -714,7 +819,11 @@ export function buildFeed(
           d.filed_date ? dayStart(d.filed_date) : utc(d.first_seen),
           d.filed_date ? 'day' : null
         ),
-        title: `${d.company_name} reported a data breach to ${to}${people}`,
+        title:
+          `${d.company_name} reported a data breach to ${to}${people}` +
+          (late
+            ? ` (filed ${plain(d.filed_date)}; first seen by Vigil ${plain(d.first_seen)})`
+            : ''),
         tier: 'routine',
         status_class: 'reported',
         us_person_data: 'organizations',
@@ -725,9 +834,7 @@ export function buildFeed(
         precision_class: 'none',
         sources: withSources(
           published,
-          sec
-            ? { ...SRC.sec, url: d.filing_url || SRC.sec.url }
-            : { ...SRC.stateAg, url: d.filing_url || undefined, id: d.source }
+          sec ? { ...SRC.sec, url: d.filing_url || SRC.sec.url } : stateAgSource(d)
         ),
         measures: {
           persons_affected: d.persons_affected ?? null,
@@ -791,13 +898,29 @@ export function buildFeed(
           part: latest,
         }),
         figure({
+          total: counts.ics,
+          rows: ics,
+          noun: ['CISA ICS advisory', 'CISA ICS advisories'],
+          scope: `published since ${since(start.ics)}`,
+          part: latest,
+        }),
+        figure({
           total: counts.disclosures,
           rows: disclosures,
           noun: ['breach notice', 'breach notices'],
-          scope: `first seen since ${since(start.disclosures)}`,
+          scope: `filed since ${since(start.disclosures)}`,
           part: latest,
         }),
-      ].join('; ') +
+        filedEarlier(
+          counts.disclosuresFiledEarlier,
+          since(start.disclosures),
+          counts.disclosuresLate,
+          lateDisclosures.length,
+          since(start.disclosuresLate)
+        ),
+      ]
+        .filter(Boolean)
+        .join('; ') +
       (stallCaveat(health) ? `. ${stallCaveat(health)}` : ''),
     tier: 'routine',
     status_class: 'reported',
@@ -812,6 +935,7 @@ export function buildFeed(
       SRC.ransomlook,
       SRC.kev,
       SRC.adp,
+      SRC.ics,
       SRC.stateAg,
       SRC.sec
     ),

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """tic_archive.py: copy licence-restricted raw data into TIC's private archive, metacog-osint/tic-archive.
 
-Rule (Tom, 18 Nov 2026): no TIC program loses data. Live views may filter; storage keeps everything. Data whose
+Rule: no TIC program loses data. Live views may filter; storage keeps everything. Data whose
 licence bars public redistribution (Space-Track, WHO, ReliefWeb, private watch configuration, ...) cannot go into
 the public program repos, so it goes here. Same file in every program repo (tools/tic_archive.py); the reference
 copy and its tests live in tic-archive itself.

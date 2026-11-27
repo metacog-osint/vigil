@@ -18,7 +18,9 @@ import {
   healthBlock,
   HEALTH_FEEDS,
   HEALTH_LANES,
+  LATE_NOTICE_DAYS,
   SECTOR_MAP,
+  STATE_AG,
   stallCaveat,
   subjectOf,
   windowStarts,
@@ -116,6 +118,16 @@ const rows = () => ({
       description: null,
     },
   ],
+  ics: [
+    {
+      advisory_id: 'ICSA-26-301-01',
+      title: 'Acme Controller',
+      published_date: '2026-10-28',
+      source_url: 'https://www.cisa.gov/news-events/ics-advisories/icsa-26-301-01',
+      cvss_score: 8.1,
+      cve_ids: ['CVE-2026-0100', 'CVE-2026-0101'],
+    },
+  ],
   disclosures: [
     {
       id: 'd1',
@@ -138,7 +150,7 @@ const rows = () => ({
     },
   ],
   // The database's counts behind each list; here the rows are all of them.
-  counts: { actors: 1, claims: 3, kev: 3, adp: 2, disclosures: 2 },
+  counts: { actors: 1, claims: 3, kev: 3, adp: 2, ics: 1, disclosures: 2 },
 })
 
 const byId = (fc) => Object.fromEntries(fc.features.map((f) => [f.properties.id, f]))
@@ -225,9 +237,10 @@ describe('doctrineFeed', () => {
         '3 leak-site claims since 28 Oct (1 placed on the map); ' +
         '3 KEV additions since 23 Oct (1 meets the EPSS alert); ' +
         "2 CVEs CISA's ADP assessed as exploitation active since 23 Oct (1 not in KEV); " +
-        '2 breach notices first seen since 23 Oct'
+        '1 CISA ICS advisory published since 23 Oct; ' +
+        '2 breach notices filed since 23 Oct'
     )
-    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 2)
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 1 + 2)
   })
 
   it('dates each window from the same start the queries use, with the year when it differs', () => {
@@ -235,7 +248,9 @@ describe('doctrineFeed', () => {
       claims: '2026-10-28',
       kev: '2026-10-23',
       adp: '2026-10-23',
+      ics: '2026-10-23',
       disclosures: '2026-10-23',
+      disclosuresLate: '2026-08-24',
     })
     const newYear = new Date('2027-01-01T05:00:00Z')
     expect(windowStarts(newYear).claims).toBe('2026-12-30')
@@ -260,17 +275,18 @@ describe('doctrineFeed', () => {
     expect(title).toContain('3 groups with unusual claims (1 named in this feed)')
     expect(title).toContain('4,500 leak-site claims since 28 Oct (the latest 3 in this feed)')
     expect(title).toContain('120 KEV additions since 23 Oct (the latest 3 in this feed)')
-    expect(title).toContain('2 breach notices first seen since 23 Oct')
+    expect(title).toContain('2 breach notices filed since 23 Oct')
     // A tally of a capped page is not a count, so no sub-figure is drawn from one.
     expect(title).not.toContain('placed on the map')
     expect(title).not.toContain('EPSS alert')
     expect(title).not.toMatch(/\b3 leak-site claims/)
     // The items themselves are unchanged.
-    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 2)
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 1 + 2)
   })
 
   it('states no figure for a count that failed, and never reads it as zero', () => {
-    const counted = /\d+ (groups? with unusual claims|leak-site claim|KEV addition|breach notice)/
+    const counted =
+      /\d+ (groups? with unusual claims|leak-site claim|KEV addition|CISA ICS advisor|breach notice)/
     const fc = buildFeed(
       {
         ...rows(),
@@ -282,10 +298,11 @@ describe('doctrineFeed', () => {
     expect(title).toContain('count unavailable for groups with unusual claims')
     expect(title).toContain('count unavailable for leak-site claims since 28 Oct')
     expect(title).toContain('count unavailable for KEV additions since 23 Oct')
-    expect(title).toContain('count unavailable for breach notices first seen since 23 Oct')
+    expect(title).toContain('count unavailable for breach notices filed since 23 Oct')
+    expect(title).toContain('count unavailable for CISA ICS advisories published since 23 Oct')
     expect(title).not.toMatch(counted)
     expect(title).not.toContain('placed on the map')
-    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 2)
+    expect(fc.features).toHaveLength(1 + 1 + 3 + 3 + 2 + 1 + 2)
 
     // No counts at all is the same as failed counts, not a fallback to the rows.
     const bare = rows()
@@ -500,6 +517,23 @@ describe('doctrineFeed', () => {
     expect(method).toContain('known ransomware use')
     expect(method).toContain(`at least ${EPSS_ALERT}`)
     expect(method).toContain(`within ${EPSS_CURRENT_DAYS} days`)
+    // The epss job runs after FIRST's 13:30 UTC release (afterUtc, workers/src/feeds/registry.js).
+    expect(method).not.toContain('one release behind')
+    expect(method).toContain('after 15:00 UTC')
+  })
+
+  it('states the breach-notice window by filing date in method.md and API.md', () => {
+    const flat = (p) => readFileSync(join(ROOT, p), 'utf8').replace(/\s+/g, ' ')
+    const method = flat('doctrine/method.md')
+    const api = flat('docs/API.md')
+    // The wording before notices were counted by filing date.
+    expect(method).not.toContain('disclosures first seen from seven days before')
+    expect(api).not.toContain('disclosures Vigil first saw from midnight UTC seven days before')
+    expect(method).toContain('disclosures filed from seven days before')
+    expect(api).toContain('disclosures filed from seven days before')
+    for (const text of [method, api]) {
+      expect(text).toContain(`filed up to ${LATE_NOTICE_DAYS} days before it`)
+    }
   })
 
   it('names the regulator and the scope of people affected', () => {
@@ -510,6 +544,126 @@ describe('doctrineFeed', () => {
     expect(f['vigil:disclosure:d2'].properties.title).toBe(
       'Listed Inc reported a data breach to the SEC (Form 8-K Item 1.05)'
     )
+  })
+
+  it("labels a state notice with its own state, never another state's", () => {
+    const input = rows()
+    input.disclosures = Object.keys(STATE_AG).map((source, i) => ({
+      id: `s${i}`,
+      company_name: `Co ${i}`,
+      source,
+      filed_date: '2026-10-28',
+      first_seen: '2026-10-29T10:00:00Z',
+      filing_url: `https://example.org/${source}`,
+    }))
+    input.disclosures.push({
+      id: 'sx',
+      company_name: 'Co X',
+      source: 'zz-ag',
+      filed_date: '2026-10-28',
+      first_seen: '2026-10-29T10:00:00Z',
+    })
+    const fc = buildFeed(input, NOW)
+    const f = byId(fc)
+    Object.entries(STATE_AG).forEach(([source, [, name]], i) => {
+      const p = f[`vigil:disclosure:s${i}`].properties
+      expect(p.title).toBe(`Co ${i} reported a data breach to the ${name} attorney general`)
+      expect(p.sources).toHaveLength(1)
+      expect(p.sources[0]).toMatchObject({
+        id: source,
+        publisher: `${name} Attorney General`,
+        url: `https://example.org/${source}`,
+      })
+    })
+    // Vermont was labelled "State attorneys general (CA, WA, OR)" until 26 Nov 2026.
+    const vt = f[`vigil:disclosure:s${Object.keys(STATE_AG).indexOf('vt-ag')}`].properties
+    expect(vt.sources[0].publisher).toBe('Vermont Attorney General')
+    // A registry this list does not know is never credited to the others.
+    const unknown = f['vigil:disclosure:sx'].properties
+    expect(unknown.sources[0].publisher).toBe('State attorney general')
+    expect(unknown.title).toBe('Co X reported a data breach to the state attorney general')
+    // Only the summary, which rests on every registry, lists them together.
+    const listed = fc.features[0].properties.sources.find((s) => s.id === 'state-ag-notices')
+    expect(listed.publisher).toBe('State attorneys general (CA, WA, OR, VT, MT, SC, ID, DE)')
+  })
+
+  it('counts breach notices by filing date and names a backfill apart', () => {
+    const title = (counts) =>
+      summaryTitle(buildFeed({ ...rows(), counts: { ...rows().counts, ...counts } }, NOW))
+    expect(title({ disclosuresFiledEarlier: 8693 })).toMatch(
+      /; 2 breach notices filed since 23 Oct; 8,693 older breach notices first seen since 23 Oct, filed before it$/
+    )
+    expect(title({ disclosuresFiledEarlier: 1 })).toMatch(
+      /; 1 older breach notice first seen since 23 Oct, filed before it$/
+    )
+    // Zero, failed or absent: the clause is left out, never stated as zero.
+    for (const n of [0, null, undefined, Number.NaN]) {
+      const t = title({ disclosuresFiledEarlier: n })
+      expect(t).toMatch(/; 2 breach notices filed since 23 Oct$/)
+      expect(t).not.toContain('older breach')
+    }
+  })
+
+  it('lists late-posted notices with both dates and says how many of the older ones it lists', () => {
+    const late = (n) =>
+      Array.from({ length: n }, (_, i) => ({
+        id: `late${i}`,
+        company_name: `Late ${i}`,
+        source: 'wa-ag',
+        filed_date: '2026-10-18',
+        first_seen: '2026-10-30T03:16:00Z',
+        persons_affected: i === 0 ? 2500 : null,
+        persons_affected_scope: i === 0 ? 'state_residents' : null,
+      }))
+    const build = (lateDisclosures, counts) =>
+      buildFeed({ ...rows(), lateDisclosures, counts: { ...rows().counts, ...counts } }, NOW)
+    const fc = build(late(2), { disclosuresFiledEarlier: 9, disclosuresLate: 2 })
+    expect(byId(fc)['vigil:disclosure:late0'].properties.title).toBe(
+      'Late 0 reported a data breach to the Washington attorney general; 2,500 people affected in that state (filed 18 Oct 2026; first seen by Vigil 30 Oct 2026)'
+    )
+    expect(summaryTitle(fc)).toMatch(
+      /; 9 older breach notices first seen since 23 Oct, filed before it \(2 filed since 24 Aug listed in this feed\)$/
+    )
+    expect(
+      summaryTitle(build(late(2), { disclosuresFiledEarlier: 2, disclosuresLate: 2 }))
+    ).toMatch(/filed before it \(all listed in this feed\)$/)
+    // A capped page: the database's count, and how many the feed holds.
+    expect(
+      summaryTitle(build(late(2), { disclosuresFiledEarlier: 9, disclosuresLate: 5 }))
+    ).toMatch(/filed before it \(5 filed since 24 Aug; the latest 2 in this feed\)$/)
+    // No late rows, or the read failed: the clause is as it was.
+    for (const [rowsIn, n] of [
+      [[], 0],
+      [[], null],
+    ]) {
+      expect(
+        summaryTitle(build(rowsIn, { disclosuresFiledEarlier: 9, disclosuresLate: n }))
+      ).toMatch(/; 9 older breach notices first seen since 23 Oct, filed before it$/)
+    }
+    // A notice filed in the window names no extra dates.
+    expect(byId(fc)['vigil:disclosure:d1'].properties.title).not.toContain('first seen')
+  })
+
+  it('queries breach notices by filing date, and counts the earlier-filed apart', () => {
+    const src = readFileSync(resolve(ROOT, 'api/feed.js'), 'utf8')
+    const list = src.match(/`victim_disclosures\?select=id,company_name[^`]*`/)[0]
+    expect(list).toContain('&filed_date=gte.${since.disclosures}&')
+    expect(list).not.toContain('first_seen=gte.')
+    expect(list).toContain('order=filed_date.desc')
+    expect(list).toContain('source=neq.hhs-ocr')
+    const earlier = src.match(/`victim_disclosures\?select=id&[^`]*`/)[0]
+    expect(earlier).toContain('first_seen=gte.${since.disclosures}T00:00:00Z')
+    expect(earlier).toContain('filed_date=lt.${since.disclosures}')
+    expect(earlier).toContain('source=neq.hhs-ocr')
+    expect(src).toContain('disclosuresFiledEarlier: earlierPage.count')
+    // Late-posted notices: first seen in the window, filed before it and since the late cut-off.
+    const late = [...src.matchAll(/`victim_disclosures\?select=id,company_name[^`]*`/g)][1][0]
+    expect(late).toContain('first_seen=gte.${since.disclosures}T00:00:00Z')
+    expect(late).toContain(
+      'and=(filed_date.gte.${since.disclosuresLate},filed_date.lt.${since.disclosures})'
+    )
+    expect(late).toContain('source=neq.hhs-ocr')
+    expect(src).toContain('disclosuresLate: latePage.count')
   })
 
   it("gives CISA's ADP assessment its own line, never labelled KEV, and marks what KEV lacks", () => {
@@ -589,8 +743,23 @@ describe('doctrineFeed', () => {
     const py = ['python3', 'python'].find((cmd) => spawnSync(cmd, ['--version']).status === 0)
     if (!py) return // no Python on this machine; CI has it
     // Without a health block, and with one carrying the stall and the summary's caveat.
+    // The first carries a late-posted breach notice too.
+    const late = {
+      id: 'late1',
+      company_name: 'Late Posting LLC',
+      source: 'wa-ag',
+      filed_date: '2026-10-18',
+      first_seen: '2026-10-30T03:16:00Z',
+    }
     for (const fc of [
-      buildFeed(rows(), NOW),
+      buildFeed(
+        {
+          ...rows(),
+          lateDisclosures: [late],
+          counts: { ...rows().counts, disclosuresFiledEarlier: 3, disclosuresLate: 1 },
+        },
+        NOW
+      ),
       buildFeed({ ...rows(), health: healthBlock(healthRows()) }, NOW),
     ]) {
       const file = join(mkdtempSync(join(tmpdir(), 'vigil-feed-')), 'feed.geojson')
@@ -670,7 +839,7 @@ describe('the health block (migration 163)', () => {
 
   it('reads a late daily feed as read, as the kit does, and names the job behind each state', () => {
     const h = health()
-    for (const lane of ['ca-ag', 'wa-ag', 'or-ag']) {
+    for (const lane of Object.keys(STATE_AG)) {
       expect(h[lane]).toMatchObject({ state: 'late', feeds: ['state-breach-notices'] })
       expect(laneRead(h[lane])).toBe(true)
     }
@@ -704,11 +873,17 @@ describe('the health block (migration 163)', () => {
         'ransomlook',
         'cisa-kev',
         'cisa-vulnrichment',
+        'cisa-ics',
         'sec-edgar',
         'threatcluster',
         'ca-ag',
         'wa-ag',
         'or-ag',
+        'vt-ag',
+        'mt-ag',
+        'sc-ag',
+        'id-ag',
+        'de-ag',
         'vigil',
       ])
     )
@@ -716,6 +891,7 @@ describe('the health block (migration 163)', () => {
       'ransomlook',
       'cisa-kev',
       'cisa-vulnrichment',
+      'cisa-ics',
       'sec-edgar',
       'threatcluster',
       'state-breach-notices',
@@ -810,5 +986,24 @@ describe('data_as_of of what Vigil computes itself, never the request time', () 
     expect(computedAsOf(null, [], 'REQUEST')).toBe('REQUEST')
     const fc = buildFeed(rows(), NOW)
     for (const f of computed(fc)) expect(f.properties.data_as_of).not.toBe('2026-10-30T18:00:00Z')
+  })
+})
+
+describe('CISA ICS advisories', () => {
+  it('lists each as a notice with no indicator, and the summary states the count', () => {
+    const fc = buildFeed(rows(), NOW)
+    const p = byId(fc)['vigil:ics:ICSA-26-301-01'].properties
+    expect(p).toMatchObject({
+      tier: 'routine',
+      status_class: 'reported',
+      requirement_ids: ['VG-PIR-2'],
+      measures: { cvss: 8.1, cves: 2 },
+    })
+    expect(p).not.toHaveProperty('indicator_id')
+    expect(p.sources.map((s) => s.id)).toEqual(['cisa-ics'])
+    expect(p.title).toContain('Acme Controller (published 28 Oct 2026)')
+    expect(byId(fc)['vigil:2026-10-30:summary'].properties.title).toContain(
+      '1 CISA ICS advisory published since 23 Oct'
+    )
   })
 })
