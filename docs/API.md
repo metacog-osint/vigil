@@ -11,13 +11,14 @@
 `GET https://vigil.theintelligence.company/api/feed` returns Vigil's current picture as GeoJSON in The
 Intelligence Company's feed contract v2 (`tic-feed/2`, described in `doctrine/kit/docs/feed-contract-v2.md`):
 groups whose claims are unusual for them (VG-IND-1, migration 179); leak-site claims dated from two days before the current UTC date (three calendar dates, today's
-included); CISA KEV additions dated from seven days before; and victim breach disclosures Vigil first saw from
+included); CISA KEV additions dated from seven days before; CISA industrial control system advisories published
+from seven days before (not reports of exploitation); and victim breach disclosures Vigil first saw from
 midnight UTC seven days before, plus a summary item. It needs no key, is cached for 15 minutes, and reads claims
 and group names only from the `*_commercial` views, so nothing a restricted source supplied is re-served.
 Built by `api/_lib/doctrineFeed.js`; `src/lib/__tests__/doctrineFeed.test.js` runs the kit's linter over it.
 The summary names each window by its first date ("since 29 Oct"), and its figures are the database's counts
 (`Prefer: count=exact`), not the number of items listed, which the queries cap at 50 groups, 300 claims, 100 KEV
-additions and 200 notices. When there are more than the feed lists, the summary says how many it lists (for groups,
+additions, 100 ICS advisories and 200 notices. When there are more than the feed lists, the summary says how many it lists (for groups,
 how many it names: a group whose name only a restricted source supplied is counted but not listed); a count that
 fails reads "count unavailable", never a number.
 
@@ -29,7 +30,7 @@ weeks before (negative binomial, p < 0.01). Tier `anomaly`: unusual against Vigi
 were 077's "more than 1.25x the week before", which flagged about 17 groups a day; the site's trend label still is.
 
 **`health`** (migration 163): a top-level block, one entry per source lane, the shape Cordon's and Blackout's feeds
-carry. A lane is an item's first source id: `ransomlook`, `cisa-kev`, `sec-edgar`, `ca-ag`, `wa-ag`, `or-ag`, and
+carry. A lane is an item's first source id: `ransomlook`, `cisa-kev`, `cisa-ics`, `sec-edgar`, `ca-ag`, `wa-ag`, `or-ag`, and
 `vigil` (Vigil's own computation: the surge groups and the summary). Each entry has `state` (`fresh`, `late`,
 `stale`, `never`, or `stalled`: the job runs and has added nothing for longer than it does when working), `last_ok`,
 `checked_at`, `last_status` and `feeds` (the Vigil jobs it rests on, `feed_health.feed_id`); a feed watched for

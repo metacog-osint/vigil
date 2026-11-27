@@ -52,7 +52,8 @@ it is listed without a map point rather than guessed. A feed that misses its exp
 
 ## Feed
 `GET /api/feed` returns the current picture in feed contract v2 (`tic-feed/2`, GeoJSON): groups whose claims are unusual for them, leak-site
-claims dated from two days before the current UTC date, KEV additions dated from seven days before and victim
+claims dated from two days before the current UTC date, KEV additions dated from seven days before, CISA ICS
+advisories published from seven days before and victim
 disclosures first seen from seven days before (`api/_lib/doctrineFeed.js`, `windowStarts`). The summary names each
 window by its first date and states database counts, never a tally of the capped rows. The tests check every item
 with the kit's tradecraft linter.

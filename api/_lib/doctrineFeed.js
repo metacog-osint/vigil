@@ -90,6 +90,18 @@ const SRC = {
     descriptor:
       "CISA's SSVC assessment of a CVE (Exploitation, Automatable, Technical Impact) in its ADP container. Not the KEV catalog.",
   },
+  ics: {
+    id: 'cisa-ics',
+    publisher: 'CISA',
+    title: 'Industrial control systems advisories',
+    url: 'https://www.cisa.gov/news-events/cybersecurity-advisories',
+    licence: 'US public domain',
+    grade: 'A1',
+    independence_group: 'cisa',
+    source_type: 'official_notice',
+    descriptor:
+      "CISA's advisories on vulnerabilities in industrial control system products. An advisory is not a report of exploitation.",
+  },
   epss: {
     id: 'first-epss',
     publisher: 'FIRST',
@@ -197,7 +209,7 @@ const DAY_MS = 86400000
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 /** How many days before today (UTC) each window starts. api/feed.js queries from these dates. */
-export const WINDOW_DAYS = { claims: 2, kev: 7, adp: 7, disclosures: 7 }
+export const WINDOW_DAYS = { claims: 2, kev: 7, adp: 7, ics: 7, disclosures: 7 }
 
 /** The first UTC date (YYYY-MM-DD) each window includes. */
 export function windowStarts(now = new Date()) {
@@ -206,6 +218,7 @@ export function windowStarts(now = new Date()) {
     claims: back(WINDOW_DAYS.claims),
     kev: back(WINDOW_DAYS.kev),
     adp: back(WINDOW_DAYS.adp),
+    ics: back(WINDOW_DAYS.ics),
     disclosures: back(WINDOW_DAYS.disclosures),
   }
 }
@@ -327,9 +340,10 @@ export function subjectOf(v) {
  * @param {Array} rows.adp         cisa_ssvc rows (176, 177) rated active with assessed_at in the
  *   window, each with in_kev (true or false, from Vigil's copy of the KEV catalog) and the
  *   vulnerability's vendor, product and description where Vigil holds it
+ * @param {Array} rows.ics         ics_advisories rows published in the window
  * @param {Array} rows.disclosures victim_disclosures filed in the window (by filed_date)
  * @param {object} [rows.counts]   the database's exact counts behind each list
- *   ({ actors, claims, kev, adp, disclosures }), plus disclosuresFiledEarlier: notices first seen
+ *   ({ actors, claims, kev, adp, ics, disclosures }), plus disclosuresFiledEarlier: notices first seen
  *   in the window but filed before it; a missing or failed count is null
  * @param {Date} [now]
  */
@@ -355,6 +369,7 @@ export const HEALTH_LANES = {
   ransomlook: ['ransomlook'],
   'cisa-kev': ['cisa-kev'],
   'cisa-vulnrichment': ['cisa-vulnrichment'],
+  'cisa-ics': ['cisa-ics'],
   'sec-edgar': ['sec-edgar'],
   // Victim country. It has no items of its own, so this lane is how a collapse reaches COP (197).
   threatcluster: ['threatcluster'],
@@ -494,6 +509,7 @@ export function buildFeed(
     actorNames = {},
     kev = [],
     adp = [],
+    ics = [],
     disclosures = [],
     counts = {},
     health = null,
@@ -734,6 +750,31 @@ export function buildFeed(
     )
   }
 
+  // CISA's ICS advisories: a notice about a product, never a claim of exploitation. Like the ADP
+  // rows they carry the warning problem and requirement and no indicator.
+  for (const a of ics) {
+    const cves = Array.isArray(a.cve_ids) ? a.cve_ids : []
+    feats.push(
+      feature(null, {
+        ...base,
+        id: `vigil:ics:${a.advisory_id}`,
+        ...onceAt(`vigil:ics:${a.advisory_id}`, dayStart(a.published_date), 'day'),
+        title: `CISA ICS advisory ${a.advisory_id}: ${a.title} (published ${plain(a.published_date)})`,
+        tier: 'routine',
+        status_class: 'reported',
+        us_person_data: 'organizations',
+        data_as_of: dayStart(a.published_date),
+        countries: [],
+        warning_problem_id: 'VG-WP-2',
+        requirement_ids: ['VG-PIR-2'],
+        precision_class: 'none',
+        sources: withSources(published, { ...SRC.ics, url: a.source_url || SRC.ics.url }),
+        measures: { cvss: a.cvss_score ?? null, cves: cves.length },
+        visual: { type: 'page', url: `${SITE}/vulnerabilities` },
+      })
+    )
+  }
+
   for (const d of disclosures) {
     const sec = d.source === 'sec-edgar'
     const to = sec
@@ -827,6 +868,13 @@ export function buildFeed(
           part: latest,
         }),
         figure({
+          total: counts.ics,
+          rows: ics,
+          noun: ['CISA ICS advisory', 'CISA ICS advisories'],
+          scope: `published since ${since(start.ics)}`,
+          part: latest,
+        }),
+        figure({
           total: counts.disclosures,
           rows: disclosures,
           noun: ['breach notice', 'breach notices'],
@@ -851,6 +899,7 @@ export function buildFeed(
       SRC.ransomlook,
       SRC.kev,
       SRC.adp,
+      SRC.ics,
       SRC.stateAg,
       SRC.sec
     ),
