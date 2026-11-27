@@ -7,9 +7,14 @@
  * every new table, view and sequence was granted to anon, authenticated and
  * service_role, and every new function was executable by all three.
  *
- * 1. From 30 October 2026 that stops for tables and sequences (Supabase
- *    changelog 45329). In Postgres, default privileges "on tables" also cover
- *    views and materialized views. A new object with no GRANT returns
+ * 1. Supabase announced that this stops for tables and sequences from
+ *    30 October 2026 (changelog 45329). Read live on 26 Nov 2026, Vigil's
+ *    project still granted every privilege on new tables and views to anon
+ *    and authenticated; migration 204 removes DELETE and TRUNCATE from that
+ *    default, and the rest of it stays open. Either way the rule below holds:
+ *    revoke first, then grant what is meant. In Postgres, default privileges
+ *    "on tables" also cover views and materialized views. Where a default is
+ *    closed, a new object with no GRANT returns
  *    "permission denied" to supabase-js, and CLAUDE.md records what that
  *    looks like here: a try/catch swallows it, and the page renders an empty
  *    state that reads exactly like "there is nothing here". A worker or Edge
