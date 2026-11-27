@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { watchlists, threatActors, countries } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
 import { CountryFilter, CountryCoverageNote } from '../components/common'
 import { Tooltip, FIELD_TOOLTIPS } from '../components/Tooltip'
 import { SECTORS } from '../lib/constants'
@@ -23,6 +24,7 @@ import ActorOverviewView from './actors/ActorOverviewView'
 import ActorTableView from './actors/ActorTableView'
 
 export default function ThreatActors() {
+  const { user } = useAuth()
   // Filter state
   const [search, setSearch] = useState('')
   const [sectorFilter, setSectorFilter] = useState('')
@@ -200,7 +202,12 @@ export default function ThreatActors() {
     if (selectedRows.size === 0) return
 
     try {
-      const { data: lists } = await watchlists.getAll()
+      const userId = user?.id
+      if (!userId) {
+        alert('Sign in to add actors to a watchlist.')
+        return
+      }
+      const { data: lists } = await watchlists.getAll(userId)
       const actorList = lists?.find((w) => w.entity_type === 'threat_actor')
 
       if (!actorList) {
@@ -208,11 +215,17 @@ export default function ThreatActors() {
         return
       }
 
+      let added = 0
       for (const actorId of selectedRows) {
-        await watchlists.addItem(actorList.id, actorId)
+        const { error } = await watchlists.addItem(actorList.id, actorId, userId)
+        if (!error) added += 1
       }
 
-      alert(`Added ${selectedRows.size} actors to watchlist`)
+      alert(
+        added === selectedRows.size
+          ? `Added ${added} actors to ${actorList.name}`
+          : `Added ${added} of ${selectedRows.size} actors to ${actorList.name}; the rest were already on it or could not be added.`
+      )
       setSelectedRows(new Set())
     } catch (error) {
       console.error('Error adding to watchlist:', error)
