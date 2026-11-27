@@ -83,6 +83,38 @@ export async function ingestRansomlook(supabase) {
   }
 }
 
+const LOCAL_TIME = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?$/
+
+/**
+ * RansomLook's `discovered` carries no zone, and its times run in Central European time
+ * (CET, CEST in summer): a post stamped 17:26 was stored while the UTC clock read 17:20.
+ * Read it as Europe/Paris and return the UTC instant as ISO text, or null when the field
+ * is not a date and time. Same rule as migration 203's backfill.
+ */
+export function parisToUtc(local) {
+  const m = LOCAL_TIME.exec(local || '')
+  if (!m) return null
+  const [y, mo, d, h, mi, se] = m.slice(1).map((x) => Number(x || 0))
+  const asUtc = Date.UTC(y, mo - 1, d, h, mi, se)
+  // Paris's offset at that instant, found by formatting it there; twice, so a time near
+  // a clock change takes the offset in force at the result, not at the first guess.
+  const offset = (t) => {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/Paris',
+        hourCycle: 'h23',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      }).formatToParts(new Date(t)).map((x) => [x.type, x.value])
+    )
+    const shown = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second)
+    return shown - Math.floor(t / 1000) * 1000
+  }
+  let t = asUtc - offset(asUtc)
+  t = asUtc - offset(t)
+  return new Date(t).toISOString()
+}
+
 export function toIncident(post, actorMap) {
   // Parse discovered date - format is "2026-01-16 21:44:10.064656"
   let incidentDate = null
@@ -99,6 +131,10 @@ export function toIncident(post, actorMap) {
     source: 'ransomlook',
     incident_date: incidentDate,
     discovered_date: incidentDate || new Date().toISOString().split('T')[0],
+    // RansomLook's own time as given, and as UTC (migration 203). discovered_date stays
+    // RansomLook's calendar day: it is this feed's de-duplication key.
+    discovered_local: post.discovered || null,
+    discovered_at: parisToUtc(post.discovered),
     victim_sector: inferSector(post.post_title),
     status: 'claimed',
     // The whole post as RansomLook returned it (retention rule, 18 Nov 2026): the
