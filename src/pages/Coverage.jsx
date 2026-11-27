@@ -9,8 +9,23 @@ import { BUILD_INFO, describeInterval } from '../lib/buildInfo'
  * Each source names the feed-registry job that reads it (`job`), and the
  * cadence shown beside it comes from the registry in this build, so the page
  * cannot claim a schedule the registry does not have. Coverage.test.jsx fails
- * if a job named here is not in the registry.
+ * if a job named here is not in the registry, and if a scheduled job is named
+ * neither here nor in NO_OUTSIDE_SOURCE.
  */
+
+/**
+ * Scheduled jobs that read no outside source: each works only on rows Vigil
+ * already holds, so it has no place in the list of sources below.
+ */
+export const NO_OUTSIDE_SOURCE = [
+  'data-quality', // run_data_quality_checks()
+  'leak-site-notices', // detect_leak_site_notices()
+  'actor-status', // apply_actor_status()
+  'actor-trend-snapshot', // snapshot_actor_trends()
+  'alert-rules', // evaluate_alert_rules()
+  'public-summary', // builds the hub's daily line from Vigil's own tables
+  'campaign-links', // link_campaign_actors()
+]
 export const COVERAGE = [
   {
     id: 'claims',
@@ -147,26 +162,47 @@ export const COVERAGE = [
       { name: 'MalwareBazaar', job: 'malwarebazaar', what: 'malware samples' },
       { name: 'Pulsedive', job: 'pulsedive', what: 'community indicators' },
       { name: 'Tor Project', job: 'tor-exits', what: 'Tor exit addresses' },
-      { name: 'DB-IP', job: 'ioc-geo', what: 'the location of each IP' },
+      {
+        name: 'DB-IP',
+        job: 'ioc-geo',
+        what: 'the country of each IPv4 address, from DB-IP’s free IP-to-country file',
+      },
       { name: 'Censys', job: 'censys', what: 'host details, a small batch of IPs a day' },
+      {
+        name: 'Cisco Crosswork BGPStream',
+        job: 'bgpstream',
+        what: 'BGP hijack, leak and outage events (BGP, the Border Gateway Protocol, is how networks announce which addresses they carry)',
+      },
     ],
     gaps: [
       'These are lists people submit. An address or file that is not listed is not shown to be safe, and a listed one may since have been cleaned or reassigned.',
       'Vigil runs no sandbox, sensor or honeypot of its own, and reads no passive DNS or certificate logs.',
+      'DB-IP’s free file gives a country only: no city, coordinates or network owner. It covers IPv4 addresses, not IPv6. The file is loaded by hand, not on a schedule, so it can be older than DB-IP’s latest monthly release; the job shown beside it only looks new indicators up in the copy Vigil holds.',
+      'Each daily BGPStream run reads the 100 most recent events and keeps the first 50, so on a busy day some events are not in Vigil. When Crosswork cannot be read, the job reads RIPE Stat’s announced address blocks for three fixed networks instead; those rows are a fixed list labelled suspicious in Vigil’s code, not routing events a source reported.',
     ],
   },
   {
     id: 'actors',
-    title: 'Threat actors',
+    title: 'Threat actors and malware families',
     reads: [
       { name: 'MITRE ATT&CK', job: 'mitre', what: 'groups, techniques and campaigns' },
       { name: 'MITRE ATLAS', job: 'mitre-atlas', what: 'techniques against AI systems' },
-      { name: 'Malpedia', job: 'malpedia', what: 'actors and malware families' },
+      {
+        name: 'Malpedia',
+        job: 'malpedia',
+        what: 'actors only; its list of malware families is not read',
+      },
       { name: 'MISP Galaxy', job: 'misp-galaxy', what: 'actor clusters' },
       { name: 'ETDA', job: 'etda-actors', what: 'actor origin countries' },
+      {
+        name: 'ANY.RUN',
+        job: 'anyrun-trends',
+        what: 'the malware families named on its public malware-trends page',
+      },
     ],
     gaps: [
-      'A group none of these catalogues lists has no profile, even if it posts claims.',
+      'A group none of these catalogues lists still has an entry once it posts claims on a leak site RansomLook reads. The entry lists its claims, but has no description, techniques or origin from these catalogues.',
+      'ANY.RUN’s trends reflect only the samples people submit to its public sandbox, and Vigil takes no indicators from it. When the trends page cannot be read, the job saves a fixed list of 15 well-known families instead, labelled as a fallback rather than as ANY.RUN’s data, and marks them active without anything having been observed.',
       'Where a group is from is what these sources say, with their own confidence. It is a claim, not an observation.',
     ],
   },
@@ -187,12 +223,16 @@ export const COVERAGE = [
   },
 ]
 
-/** Areas no source in Vigil covers. */
+/**
+ * Areas no source in Vigil covers. Where a source above touches one in part,
+ * the line says how far, so nothing Vigil holds is listed as missing.
+ */
 export const NOT_COVERED = [
   'Dark-web forums, marketplaces and Telegram channels. CIRCL can report a sighting made on Telegram, without the post.',
-  'News reporting. Vigil reads no news outlets.',
-  'DDoS attacks, business email compromise and fraud reports, insider incidents and influence operations.',
-  'Threats specific to mobile devices, the Internet of Things or a cloud provider’s own platform.',
+  'News reporting. Vigil reads no news outlets itself. A CIRCL sighting can cite an article from BleepingComputer, SecurityWeek, The Hacker News or The Record, and Vigil keeps the link, not the article.',
+  'Reports of individual fraud or business email compromise (BEC) cases. FinCEN’s alerts and advisories, which describe fraud schemes and their warning signs, are read (above); single cases are not.',
+  'DDoS (distributed denial-of-service) attacks, insider incidents and influence operations.',
+  'Sources dedicated to mobile devices, the Internet of Things (IoT) or a cloud provider’s own platform. Android’s security bulletins are read only for their statements that a flaw was or may be exploited (above).',
 ]
 
 const JOBS_BY_ID = Object.fromEntries((BUILD_INFO.registry?.jobs || []).map((job) => [job.id, job]))
@@ -221,9 +261,11 @@ export default function Coverage() {
           What Vigil does not cover
         </h1>
         <p>
-          Vigil reads a fixed set of public sources on a schedule. This page lists them by area, and
-          then what they leave out. When Vigil shows nothing, its sources hold nothing; it does not
-          mean nothing happened.
+          Vigil reads a fixed set of public sources on a schedule. This page lists every one of them
+          by area, and then what they leave out. When Vigil shows nothing, it holds nothing from its
+          sources. That does not mean the sources hold nothing, or that nothing happened: a job can
+          fail or run late, and Vigil keeps only part of some sources, such as CIRCL sightings from
+          an allow-list.
         </p>
         <p className="text-sm text-gray-400">
           A ransomware claim is a claim, never a confirmed breach. The cadence beside each source is
