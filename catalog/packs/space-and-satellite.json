@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "pack_version": "1.0.0",
+  "id": "space-and-satellite",
+  "name": "Space and satellite operators",
+  "description": "New CVEs and KEV entries that name satellite-communications vendors, and one actor whose use of satellite links a vendor has reported. Vigil has no space sector, so leak-site claims against operators are not matched by sector; a vendor name is matched anywhere in a CVE's product or description.",
+  "rules": [
+    {
+      "rule_type": "vendor_cve",
+      "rule_name": "Satellite vendors: new high and critical CVEs",
+      "conditions": {
+        "vendors": [
+          "Viasat",
+          "Hughes Network",
+          "iDirect",
+          "Gilat",
+          "Cobham",
+          "Inmarsat",
+          "Iridium",
+          "Thuraya",
+          "Comtech"
+        ],
+        "min_severity": "high"
+      }
+    },
+    {
+      "rule_type": "kev_added",
+      "rule_name": "Satellite vendors: added to KEV",
+      "conditions": {
+        "vendors": [
+          "Viasat",
+          "Hughes Network",
+          "iDirect",
+          "Gilat",
+          "Cobham",
+          "Inmarsat",
+          "Iridium",
+          "Thuraya",
+          "Comtech"
+        ]
+      }
+    }
+  ],
+  "watch": [
+    {
+      "watchlist": "Space and satellite: actors",
+      "entity_type": "actor",
+      "entities": [
+        {
+          "name": "Turla",
+          "note": "Kaspersky reported in September 2015 that Turla used hijacked satellite internet links to hide its command-and-control servers."
+        }
+      ]
+    }
+  ]
+}
