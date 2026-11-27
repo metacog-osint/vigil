@@ -3,6 +3,8 @@
  * Cloudflare Worker version
  */
 
+import { inferSector } from '../lib/victimSector.js'
+
 const RANSOMLOOK_API = 'https://www.ransomlook.io/api/recent'
 
 export async function ingestRansomlook(supabase) {
@@ -16,7 +18,7 @@ export async function ingestRansomlook(supabase) {
   try {
     // Fetch recent ransomware posts
     const response = await fetch(RANSOMLOOK_API, {
-      headers: { 'User-Agent': 'Vigil-ThreatIntel/1.0' }
+      headers: { 'User-Agent': 'Vigil-ThreatIntel/1.0' },
     })
 
     if (!response.ok) {
@@ -27,7 +29,7 @@ export async function ingestRansomlook(supabase) {
     console.log(`Fetched ${posts.length} ransomware posts`)
 
     // Get or create threat actors
-    const actorNames = [...new Set(posts.map(p => p.group_name).filter(Boolean))]
+    const actorNames = [...new Set(posts.map((p) => p.group_name).filter(Boolean))]
     const actorMap = await ensureActors(supabase, actorNames)
     console.log(`Actor map has ${Object.keys(actorMap).length} actors`)
 
@@ -49,7 +51,7 @@ export async function ingestRansomlook(supabase) {
     const newRecords = records.filter((r) => !existingKeys.has(incidentKey(r)))
     skipped = records.length - newRecords.length
 
-    const batchSize = 250  // see cisa-kev.js on batch size and subrequests
+    const batchSize = 250 // see cisa-kev.js on batch size and subrequests
     for (let i = 0; i < newRecords.length; i += batchSize) {
       const batch = newRecords.slice(i, i + batchSize)
       const { error } = await supabase.from('incidents').insert(batch)
@@ -65,7 +67,6 @@ export async function ingestRansomlook(supabase) {
     }
 
     // Trends and data-quality checks run once per hourly job (see index.js)
-
   } catch (error) {
     console.error('Ransomlook ingestion error:', error.message)
     return { success: false, error: error.message }
@@ -79,7 +80,7 @@ export async function ingestRansomlook(supabase) {
     added,
     skipped,
     failed,
-    lastError: lastError ? lastError.message : null
+    lastError: lastError ? lastError.message : null,
   }
 }
 
@@ -110,8 +111,8 @@ export function toIncident(post, actorMap) {
       link: post.link,
       group_name: post.group_name,
       description: post.description || null,
-      screen: post.screen
-    }
+      screen: post.screen,
+    },
   }
 }
 
@@ -137,7 +138,10 @@ async function fetchExistingKeys(supabase, records) {
     const chunk = names.slice(i, i + 40)
     const { data, error } = await supabase
       .from('incidents')
-      .select('actor_id,victim_name,discovered_date', `victim_name=in.${inList(chunk)}&discovered_date=gte.${minDate}`)
+      .select(
+        'actor_id,victim_name,discovered_date',
+        `victim_name=in.${inList(chunk)}&discovered_date=gte.${minDate}`
+      )
     if (error) throw new Error(`Dedup lookup failed: ${error.message}`)
     for (const row of data) keys.add(incidentKey(row))
   }
@@ -168,29 +172,4 @@ async function ensureActors(supabase, actorNames) {
   }
 
   return actorMap
-}
-
-function inferSector(victimName) {
-  if (!victimName) return null
-
-  const name = victimName.toLowerCase()
-
-  const sectorKeywords = {
-    healthcare: ['hospital', 'medical', 'health', 'clinic', 'pharma', 'healthcare'],
-    finance: ['bank', 'financial', 'insurance', 'credit', 'investment'],
-    education: ['university', 'college', 'school', 'academy', 'education'],
-    government: ['city of', 'county', 'government', 'municipal', 'federal'],
-    manufacturing: ['manufacturing', 'industrial', 'factory', 'automotive'],
-    technology: ['tech', 'software', 'digital', 'cyber', 'cloud'],
-    retail: ['retail', 'store', 'shop', 'market', 'commerce'],
-    energy: ['energy', 'oil', 'gas', 'utility', 'power']
-  }
-
-  for (const [sector, keywords] of Object.entries(sectorKeywords)) {
-    if (keywords.some(kw => name.includes(kw))) {
-      return sector
-    }
-  }
-
-  return null
 }
