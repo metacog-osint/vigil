@@ -164,7 +164,7 @@ export function ActorTableView({
                 {/* Actor Name Cell */}
                 <td>
                   <div className="flex items-center gap-2">
-                    <WatchButton entityType="threat_actor" entityId={actor.id} size="sm" />
+                    <WatchButton entityType="actor" entityId={actor.id} size="sm" />
                     <div>
                       <Tooltip
                         content={FIELD_TOOLTIPS.actor_name.content}

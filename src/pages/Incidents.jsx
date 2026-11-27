@@ -5,6 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { watchlists, incidents, countries } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
 import { CountryFilter, CountryCoverageNote } from '../components/common'
 import { Tooltip } from '../components/Tooltip'
 import { SECTORS, TIME_RANGES } from '../lib/constants'
@@ -20,6 +21,7 @@ import IncidentOverviewView from './incidents/IncidentOverviewView'
 import { IncidentDetailPanel, IncidentDetailModal } from './incidents/IncidentDetailPanel'
 
 export default function Incidents() {
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   // Filter state
@@ -228,7 +230,12 @@ export default function Incidents() {
     if (selectedRows.size === 0) return
 
     try {
-      const { data: lists } = await watchlists.getAll()
+      const userId = user?.id
+      if (!userId) {
+        alert('Sign in to add incidents to a watchlist.')
+        return
+      }
+      const { data: lists } = await watchlists.getAll(userId)
       const incidentList = lists?.find((w) => w.entity_type === 'incident')
 
       if (!incidentList) {
@@ -236,16 +243,22 @@ export default function Incidents() {
         return
       }
 
+      let added = 0
       for (const incidentId of selectedRows) {
-        await watchlists.addItem(incidentList.id, incidentId)
+        const { error } = await watchlists.addItem(incidentList.id, incidentId, userId)
+        if (!error) added += 1
       }
 
-      alert(`Added ${selectedRows.size} incidents to watchlist`)
+      alert(
+        added === selectedRows.size
+          ? `Added ${added} incidents to ${incidentList.name}`
+          : `Added ${added} of ${selectedRows.size} incidents to ${incidentList.name}; the rest were already on it or could not be added.`
+      )
       setSelectedRows(new Set())
     } catch (error) {
       console.error('Error adding to watchlist:', error)
     }
-  }, [selectedRows])
+  }, [selectedRows, user])
 
   // Clear all filters
   const clearAllFilters = useCallback(() => {

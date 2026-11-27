@@ -2,34 +2,38 @@
 import { useState, useEffect } from 'react'
 import { clsx } from 'clsx'
 import { watchlists as watchlistsApi } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
 
 export function WatchButton({ entityType, entityId, className = '', size = 'md' }) {
+  const { user } = useAuth()
+  const userId = user?.id
   const [watchlists, setWatchlists] = useState([])
-  const [isWatched, setIsWatched] = useState(false)
+  // Ids of this user's lists that hold the entity
+  const [inLists, setInLists] = useState(() => new Set())
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const isWatched = inLists.size > 0
 
   useEffect(() => {
-    loadWatchlists()
-  }, [entityId])
+    if (userId) loadWatchlists()
+  }, [entityId, userId])
 
   const loadWatchlists = async () => {
-    const { data } = await watchlistsApi.getAll()
-    const filtered = (data || []).filter((w) => w.entity_type === entityType)
-    setWatchlists(filtered)
-
-    // Check if entity is in any watchlist
-    const watched = await watchlistsApi.isWatched(entityId)
-    setIsWatched(watched)
+    const [{ data }, { data: holding }] = await Promise.all([
+      watchlistsApi.getAll(userId),
+      watchlistsApi.containing(entityId, userId),
+    ])
+    setWatchlists((data || []).filter((w) => w.entity_type === entityType))
+    setInLists(new Set(holding || []))
   }
 
   const toggleWatchlist = async (watchlistId, isInList) => {
     setIsLoading(true)
     try {
       if (isInList) {
-        await watchlistsApi.removeItem(watchlistId, entityId)
+        await watchlistsApi.removeItem(watchlistId, entityId, userId)
       } else {
-        await watchlistsApi.addItem(watchlistId, entityId)
+        await watchlistsApi.addItem(watchlistId, entityId, userId)
       }
       await loadWatchlists()
     } finally {
@@ -93,7 +97,7 @@ export function WatchButton({ entityType, entityId, className = '', size = 'md' 
               <div className="px-3 py-2 text-sm text-gray-500">No watchlists for this type</div>
             ) : (
               watchlists.map((wl) => {
-                const isInList = wl.items?.some((i) => i.entity_id === entityId)
+                const isInList = inLists.has(wl.id)
                 return (
                   <button
                     key={wl.id}

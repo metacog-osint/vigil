@@ -5,8 +5,19 @@
 
 import { supabase } from './client'
 
+/**
+ * Every read and write here names the signed-in user (user.id from useAuth).
+ * The filter on user_id only narrows the query; row-level security (065:
+ * user_id = auth.uid()::text, and watchlist_items through the owning list)
+ * still decides which rows the session can reach. A call without a user id
+ * returns an error and sends no query, so a caller that forgets it fails
+ * visibly instead of silently finding nothing.
+ */
+const NO_USER = { message: 'User ID required' }
+
 export const watchlists = {
-  async getAll(userId = 'anonymous') {
+  async getAll(userId) {
+    if (!userId) return { data: [], error: NO_USER }
     return supabase
       .from('watchlists')
       .select(
@@ -141,7 +152,23 @@ export const watchlists = {
       .eq('entity_id', entityId)
   },
 
-  async isWatched(entityId, userId = 'anonymous') {
+  /**
+   * The ids of this user's watchlists that hold the entity. getAll() returns
+   * only a count of each list's items, so it cannot say which lists hold it.
+   */
+  async containing(entityId, userId) {
+    if (!userId) return { data: [], error: NO_USER }
+    const { data, error } = await supabase
+      .from('watchlist_items')
+      .select('watchlist_id, watchlist:watchlists!inner(user_id)')
+      .eq('entity_id', entityId)
+      .eq('watchlist.user_id', userId)
+    if (error) return { data: [], error }
+    return { data: [...new Set((data || []).map((row) => row.watchlist_id))], error: null }
+  },
+
+  async isWatched(entityId, userId) {
+    if (!userId) return false
     const { data } = await supabase
       .from('watchlist_items')
       .select(
