@@ -178,7 +178,7 @@ export const COVERAGE = [
       'These are lists people submit. An address or file that is not listed is not shown to be safe, and a listed one may since have been cleaned or reassigned.',
       'Vigil runs no sandbox, sensor or honeypot of its own, and reads no passive DNS or certificate logs.',
       'DB-IP’s free file gives a country only: no city, coordinates or network owner. It covers IPv4 addresses, not IPv6. The file is loaded by hand, not on a schedule, so it can be older than DB-IP’s latest monthly release; the job shown beside it only looks new indicators up in the copy Vigil holds.',
-      'Each daily BGPStream run reads the 100 most recent events and keeps the first 50, so on a busy day some events are not in Vigil. When Crosswork cannot be read, the job reads RIPE Stat’s announced address blocks for three fixed networks instead; those rows are a fixed list labelled suspicious in Vigil’s code, not routing events a source reported.',
+      'Each daily BGPStream run reads the 100 most recent events and keeps the first 50, so on a busy day some events are not in Vigil. When Crosswork cannot be read, the run is logged as failed and nothing is saved.',
     ],
   },
   {
@@ -202,7 +202,7 @@ export const COVERAGE = [
     ],
     gaps: [
       'A group none of these catalogues lists still has an entry once it posts claims on a leak site RansomLook reads. The entry lists its claims, but has no description, techniques or origin from these catalogues.',
-      'ANY.RUN’s trends reflect only the samples people submit to its public sandbox, and Vigil takes no indicators from it. When the trends page cannot be read, the job saves a fixed list of 15 well-known families instead, labelled as a fallback rather than as ANY.RUN’s data, and marks them active without anything having been observed.',
+      'ANY.RUN’s trends reflect only the samples people submit to its public sandbox, and Vigil takes no indicators from it. When the trends page cannot be read, the run is logged as failed and nothing is saved.',
       'Where a group is from is what these sources say, with their own confidence. It is a claim, not an observation.',
     ],
   },
