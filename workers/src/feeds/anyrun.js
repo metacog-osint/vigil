@@ -5,6 +5,9 @@
  * Scrapes public malware trend data from ANY.RUN's trends page.
  * Note: This uses publicly available data - no API key required.
  * For full IOC access, a paid API subscription is needed.
+ *
+ * A run that cannot read or parse the page writes nothing and reports a failure, so
+ * sync_log and feed health show it.
  */
 
 import { createInsertTally } from '../lib/inserts.js'
@@ -50,9 +53,8 @@ export async function ingestAnyRun(supabase, env) {
     console.log(`Extracted ${malwareData.length} malware families from ANY.RUN trends`)
 
     if (malwareData.length === 0) {
-      // Fallback: return known high-activity malware as baseline
-      console.log('No data extracted, using fallback malware list')
-      return await ingestFallbackData(supabase)
+      console.log('ANY.RUN: no malware families found on the trends page; nothing written')
+      return { success: false, source: 'anyrun-trends', error: 'no malware families found on the trends page' }
     }
 
     // Filter to priority malware and create records
@@ -95,8 +97,7 @@ export async function ingestAnyRun(supabase, env) {
 
   } catch (error) {
     console.error('ANY.RUN error:', error.message)
-    // On error, still try to provide baseline data
-    return await ingestFallbackData(supabase)
+    return { success: false, source: 'anyrun-trends', error: error.message }
   }
 
   console.log(`ANY.RUN complete: ${updated} updated, ${failed} failed`)
@@ -211,53 +212,4 @@ function mapMalwareType(type) {
     'Spyware': 'spyware'
   }
   return typeMap[type] || type?.toLowerCase() || 'malware'
-}
-
-/**
- * Fallback: Insert baseline malware data if scraping fails
- */
-async function ingestFallbackData(supabase) {
-  console.log('Using fallback malware baseline data...')
-
-  const fallbackMalware = [
-    { name: 'AsyncRAT', type: 'rat', description: 'Open-source remote access trojan' },
-    { name: 'Remcos', type: 'rat', description: 'Commercial RAT abused by threat actors' },
-    { name: 'AgentTesla', type: 'stealer', description: '.NET-based information stealer' },
-    { name: 'FormBook', type: 'stealer', description: 'Infostealer sold as malware-as-a-service' },
-    { name: 'RedLine', type: 'stealer', description: 'Popular credential stealer' },
-    { name: 'Lumma', type: 'stealer', description: 'Information stealer targeting browsers' },
-    { name: 'XWorm', type: 'rat', description: 'Multi-functional RAT with stealer capabilities' },
-    { name: 'SmokeLoader', type: 'loader', description: 'Modular malware loader' },
-    { name: 'Amadey', type: 'loader', description: 'Lightweight loader and reconnaissance bot' },
-    { name: 'DarkGate', type: 'loader', description: 'Loader with RAT and cryptomining capabilities' },
-    { name: 'Vidar', type: 'stealer', description: 'Information stealer derived from Arkei' },
-    { name: 'Stealc', type: 'stealer', description: 'Lightweight C-based stealer' },
-    { name: 'PikaBot', type: 'loader', description: 'Modular backdoor and loader' },
-    { name: 'GuLoader', type: 'loader', description: 'VBS-based downloader' },
-    { name: 'Cobalt Strike', type: 'framework', description: 'Commercial penetration testing framework abused by threat actors' }
-  ]
-
-  const records = fallbackMalware.map(m => ({
-    name: m.name,
-    type: m.type,
-    source: 'anyrun-fallback',
-    first_seen: new Date().toISOString(),
-    last_seen: new Date().toISOString(),
-    is_active: true,
-    aliases: [m.name.toLowerCase()],
-    description: m.description,
-    source_url: `https://any.run/malware-trends/${m.name.toLowerCase()}/`,
-    metadata: {}
-  }))
-
-  const { error } = await supabase
-    .from('malware_families')
-    .upsert(records, { onConflict: 'name' })
-
-  if (error) {
-    console.error(`Fallback insert error: ${error.message}`)
-    return { success: false, source: 'anyrun-fallback', error: error.message }
-  }
-
-  return { success: true, source: 'anyrun-fallback', updated: records.length, failed: 0 }
 }

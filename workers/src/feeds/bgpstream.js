@@ -2,13 +2,12 @@
  * BGPStream - BGP Routing Anomaly Detection
  * Cloudflare Worker version
  *
- * Fetches BGP hijack and anomaly data from multiple sources
+ * Fetches BGP hijack, leak and outage events from Cisco Crosswork (formerly BGPStream).
+ * A run that cannot read Crosswork writes nothing and reports a failure, so sync_log and
+ * feed health show it.
  */
 
 import { createInsertTally } from '../lib/inserts.js'
-
-// RIPE Stat API for routing data
-const RIPE_STAT_API = 'https://stat.ripe.net/data'
 
 // Known BGP hijack trackers
 const BGPSTREAM_ALERTS = 'https://bgpstream.crosswork.cisco.com/api/alerts'
@@ -32,9 +31,8 @@ export async function ingestBGPStream(supabase) {
     })
 
     if (!response.ok) {
-      // Try alternate source - use a fallback approach
-      console.log(`BGPStream API returned ${response.status}, trying alternate source...`)
-      return await ingestFromRIPEStat(supabase)
+      console.log(`BGPStream API returned ${response.status}; nothing written`)
+      return { success: false, source: 'bgpstream', error: `HTTP ${response.status} from Crosswork` }
     }
 
     const data = await response.json()
@@ -85,87 +83,11 @@ export async function ingestBGPStream(supabase) {
 
   } catch (error) {
     console.error('BGPStream error:', error.message)
-    // Try alternate source on error
-    return await ingestFromRIPEStat(supabase)
+    return { success: false, source: 'bgpstream', error: error.message }
   }
 
   console.log(`BGPStream complete: ${updated} updated, ${failed} failed`)
   return { success: true, source: 'bgpstream', added: inserts.added, updated, failed, lastError }
-}
-
-/**
- * Fallback: Fetch from RIPE Stat announced prefixes for known bad ASNs
- */
-async function ingestFromRIPEStat(supabase) {
-  console.log('Using RIPE Stat fallback...')
-
-  let updated = 0
-  let failed = 0
-
-  try {
-    // Known malicious/suspicious ASNs (bulletproof hosting, frequent hijackers)
-    // This is a curated list - in production, this would be dynamically updated
-    const suspiciousASNs = [
-      '62904',  // Known bulletproof hosting
-      '197540', // Known bulletproof hosting
-      '48715',  // Frequently involved in spam
-    ]
-
-    const records = []
-
-    for (const asn of suspiciousASNs.slice(0, 3)) { // Limit to avoid subrequest limits
-      try {
-        const response = await fetch(
-          `${RIPE_STAT_API}/announced-prefixes/data.json?resource=AS${asn}`,
-          { headers: { 'User-Agent': 'Vigil-ThreatIntel/1.0' } }
-        )
-
-        if (response.ok) {
-          const data = await response.json()
-          const prefixes = data.data?.prefixes || []
-
-          // Create one record per ASN, aggregating all prefixes
-          if (prefixes.length > 0) {
-            records.push({
-              value: `AS${asn}`,
-              type: 'asn',
-              source: 'ripe-stat',
-              confidence: 'medium',
-              first_seen: new Date().toISOString(),
-              last_seen: new Date().toISOString(),
-              tags: ['bgp', 'suspicious-asn', 'bulletproof-hosting'],
-              metadata: {
-                announced_prefixes: prefixes.slice(0, 20).map(p => p.prefix),
-                prefix_count: prefixes.length,
-                asn: asn
-              }
-            })
-          }
-        }
-      } catch (e) {
-        console.log(`Failed to fetch ASN ${asn}: ${e.message}`)
-      }
-    }
-
-    if (records.length > 0) {
-      const { error } = await supabase
-        .from('iocs')
-        .upsert(records, { onConflict: 'type,value' })
-
-      if (error) {
-        failed = records.length
-      } else {
-        updated = records.length
-      }
-    }
-
-  } catch (error) {
-    console.error('RIPE Stat error:', error.message)
-    return { success: false, error: error.message }
-  }
-
-  console.log(`RIPE Stat fallback complete: ${updated} updated, ${failed} failed`)
-  return { success: true, source: 'bgpstream-ripe', updated, failed }
 }
 
 function mapConfidence(eventType) {
