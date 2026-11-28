@@ -2,7 +2,7 @@
 --
 -- STATUS: APPLIED about 05:41 UTC 16 November 2026.
 --
--- Finding victim_name_quality (55aad300, raised 20 Sep 2026). Tom's verdict on
+-- Finding victim_name_quality (55aad300, raised 20 Sep 2026). The verdict on
 -- 16 Nov 2026: confirmed. Each name below was read by a person from the post
 -- itself; nothing here parses markup to find a name.
 --

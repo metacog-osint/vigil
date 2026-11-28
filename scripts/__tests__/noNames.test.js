@@ -15,33 +15,13 @@ const WORDS = new Set([
   'e1608f75c5d7813f3d4031cb30bfb786507d98137538ff8e128a6ff74e84e643',
   '1e79f6794931ef59a7825ea40e5b00346d48e7b6a9ada0904a3b9738b2baca92',
 ])
-// Lines still to reword, per file. They sit in applied migrations, edge functions, the Worker and a worked
-// example's source citation, which change apart from this check. A file may hold fewer, never more, and a file not
-// listed holds none.
+// Lines left on purpose, per file: one migration's stored SQL text (an applied migration's SQL never changes) and a
+// worked example's source citation, the author's name on a cited work. A file may hold fewer, never more, and a
+// file not listed holds none.
 const PENDING = {
   'src/pages/__tests__/ContestedClaims.test.jsx': 1,
-  'supabase/functions/state-breach-notices/index.ts': 1,
-  'supabase/functions/wa-breach-causes/index.ts': 1,
   'supabase/migrations/146_contested_claims_worked_examples.sql': 3,
-  'supabase/migrations/163_feed_health_stall.sql': 1,
-  'supabase/migrations/166_breach_notice_candidates.sql': 1,
-  'supabase/migrations/167_feed_stall_expand.sql': 1,
-  'supabase/migrations/169_vulnerability_malformed_keys.sql': 1,
-  'supabase/migrations/170_victim_names_from_markup.sql': 1,
-  'supabase/migrations/171_audit_log_server_written.sql': 1,
-  'supabase/migrations/172_review_reading_evidence.sql': 1,
-  'supabase/migrations/174_wa_breach_causes.sql': 2,
-  'supabase/migrations/176_cisa_vulnrichment.sql': 2,
-  'supabase/migrations/177_cisa_ssvc_public_read.sql': 1,
-  'supabase/migrations/179_actor_surge_rule.sql': 1,
-  'supabase/migrations/181_actor_trend_snapshot_daily.sql': 1,
-  'supabase/migrations/182_vulnerability_history.sql': 1,
-  'supabase/migrations/187_vendor_exploitation_statements.sql': 2,
-  'supabase/migrations/188_certfr_alerts.sql': 1,
-  'supabase/migrations/190_more_state_breach_registries.sql': 2,
-  'supabase/migrations/191_vendor_sources_public_read.sql': 2,
-  'supabase/migrations/196_surge_first_flagged.sql': 1,
-  'workers/src/lib/limits.js': 1,
+  'supabase/migrations/174_wa_breach_causes.sql': 1,
 }
 
 const sha = (w) => createHash('sha256').update(w.toLowerCase()).digest('hex')

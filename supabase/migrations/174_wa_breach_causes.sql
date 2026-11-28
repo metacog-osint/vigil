@@ -34,7 +34,7 @@
 --
 -- The dataset states no licence (license and licenseId are null in its
 -- metadata, checked 16 Nov 2026). It is a state agency's public record of
--- facts. Tom approved storing and showing the cause, credited to the Attorney
+-- facts. Storing and showing the cause was approved, credited to the Attorney
 -- General, on 16 Nov 2026. Registered as not cleared for commercial use.
 --
 -- GRANTS
